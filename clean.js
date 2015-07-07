@@ -143,7 +143,6 @@ function convertTypes(h) {
         "FlipAngle",
         "HighBit",
         "InstanceNumber",
-        "ImageOrientationPatient",
         "LargestImagePixelValue",
         "MagneticFieldStrength",
         "NumberOfAverages",
@@ -174,6 +173,7 @@ function convertTypes(h) {
 
     var float_fields = [
         "EchoTime",
+        "ImageOrientationPatient",
         "ImagePositionPatient",
         "ImagingFrequency",
         "PatientSize",
@@ -200,20 +200,20 @@ function splitFields(h) {
     }
     */
     //split WindowCenter into min/max if array
-    if(h.WindowCenter.constructor === Array) {
+    if(h.WindowCenter && h.WindowCenter.constructor === Array) {
     //if(h.Modality == "CT") {
         h.WindowCenterMin = h.WindowCenter[0];
         h.WindowCenterMax = h.WindowCenter[1];
         delete h.WindowCenter;
     }
 
-    if(h.WindowWidth.constructor === Array) {
+    if(h.WindowWidth && h.WindowWidth.constructor === Array) {
         h.WindowWidthMin = h.WindowWidth[0];
         h.WindowWidthMax = h.WindowWidth[1];
         delete h.WindowWidth;
     }
     
-    if(h.PixelSpacing.constructor === Array) {
+    if(h.PixelSpacing && h.PixelSpacing.constructor === Array) {
         h.PixelSpacingMin = h.PixelSpacing[0];
         h.PixelSpacingMax = h.PixelSpacing[1];
         delete h.PixelSpacing;
