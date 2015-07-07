@@ -1,0 +1,293 @@
+{
+    "AccessionNumber": null,
+    "AcquisitionMatrix": 80,
+    "AcquisitionNumber": 173,
+    "AngioFlag": "N",
+    "BitsAllocated": 16,
+    "BitsStored": 12,
+    "BodyPartExamined": "BRAIN",
+    "CSAImageHeaderInfo": null,
+    "CSAImageHeaderType": "IMAGE NUM 4",
+    "CSAImageHeaderVersion": "20130925",
+    "CSASeriesHeaderInfo": null,
+    "CSASeriesHeaderType": "MR",
+    "CSASeriesHeaderVersion": "20130925",
+    "Columns": 560,
+    "CommentsOnThePerformedProcedureStep": null,
+    "DeviceSerialNumber": "45294",
+    "EchoNumbers": 1,
+    "EchoTime": 29,
+    "EchoTrainLength": 40,
+    "FlipAngle": 79,
+    "FrameOfReferenceUID": "1.3.12.2.1107.5.2.19.45294.1.20130925082402960.0.0.0",
+    "HighBit": 11,
+    "ImageOrientationPatient": [
+        1,
+        0,
+        0,
+        0,
+        1,
+        0
+    ],
+    "ImagePositionPatient": [
+        -833.46246957779,
+        -834.91525411606,
+        -63.594432830811
+    ],
+    "ImageType": [
+        "ORIGINAL",
+        "PRIMARY",
+        "M",
+        "ND",
+        "MOSAIC"
+    ],
+    "ImagedNucleus": "1H",
+    "ImagingFrequency": 123.251032,
+    "InPlanePhaseEncodingDirection": "COL",
+    "InstanceNumber": 173,
+    "InstitutionAddress": "West 16th Street 355,Indianapolis,IN,US,46206",
+    "InstitutionName": "Indiana University Medical Center",
+    "InstitutionalDepartmentName": "Department",
+    "LargestImagePixelValue": 3314,
+    "MRAcquisitionType": "2D",
+    "MagneticFieldStrength": 3,
+    "Manufacturer": "SIEMENS",
+    "ManufacturerModelName": "Skyra",
+    "Modality": "MR",
+    "NumberOfAverages": 1,
+    "NumberOfPhaseEncodingSteps": 80,
+    "OperatorsName": "RWB",
+    "PatientAge": "001D",
+    "PatientBirthDate": "20130925",
+    "PatientID": "201325SEPT",
+    "PatientName": "STABILITYFMRI^RESEARCH SKYRA 3T",
+    "PatientPosition": "HFS",
+    "PatientSex": "O",
+    "PatientSize": 1.82880366,
+    "PatientWeight": 99.790334094,
+    "PercentPhaseFieldOfView": 100,
+    "PercentSampling": 100,
+    "PerformedProcedureStepDescription": "QA^fMRI QA",
+    "PerformedProcedureStepID": "MR20130925082402",
+    "PerformingPhysicianName": null,
+    "PhotometricInterpretation": "MONOCHROME2",
+    "PixelBandwidth": 2155,
+    "PixelData": null,
+    "PixelRepresentation": 0,
+    "PositionReferenceIndicator": null,
+    "PrivateCreator": "SIEMENS MR HEADER",
+    "ProtocolName": "EPI Stability 200 meas 3",
+    "ReferencedImageSequence": [
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508294886434702921"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508295210336102929"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508295049437702925"
+        }
+    ],
+    "ReferringPhysicianName": " MCDONALD",
+    "RepetitionTime": "2250",
+    "RequestedProcedureDescription": "QA fMRI QA",
+    "Rows": 560,
+    "SAR": 0.19559265198124,
+    "SOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+    "SOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508530029841671435",
+    "SamplesPerPixel": 1,
+    "ScanOptions": "FS",
+    "ScanningSequence": "EP",
+    "SequenceName": "*epfid2d1_80",
+    "SequenceVariant": "SK",
+    "SeriesDescription": "EPI Stability 200 meas 3",
+    "SeriesInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508462256579550847.0.0.0",
+    "SeriesNumber": 4,
+    "SeriesWorkflowStatus": "com",
+    "SliceLocation": -63.594432830811,
+    "SliceThickness": 3.5,
+    "SmallestImagePixelValue": 0,
+    "SoftwareVersions": "syngo MR D13",
+    "SourceImageSequence": [
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525810463471319"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525812287171323"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525821612771326"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525827605971329"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525833512071332"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525838732871335"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525844653671338"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525850654371341"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525854408971344"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525861759171347"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525867757471350"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525871536771353"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525878856471356"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525884800971359"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525888599471362"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525895973271365"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.201309250852591931171368"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.201309250852593736871371"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525913047971374"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525919069271377"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525924983371380"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525930195671383"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525936141071386"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525942088471389"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525945865071392"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525953269071395"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525959193871398"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525962995571401"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525970371271404"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525976289071407"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525980080271410"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525987449371413"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525993429571416"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508525995199971419"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.201309250853004558871422"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508530010499471425"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508530016473771428"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508530021620671431"
+        },
+        {
+            "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.4",
+            "ReferencedSOPInstanceUID": "1.3.12.2.1107.5.2.19.45294.2013092508530029687471434"
+        }
+    ],
+    "SpacingBetweenSlices": 3.5000001003868,
+    "SpecificCharacterSet": "ISO_IR 100",
+    "StationName": "AWP45294",
+    "StudyDescription": "QA^fMRI QA",
+    "StudyID": "1",
+    "StudyInstanceUID": "1.3.12.2.1107.5.2.19.45294.30000013092511535638500000004",
+    "TransmitCoilName": "Body",
+    "Unknown Tag & Data": "A1/FS",
+    "VariableFlipAngleFlag": "N",
+    "WindowCenter": 752,
+    "WindowCenterWidthExplanation": "Algo1",
+    "WindowWidth": 2186,
+    "dBdt": 0,
+    "PixelSpacingMin": 3,
+    "PixelSpacingMax": 3,
+    "AcquisitionTimestamp": "2013-09-25T08:52:57.770Z",
+    "StudyTimestamp": "2013-09-25T08:24:02.795Z",
+    "SeriesTimestamp": "2013-09-25T08:47:27.183Z",
+    "ContentTimestamp": "2013-09-25T08:53:27.219Z",
+    "InstanceCreationTimestamp": "2013-09-25T08:53:27.219Z",
+    "PerformedProcedureStepStartTimestamp": "2013-09-25T08:24:02.899Z"
+}

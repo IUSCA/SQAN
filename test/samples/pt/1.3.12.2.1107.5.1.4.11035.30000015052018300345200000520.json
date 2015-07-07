@@ -1,0 +1,185 @@
+{
+    "ACR_NEMA_2C_VariablePixelDataGroupLength": "80012",
+    "AccessionNumber": null,
+    "AcquisitionDate": "20150520",
+    "AcquisitionNumber": "2001",
+    "AcquisitionTime": "143000.999981",
+    "ActualFrameDuration": "3000",
+    "AttenuationCorrectionMethod": "measured,AC CT WB",
+    "AxialAcceptance": "49",
+    "AxialMash": "5\\6",
+    "BitsAllocated": "16",
+    "BitsStored": "16",
+    "CSASeriesHeaderInfo": null,
+    "CSASeriesHeaderType": null,
+    "CSASeriesHeaderVersion": null,
+    "CollimatorType": "NONE",
+    "Columns": "200",
+    "ContentDate": "20150520",
+    "ContentTime": "143652.530000",
+    "ConvolutionKernel": "XYZ Gauss5.00",
+    "CorrectedImage": "NORM\\DTIM\\ATTN\\SCAT\\DECY\\RAN",
+    "CountsSource": "EMISSION",
+    "DateOfLastCalibration": "20150520\\20140610",
+    "DecayCorrection": "START",
+    "DecayFactor": "1.00016",
+    "DeviceSerialNumber": "11035",
+    "DoseCalibrationFactor": "31327000",
+    "EnergyWindowRangeSequence": [
+        {
+            "EnergyWindowLowerLimit": "435",
+            "EnergyWindowUpperLimit": "650"
+        }
+    ],
+    "FrameOfReferenceUID": "1.3.12.2.1107.5.1.4.11035.30000015052013003888000000002",
+    "FrameReferenceTime": "1500",
+    "GenericGroupLength": "1014",
+    "HighBit": "15",
+    "ImageComments": "AC CT WB, Volume Scaled",
+    "ImageIndex": "69",
+    "ImageOrientationPatient": "1\\0\\0\\0\\1\\0",
+    "ImagePositionPatient": "-405.713\\-546.412\\707.5",
+    "ImageType": "ORIGINAL\\PRIMARY",
+    "InstanceNumber": "69",
+    "InstitutionAddress": "Indianapolis 46202 16th St 355",
+    "InstitutionName": "Indiana University",
+    "InstitutionalDepartmentName": "Department",
+    "LargestImagePixelValue": "3871",
+    "Manufacturer": "SIEMENS",
+    "ManufacturerModelName": "SOMATOM Definition AS_mCT",
+    "Modality": "PT",
+    "NumberOfSlices": "75",
+    "OperatorsName": "KMP",
+    "PatientAge": "001D",
+    "PatientBirthDate": "20150520",
+    "PatientGantryRelationshipCodeSequence": [
+        {
+            "CodeMeaning": "headfirst",
+            "CodeValue": "F-10470",
+            "CodingSchemeDesignator": "99SDM",
+            "ContextGroupVersion": "20020904000000.000000",
+            "ContextIdentifier": "21",
+            "MappingResource": "DCMR"
+        }
+    ],
+    "PatientID": "05202015",
+    "PatientName": "CC05202015",
+    "PatientOrientationCodeSequence": [
+        {
+            "CodeMeaning": "recumbent",
+            "CodeValue": "F-10450",
+            "CodingSchemeDesignator": "99SDM",
+            "ContextGroupVersion": "20020904000000.000000",
+            "ContextIdentifier": "19",
+            "MappingResource": "DCMR",
+            "PatientOrientationModifierCodeSequence": [
+                {
+                    "CodeMeaning": "supine",
+                    "CodeValue": "F-10340",
+                    "CodingSchemeDesignator": "99SDM",
+                    "ContextGroupVersion": "20020904000000.000000",
+                    "ContextIdentifier": "20",
+                    "MappingResource": "DCMR"
+                }
+            ]
+        }
+    ],
+    "PatientPosition": "HFS",
+    "PatientSex": "O",
+    "PatientWeight": "6.28",
+    "PhotometricInterpretation": "MONOCHROME2",
+    "PixelData": null,
+    "PixelRepresentation": "0",
+    "PixelSpacing": "4.07283\\4.07283",
+    "PositionReferenceIndicator": null,
+    "PrivateCreator": "SIEMENS MED PT MU MAP",
+    "PrivateGroupLength": "154",
+    "RadiopharmaceuticalInformationSequence": [
+        {
+            "RadionuclideCodeSequence": [
+                {
+                    "CodeMeaning": "^18^Fluorine",
+                    "CodeValue": "C-111A1",
+                    "CodingSchemeDesignator": "SRT",
+                    "ContextGroupVersion": "20070625000000.000000",
+                    "ContextIdentifier": "4020",
+                    "MappingResource": "DCMR"
+                }
+            ],
+            "RadionuclideHalfLife": "6586.2",
+            "RadionuclidePositronFraction": "0.97",
+            "RadionuclideTotalDose": "58090000",
+            "Radiopharmaceutical": "Fluorodeoxyglucose",
+            "RadiopharmaceuticalCodeSequence": [
+                {
+                    "CodeMeaning": "Fluorodeoxyglucose F^18^",
+                    "CodeValue": "C-B1031",
+                    "CodingSchemeDesignator": "SRT",
+                    "ContextGroupVersion": "20070625000000.000000",
+                    "ContextIdentifier": "4021",
+                    "MappingResource": "DCMR"
+                }
+            ],
+            "RadiopharmaceuticalStartTime": "142800.000000"
+        }
+    ],
+    "RandomsCorrectionMethod": "DLYD",
+    "ReconstructionMethod": "PSF+TOF 3i21s",
+    "ReferringPhysicianName": null,
+    "RelatedSeriesSequence": [
+        {
+            "PurposeOfReferenceCodeSequence": [
+                {
+                    "CodeMeaning": "Same Anatomy",
+                    "CodeValue": "122401",
+                    "CodingSchemeDesignator": "DCM",
+                    "ContextGroupVersion": "20030619000000.000000",
+                    "ContextIdentifier": "7210",
+                    "MappingResource": "DCMR"
+                },
+                {
+                    "CodeMeaning": "For Attenuation Correction",
+                    "CodeValue": "122403",
+                    "CodingSchemeDesignator": "DCM",
+                    "ContextGroupVersion": "20030619000000.000000",
+                    "ContextIdentifier": "7210",
+                    "MappingResource": "DCMR"
+                }
+            ],
+            "SeriesInstanceUID": "1.3.12.2.1107.5.1.4.11035.30000015052018283765500000000",
+            "StudyInstanceUID": "1.3.12.2.1107.5.1.4.11035.30000015052013003817700000007"
+        }
+    ],
+    "RequestedProcedureDescription": "PET 1_PETCT_WholeBody (Adult)",
+    "RescaleIntercept": "0",
+    "RescaleSlope": "5.8759696615497",
+    "RescaleType": "BQML",
+    "Rows": "200",
+    "SOPClassUID": "1.2.840.10008.5.1.4.1.1.128",
+    "SOPInstanceUID": "1.3.12.2.1107.5.1.4.11035.30000015052018300345200000520",
+    "SamplesPerPixel": "1",
+    "ScatterCorrectionMethod": "Model-based",
+    "ScatterFractionFactor": "0.272767",
+    "SeriesDate": "20150520",
+    "SeriesDescription": "PET WB",
+    "SeriesInstanceUID": "1.3.12.2.1107.5.1.4.11035.30000015052018300345200000527",
+    "SeriesNumber": "3",
+    "SeriesTime": "143001.000000",
+    "SeriesType": "WHOLE BODY\\IMAGE",
+    "SliceLocation": "707.5",
+    "SliceThickness": "4",
+    "SmallestImagePixelValue": "0",
+    "SoftwareVersions": "syngo MI.PET/CT 2012A",
+    "SpecificCharacterSet": "ISO_IR 100",
+    "StationName": "CT71271",
+    "StudyDate": "20150520",
+    "StudyDescription": "PET^1_PETCT_WholeBody (Adult)",
+    "StudyID": "1",
+    "StudyInstanceUID": "1.3.12.2.1107.5.1.4.11035.30000015052013003817700000007",
+    "StudyTime": "142252.045000",
+    "TimeOfLastCalibration": "082404.000000\\165211.000000",
+    "Units": "BQML",
+    "Unknown Tag & Data": null,
+    "WindowCenter": "11373",
+    "WindowWidth": "22745"
+}
