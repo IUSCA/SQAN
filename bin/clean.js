@@ -1,12 +1,7 @@
 #!/usr/bin/node
 var amqp = require('amqp');
-
-var conn = amqp.createConnection({
-    host: "localhost",
-    login: "dicomtest",
-    password: "dicomtest#pass",
-    vhost: "dicom"
-});
+var config = require('../config/config').config;
+var conn = amqp.createConnection(config.amqp);
 
 conn.on('ready', function () {
     conn.exchange('cleaned', {autoDelete: false, durable: true, type: 'topic'}, function(clean_ex) {
@@ -22,18 +17,27 @@ conn.on('ready', function () {
                         console.dir(h);
                         console.dir(info);
                         */
+                        //var _source = JSON.stringify(h);
                         var index = composeESIndex(h);
                         console.log(h.SOPInstanceUID+" "+index);
-                        h.es_index = index;
+                        h.qc_esindex = index;
 
                         convertTypes(h); //"2.34" => 2.34
                         splitFields(h); 
                         mergeFields(h); //date+time => timestamp
+
+                        //h._source = "ignore";
+
                         clean_ex.publish('', h);
                     } catch(ex) {
+                        //I am not sure if this ever gets caught
+                        console.log("failed to clean record");
+                        console.dir(h); 
                         console.log(ex, ex.stack);
                         conn.publish('cleaning_failed', h);
-                        process.exit(1); //debug
+
+                        //DEBUG - stop clearning
+                        process.exit(1);
                     }
                 });
             });
@@ -202,67 +206,68 @@ function splitFields(h) {
     //split WindowCenter into min/max if array
     if(h.WindowCenter && h.WindowCenter.constructor === Array) {
     //if(h.Modality == "CT") {
-        h.WindowCenterMin = h.WindowCenter[0];
-        h.WindowCenterMax = h.WindowCenter[1];
-        delete h.WindowCenter;
+        h.qc_WindowCenterMin = h.WindowCenter[0];
+        h.qc_WindowCenterMax = h.WindowCenter[1];
+        //delete h.WindowCenter;
     }
 
     if(h.WindowWidth && h.WindowWidth.constructor === Array) {
-        h.WindowWidthMin = h.WindowWidth[0];
-        h.WindowWidthMax = h.WindowWidth[1];
-        delete h.WindowWidth;
+        h.qc_WindowWidthMin = h.WindowWidth[0];
+        h.qc_WindowWidthMax = h.WindowWidth[1];
+        //delete h.WindowWidth;
     }
     
+    //for PixelSpacing / ImagePositionPatient, ImageOrientationPatient fields
+    //http://nipy.org/nibabel/dicom/dicom_orientation.html
+
     if(h.PixelSpacing && h.PixelSpacing.constructor === Array) {
-        h.PixelSpacingMin = h.PixelSpacing[0];
-        h.PixelSpacingMax = h.PixelSpacing[1];
-        delete h.PixelSpacing;
+        h.qc_PixelSpacingMin = h.PixelSpacing[0];
+        h.qc_PixelSpacingMax = h.PixelSpacing[1];
+        //delete h.PixelSpacing;
     }
 }
 
-
 function mergeFields(h) {
-
     var timestamp = toTimestamp(h.AcquisitionDate, h.AcquisitionTime);
     if(timestamp) {
-        h.AcquisitionTimestamp = timestamp;
-        delete h.AcquisitionDate;
-        delete h.AcquisitionTime;
+        h.qc_AcquisitionTimestamp = timestamp;
+        //delete h.AcquisitionDate;
+        //delete h.AcquisitionTime;
     }
 
     timestamp = toTimestamp(h.StudyDate, h.StudyTime);
     if(timestamp) {
-        h.StudyTimestamp = timestamp;
-        delete h.StudyDate;
-        delete h.StudyTime;
+        h.qc_StudyTimestamp = timestamp;
+        //delete h.StudyDate;
+        //delete h.StudyTime;
     }
 
     timestamp = toTimestamp(h.SeriesDate, h.SeriesTime);
     if(timestamp) {
-        h.SeriesTimestamp = timestamp;
-        delete h.SeriesDate;
-        delete h.SeriesTime;
+        h.qc_SeriesTimestamp = timestamp;
+        //delete h.SeriesDate;
+        //delete h.SeriesTime;
     }
 
     timestamp = toTimestamp(h.ContentDate, h.ContentTime);
     if(timestamp) {
-        h.ContentTimestamp = timestamp;
-        delete h.ContentDate;
-        delete h.ContentTime;
+        h.qc_ContentTimestamp = timestamp;
+        //delete h.ContentDate;
+        //delete h.ContentTime;
     }
 
     timestamp = toTimestamp(h.InstanceCreationDate, h.InstanceCreationTime);
     if(timestamp) {
-        h.InstanceCreationTimestamp = timestamp;
-        delete h.InstanceCreationDate;
-        delete h.InstanceCreationTime;
+        h.qc_InstanceCreationTimestamp = timestamp;
+        //delete h.InstanceCreationDate;
+        //delete h.InstanceCreationTime;
     }
 
     timestamp = toTimestamp(h.PerformedProcedureStepStartDate, h.PerformedProcedureStepStartTime);
     if(timestamp) {
-        h.PerformedProcedureStepStartTimestamp = timestamp;
-        delete h.PerformedProcedureStepStartDate;
-        delete h.PerformedProcedureStepStartTime;
+        h.qc_PerformedProcedureStepStartTimestamp = timestamp;
+        //delete h.PerformedProcedureStepStartDate;
+        //delete h.PerformedProcedureStepStartTime;
     }
 }
 

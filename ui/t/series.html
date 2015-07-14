@@ -1,0 +1,10 @@
+<div class="container">
+    <h1>Series: {{series.series_desc}} <small>{{seriesid}}</small></h1>
+    <div ng-repeat="(instid, instance) in series.instances" class="instance"
+        ng-class="{'instance_error': instance.errors.length != 0, 'instance_warning': instance.warnings.length != 0}"
+        title="{{instid}}" ng-click="open_instance(instid)">
+    </div>
+
+    <h2>Series Statistics</h2>
+    {{series.stats}}
+</div>

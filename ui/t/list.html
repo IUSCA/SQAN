@@ -1,0 +1,58 @@
+<div class="container">
+    <h1>QC Reports</h1>
+    <div ng-repeat="result in results | orderBy:'-date'">
+        <h2>{{result.date}}</h2> 
+        <div ng-repeat="(studyid, study) in result.analysis.studies">
+            <h3>{{study.study_desc}} <small>StudyID: {{studyid}}</small></h3>
+            <div ng-repeat="(seriesid, series) in study.serieses">
+                <!--
+                <p class="pull-left" style="margin: 0px; margin-right: 10px; color: green;" ng-show="series.error_count == 0 && series.warning_count == 0">
+                    <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                </p>
+                -->
+                <h4><a href="#/series/{{result.date}}/{{studyid}}/{{seriesid}}">{{series.series_desc}}</a>
+                    <small>
+                        SeriesID: {{seriesid}} | {{series._instance_count}} Instances |
+                        <span ng-class="{'errorcount': series.error_count != 0}">{{series.error_count}} Errors</span>
+                        |
+                        <span ng-class="{'warningcount': series.warning_count != 0}">{{series.warning_count}} Warnings</span>
+                    </small>
+                </h4>
+                <div ng-repeat="(instid, instance) in series.instances" class="instance" 
+                    ng-class="{'instance_error': instance.errors.length != 0, 'instance_warning': instance.warnings.length != 0}" 
+                    title="{{instid}}" ng-click="open_instance(result.date, studyid, seriesid, instid)">
+                </div>
+                <!--
+                <div ng-repeat="(instid, errors) in series.errors" class="alert alert-danger" role="alert">
+                    <h4>SOPInstanceUID: {{instid}}</h4>
+                    <p ng-repeat="error in errors">
+                        <span class="sr-only">Error:</span> 
+                        <b>{{error.type}}</b> {{error.message}}
+                        <blockquote>
+                            <b>Field:{{error.field}}</b> = <b>Value:{{error.value}}</b>
+                        </blockquote>
+                    </p>
+                </div>
+                <div ng-repeat="(instid, warnings) in series.warnings" class="alert alert-warning" role="alert">
+                    <h4>SOPInstanceUID: {{instid}}</h4>
+                    <p ng-repeat="warning in warnings">
+                        <span class="sr-only">Warning:</span> 
+                        <b>{{warning.type}}</b> {{warning.message}}
+                        <blockquote>
+                            <b>Field:{{error.field}}</b> = <b>Value:{{error.value}}</b>
+                        </blockquote>
+                    </p>
+                </div>
+                -->
+            </div><!--series repeat-->
+        </div><!-- study repeat -->
+    </div><!--result repeat-->
+
+    <br>
+    <button class="btn btn-block btn-lg" ng-click="loadresults(10)" ng-show="!loading">Show Older Results</button>
+    <p ng-show="loading">
+        <span class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>&nbsp;&nbsp;Loading...
+    </p>
+    <br>
+</div>
+

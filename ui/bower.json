@@ -1,0 +1,27 @@
+{
+  "name": "qc",
+  "version": "0.0.0",
+  "authors": [
+    "Soichi Hayashi <hayashis@iu.edu>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "bower_components",
+    "barn"
+  ],
+  "dependencies": {
+    "bootstrap": "~3.3.2",
+    "angular": "~1.4.0",
+    "fontawesome": "~4.3.0",
+    "angular-ui-select": "~0.11.1",
+    "angular-sanitize": "~1.3.14",
+    "angular-route": "~1.4.0",
+    "angular-bootstrap": "~0.13.0",
+    "angular-jwt": "~0.0.9",
+    "angular-animate": "~1.4.0",
+    "angularjs-toaster": "~0.4.14",
+    "angular-cookies": "~1.4.0",
+    "angular-loading-bar": "~0.7.1"
+  }
+}

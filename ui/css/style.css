@@ -1,0 +1,62 @@
+/*main css*/
+body {
+  font-family: 'Lato', serif;
+  font-size: 18px;
+}
+span.errorcount {
+  color: red;
+  font-weight: bold;
+}
+span.warningcount {
+  color: orange;
+  font-weight: bold;
+}
+h2 {
+  color: gray;
+  font-weight: bold;
+}
+div.instance {
+  background-color: gray;
+  margin-left: 2px;
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+/*
+div.instance:hover {
+transition: all 0.2s ease-in-out;
+width: 28px;
+height: 28px;
+}
+*/
+div.instance_warning {
+  background-color: orange;
+}
+div.instance_error {
+  background-color: red;
+}
+div.instance_active {
+  width: 28px;
+  height: 28px;
+}
+.glyphicon-refresh-animate {
+  -animation: spin .7s infinite linear;
+  -webkit-animation: spin2 .7s infinite linear;
+}
+@-webkit-keyframes spin2 {
+  from {
+    -webkit-transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(360deg);
+  }
+}
+@keyframes spin {
+  from {
+    transform: scale(1) rotate(0deg);
+  }
+  to {
+    transform: scale(1) rotate(360deg);
+  }
+}
