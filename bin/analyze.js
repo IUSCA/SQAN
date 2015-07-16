@@ -3,9 +3,11 @@ var fs = require('fs');
 var config = require('../config/config').config;
 var async = require('async');
 var ss = require('simple-statistics');
+var _ = require('underscore');
 
 var qc_instance = require('../qc/instance');
 var qc_series = require('../qc/series');
+var qc_template = require('../qc/template');
 
 /*
 function analyze(inputdir, done){
@@ -30,28 +32,61 @@ function analyze(inputdir, done){
 }
 */
 
-function analyze(studydir, done) {
+function analyze(studyid, done) {
     var count = 0;
     var serieses = {};
     var sample_h = null;
-    fs.readdir(studydir, function(err, files) {
+    fs.readdir(config.cleaned_headers+'/'+studyid, function(err, files) {
         if(err) throw err;
         async.eachSeries(files, function(seriesid, next) {
-            if(fs.lstatSync(studydir+"/"+seriesid).isDirectory()) {
+            if(fs.lstatSync(config.cleaned_headers+'/'+studyid+"/"+seriesid).isDirectory()) {
                 count++;
-                analyze_series(studydir+"/"+seriesid, function(series, h) {
+                analyze_series(config.cleaned_headers+'/'+studyid+"/"+seriesid, function(series, h) {
                     if(!sample_h) sample_h = h;
                     serieses[seriesid] = series;
                     next();
                 });
             } else {   
-                console.log(studydir+" // " + seriesid+" is not directory .. skipping");
+                console.log(studyid+" // " + seriesid+" is not directory .. skipping");
                 next();
             }
         }, function(err) {
-            done(err, {study_desc: sample_h.StudyDescription, series_count: count, serieses: serieses}, sample_h);
+            done(err, {
+                studyid: studyid, 
+                study_desc: sample_h.StudyDescription, 
+                series_count: count, 
+                serieses: serieses,
+                esindex: sample_h.qc_esindex 
+            }, sample_h);
         });
     });
+}
+
+var templates = {};
+function getTemplate(h, cb) {
+    var name = qc_template.getName(h);
+    if(templates[name]) return cb(templates[name], null);
+
+    if(fs.existsSync(config.qc_templates+"/"+name)) {
+        //need to load from disk
+        var json = fs.readFileSync(config.qc_templates+"/"+name, {encoding: "utf8"});
+        var template = JSON.parse(json);
+        templates[name] = name;
+        cb(template, null);
+    } else {
+        //first time we see this study (use this instance as a template)
+        var template = _.clone(h);
+        
+        //ignore fields configured not to check
+        qc_template.ignore.forEach(function(ignore) {
+            delete template[ignore];
+        });
+        
+        //then save as new template
+        fs.writeFileSync(config.qc_templates+"/"+name, JSON.stringify(template, null, 4));
+        templates[name] = template;
+        cb(template, name);
+    }
 }
 
 //aggregate all inst under a series and check for any issues in stats
@@ -66,25 +101,45 @@ function analyze_series(seriesdir, done) {
             //instids.push(instid);
             var json = fs.readFileSync(seriesdir+"/"+instid, {encoding: "utf8"});
             var h = JSON.parse(json);
-            qc_instance.check(h, function(instance_errors, instance_warnings) {
-                if(!sample_h) sample_h = h;
-                //aggregate values for each field
-                for(var k in h) {
-                    switch(k) {
-                    //ignore some fields
-                    case "SOPInstanceUID":
-                    case "InstanceCreationTimestamp":
-                    case "ContentTimestamp":
-                    case "AcquisitionTimestamp":
-                        break;
-                    default:
-                        var v = h[k];
-                        if(!h_agg[k]) h_agg[k] = [];
-                        h_agg[k].push(v);
-                    }
+            if(!sample_h) sample_h = h;
+            
+            //aggregate values for each field
+            for(var k in h) {
+                switch(k) {
+                //ignore some fields
+                case "SOPInstanceUID":
+                case "InstanceCreationTimestamp":
+                case "ContentTimestamp":
+                case "AcquisitionTimestamp":
+                    break;
+                default:
+                    var v = h[k];
+                    if(!h_agg[k]) h_agg[k] = [];
+                    h_agg[k].push(v);
                 }
-                instances[instid] = {errors: instance_errors, warnings: instance_warnings};
-                next();
+            }
+
+            //do parameter checks
+            qc_instance.check(h, function(instance_errors, instance_warnings) {
+                //do template checks
+                getTemplate(h, function(template, newtemplatename) {
+                    if(newtemplatename) {
+                        instance_warnings.push({type:"new_template",message: "New StudyDescription "+newtemplatename+" - using this instance as template"});
+                    }
+                    
+                    //compare values
+                    for(var tk in template) {
+                        var tv = template[tk];
+                        if(h[tk] === undefined) {
+                            instance_errors.push({type:"missing", field:tk, message: "Field "+tk+" is missing"});
+                        } else if(h[tk] != tv) { //TODO - should I do deep comparison?
+                            instance_errors.push({type:"invalid_value", field:tk, value: h[tk], message: "Field "+tk+" should be "+tv});
+                        }
+                    }
+
+                    instances[instid] = {errors: instance_errors, warnings: instance_warnings};
+                    next();
+                });
             });
         }, function() {
             //summerize aggregate

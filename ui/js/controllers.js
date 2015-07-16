@@ -29,7 +29,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $cookies, $location) {
     }
 
     $scope.title = appconf.title;
-    $scope.results = [];
+    $scope.studies = [];
     
     //console.dir(jwt);
     //toaster.pop('error', 'title', 'Hello there');
@@ -43,47 +43,43 @@ function($scope, appconf, toaster, $http, jwtHelper, $cookies, $location) {
     $scope.loading = false;
     $scope.loadresults = function(num) {
         $scope.loading = true;
-        var count = $scope.results.length;
-        $http.get(appconf.api.qc+'/results', {params: {start: count, end: count+num}})
-        .success(function(results, status, headers, config) {
-            results.forEach(function(result) {
-                for(var studyid in result.analysis.studies) {
-                    var study = result.analysis.studies[studyid];
-                    for(var seriesid in study.serieses) {
-                        var series = study.serieses[seriesid];
-                        series._instance_count = Object.keys(series.instances).length;
-                    }
+        var count = $scope.studies.length;
+        $http.get(appconf.api.qc+'/studies', {params: {start: count, end: count+num}})
+        .success(function(studies, status, headers, config) {
+            //add last minute stuff
+            studies.forEach(function(study) {
+                //console.dir(study);
+                for(var seriesid in study.serieses) {
+                    var series = study.serieses[seriesid];
+                    var index = "dicom-"+study.esindex.split(".")[0]+".*";
+                    series._kibana_url = appconf.url.kibana+"#/discover?_g=()&_a=(columns:!(_source),index:'"+index+"',interval:auto,query:(query_string:(analyze_wildcard:!t,query:'SeriesInstanceUID:"+seriesid+"')),sort:!('@timestamp',desc))";
+                    series._instance_count = Object.keys(series.instances).length;
                 }
             });
-            $scope.results = $scope.results.concat(results);
+            $scope.studies = $scope.studies.concat(studies); //add to current list
             $scope.loading = false;
         });
     }
     $scope.loadresults(10);
+    /*
     $scope.open_instance = function(date, studyid, seriesid, instid) {
         $location.path('/instance/'+date+'/'+studyid+'/'+seriesid+'/'+instid);
     }
-
-    /*
-    var id = "48599";
-    $scope.userpass = {};
-    $http({
-        url: appconf.api.imagex+'/authorize',
-        method: 'POST',
-        data: {id: id}
-    }).then(function(res) {
-        //console.dir(res);
-        var access_token = res.data.access_token; //we don't store this in local storage.. this is SOP only
-       
-        //initialize tileviewer
-        $("#tileviewer").tileviewer({
-            access_token: access_token,
-            src: appconf.url.data+"/"+id+"/main_tiles"
-        });
-    });
     */
+    $scope.show_seriesid = null;
+    $scope.active_instid = null;
+    $scope.load_instance = function(studyid, seriesid, instid) {
+        $http.get(appconf.api.qc+'/series', {params: {studyid:studyid, seriesid:seriesid}})
+        .success(function(series, status, headers, config) {
+            //console.dir(series);
+            $scope.show_seriesid = seriesid;
+            $scope.instance_detail = series.instances[instid];
+            $scope.active_instid = instid;
+        });
+    }
 }]);
 
+/*
 app.controller('SeriesController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$cookies', '$routeParams', '$location', 
 function($scope, appconf, toaster, $http, jwtHelper, $cookies, $routeParams, $location) {
     $scope.appconf = appconf;
@@ -102,6 +98,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $cookies, $routeParams, $lo
         $location.path('/instance/'+$scope.date+'/'+$scope.studyid+'/'+$scope.seriesid+'/'+instid);
     }
 }]);
+*/
 
 app.controller('InstanceController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$cookies', '$routeParams', '$location', 
 function($scope, appconf, toaster, $http, jwtHelper, $cookies, $routeParams, $location) {

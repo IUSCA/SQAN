@@ -4,11 +4,11 @@
  * Module dependencies.
  */
 
-var app = require('../app');
+var app = require('./app');
 var debug = require('debug')('qc:www');
 var http = require('http');
 
-var config = require('../config/config.js').config;
+var config = require('./config/config.js').config;
 
 /**
  * Get port from environment and store in Express.

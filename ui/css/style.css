@@ -22,13 +22,9 @@ div.instance {
   height: 14px;
   cursor: pointer;
 }
-/*
 div.instance:hover {
-transition: all 0.2s ease-in-out;
-width: 28px;
-height: 28px;
+  opacity: 0.6;
 }
-*/
 div.instance_warning {
   background-color: orange;
 }
@@ -58,4 +54,13 @@ div.instance_active {
   to {
     transform: scale(1) rotate(360deg);
   }
+}
+/* The starting CSS styles for the enter animation */
+.instance-detail.ng-enter {
+  transition: 0.5s linear all;
+  opacity: 0;
+}
+/* The finishing CSS styles for the enter animation */
+.instance-detail.ng-enter.ng-enter-active {
+  opacity: 1;
 }

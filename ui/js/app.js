@@ -5,6 +5,7 @@ var app = angular.module('app', [
     'ngSanitize',
     'ngRoute',
     'ngCookies',
+    'ngAnimate',
     'toaster',
     'angular-loading-bar',
     'angular-jwt',
@@ -24,6 +25,7 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         controller: 'ListController',
         requiresLogin: true
     })
+    /*
     .when('/series/:date/:studyid/:seriesid', {
         templateUrl: 't/series.html',
         controller: 'SeriesController',
@@ -34,6 +36,7 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         controller: 'InstanceController',
         requiresLogin: true
     })
+    */
     .otherwise({
         redirectTo: '/list'
     });

@@ -35,7 +35,7 @@ fs.readdir(config.cleaned_headers, function(err, files) {
                 });
             }, function() {
                 console.log("study ready to be analyzed");
-                analyze(config.cleaned_headers+"/"+studyid, function(err, result) {
+                analyze(studyid, function(err, result) {
                     if(err) throw err;
                     console.dir(result);
                     fs.writeFileSync(config.cleaned_headers+"/"+studyid+"/analysis.json", JSON.stringify(result, null, 4));

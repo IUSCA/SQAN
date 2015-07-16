@@ -22,13 +22,9 @@ width: 14px;
 height: 14px;
 cursor: pointer;
 }
-/*
 div.instance:hover {
-transition: all 0.2s ease-in-out;
-width: 28px;
-height: 28px;
+opacity: 0.6;
 }
-*/
 div.instance_warning {
   background-color: orange;
 }
@@ -38,7 +34,6 @@ div.instance_error {
 div.instance_active {
 width: 28px;
 height: 28px;
-    
 }
 .glyphicon-refresh-animate {
     -animation: spin .7s infinite linear;
@@ -53,4 +48,15 @@ height: 28px;
 @keyframes spin {
     from { transform: scale(1) rotate(0deg);}
     to { transform: scale(1) rotate(360deg);}
+}
+
+/* The starting CSS styles for the enter animation */
+.instance-detail.ng-enter {
+  transition:0.5s linear all;
+  opacity:0;
+}
+
+/* The finishing CSS styles for the enter animation */
+.instance-detail.ng-enter.ng-enter-active {
+  opacity:1;
 }
