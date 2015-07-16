@@ -10,7 +10,7 @@ exports.check = function(h, next) {
         errors.push({type:"EchoTime out of range", field:"EchoTime", value: h.EchoTime, message: "EchoTime should be between 5 - 30000"});
     }
     //Minimum of TE is 2 and maximum is 400.
-    if(h.EchoTime >= 5 && h.EchoTime <= 30000) {
+    if(h.EchoTime >= 2 && h.EchoTime <= 400) {
         errors.push({type:"EchoTime out of range", field:"EchoTime", value: h.EchoTime, message: "EchoTime should be between 5 - 30000"});
     }
     
