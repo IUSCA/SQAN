@@ -5,13 +5,17 @@ exports.check = function(h, next) {
 
     //[Sundar]
     //Our MRI technologists just looked into EchoTime (TE) and RepetitionTime (TR). 
-    //For 3T our 3T scanners, minimum of TR is 5 and maximum is 30,000. 
-    if(h.RepetitionTime < 5 || h.RepetitionTime > 30000) {
-        errors.push({type:"out_of_range", field:"RepetitionTime", value: h.RepetitionTime, message: "RepetitionTime should be between 5 - 30000"});
-    }
-    //Minimum of TE is 2 and maximum is 400.
-    if(h.EchoTime < 2 || h.EchoTime > 400) {
-        errors.push({type:"out_of_range", field:"EchoTime", value: h.EchoTime, message: "EchoTime should be between 5 - 30000"});
+    
+    //For 3T specific parameters
+    if(h.MagneticFieldStrength == 3){
+        //Minimum of TR is 5 and maximum is 30,000. 
+        if(h.RepetitionTime < 5 || h.RepetitionTime > 30000) {
+            errors.push({type:"out_of_range", field:"RepetitionTime", value: h.RepetitionTime, message: "RepetitionTime should be between 5 - 30000"});
+        }
+        //Minimum of TE is 2 and maximum is 400.
+        if(h.EchoTime < 2 || h.EchoTime > 400) {
+            errors.push({type:"out_of_range", field:"EchoTime", value: h.EchoTime, message: "EchoTime should be between 5 - 30000"});
+        }
     }
     
     //DEBUG mock up some random error message
