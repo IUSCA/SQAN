@@ -177,6 +177,7 @@ function convertTypes(h) {
 
     var float_fields = [
         "EchoTime",
+        "RepetitionTime",
         "ImageOrientationPatient",
         "ImagePositionPatient",
         "ImagingFrequency",
@@ -194,7 +195,6 @@ function convertTypes(h) {
         if(h[f] === undefined) return;
         h[f] = convertToFloat(h[f], f);
     });
-
 }
 
 function splitFields(h) {

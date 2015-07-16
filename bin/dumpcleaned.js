@@ -40,16 +40,18 @@ conn.on('ready', function () {
                 //var patient_name = h.PatientName;
                 //var study_desc = h.StudyDescription;
 
+                /*
                 //let group by the date of study timestamp (TODO - should I use other timestamps?)
                 var study_time = new Date(h.qc_StudyTimestamp);
                 var path = config.incoming_headers+"/"+study_time.yyyymmdd();
-
 
                 //make sure directory exists
                 if(!fs.existsSync(path)) {
                     fs.mkdirSync(path);
                 }
-                path += "/"+study_id;
+                */
+
+                path = config.cleaned_headers+"/"+study_id;
                 console.log(path);
                 if(!fs.existsSync(path)) {
                     fs.mkdirSync(path);
