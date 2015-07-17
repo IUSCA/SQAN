@@ -121,25 +121,27 @@ function analyze_series(seriesdir, done) {
 
             //do parameter checks
             qc_instance.check(h, function(instance_errors, instance_warnings) {
-                //do template checks
-                getTemplate(h, function(template, newtemplatename) {
-                    if(newtemplatename) {
-                        instance_warnings.push({type:"new_template",message: "New StudyDescription "+newtemplatename+" - using this instance as template"});
-                    }
-                    
-                    //compare values
-                    for(var tk in template) {
-                        var tv = template[tk];
-                        if(h[tk] === undefined) {
-                            instance_errors.push({type:"missing", field:tk, message: "Field "+tk+" is missing"});
-                        } else if(h[tk] != tv) { //TODO - should I do deep comparison?
-                            instance_errors.push({type:"invalid_value", field:tk, value: h[tk], message: "Field "+tk+" should be "+tv});
+                instances[instid] = {errors: instance_errors, warnings: instance_warnings};
+                if(h.Modality == "CT" || h.Modality == "PT") {
+                    //do template checks
+                    getTemplate(h, function(template, newtemplatename) {
+                        if(newtemplatename) {
+                            instance_warnings.push({type:"new_template",message: "New StudyDescription "+newtemplatename+" - using this instance as template"});
                         }
-                    }
-
-                    instances[instid] = {errors: instance_errors, warnings: instance_warnings};
+                        //compare values
+                        for(var tk in template) {
+                            var tv = template[tk];
+                            if(h[tk] === undefined) {
+                                instance_errors.push({type:"missing", field:tk, message: "Field "+tk+" is missing"});
+                            } else if(h[tk] != tv) { //TODO - should I do deep comparison?
+                                instance_errors.push({type:"invalid_value", field:tk, value: h[tk], message: "Field "+tk+" should be "+tv});
+                            }
+                        }
+                        next();
+                    });
+                } else {
                     next();
-                });
+                }
             });
         }, function() {
             //summerize aggregate

@@ -52,16 +52,15 @@ conn.on('ready', function () {
                 */
 
                 path = config.cleaned_headers+"/"+study_id;
-                console.log(path);
+                //console.log(path);
                 if(!fs.existsSync(path)) {
                     fs.mkdirSync(path);
                 }
                 path += "/"+series_id;
-                console.log(path);
+                //console.log(path);
                 if(!fs.existsSync(path)) {
                     fs.mkdirSync(path);
                 }
-
                 console.log(path+"/"+inst_id);
                 fs.writeFileSync(path+"/"+inst_id, JSON.stringify(h, null, 4));
 

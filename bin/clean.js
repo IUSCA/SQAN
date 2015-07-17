@@ -34,7 +34,7 @@ conn.on('ready', function () {
                         console.log("failed to clean record");
                         console.dir(h); 
                         console.log(ex, ex.stack);
-                        conn.publish('cleaning_failed', h);
+                        conn.publish('_cleaning_failed', h);
 
                         //DEBUG - stop clearning
                         process.exit(1);

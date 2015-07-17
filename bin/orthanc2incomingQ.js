@@ -1,8 +1,10 @@
 #!/usr/bin/node
 
-# This script exits once it loada all orthanc images, so cron has to keep running it over and over
-# It might be a good idea to let cron restart the script, but to be consistent with other script
-# I think I should make it run continously
+/*
+This script exits once it loada all orthanc images, so cron has to keep running it over and over
+It might be a good idea to let cron restart the script, but to be consistent with other script
+I think I should make it run continously
+*/
 
 var request = require("request")
 var async = require('async');

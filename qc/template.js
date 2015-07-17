@@ -2,10 +2,12 @@
 
 //compose template name to use for each instance
 exports.getName = function(h) {
+    //return h.StudyDescription;
+    
     //Sundar mentions that currently StudyDescription are not unique.
     //Until we have more unique StudyDescription, we will be using following formula as "StudyDescription"
-    return h.PatientName+"."+h.Modality+"."+h.ManufacturerModelName;
-    //return h.StudyDescription;
+    var iibisid = h.PatientName.split("^")[0];
+    return iibisid+"."+h.Modality+"."+h.ManufacturerModelName;
 }
 
 //don't check these fields for template check
@@ -41,4 +43,7 @@ exports.ignore = [
     "DateOfLastCalibration",
 
     "Unknown Tag & Data",
+    "qc_AcquisitionTimestamp",
+    "qc_ContentTimestamp",
+    "qc_InstanceCreationTimestamp",
 ];
