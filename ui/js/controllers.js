@@ -62,7 +62,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $cookies, $location) {
             $scope.loading = false;
         });
     }
-    $scope.loadresults(10);
+    $scope.loadresults(3);
     /*
     $scope.open_instance = function(date, studyid, seriesid, instid) {
         $location.path('/instance/'+date+'/'+studyid+'/'+seriesid+'/'+instid);

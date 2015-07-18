@@ -32,32 +32,35 @@ div.instance_error {
   background-color: red;
 }
 div.instance.instance_active {
-  -animation: bigger .2s;
-  width: 28px;
-  height: 28px;
+  -animation: bigger .5s;
+  -webkit-animation: bigger .5s;
+  /*width: 28px;
+height: 28px;
+*/
+  background-color: #337ab7;
 }
 @keyframes bigger {
+  /*
+from {width: 14px;height: 14px;}
+to {width: 28px; height: 28px; }
+*/
   from {
-    width: 14px;
-    height: 14px;
+    background-color: inherit;
   }
   to {
-    width: 28px;
-    height: 28px;
+    background-color: #337ab7;
   }
 }
 .glyphicon-refresh-animate {
   -animation: spin .7s infinite linear;
-  -webkit-animation: spin2 .7s infinite linear;
+  -webkit-animation: spin .7s infinite linear;
 }
+/*
 @-webkit-keyframes spin2 {
-  from {
-    -webkit-transform: rotate(0deg);
-  }
-  to {
-    -webkit-transform: rotate(360deg);
-  }
+    from { -webkit-transform: rotate(0deg);}
+    to { -webkit-transform: rotate(360deg);}
 }
+*/
 @keyframes spin {
   from {
     transform: scale(1) rotate(0deg);
@@ -70,13 +73,53 @@ div.instance.instance_active {
   maring-right: 2px;
   border-left: 4px solid #ccc;
   padding-left: 10px;
+  /*
+-animation: expand .7s;
+-webkit-animation: expand .7s;
+height: 100px;
+*/
 }
-/* The starting CSS styles for the enter animation */
-.instance-detail.ng-enter {
-  transition: 0.5s linear all;
-  opacity: 0;
+/*
+@keyframes expand {
+    from { height: 0; }
+    to { height: 100px; }
 }
-/* The finishing CSS styles for the enter animation */
-.instance-detail.ng-enter.ng-enter-active {
-  opacity: 1;
+*/
+/* when hiding the picture */
+/*
+.instance-detail.ng-hide-add         { animation:0.5s lightSpeedOut ease; }
+*/
+/* when showing the picture */
+.instance-detail.ng-hide-remove {
+  animation: 0.5s flipInX ease;
+}
+@keyframes flipInX {
+  0% {
+    transform: perspective(400px) rotate3d(1, 0, 0, 90deg);
+    transition-timing-function: ease-in;
+    opacity: 0;
+  }
+  40% {
+    transform: perspective(400px) rotate3d(1, 0, 0, -20deg);
+    transition-timing-function: ease-in;
+  }
+  60% {
+    transform: perspective(400px) rotate3d(1, 0, 0, 10deg);
+    opacity: 1;
+  }
+  80% {
+    transform: perspective(400px) rotate3d(1, 0, 0, -5deg);
+  }
+  100% {
+    transform: perspective(400px);
+  }
+}
+@keyframes lightSpeedOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(100%, 0, 0) skewX(30deg);
+    opacity: 0;
+  }
 }
