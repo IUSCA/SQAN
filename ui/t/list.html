@@ -15,9 +15,9 @@
                 <a href="{{series._kibana_url}}" target="_blank">{{series.series_desc}}</a>
                 <small>
                     SeriesID: {{seriesid}} | {{series._instance_count}} Instances |
-                    <span ng-class="{'errorcount': series.error_count != 0}">{{series._inst_error_count}} Errors</span>
+                    <span ng-class="{'errorcount': series._inst_error_count != 0}">{{series._inst_error_count}} Errors</span>
                     |
-                    <span ng-class="{'warningcount': series.warning_count != 0}">{{series._inst_warning_count}} Warnings</span>
+                    <span ng-class="{'warningcount': series._inst_warning_count != 0}">{{series._inst_warning_count}} Warnings</span>
                 </small>
             </h4>
             <div ng-repeat="(instid, instance) in series.instances" class="instance" 
@@ -28,8 +28,8 @@
                 }" 
                 title="{{instid}}" ng-click="load_instance(study.studyid, seriesid, instid)">
             </div>
-            <div ng-show="show_seriesid == seriesid" class="instance-detail well">
-                <h4>{{active_instid}}</h4>
+            <div ng-show="show_seriesid == seriesid" class="instance-detail">
+                <b>SOPInstanceUID: {{active_instid}}</b>
                 <p ng-repeat="error in instance_detail.errors" class="alert alert-danger">
                     <span class="sr-only">Error:</span> 
                     <b>{{error.type}}</b> {{error.message}}
@@ -39,7 +39,6 @@
                     </blockquote>
                     -->
                 </p>
-
                 <p ng-repeat="warning in instance_detail.warnings" class="alert alert-warning">
                     <span class="sr-only">Warning:</span> 
                     <span class="tag">{{warning.type}}</span> {{warning.message}}
@@ -49,6 +48,7 @@
                     </blockquote>
                     -->
                 </p>
+                <p class="text-muted" ng-show="instance_detail.errors.length == 0 && instance_detail.warnings.length == 0">No issues found</p>
             </div>
             <!--
             <div ng-repeat="(instid, errors) in series.errors" class="alert alert-danger" role="alert">

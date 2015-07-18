@@ -31,9 +31,20 @@ div.instance_warning {
 div.instance_error {
   background-color: red;
 }
-div.instance_active {
+div.instance.instance_active {
+  -animation: bigger .2s;
   width: 28px;
   height: 28px;
+}
+@keyframes bigger {
+  from {
+    width: 14px;
+    height: 14px;
+  }
+  to {
+    width: 28px;
+    height: 28px;
+  }
 }
 .glyphicon-refresh-animate {
   -animation: spin .7s infinite linear;
@@ -54,6 +65,11 @@ div.instance_active {
   to {
     transform: scale(1) rotate(360deg);
   }
+}
+.instance-detail {
+  maring-right: 2px;
+  border-left: 4px solid #ccc;
+  padding-left: 10px;
 }
 /* The starting CSS styles for the enter animation */
 .instance-detail.ng-enter {

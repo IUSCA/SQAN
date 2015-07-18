@@ -9,6 +9,7 @@
 app.controller('ListController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$cookies', '$location',
 function($scope, appconf, toaster, $http, jwtHelper, $cookies, $location) {
 
+    /* done via app.js
     //make sure we have good jwt
     var jwt = localStorage.getItem(appconf.jwt_id);
     var needlogin = false;
@@ -24,9 +25,10 @@ function($scope, appconf, toaster, $http, jwtHelper, $cookies, $location) {
 
     if(needlogin) {
         console.log("user doesn't have valid jwt token - redirecting to login page");
-        document.location = appconf.url.loginurl+"?redirect="+document.location;
+        document.location = appconf.url.login+"?redirect="+encodeURIComponent(document.location);
         return;
     }
+    */
 
     $scope.title = appconf.title;
     $scope.studies = [];

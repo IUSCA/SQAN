@@ -48,14 +48,13 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         if(next.requiresLogin) {
             var jwt = localStorage.getItem(appconf.jwt_id);
             if(jwt == null || jwtHelper.isTokenExpired(jwt)) {
-                localStorage.setItem('post_auth_redirect', next.originalPath);
-                document.location = appconf.url.loginurl+"?redirect="+document.location;
+                //localStorage.setItem('post_auth_redirect', next.originalPath);
+                document.location = appconf.url.login+"?redirect="+encodeURIComponent(document.location);
                 event.preventDefault();
             }
         }
     });
 }]);
-
 
 app.config(['appconf', '$httpProvider', 'jwtInterceptorProvider', 
 function(appconf, $httpProvider, jwtInterceptorProvider) {
@@ -71,7 +70,7 @@ function(appconf, $httpProvider, jwtInterceptorProvider) {
         var ttl = expdate - Date.now();
         if(ttl < 0) {
             //expired already.. redirect to login form
-            document.location = appconf.url.loginurl+"?redirect="+document.location;
+            document.location = appconf.url.login+"?redirect="+encodeURIComponent(document.location);
         } else if(ttl < 3600*1000) {
             //jwt expring in less than an hour! refresh!
             //console.dir(config);
