@@ -14,12 +14,11 @@ var amqp = require('amqp');
 var config = require('../config/config.js').config;
 //var mongoose = require('mongoose');
 
-var orthanc_url = 'https://test:test@soichi7.ppa.iu.edu/orthanc';
 var conn = amqp.createConnection(config.amqp);
 
 function process(since, limit, ex) {
-    console.log("downloading changed since seqid:"+since+" from url:"+orthanc_url+'/changes?since='+since+'&limit='+limit);
-    request({ url: orthanc_url+'/changes?since='+since+'&limit='+limit, json: true }, handle_response);
+    console.log("downloading changed since seqid:"+since+" from url:"+config.orthanc_url+'/changes?since='+since+'&limit='+limit);
+    request({ url: config.orthanc_url+'/changes?since='+since+'&limit='+limit, json: true }, handle_response);
 
     function handle_response(error, response, json) {
         if (!error && response.statusCode === 200) {
@@ -71,7 +70,7 @@ function process_instance(change, next, ex) {
       ResourceType: 'Instance',
       Seq: 110 }
     */
-    var tagurl = orthanc_url+change.Path+'/simplified-tags';
+    var tagurl = config.orthanc_url+change.Path+'/simplified-tags';
     console.log("loading (seq:"+change.Seq+"):"+tagurl);
     request({ url: tagurl, json: true }, function(err, res, json){
         if(err) {
@@ -85,7 +84,7 @@ function process_instance(change, next, ex) {
             fs.writeFile(config.incoming_headers+"/"+json.SOPInstanceUID+".json", JSON.stringify(json,null,4), function(err) {
                 if(err) return next(err);
                 //remove the instance from orthanc
-                request.del(orthanc_url+change.Path).on('response', function(res) {
+                request.del(config.orthanc_url+change.Path).on('response', function(res) {
                     //console.dir(res.statusCode);
                     //console.log("removed instance from orthanc.");
                     next();

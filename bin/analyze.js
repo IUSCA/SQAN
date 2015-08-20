@@ -122,7 +122,10 @@ function analyze_series(seriesdir, done) {
             //do parameter checks
             qc_instance.check(h, function(instance_errors, instance_warnings) {
                 instances[instid] = {errors: instance_errors, warnings: instance_warnings};
+    
+                //TODO Sundar says this is not a correct way to determine if we need to do template check or not.
                 if(h.Modality == "CT" || h.Modality == "PT") {
+                    
                     //do template checks
                     getTemplate(h, function(template, newtemplatename) {
                         if(newtemplatename) {

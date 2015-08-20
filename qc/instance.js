@@ -18,7 +18,6 @@ exports.check = function(h, next) {
         }
     }
     
-    /*
     //DEBUG mock up some random error message
     if(h.SOPInstanceUID.indexOf("004") != -1) {
         errors.push({type:"out_of_range", field:"abc", value: 123, message: "abc should be within 300 - 400"});
@@ -39,7 +38,6 @@ exports.check = function(h, next) {
     if(h.SOPInstanceUID.indexOf("009") != -1) {
         warnings.push({type:"random warning 3", field:"ghj", value: null, message: "some value looks odd."});
     }
-    */
 
     next(errors, warnings);
 }

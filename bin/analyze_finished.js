@@ -26,7 +26,8 @@ fs.readdir(config.cleaned_headers, function(err, files) {
                         var stat = fs.statSync(config.cleaned_headers+"/"+studyid+"/"+seriesid+"/"+instid);
                         //console.log("        "+instid+" "+stat.mtime);
                         var age = Date.now() - stat.mtime.getTime();
-                        if(age < 3600*1000) {
+                        //if(age < 3600*1000) {
+                        if(age < 5*1000) {
                             console.log("  instid"+instid+" is young(age:"+age+") .. skipping this study");
                             return next_study();
                         }
