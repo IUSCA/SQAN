@@ -2,17 +2,22 @@
 
 //post headers to amqp
 
-var amqp = require('amqp');
+//os
 var fs = require('fs');
+
+//contrib
+var amqp = require('amqp');
 var concat = require('concat-stream');
 var split = require('split');
 var throttle = require('stream-throttle');
 
-var config = require('../../config/config').config;
+//mine
+var config = require('../config/config');
+
 var conn = amqp.createConnection(config.amqp);
 
 conn.on('ready', function () {
-    conn.exchange('incoming', {autoDelete: false, durable: true, type: 'topic'}, function(ex) {
+    conn.exchange(config.incoming.ex, {autoDelete: false, durable: true, type: 'topic'}, function(ex) {
         process.stdin.pipe(new throttle.Throttle({rate: 40000})).pipe(split('\n')).on('data', function(filename) {
             if(!filename) {
                 return conn.disconnect();
@@ -25,7 +30,7 @@ conn.on('ready', function () {
             
             //unless I use type:'direct', confirm:'true' and publish it with deliveryMode:2, 
             //I don't get callback called
-            ex.publish("test", msg); 
+            ex.publish("reindex", msg); 
         });
     });
 });
