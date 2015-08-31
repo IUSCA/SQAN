@@ -6,13 +6,17 @@ It might be a good idea to let cron restart the script, but to be consistent wit
 I think I should make it run continously
 */
 
-var request = require("request")
-var async = require('async');
+//node
 var fs = require('fs');
-var amqp = require('amqp');
+var request = require("request")
 
-var config = require('../config/config.js');
+//contrib
+var async = require('async');
+var amqp = require('amqp');
 //var mongoose = require('mongoose');
+
+//mine
+var config = require('../config/config.js');
 
 var conn = amqp.createConnection(config.amqp);
 

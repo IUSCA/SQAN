@@ -5,3 +5,4 @@ nohup_*.out
 ui/bower_components
 bin/barn
 log
+debug

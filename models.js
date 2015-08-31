@@ -31,11 +31,15 @@ exports.Template = mongoose.model('Template', templateSchema);;
 
 var studySchema = mongoose.Schema({
 
-    IIBISID: String,
+    //Research PRoject
+    IIBISID: String, //like.. 2016-00001^100075
 
-    Modality: String, 
+    //Modality
+    Modality: String,  //like.. PT
+    StationName: String,  //like.. CT71271
 
-    RadioTracer: String, //only used for PT / CT
+    //Radio Tracer - only used for PT / CT
+    Radiopharmaceutical: String, //like DOTA NOC
 
     StudyInstanceUID: String,
 
@@ -49,12 +53,12 @@ var studySchema = mongoose.Schema({
     template_id: mongoose.Schema.Types.ObjectId,
 
     //list of patients for this study
-    PatientIDs: [String],
+    //PatientIDs: [String],
 
     //list of series for this study
     SeriesInstanceUID: [String]
-    
 });
+
 //function for each instances
 studySchema.methods.speak = function() {
     //sample..
