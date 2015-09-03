@@ -49,7 +49,7 @@ function process(since, limit, ex) {
                     if(done) {
                         fs.writeFile(config.orthanc.last_seq, last.toString(), function(err) {
                             if(err) throw err;
-                            console.log("disconnecting amqp");
+                            //console.log("disconnecting amqp");
                             conn.disconnect();
                             //mongoose.disconnect();
                         });
@@ -123,7 +123,8 @@ conn.on('ready', function () {
                 //I don't realyl need to do this anymore since I am removing data as I receive it
                 fs.readFile(config.orthanc.last_seq, function(err, data) {
                     var lastseq = parseInt(data);
-                    console.log("Process start at "+Date.now()+ " from lastseq:"+lastseq);
+                    var now = new Date();
+                    console.log("Process start at "+now.toString()+ " from lastseq:"+lastseq);
                     process(lastseq, 50, ex); //process 50 records at a time
                 });
             });

@@ -44,6 +44,13 @@ exports.check = function(h, next) {
 
 //function to run during clean up
 function maskFields(h) {
+
+    //IRB requirement to make older patient (less number of them) to be more difficult to identify.
+    if(h.PatientAge && h.PatientAge > 89) {
+        h.PatientAge = 89; //sundar wants to do this instead of removing it.
+        h.qc_PatientAgeMasked = true;
+    }
+    
     //soichi's arbitrary decision to remove some large fields containing relationship to other images 
     //TODO - maybe store this relationship in the DB?
     if(h.SourceImageSequence) h.SourceImageSequence = "(masked)";
@@ -261,6 +268,46 @@ function convertToArray(v) {
     return v.split('\\');
 }
 */
+
+//parse important fields like iibisid, subject, and if record is a flag
+exports.parseMeta = function(h) {
+    //default
+    var meta = {
+        iibisid: null, 
+        subject: null,
+        template: false,
+    };
+
+    if(h.PatientName) {
+        var ts = h.PatientName.split("^");
+        meta.iibisid = ts[0];
+        meta.subject = ts[1]; //subject will be undefined if there is only 1 token.
+    }
+    if(h.OtherPatientIDs &&  h.OtherPatientIDs == "TEMPLATE") {
+        meta.template = true;
+    }
+    return meta;
+}
+
+//construct ES index to store
+exports.composeESIndex = function(h) {
+    var id = "";
+
+    //concat various index fields (defined by Sundar / Dr. Hutchins)
+    //var index_fields = [h.Modality, h.ManufacturerModelName, h.StationName, h.SoftwareVersions];
+    var index_fields = ["Modality", "ManufacturerModelName", "StationName", "SoftwareVersions"];
+    index_fields.forEach(function(field) {
+        var value = h[field];
+        if(!value) throw new Error("missing required esindex fields:"+field);
+        if(id != "") id += ".";
+        //make es index name friendly
+        value = value.replace(/\W+/g,'_'); //replace all-non-alphanumeric chars to _
+        value = value.toLowerCase();
+        id += value;
+    });
+
+    return id;
+}
 
 //function to run during clean up
 exports.clean = function(h) {

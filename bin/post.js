@@ -30,6 +30,7 @@ conn.on('ready', function () {
             
             //unless I use type:'direct', confirm:'true' and publish it with deliveryMode:2, 
             //I don't get callback called
+            console.dir(msg);
             ex.publish("reindex", msg); 
         });
     });
