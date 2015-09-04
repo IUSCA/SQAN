@@ -63,7 +63,7 @@ function convertTypes(h) {
     //convert values that contain backslash into array of values 
     for(var key in h) {
         var v = h[key];
-        if(v != null && v.indexOf("\\") !== -1) {
+        if(v != null && v.indexOf && v.indexOf("\\") !== -1) {
             h[key] = v.split('\\');
         }
     }

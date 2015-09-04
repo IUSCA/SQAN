@@ -52,50 +52,150 @@ models.init(function(err) {
 
 //here is the main business logic
 function handle_message(h, msg_h, info, ack) {
-    //pull some very important information first
-    var pn = instance.parseMeta(h);
-    h.qc_iibisid = pn.iibisid;
-    h.qc_subject = pn.subject;
+    
+    var study = null;
+    var series = null;
+    var aq = null;
 
-    //then, first things first, store a copy of raw input
-    var path = config.cleaner.raw_headers+"/"+h.qc_iibisid;
-    logger.info("storing header to "+path);
-    write_to_disk(path, h, function(err) {
-        if(err) throw err; //will crash app
-        logger.info("wrote to raw_headers");
-        
-        //cb to call after handling instance / template
-        //store on failed_header queue if something goes wrong
-        function finish_handler(err) {
-            if(err) {
-                logger.error("caught exception while handling:"+path);
-                logger.error(err);
-               // if(err.stack) logger.error(err.stack);
-                conn.publish(config.cleaner.failed_q, h); //publishing to default exchange can't be confirmed?
-                fs.writeFile(config.cleaner.failed_headers+"/"+h.SOPInstanceUID+".json", JSON.stringify(h,null,4), function(err) {
-                    if(err) throw err; //will crash app
-                    ack.acknowledge(); 
-                }); 
-            } else {
-                //all good then.
-                ack.acknowledge();
+    async.series([
+
+        function(next) {
+            try {
+                //parse some special fields
+                var pn = instance.parseMeta(h);
+                h.qc_iibisid = pn.iibisid;
+                h.qc_subject = pn.subject;
+                h.qc_istemplate = pn.template;
+
+                //construct esindex
+                var esindex = instance.composeESIndex(h);
+                logger.info(h.qc_iibisid+" esindex:"+esindex+" "+h.SOPInstanceUID);
+                h.qc_esindex = esindex;
+
+                next(null);
+            } catch(err) {
+                next(err);
             }
+        },
+
+        function(next) {
+            //store a copy of raw input
+            var path = config.cleaner.raw_headers+"/"+h.qc_iibisid;
+            logger.debug("storing header to "+path);
+            write_to_disk(path, h, function(err) {
+                if(err) throw err; //let's kill the app - to alert the operator of this critical issue
+                logger.debug("wrote to raw_headers");
+                next(null);
+            });
+        },
+
+        function(next) {
+            try {       
+                instance.clean(h);
+                next(null);
+            } catch(err) {
+                next(err);
+            }
+        },
+
+        function(next) {
+            if(h.qc_istemplate) return next(null); //if not template then skip
+            //store in cleaned_instances directory
+            var path = config.cleaner.cleaned_instances+"/"+h.qc_iibisid;
+            logger.debug("storing instance headers to "+path);
+            write_to_disk(path, h, function(err) {
+                if(err) logger.error(err); //continue
+                next(null);
+            });
+        },
+
+        function(next) {
+            if(!h.qc_istemplate) return next(null); //if template then skip
+            //store in cleaned_instances directory
+            var path = config.cleaner.cleaned_templates;//+"/"+h.qc_iibisid;
+            logger.debug("storing template headers to "+path);
+            write_to_disk(path, h, function(err) {
+                if(err) logger.error(err); //continue
+                next(null);
+            });
+        },
+
+        function(next) {
+            if(h.qc_istemplate) return next(null); //if template then don't send to es
+
+            logger.debug("publishing to cleaned_ex");
+            cleaned_ex.publish('', h, {}, function(err) {
+                next(err);
+            });
+        },
+
+        function(next) {
+            //make sure we know about this study
+            findOrCreate_study(h, function(err, _study) {
+                if(err) return next(err);
+                
+                /*
+                //add series id to study
+                if(study.SeriesInstanceUID.indexOf(h.SeriesInstanceUID) === -1) {
+                    study.SeriesInstanceUID.push(h.SeriesInstanceUID);
+                    study.save(cb);
+                } else cb(null);
+                */
+                study = _study;
+                next(null);
+            });
+        },
+
+        function(next) {
+            //then series under it
+            findOrCreate_series(study, h, function(err, _series) {
+                if(err) return next(err);
+                series = _series;
+                next(null);
+            });
+        },
+
+        function(next) {
+            //then store the instance
+            findOrCreate_acquisition(study, series, h, function(err, _aq) {
+                if(err) return next(err);
+                aq = _aq;
+                next(null);
+            });
+        },
+
+        function(next) {
+            if(h.qc_istemplate) return next(null); //if template then skip
+            
+            //store the instance
+            findOrCreate_instance(study, series, aq, h, function(err, instance) {
+                if(err) return next(err);
+                next(null);
+            });
+        },
+
+        //if it's template, update template for this study 
+        function(next) {
+            if(!h.qc_istemplate) return next(null); //if not template then skip
+
+            //add to template collection
+            findOrCreate_template(study, h, function(err, template) {
+                if(err) return next(err);
+                next(null);
+            });
         }
-
-        try {
-            var esindex = instance.composeESIndex(h);
-            logger.info(h.qc_iibisid+" esindex:"+esindex+" "+h.SOPInstanceUID);
-            h.qc_esindex = esindex;
-
-            instance.clean(h);
-
-            if(pn.template) {
-                handle_template(h, finish_handler);
-            } else {
-                handle_instance(h, finish_handler);
-            }
-        } catch(err) {
-            finish_handler(err);
+    ], function(err) {
+        if(err) {
+            logger.error(err);
+            conn.publish(config.cleaner.failed_q, h); //publishing to default exchange can't be confirmed?
+            fs.writeFile(config.cleaner.failed_headers+"/"+h.SOPInstanceUID+".json", JSON.stringify(h,null,4), function(err) {
+                if(err) throw err; //will crash app
+                ack.acknowledge(); 
+            }); 
+        } else {
+            //all good then.
+            //logger.debug("acking");
+            ack.acknowledge();
         }
     });
 }
@@ -107,105 +207,14 @@ function findOrCreate_template(study, h, cb) {
     models.Template.findOne(keys, function(err, template) {
         if(err) return cb(err);
         if(!template) {
+            logger.info("received a new template -- SOPInstanceUID:" + h.SOPInstanceUID);
+
             template = new models.Template(keys);
             template.study_id = study._id;
             template.headers = h;
             template.save(cb);
-
-            logger.info("received a new template -- SOPInstanceUID:" + h.SOPInstanceUID);
-
         } else cb(null, template); //template re-sent?
     });
-}
-
-function handle_template(h, cb) {
-    var path = config.cleaner.cleaned_templates;
-    write_to_disk(path, h, function(err) {
-        if(err) return cb(err);
-
-        //add to db
-        findOrCreate_study(h, function(err, study) {
-            if(err) return cb(err);
-            findOrCreate_template(study, h, cb);
-        });
-    });
-}
-
-function handle_instance(h, cb) {
-    async.waterfall([
-        function(next) {
-            //publish to es queue
-            cleaned_ex.publish('', h, {}, function(err) {
-                next(err);
-            });
-        },
-
-        function(next) {
-            //start by making sure we know about this study
-            findOrCreate_study(h, function(err, study) {
-                if(err) return next(err);
-                
-                /*
-                //add series id to study
-                if(study.SeriesInstanceUID.indexOf(h.SeriesInstanceUID) === -1) {
-                    study.SeriesInstanceUID.push(h.SeriesInstanceUID);
-                    study.save(cb);
-                } else cb(null);
-                */
-                next(null, study);
-            });
-        },
-
-        function(study, next) {
-            //then series under it
-            findOrCreate_series(study, h, function(err, series) {
-                if(err) return next(err);
-                next(null, study, series);
-            });
-        },
-
-        function(study, series, next) {
-            //then store the instance
-            findOrCreate_acquisition(study, series, h, function(err, aq) {
-                if(err) return next(err);
-                next(null, study, series, aq); 
-            });
-        },
-
-        function(study, series, aq, next) {
-            //finally store the instance
-            findOrCreate_instance(study, series, aq, h, function(err, instance) {
-                if(err) return next(err);
-                
-            });
-        },
-    ], function(err, result) {
-        if(err) logger.error(err); //continue
-    }); 
-
-    /*
-    //publish to es queue
-    cleaned_ex.publish('', h, {}, function(err) {
-        if(err) return cb(err);
-        
-        //also write cleaned data to file (shouldn't be needed, but just in case)
-        var cleanpath = config.cleaner.cleaned_headers+"/"+h.qc_iibisid;
-        write_to_disk(cleanpath, h, function(err) {
-            if(err) return cb(err);
-
-            //then store series under study
-            findOrCreate_study(h, function(err, study) {
-                if(err) return cb(err);
-                
-                //add series id to study
-                if(study.SeriesInstanceUID.indexOf(h.SeriesInstanceUID) === -1) {
-                    study.SeriesInstanceUID.push(h.SeriesInstanceUID);
-                    study.save(cb);
-                } else cb(null);
-            });
-        });
-    });
-    */
 }
 
 function write_to_disk(dir, h, cb) {
