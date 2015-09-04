@@ -18,6 +18,8 @@ exports.init = function(cb) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 var templateSchema = mongoose.Schema({
+    SOPInstanceUID: {type: String, index: true}, 
+    
     //the actual template headers
     headers: mongoose.Schema.Types.Mixed, 
 });
@@ -36,6 +38,7 @@ var studySchema = mongoose.Schema({
 
     StudyInstanceUID: {type: String, index: true}, //ID stored in DICOM header
 
+    /*
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // let's store some key fields (TODO - should these be indexed?)
 
@@ -48,6 +51,7 @@ var studySchema = mongoose.Schema({
 
     //Radio Tracer - only used for PT / CT
     Radiopharmaceutical: String, //like DOTA NOC
+    */
     
     //list of series for this study
     SeriesInstanceUID: [String],

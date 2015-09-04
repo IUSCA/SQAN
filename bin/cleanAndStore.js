@@ -86,6 +86,8 @@ function handle_message(h, msg_h, info, ack) {
             logger.info(h.qc_iibisid+" esindex:"+esindex+" "+h.SOPInstanceUID);
             h.qc_esindex = esindex;
 
+            instance.clean(h);
+
             if(pn.template) {
                 handle_template(h, finish_handler);
             } else {
@@ -97,23 +99,43 @@ function handle_message(h, msg_h, info, ack) {
     });
 }
 
-//TODO - if SOPInstanceUID is unique, then I should first look for a template with that ID
-//and if it exist, ignore it (warning?)
+function find_template(h, cb) {
+    var keys = {
+        SOPInstanceUID: h.SOPInstanceUID,
+    };
+    models.Template.findOne(keys, function(err, template) {
+        if(err) return cb(err);
+        if(!template) {
+            logger.info("received a new template");
+            logger.info(keys);
+            keys.headers = h;
+            template = new models.Template(keys);
+            template.save(function(err) {
+                if(err) return cb(err);
+                cb(null, template);
+            });
+        } else cb(null, template);
+    });
+}
+
 function handle_template(h, cb) {
     logger.info("received template");
-    var template = new models.Template({headers: h});
-    template.save(function(err) {
-        find_study(h, function(err, study) {
-            if(err) return cb(err);
-            study.template_ids.push(template._id);
-            study.save(cb);    
+    var path = config.cleaner.cleaned_templates;
+    write_to_disk(path, h, function(err) {
+        if(err) return cb(err);
+        find_template(h, function(err, template) {
+            find_study(h, function(err, study) {
+                if(err) return cb(err);
+                if(study.template_ids.indexOf(template._id) === -1) {
+                    study.template_ids.push(template._id);
+                }
+                study.save(cb);    
+            });
         });
     });
 }
 
 function handle_instance(h, cb) {
-    //now clean it
-    instance.clean(h);
 
     //publish to es queue
     cleaned_ex.publish('', h, {}, function(err) {
@@ -144,16 +166,20 @@ function write_to_disk(dir, h, cb) {
 
 function find_study(h, cb) {
     var keys = {
+        StudyInstanceUID: h.StudyInstanceUID,
+        /*
+        //these are just 
         IIBISID: h.qc_iibisid,
         Modality: h.Modality,
         StationName: h.StationName,
         Radiopharmaceutical: h.Radiopharmaceutical, //only set for Modality: PT/CT
-        StudyInstanceUID: h.StudyInstanceUID,
+        */
     };
     models.Study.findOne(keys, function(err, study) {
         if(err) return cb(err);
         if(!study) {
-            //create a new study
+            logger.info("received a new study");
+            logger.info(keys);
             study = new models.Study(keys);
         }
         cb(null, study);
