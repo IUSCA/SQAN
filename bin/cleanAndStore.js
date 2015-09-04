@@ -6,6 +6,7 @@ var fs = require('fs');
 //contrib
 var amqp = require('amqp');
 var winston = require('winston');
+var async = require('async');
 
 //mine
 var config = require('../config/config');
@@ -99,44 +100,90 @@ function handle_message(h, msg_h, info, ack) {
     });
 }
 
-function find_template(h, cb) {
+function findOrCreate_template(study, h, cb) {
     var keys = {
         SOPInstanceUID: h.SOPInstanceUID,
     };
     models.Template.findOne(keys, function(err, template) {
         if(err) return cb(err);
         if(!template) {
-            logger.info("received a new template");
-            logger.info(keys);
-            keys.headers = h;
             template = new models.Template(keys);
-            template.save(function(err) {
-                if(err) return cb(err);
-                cb(null, template);
-            });
-        } else cb(null, template);
+            template.study_id = study._id;
+            template.headers = h;
+            template.save(cb);
+
+            logger.info("received a new template -- SOPInstanceUID:" + h.SOPInstanceUID);
+
+        } else cb(null, template); //template re-sent?
     });
 }
 
 function handle_template(h, cb) {
-    logger.info("received template");
     var path = config.cleaner.cleaned_templates;
     write_to_disk(path, h, function(err) {
         if(err) return cb(err);
-        find_template(h, function(err, template) {
-            find_study(h, function(err, study) {
-                if(err) return cb(err);
-                if(study.template_ids.indexOf(template._id) === -1) {
-                    study.template_ids.push(template._id);
-                }
-                study.save(cb);    
-            });
+
+        //add to db
+        findOrCreate_study(h, function(err, study) {
+            if(err) return cb(err);
+            findOrCreate_template(study, h, cb);
         });
     });
 }
 
 function handle_instance(h, cb) {
+    async.waterfall([
+        function(next) {
+            //publish to es queue
+            cleaned_ex.publish('', h, {}, function(err) {
+                next(err);
+            });
+        },
 
+        function(next) {
+            //start by making sure we know about this study
+            findOrCreate_study(h, function(err, study) {
+                if(err) return next(err);
+                
+                /*
+                //add series id to study
+                if(study.SeriesInstanceUID.indexOf(h.SeriesInstanceUID) === -1) {
+                    study.SeriesInstanceUID.push(h.SeriesInstanceUID);
+                    study.save(cb);
+                } else cb(null);
+                */
+                next(null, study);
+            });
+        },
+
+        function(study, next) {
+            //then series under it
+            findOrCreate_series(study, h, function(err, series) {
+                if(err) return next(err);
+                next(null, study, series);
+            });
+        },
+
+        function(study, series, next) {
+            //then store the instance
+            findOrCreate_acquisition(study, series, h, function(err, aq) {
+                if(err) return next(err);
+                next(null, study, series, aq); 
+            });
+        },
+
+        function(study, series, aq, next) {
+            //finally store the instance
+            findOrCreate_instance(study, series, aq, h, function(err, instance) {
+                if(err) return next(err);
+                
+            });
+        },
+    ], function(err, result) {
+        if(err) logger.error(err); //continue
+    }); 
+
+    /*
     //publish to es queue
     cleaned_ex.publish('', h, {}, function(err) {
         if(err) return cb(err);
@@ -145,8 +192,11 @@ function handle_instance(h, cb) {
         var cleanpath = config.cleaner.cleaned_headers+"/"+h.qc_iibisid;
         write_to_disk(cleanpath, h, function(err) {
             if(err) return cb(err);
-            find_study(h, function(err, study) {
+
+            //then store series under study
+            findOrCreate_study(h, function(err, study) {
                 if(err) return cb(err);
+                
                 //add series id to study
                 if(study.SeriesInstanceUID.indexOf(h.SeriesInstanceUID) === -1) {
                     study.SeriesInstanceUID.push(h.SeriesInstanceUID);
@@ -155,6 +205,7 @@ function handle_instance(h, cb) {
             });
         });
     });
+    */
 }
 
 function write_to_disk(dir, h, cb) {
@@ -164,25 +215,81 @@ function write_to_disk(dir, h, cb) {
     });
 }
 
-function find_study(h, cb) {
+function findOrCreate_study(h, cb) {
     var keys = {
         StudyInstanceUID: h.StudyInstanceUID,
-        /*
-        //these are just 
-        IIBISID: h.qc_iibisid,
-        Modality: h.Modality,
-        StationName: h.StationName,
-        Radiopharmaceutical: h.Radiopharmaceutical, //only set for Modality: PT/CT
-        */
     };
     models.Study.findOne(keys, function(err, study) {
         if(err) return cb(err);
         if(!study) {
-            logger.info("received a new study");
-            logger.info(keys);
+            //create new study
             study = new models.Study(keys);
-        }
-        cb(null, study);
+
+            study.StudyTimestamp = h.qc_StudyTimestamp;
+            study.StudyDescription = h.StudyDescription;
+            study.StudyID = h.StudyID;
+        
+            study.IIBISID = h.qc_iibisid;
+            study.Modality = h.Modality;
+            study.StationName = h.StationName;
+            study.Radiopharmaceutical = h.Radiopharmaceutical; //only set for Modality: PT/CT
+
+            study.save(cb);
+
+            logger.info("received a new study");
+        } else cb(null, study);
+    });
+}
+
+function findOrCreate_series(study, h, cb) {
+    var keys = {
+        SOPInstanceUID: h.SOPInstanceUID,
+    };
+    models.Instance.findOne(keys, function(err, series) {
+        if(err) return cb(err);
+        if(!series) {
+            //create new study
+            series = new models.Series(keys);
+            series.study_id = study._id;
+            series.SeriesNumber = h.SeriesNumber;
+            series.SeriesTimestamp = h.q_SeriesTimestamp;
+            series.SeriesDescription = h.SeriesDescription;
+            series.save(cb);
+        } else cb(null, series);
+    });
+}
+
+function findOrCreate_acquisition(study, series, h, cb) {
+    var keys = {
+        series_id: series._id,
+        AcquisitionNumber: h.AcquisitionNumber,
+    };
+    models.Acquisition.findOne(keys, function(err, aq) {
+        if(err) return cb(err);
+        if(!aq) {
+            //create new study
+            aq = new models.Acquisition(keys);
+            aq.study_id = study._id;
+            aq.AcquisitionTimestamp = h.q_AcquisitionTimestamp;
+            aq.save(cb);
+        } else cb(null, aq);
+    });
+}
+function findOrCreate_instance(study, series, aq, h, cb) {
+    var keys = {
+        SOPInstanceUID: h.SOPInstanceUID,
+    };
+    models.Instance.findOne(keys, function(err, instance) {
+        if(err) return cb(err);
+        if(!instance) {
+            //create new study
+            instance = new models.Instance(keys);
+            instance.study_id = study._id;
+            instance.series_id = series._id;
+            instance.acquisition_id = aq._id;
+            instance.headers = h;
+            instance.save(cb);
+        } else cb(null, instance);
     });
 }
 
