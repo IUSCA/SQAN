@@ -17,14 +17,83 @@ exports.init = function(cb) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-var templateSchema = mongoose.Schema({
-    //just to allow efficient search by SOPInstanceUID of the template
-    SOPInstanceUID: {type: String, index: true}, 
+var researchSchema = mongoose.Schema({
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // keys
+    //
+    IIBISID: String, //like.. 2016-00001
+    Modality: String,  //like.. PT
+    StationName: String,  //like.. CT71271
+    Radiopharmaceutical: String, //like DOTA NOC (aka. Radio Tracer - only used for PT / CT)
+    //
+    ///////////////////////////////////////////////////////////////////////////
 
-    //study that this template belongs to
-    study_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    //StudyTimestamp: Date,
+    //StudyDescription: String, //PHI now
+    //StudyID: String,
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // let's store some key fields (TODO - should these be indexed?)
+
+
+    //"what people say "Modality" is actually defined by combination of Modality+StationMame fields
+   
+    //list of series for this study
+    //SeriesInstanceUID: [String],
+   
+    //list of templates available for this study (the last should be applied to all new series - unless overridden)
+    //template_ids: [ mongoose.Schema.Types.ObjectId] ,
+});
+
+/*
+//function for each instances
+studySchema.methods.speak = function() {
+    //demo purpose..
+    console.log(this.headers.StudyDate);
+}
+*/
+exports.Research = mongoose.model('Research', researchSchema);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+var seriesSchema = mongoose.Schema({
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // keys
+    //
+    research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    SeriesDescription: String,
+    //
+    ///////////////////////////////////////////////////////////////////////////
+
+    //SeriesTimestamp: Date, //from qc_SeriesTimestamp
+});
+
+/*
+//function for each instances
+templateSchema.methods.speak = function() {
+    //demo purpose only
+    console.log(this.headers.StudyDate);
+}
+*/
+exports.Series = mongoose.model('Series', seriesSchema);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+var templateSchema = mongoose.Schema({
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // keys
+    //
+    //study_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    date: Date, //date when this template is received (probabbly use StudyTimestamp of the template?)
+    //
+    ///////////////////////////////////////////////////////////////////////////
     
-    //the actual template headers
+    count: Number, //number of images in a given series
+    
+    //sample headers (right now, it just stores the *last* set of template sent for a given study/series
     headers: mongoose.Schema.Types.Mixed, 
 });
 
@@ -39,17 +108,18 @@ exports.Template = mongoose.model('Template', templateSchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-var seriesSchema = mongoose.Schema({
+var studySchema = mongoose.Schema({
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // keys
+    //
+    series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    subject: String,
+    StudyInstanceUID: String,
+    //
+    ///////////////////////////////////////////////////////////////////////////
 
-    SeriesInstanceUID: {type: String, index: true},
-
-    //study that this instance belongs to
-    study_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-
-    //just some metadata
-    SeriesNumber: Number,
-    SeriesTimestamp: Date, //from qc_SeriesTimestamp
-    SeriesDescription: String,
+    StudyTimestamp: Date,
 });
 
 /*
@@ -59,114 +129,63 @@ templateSchema.methods.speak = function() {
     console.log(this.headers.StudyDate);
 }
 */
-exports.Series = mongoose.model('Series', seriesSchema);
+exports.Study = mongoose.model('Study', studySchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-
+///
 var acquisitionSchema = mongoose.Schema({
 
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // keys
+    //
     //study that this aq belongs to
     study_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-    //series that this aq belongs to
-    series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-
     AcquisitionNumber: Number,
-    AcquisitionTimestamp: Date, 
+    //
+    ///////////////////////////////////////////////////////////////////////////
+    
+    //series that this aq belongs to
+    //series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    //AcquisitionTimestamp: Date, 
 });
-
-/*
-//function for each instances
-templateSchema.methods.speak = function() {
-    //demo purpose only
-    console.log(this.headers.StudyDate);
-}
-*/
 exports.Acquisition = mongoose.model('Acquisition', acquisitionSchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+var imageSchema = mongoose.Schema({
+    
+    //no key
 
-var instanceSchema = mongoose.Schema({
-    //just to allow efficient search by SOPInstanceUID 
-    SOPInstanceUID: {type: String, index: true}, 
-
-    //study that this instance belongs to
+    //foreigh keys to make it easier to find image
+    research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     study_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-    //series that this instnace belongs to
     series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-    //acuisition that this instance belongs to
     acquisition_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
 
     //the actual headers for this instance (cleaned)
     headers: mongoose.Schema.Types.Mixed, 
 });
-
-/*
-//function for each instances
-templateSchema.methods.speak = function() {
-    //demo purpose only
-    console.log(this.headers.StudyDate);
-}
-*/
-exports.Instance = mongoose.model('Instance', instanceSchema);
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-var studySchema = mongoose.Schema({
-
-    StudyInstanceUID: {type: String, index: true}, //ID stored in DICOM header
-
-    StudyTimestamp: Date,
-    StudyDescription: String,
-    StudyID: String,
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    // let's store some key fields (TODO - should these be indexed?)
-
-    //Research Project - 
-    IIBISID: String, //like.. 2016-00001
-
-    //"what people say "Modality" is actually defined by combination of Modality+StationMame fields
-    Modality: String,  //like.. PT
-    StationName: String,  //like.. CT71271
-
-    //Radio Tracer - only used for PT / CT
-    Radiopharmaceutical: String, //like DOTA NOC
-    
-    //list of series for this study
-    //SeriesInstanceUID: [String],
-   
-    //list of templates available for this study (the last should be applied to all new series - unless overridden)
-    //template_ids: [ mongoose.Schema.Types.ObjectId] ,
-});
-
-//function for each instances
-studySchema.methods.speak = function() {
-    //demo purpose..
-    console.log(this.headers.StudyDate);
-}
-exports.Study = mongoose.model('Study', studySchema);
+exports.Image = mongoose.model('Image', imageSchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 //to store the test results for each series
 var resultSchema = mongoose.Schema({
-    //study that this series belongs
-    study_id: mongoose.Schema.Types.ObjectId,
-
-    //series UID that this result belongs to
+    research_id: mongoose.Schema.Types.ObjectId,
     series_id: mongoose.Schema.Types.ObjectId,
+    study_id: mongoose.Schema.Types.ObjectId,
 
     //TODO this is pretty much TBD..
     results: [ {
         result_date: Date, //date when the result was created
-        //template applied for the test result
-        template_id: mongoose.Schema.Types.ObjectId,
+        template_id: mongoose.Schema.Types.ObjectId, //template applied to produce the result
 
         //the actual result organized under acquisition
         acquisitions: {
-            AcquisitionNumber: Number,
+            //AcquisitionNumber: Number,
+            acquisition_id: mongoose.Schema.Types.ObjectId,
             instances: [ {
-                instance_id: mongoose.Schema.Types.ObjectId,
+                image_id: mongoose.Schema.Types.ObjectId,
                 errs: [ mongoose.Schema.Types.Mixed ], //can't use "errors" for mongo field name
                 warns: [ mongoose.Schema.Types.Mixed ],
             } ]

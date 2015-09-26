@@ -283,7 +283,11 @@ exports.parseMeta = function(h) {
         meta.iibisid = ts[0];
         meta.subject = ts[1]; //subject will be undefined if there is only 1 token.
     }
+    //this is deprecated by meta.subject
     if(h.OtherPatientIDs &&  h.OtherPatientIDs == "TEMPLATE") {
+        meta.template = true;
+    }
+    if(meta.subject == "TEMPLATE") {
         meta.template = true;
     }
     return meta;
