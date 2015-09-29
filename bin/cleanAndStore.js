@@ -10,10 +10,10 @@ var async = require('async');
 var mkdirp = require('mkdirp');
 
 //mine
-var config = require('../config/config');
+var config = require('../api/config/config');
 var logger = new winston.Logger(config.logger.winston);
-var models = require('../models');
-var instance = require('../qc/instance');
+var db = require('../api/models');
+var instance = require('../api/qc/instance');
 
 //to-be-initizalied
 var conn = null;
@@ -23,7 +23,7 @@ var failed_q = null;
 var incoming_q = null;
 
 //connect to AMQP, ensure exchange / queues exists, and subscribe to the incoming q
-models.init(function(err) {
+db.init(function(err) {
     if(err) throw err; //will crash
     conn = amqp.createConnection(config.amqp);
     conn.on('ready', function () {
@@ -109,30 +109,6 @@ function handle_message(h, msg_h, info, ack) {
             });
         },
 
-        /*
-        function(next) {
-            if(h.qc_istemplate) return next(null); //if template then skip
-            //store in cleaned_images directory
-            var path = config.cleaner.cleaned_images+"/"+h.qc_iibisid+"/"+h.StudyInstanceUID+"/"+h.SeriesDescription;
-            logger.debug("storing instance headers to "+path);
-            write_to_disk(path, h, function(err) {
-                if(err) logger.error(err); //continue
-                next(null);
-            });
-        },
-
-        function(next) {
-            if(!h.qc_istemplate) return next(null); //if not template then skip
-            //store in cleaned_images directory
-            var path = config.cleaner.cleaned_templates+"/"+h.qc_iibisid+"/"+h.StudyInstanceUID+"/"+h.SeriesDescription;
-            logger.debug("storing template headers to "+path);
-            write_to_disk(path, h, function(err) {
-                if(err) logger.error(err); //continue
-                next(null);
-            });
-        },
-        */
-
         function(next) {
             if(h.qc_istemplate) return next(); //if template then don't send to es
             logger.debug("publishing to cleaned_ex");
@@ -143,7 +119,7 @@ function handle_message(h, msg_h, info, ack) {
 
         //make sure we know about this research
         function(next) {
-            models.Research.findOneAndUpdate({
+            db.Research.findOneAndUpdate({
                 IIBISID: h.qc_iibisid,
                 Modality: h.Modality,
                 StationName: h.StationName,
@@ -157,7 +133,7 @@ function handle_message(h, msg_h, info, ack) {
 
         //make sure we know about this series
         function(next) {
-            models.Series.findOneAndUpdate({
+            db.Series.findOneAndUpdate({
                 research_id: research._id,
                 SeriesDescription: h.SeriesDescription,
             }, {}, {upsert:true, 'new': true}, function(err, _series) {
@@ -171,7 +147,7 @@ function handle_message(h, msg_h, info, ack) {
         function(next) {
             if(!h.qc_istemplate) return next();  //if not template then skip
 
-            models.Template.findOneAndUpdate({
+            db.Template.findOneAndUpdate({
                 series_id: series._id,
                 date: h.qc_StudyTimestamp, //TODO qc_StudyTimestamp the best choice?
             }, {
@@ -181,20 +157,13 @@ function handle_message(h, msg_h, info, ack) {
                 if(err) return next(err);
                 next();
             });
-
-            /*
-            findOrCreate_template(series, h, function(err, _template) {
-                if(err) return next(err);
-                next(null);
-            });
-            */
         },
         
         //make sure we know about this study
         function(next) {
             if(h.qc_istemplate) return next();  //if it's template then skip
 
-            models.Study.findOneAndUpdate({
+            db.Study.findOneAndUpdate({
                 series_id: series._id,
                 subject: h.qc_subject,
                 StudyInstanceUID: h.StudyInstanceUID,
@@ -205,20 +174,13 @@ function handle_message(h, msg_h, info, ack) {
                 study = _study;
                 next();
             });
-            /*
-            findOrCreate_study(series, h, function(err, _study) {
-                if(err) return next(err);
-                study = _study;
-                next(null);
-            });
-            */
         },
 
         //make sure we know about this acquisition
         function(next) {
             if(h.qc_istemplate) return next();  //if it's template then skip
 
-            models.Acquisition.findOneAndUpdate({
+            db.Acquisition.findOneAndUpdate({
                 study_id: study._id,
                 AcquisitionNumber: h.AcquisitionNumber,
             }, {}, {upsert:true, 'new': true}, function(err, _aq) {
@@ -232,7 +194,7 @@ function handle_message(h, msg_h, info, ack) {
         function(next) {
             if(h.qc_istemplate) return next();  //if template then skip
 
-            var image = new models.Image({
+            var image = new db.Image({
                 research_id: research._id,
                 study_id: study._id,
                 series_id: series._id,
@@ -258,41 +220,6 @@ function handle_message(h, msg_h, info, ack) {
     });
 }
 
-/*
-function findOrCreate_research(h, cb) {
-    var keys = {
-        IIBISID: h.qc_iibisid,
-        Modality: h.Modality,
-        StationName: h.StationName,
-        Radiopharmaceutical: h.Radiopharmaceutical, //undefined for MR
-    };
-    models.Research.findOneAndUpdate(keys, {upsert:true, 'new': true}, function(err, research) {
-        if(err) return cb(err);
-        cb(null, research); //template re-sent?
-    });
-}
-*/
-
-/*
-function findOrCreate_template(study, series, h, cb) {
-    var keys = {
-        study_id: study._id,
-        series_id: series._id,
-        StudyDate: h.StudyDate,
-    };
-    var fields = {
-        study_id: study._id,
-        headers: h,
-        $inc: { count: 1 }, 
-    };
-    //'new': true will return the document *after* the udpate is made - not when it was found - it could be null if it's new template
-    models.Template.findOneAndUpdate(keys, fields, {upsert: true, 'new': true}, function(err, template) {
-        if(err) return cb(err);
-        cb(null, template);
-    });
-}
-*/
-
 function write_to_disk(dir, h, cb) {
     fs.exists(dir, function (exists) {
         //if(!exists) fs.mkdirSync(dir);
@@ -301,81 +228,3 @@ function write_to_disk(dir, h, cb) {
     });
 }
 
-/*
-function findOrCreate_study(h, cb) {
-    var keys = {
-        StudyInstanceUID: h.StudyInstanceUID,
-    };
-    models.Study.findOne(keys, function(err, study) {
-        if(err) return cb(err);
-        if(!study) {
-            //create new study
-            study = new models.Study(keys);
-
-            study.StudyTimestamp = h.qc_StudyTimestamp;
-            //study.StudyDescription = h.StudyDescription;
-            //study.StudyID = h.StudyID;
-        
-            study.IIBISID = h.qc_iibisid;
-            study.Modality = h.Modality;
-            study.StationName = h.StationName;
-            study.Radiopharmaceutical = h.Radiopharmaceutical; //only set for Modality: PT/CT
-
-            study.save(cb);
-
-            logger.info("received a new study");
-        } else cb(null, study);
-    });
-}
-*/
-
-/*
-function findOrCreate_series(study, h, cb) {
-    var keys = {
-        //SOPInstanceUID: h.SOPInstanceUID,
-        study_id: study._id,
-        SeriesDescription: h.SeriesDescription,
-    };
-    models.Series.findOne(keys, function(err, series) {
-        if(err) return cb(err);
-        if(!series) {
-            //create new study
-            series = new models.Series(keys);
-            series.SeriesTimestamp = h.q_SeriesTimestamp;
-            series.save(cb);
-        } else cb(null, series);
-    });
-}
-*/
-
-/*
-function findOrCreate_acquisition(study, series, h, cb) {
-    var keys = {
-        series_id: series._id,
-        AcquisitionNumber: h.AcquisitionNumber,
-    };
-    models.Acquisition.findOne(keys, function(err, aq) {
-        if(err) return cb(err);
-        if(!aq) {
-            //create new study
-            aq = new models.Acquisition(keys);
-            aq.study_id = study._id;
-            aq.AcquisitionTimestamp = h.q_AcquisitionTimestamp;
-            aq.save(cb);
-        } else cb(null, aq);
-    });
-}
-*/
-/*
-function findOrCreate_image(study, series, aq, h, cb) {
-
-    //always just add (no update)
-    var image = new models.Image({
-        study_id: study._id,
-        series_id: series._id,
-        acquisition_id: aq._id,
-        headers: h,
-    });
-    instance.save(cb);
-}
-*/

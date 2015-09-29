@@ -1,4 +1,5 @@
 
+/*
 exports.check = function(h, next) {
     var errors = [];
     var warnings = [];
@@ -41,6 +42,7 @@ exports.check = function(h, next) {
 
     next(errors, warnings);
 }
+*/
 
 //function to run during clean up
 function maskFields(h) {

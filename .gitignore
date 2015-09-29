@@ -1,5 +1,5 @@
 node_modules
-config/config.js
+api/config/config.js
 ui/config.js
 nohup_*.out
 ui/bower_components
