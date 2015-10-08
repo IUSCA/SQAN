@@ -8,12 +8,8 @@ var jwt = require('express-jwt');
 //mine
 var config = require('./config/config');
 
-/*
-router.get('/health', function(req, res) {
-    res.json({status: 'ok'});
-});
-*/
-router.use('/test', require('./controllers/test'));
+router.use('/', require('./controllers/root'));
+router.use('/study', require('./controllers/study'));
 
 module.exports = router;
 

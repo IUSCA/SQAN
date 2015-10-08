@@ -4,22 +4,23 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="initial-scale=1, width=device-width">
-    <title>Dicom QC Report</title>
+    <title>Dicom QC</title>
 
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="css/bootstrap.yeti.css">
     <link rel="stylesheet" href="bower_components/fontawesome/css/font-awesome.min.css">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:400,700">
-    <link rel="stylesheet" href="css/style.css">
-
     <link rel="stylesheet" href="bower_components/angular-ui-select/dist/select.min.css">
     <link rel="stylesheet" href="bower_components/angular-loading-bar/build/loading-bar.min.css">
     <link rel="stylesheet" href="bower_components/angularjs-toaster/toaster.min.css">
-    <link rel="stylesheet" href="bower_components/angular/angular-csp.css">
+
+    <link rel="stylesheet" href="/shared/css/style.css"><!--TODO should be configurable-->
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body ng-cloak>
     <toaster-container></toaster-container>
     <ng-view></ng-view><!-- <ng-view/> will cause route looping-->
+    <ng-include src="'t/footer.html'"></ng-include> <!--should this be part of view?-->
 
     <script src="bower_components/jquery/dist/jquery.min.js"></script><!--bootstrap requires jquery-->
     <script src="bower_components/angular/angular.min.js"></script>
@@ -35,7 +36,32 @@
     <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
     <script src="bower_components/angularjs-toaster/toaster.min.js"></script>
 
-    <script src="config.js"></script>
+    <script>
+    angular.module('app.config', [])
+    .constant('appconf', {
+        title: 'Dicom QC',
+
+        api: '/api/dicom',
+
+        kibana_url: '/kibana/',
+
+        profile_api: '/api/profile',
+        profile_url: '/profile',
+
+        //shared servive api and ui urls (for menus and stuff)
+        shared_api: '/api/shared',
+        shared_url: '/shared',
+
+        //authentcation service API to refresh token, etc.
+        auth_api: '/api/auth',
+        auth_url: '/auth',
+
+        jwt_id: 'jwt'
+    });
+    </script>
+
+    <script src="/shared/shared.js"></script> <!-- TODO make this configurable? don't forget the shared/css/style.css -->
+
     <script src="js/app.js"></script>
     <script src="js/controllers.js"></script>
 </body>

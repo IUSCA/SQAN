@@ -63,10 +63,12 @@ function handle_message(h, msg_h, info, ack) {
                 //parse some special fields
                 //if these fields fails to set, rest of the behavior is undefined.
                 //according to john, however, iibisid and subject should always be found
-                var pn = instance.parseMeta(h);
-                h.qc_iibisid = pn.iibisid;
-                h.qc_subject = pn.subject;
-                h.qc_istemplate = pn.template;
+                var meta = instance.parseMeta(h);
+                h.qc_iibisid = meta.iibisid;
+                h.qc_subject = meta.subject;
+                h.qc_istemplate = meta.template;
+                h.qc_series_desc = meta.series_desc;
+                h.qc_series_desc_version = meta.series_desc_version;
 
                 //construct esindex
                 var esindex = instance.composeESIndex(h);
@@ -81,11 +83,11 @@ function handle_message(h, msg_h, info, ack) {
 
         function(next) {
             //store a copy of raw input before cleaning
-            var path = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.SeriesDescription;
+            var path = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
             logger.debug("storing header to "+path);
             write_to_disk(path, h, function(err) {
                 if(err) throw err; //let's kill the app - to alert the operator of this critical issue
-                logger.debug("wrote to raw_headers");
+                //logger.debug("wrote to raw_headers");
                 next();
             });
         },
@@ -101,7 +103,7 @@ function handle_message(h, msg_h, info, ack) {
 
         function(next) {
             //store clearned data to cleaned directory
-            var path = config.cleaner.cleaned+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.SeriesDescription;
+            var path = config.cleaner.cleaned+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
             logger.debug("storing headers to "+path);
             write_to_disk(path, h, function(err) {
                 if(err) logger.error(err); //continue
@@ -109,6 +111,7 @@ function handle_message(h, msg_h, info, ack) {
             });
         },
 
+        /* let's do this for truely unique image
         function(next) {
             if(h.qc_istemplate) return next(); //if template then don't send to es
             logger.debug("publishing to cleaned_ex");
@@ -116,6 +119,7 @@ function handle_message(h, msg_h, info, ack) {
                 next(err);
             });
         },
+        */
 
         //make sure we know about this research
         function(next) {
@@ -135,7 +139,7 @@ function handle_message(h, msg_h, info, ack) {
         function(next) {
             db.Series.findOneAndUpdate({
                 research_id: research._id,
-                SeriesDescription: h.SeriesDescription,
+                series_desc: h.qc_series_desc,
             }, {}, {upsert:true, 'new': true}, function(err, _series) {
                 if(err) return next(err);
                 series = _series;
@@ -194,20 +198,37 @@ function handle_message(h, msg_h, info, ack) {
         function(next) {
             if(h.qc_istemplate) return next();  //if template then skip
 
-            var image = new db.Image({
-                research_id: research._id,
-                study_id: study._id,
-                series_id: series._id,
-                acquisition_id: aq._id,
-                headers: h,
+            db.Image.findOne({SOPInstanceUID: h.SOPInstanceUID}, function(err, image) {
+                if(err) return next(err);
+                if(image) {
+                    logger.warn("SOPInstanceUID: "+h.SOPInstanceUID+" already exists.. ignoring");
+                    return next(); 
+                }
+                
+                //new image!
+                var image = new db.Image({
+                    SOPInstanceUID: h.SOPInstanceUID,
+
+                    research_id: research._id,
+                    study_id: study._id,
+                    series_id: series._id,
+                    acquisition_id: aq._id,
+                    headers: h,
+                });
+                image.save(function(err) {
+                    if(err) logger.error(err); //continue to publish anyway..
+                    cleaned_ex.publish('', h, {}, function(err) {
+                        next(err);
+                    });
+                });
             });
-            image.save(next);
         },
 
     ], function(err) {
         //all done
         if(err) {
             logger.error(err);
+            h.qc_err = err;
             conn.publish(config.cleaner.failed_q, h); //publishing to default exchange can't be confirmed?
             fs.writeFile(config.cleaner.failed_headers+"/"+h.SOPInstanceUID+".json", JSON.stringify(h,null,4), function(err) {
                 if(err) throw err; //TODO - will crash app. Maybe we should remove this if we want this to run continuously

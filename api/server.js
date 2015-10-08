@@ -12,26 +12,20 @@ var bodyParser = require('body-parser');
 var expressValidator = require('express-validator');
 var winston = require('winston');
 var expressWinston = require('express-winston');
-
 var compress = require('compression');
 
 //mine
 var config = require('./config/config');
 var logger = new winston.Logger(config.logger.winston);
+var db = require('./models');
 
 //init express
 var app = express();
 app.use(bodyParser.json()); //parse application/json
 app.use(bodyParser.urlencoded({ extended: false})); //parse application/x-www-form-urlencoded
 app.use(compress());
-
-//jwt auth is optional
-if(config.express.jwt) app.use(require('express-jwt')(config.express.jwt));
-
-//setup routes
-app.get('/health', function(req, res) { res.json({status: 'running'}); });
-app.get('/', require('./router'));
-//app.post('/update', controllers.update);
+//if(config.express.jwt) app.use(require('express-jwt')(config.express.jwt)); //jwt auth is optional
+app.use('/', require('./router'));
 
 /*
 //cache result info
@@ -133,10 +127,12 @@ exports.start = function(cb) {
     var port = process.env.PORT || config.express.port || '8080';
     var host = process.env.HOST || config.express.host || 'localhost';
     //controllers.init(function() {
-    var server = app.listen(port, host, function() {
-        if(cb) cb();
-        console.log("QC api server listening on port %d in %s mode", port, app.settings.env);
-    });
+    db.init(function(err) {
+        if(err) return cb(err);
+        var server = app.listen(port, host, function() {
+            logger.info("QC api server listening on port %d in %s mode", port, app.settings.env);
+            cb();
+        });
 
         /*
         //init socket.io
@@ -149,6 +145,6 @@ exports.start = function(cb) {
         });
         controllers.set_socketio(io);
         */
-    //});
+    });
 };
 

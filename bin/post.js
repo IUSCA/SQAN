@@ -12,7 +12,7 @@ var split = require('split');
 var throttle = require('stream-throttle');
 
 //mine
-var config = require('../config/config');
+var config = require('../api/config/config');
 
 var conn = amqp.createConnection(config.amqp);
 

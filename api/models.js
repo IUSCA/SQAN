@@ -62,7 +62,7 @@ var seriesSchema = mongoose.Schema({
     // keys
     //
     research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-    SeriesDescription: String,
+    series_desc: String, //original SeriesDescription minut anything after ^
     //
     ///////////////////////////////////////////////////////////////////////////
 
@@ -144,6 +144,8 @@ var acquisitionSchema = mongoose.Schema({
     AcquisitionNumber: Number,
     //
     ///////////////////////////////////////////////////////////////////////////
+
+    //template_id: mongoose.Schema.Types.ObjectId,  //template to use for QC (if not, latest version will be used)
     
     //series that this aq belongs to
     //series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
@@ -154,9 +156,10 @@ exports.Acquisition = mongoose.model('Acquisition', acquisitionSchema);
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 var imageSchema = mongoose.Schema({
     
-    //no key
+    //key
+    SOPInstanceUID: String,
 
-    //foreigh keys to make it easier to find image
+    //foreigh keys to make it easier to find related information
     research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     study_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
@@ -164,11 +167,19 @@ var imageSchema = mongoose.Schema({
 
     //the actual headers for this instance (cleaned)
     headers: mongoose.Schema.Types.Mixed, 
+
+    //qc result (null if not qc-ed)
+    qc: {
+        template_id: mongoose.Schema.Types.ObjectId,  //template used for the qc
+        date: Date, //date when the QC was last performed
+        results: mongoose.Schema.Types.Mixed, //list of qc dicrepancies, etc..
+    }
 });
 exports.Image = mongoose.model('Image', imageSchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+/*
 //to store the test results for each series
 var resultSchema = mongoose.Schema({
     research_id: mongoose.Schema.Types.ObjectId,
@@ -193,6 +204,7 @@ var resultSchema = mongoose.Schema({
     } ]
 });
 exports.Result = mongoose.model('Result', resultSchema);
+*/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /* images are stored in elasticsearch

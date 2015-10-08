@@ -104,6 +104,10 @@ function convertTypes(h) {
         "WindowWidth",
         "dBdt",
     ].forEach(function(f) {
+        if(h[f] === "") {
+            //console.log("unsetting "+f+" of value "+h[f]);
+            delete h[f];
+        }
         if(h[f] === undefined) return;
         h[f] = convertToInt(h[f], f);
     });
@@ -127,6 +131,10 @@ function convertTypes(h) {
         "PercentPhaseFieldOfView",
         "PercentSampling",
     ].forEach(function(f) {
+        if(h[f] === "") { 
+            //console.log("unsetting "+f+" of value "+h[f]);
+            delete h[f];
+        }
         if(h[f] === undefined) return;
         h[f] = convertToFloat(h[f], f);
     });
@@ -285,13 +293,22 @@ exports.parseMeta = function(h) {
         meta.iibisid = ts[0];
         meta.subject = ts[1]; //subject will be undefined if there is only 1 token.
     }
+    
     //this is deprecated by meta.subject
     if(h.OtherPatientIDs &&  h.OtherPatientIDs == "TEMPLATE") {
         meta.template = true;
     }
+
     if(meta.subject == "TEMPLATE") {
         meta.template = true;
     }
+
+    if(h.SeriesDescription) {
+        var ts = h.SeriesDescription.split("^");
+        meta.series_desc = ts[0];
+        meta.series_desc_version = ts[1];
+    }
+
     return meta;
 }
 

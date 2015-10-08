@@ -9,7 +9,8 @@ var app = angular.module('app', [
     'toaster',
     'angular-loading-bar',
     'angular-jwt',
-    'ui.bootstrap'
+    'ui.bootstrap',
+    'sca-shared',
 ]);
 
 //show loading bar at the page top
@@ -20,9 +21,9 @@ app.config(['cfpLoadingBarProvider', function(cfpLoadingBarProvider) {
 //configure route
 app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
     $routeProvider.
-    when('/list', {
-        templateUrl: 't/list.html',
-        controller: 'ListController',
+    when('/study', {
+        templateUrl: 't/study.html',
+        controller: 'StudyController',
         requiresLogin: true
     })
     /*
@@ -38,7 +39,7 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
     })
     */
     .otherwise({
-        redirectTo: '/list'
+        redirectTo: '/study'
     });
     
     //console.dir($routeProvider);
@@ -92,4 +93,44 @@ function(appconf, $httpProvider, jwtInterceptorProvider) {
     $httpProvider.interceptors.push('jwtInterceptor');
 }]);
 
+//just a service to load all users from auth service
+app.factory('serverconf', ['appconf', '$http', 'jwtHelper', function(appconf, $http, jwtHelper) {
+    return $http.get(appconf.api+'/config')
+    .then(function(res) {
+        return res.data;
+    });
+}]);
+
+//http://www.codelord.net/2015/09/24/$q-dot-defer-youre-doing-it-wrong/
+//https://www.airpair.com/angularjs/posts/angularjs-promises
+app.factory('menu', ['appconf', '$http', 'jwtHelper', function(appconf, $http, jwtHelper) {
+    var menu = {};
+    return $http.get(appconf.shared_api+'/menu').then(function(res) {
+        //look for top menu
+        //TODO - add ?id= param to shared_api/menu so that I don't have to do this - ant don't load unnecessary stuff
+        res.data.forEach(function(m) {
+            switch(m.id) {
+            case 'top':
+                menu.top = m;
+                break;
+            }
+        });
+
+        //then load user profile (if we have jwt)
+        var jwt = localStorage.getItem(appconf.jwt_id);
+        if(!jwt)  return menu;
+        var user = jwtHelper.decodeToken(jwt);
+        //TODO - jwt could be invalid
+        return $http.get(appconf.profile_api+'/public/'+user.sub);
+    }, function(err) {
+        console.log("failed to load menu");
+    }).then(function(res) {
+        //TODO - this function is called with either valid profile, or just menu if jwt is not provided... only do following if res is profile
+        //if(res.status != 200) return $q.reject("Failed to load profile");
+        menu._profile = res.data;
+        return menu;
+    }, function(err) {
+        console.log("couldn't load profile");
+    });
+}]);
 
