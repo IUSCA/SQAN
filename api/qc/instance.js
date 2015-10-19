@@ -48,9 +48,11 @@ exports.check = function(h, next) {
 function maskFields(h) {
 
     //IRB requirement to make older patient (less number of them) to be more difficult to identify.
-    if(h.PatientAge && h.PatientAge > 89) {
-        h.PatientAge = 89; //sundar wants to do this instead of removing it.
+    if(h.qc_PatientAge && h.qc_PatientAge > 89) {
         h.qc_PatientAgeMasked = true;
+        //sundar wants to do set it to 89 years - instead of removing them
+        h.qc_PatientAge = 89; 
+        h.PatientAge = "089Y"; 
     }
     
     //soichi's arbitrary decision to remove some large fields containing relationship to other images 
@@ -215,6 +217,31 @@ function mergeFields(h) {
 }
 
 
+function parseFields(h) {
+    //parse PatientAge field so that I can do numeric comparison (in year)
+    /*
+    PatientAge tag 0010,1010 is a 4 bytes fixed field.
+    Per DICOM standard, it can have one of the following character strings:
+
+    "[0-9][0-9][0-9]D"  Example 008D (8 days old)
+    "[0-9][0-9][0-9]W"  Example 010W (10 weeks old)
+    "[0-9][0-9][0-9]M"  Example 022M (22 months old)
+    "[0-9][0-9][0-9]Y"  Example 091Y (91 years old)
+    */
+    if(h.PatientAge) {
+        var num = h.PatientAge.substr(0, 3);
+        var unit = h.PatientAge.substr(3);
+        switch(unit) {
+        case "D": h.qc_PatientAge = num/365.25; break;
+        case "W": h.qc_PatientAge = num/52.29; break;
+        case "M": h.qc_PatientAge = num/12; break;
+        case "Y": h.qc_PatientAge = num; break;
+        default:
+            console.error("unknown PatientAge unit:"+h.PatientAge); 
+        }
+    }
+}
+
 //convert dicom date / time format to Date()
 function toTimestamp(date, time) {
     if(date === undefined || time === undefined) return undefined;
@@ -243,7 +270,7 @@ function convertToInt(v, f) {
         return newa;
     } else {
         var i = parseInt(v);
-        if(i != v) throw new Error(f+":\""+v+"\" converted to " +i);
+        if(i != v) console.error(f+":\""+v+"\" converted to " +i);
         /*
         var check = i.toString();
         if(v != check) {
@@ -265,7 +292,7 @@ function convertToFloat(v, f) {
         return newa;
     } else {
         var i = parseFloat(v);
-        if(i != v) throw new Error(f+":\""+v+"\" converted to " +i);
+        if(i != v) console.error(f+":\""+v+"\" converted to " +i);
         /*
         var check = i.toString();
         if(v != check) {
@@ -340,9 +367,10 @@ exports.composeESIndex = function(h) {
 
 //function to run during clean up
 exports.clean = function(h) {
-    maskFields(h);
     convertTypes(h); //"2.34" => 2.34
     splitFields(h); 
     mergeFields(h); //date+time => timestamp
+    parseFields(h); //PatientAge -> qc_PatientAge
+    maskFields(h);
 }
 

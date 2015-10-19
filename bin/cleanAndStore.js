@@ -84,7 +84,7 @@ function handle_message(h, msg_h, info, ack) {
         function(next) {
             //store a copy of raw input before cleaning
             var path = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
-            logger.debug("storing header to "+path);
+            //logger.debug("storing header to "+path);
             write_to_disk(path, h, function(err) {
                 if(err) throw err; //let's kill the app - to alert the operator of this critical issue
                 //logger.debug("wrote to raw_headers");
@@ -104,7 +104,7 @@ function handle_message(h, msg_h, info, ack) {
         function(next) {
             //store clearned data to cleaned directory
             var path = config.cleaner.cleaned+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
-            logger.debug("storing headers to "+path);
+            //logger.debug("storing headers to "+path);
             write_to_disk(path, h, function(err) {
                 if(err) logger.error(err); //continue
                 next();
@@ -200,28 +200,55 @@ function handle_message(h, msg_h, info, ack) {
 
             db.Image.findOne({SOPInstanceUID: h.SOPInstanceUID}, function(err, image) {
                 if(err) return next(err);
-                if(image) {
-                    logger.warn("SOPInstanceUID: "+h.SOPInstanceUID+" already exists.. ignoring");
-                    return next(); 
-                }
-                
-                //new image!
-                var image = new db.Image({
-                    SOPInstanceUID: h.SOPInstanceUID,
-
+                var data = {
                     research_id: research._id,
                     study_id: study._id,
                     series_id: series._id,
                     acquisition_id: aq._id,
                     headers: h,
-                });
-                image.save(function(err) {
-                    if(err) logger.error(err); //continue to publish anyway..
+                }
+                if(image) {
+                    //if image already exists, update it!
+                    logger.warn("SOPInstanceUID: "+h.SOPInstanceUID+" already exists.. updating header");
+                    db.Image.update({SOPInstanceUID: h.SOPInstanceUID}, {$set: data}, function(err, res) {
+                        if(err) logger.error(err); //continue anyway..
+                        return next(); 
+                    });
+                } else {
+                    //new image!
+                    data.SOPInstanceUID = h.SOPInstanceUID;
+                    var image = new db.Image(data);
+                    image.save(function(err) {
+                        if(err) logger.error(err); //continue to publish anyway..
+                
+                        //send to elastic search
+                        cleaned_ex.publish('', h, {}, function(err) {
+                            next(err);
+                        });
+                    });
+                }
+            });
+            /*
+            //upsert image
+            var image = {
+                //SOPInstanceUID: h.SOPInstanceUID,
+                research_id: research._id,
+                study_id: study._id,
+                series_id: series._id,
+                acquisition_id: aq._id,
+                headers: h,
+            };
+            db.Image.update({SOPInstanceUID: h.SOPInstanceUID}, {$set: image}, {upsert: true}, function(err, res) {
+                if(err) logger.error(err); //continue to publish anyway..
+                if(res.nInserted) {
+                    logger.error("new record - senging to cleaned ex");
+                    //ship to es
                     cleaned_ex.publish('', h, {}, function(err) {
                         next(err);
                     });
-                });
+                } else next();
             });
+            */
         },
         
         //increment counter
