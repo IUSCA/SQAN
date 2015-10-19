@@ -46,13 +46,6 @@ var researchSchema = mongoose.Schema({
     //template_ids: [ mongoose.Schema.Types.ObjectId] ,
 });
 
-/*
-//function for each instances
-studySchema.methods.speak = function() {
-    //demo purpose..
-    console.log(this.headers.StudyDate);
-}
-*/
 exports.Research = mongoose.model('Research', researchSchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -97,13 +90,6 @@ var templateSchema = mongoose.Schema({
     headers: mongoose.Schema.Types.Mixed, 
 });
 
-/*
-//function for each instances
-templateSchema.methods.speak = function() {
-    //demo purpose only
-    console.log(this.headers.StudyDate);
-}
-*/
 exports.Template = mongoose.model('Template', templateSchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -120,15 +106,10 @@ var studySchema = mongoose.Schema({
     ///////////////////////////////////////////////////////////////////////////
 
     StudyTimestamp: Date,
+
+    template_id: mongoose.Schema.Types.ObjectId,  //template to use for QC (if not, latest version will be used)
 });
 
-/*
-//function for each instances
-templateSchema.methods.speak = function() {
-    //demo purpose only
-    console.log(this.headers.StudyDate);
-}
-*/
 exports.Study = mongoose.model('Study', studySchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -145,8 +126,6 @@ var acquisitionSchema = mongoose.Schema({
     //
     ///////////////////////////////////////////////////////////////////////////
 
-    //template_id: mongoose.Schema.Types.ObjectId,  //template to use for QC (if not, latest version will be used)
-    
     //series that this aq belongs to
     //series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     //AcquisitionTimestamp: Date, 
@@ -154,6 +133,7 @@ var acquisitionSchema = mongoose.Schema({
 exports.Acquisition = mongoose.model('Acquisition', acquisitionSchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+
 var imageSchema = mongoose.Schema({
     
     //key
@@ -161,8 +141,8 @@ var imageSchema = mongoose.Schema({
 
     //foreigh keys to make it easier to find related information
     research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-    study_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    study_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     acquisition_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
 
     //the actual headers for this instance (cleaned)
@@ -172,58 +152,20 @@ var imageSchema = mongoose.Schema({
     qc: {
         template_id: mongoose.Schema.Types.ObjectId,  //template used for the qc
         date: Date, //date when the QC was last performed
-        results: mongoose.Schema.Types.Mixed, //list of qc dicrepancies, etc..
+        errors: [ mongoose.Schema.Types.Mixed ], //list of qc dicrepancies, etc..
     }
 });
 exports.Image = mongoose.model('Image', imageSchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-/*
-//to store the test results for each series
-var resultSchema = mongoose.Schema({
-    research_id: mongoose.Schema.Types.ObjectId,
-    series_id: mongoose.Schema.Types.ObjectId,
-    study_id: mongoose.Schema.Types.ObjectId,
-
-    //TODO this is pretty much TBD..
-    results: [ {
-        result_date: Date, //date when the result was created
-        template_id: mongoose.Schema.Types.ObjectId, //template applied to produce the result
-
-        //the actual result organized under acquisition
-        acquisitions: {
-            //AcquisitionNumber: Number,
-            acquisition_id: mongoose.Schema.Types.ObjectId,
-            instances: [ {
-                image_id: mongoose.Schema.Types.ObjectId,
-                errs: [ mongoose.Schema.Types.Mixed ], //can't use "errors" for mongo field name
-                warns: [ mongoose.Schema.Types.Mixed ],
-            } ]
-        }
-    } ]
+var counterSchema = mongoose.Schema({
+    date: Date, 
+    research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    study_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    count: Number, //number of images in a given study 
 });
-exports.Result = mongoose.model('Result', resultSchema);
-*/
+exports.Counter = mongoose.model('Count', counterSchema);
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/* images are stored in elasticsearch
- * use es api to query headers https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-get.html
-var imageSchema = mongoose.Schema({
-    headers: Schema.Types.Mixed,
 
-    //template used to validate this image (not set if we don't know which template to apply)
-    template: Schema.Types.ObjectId,
-
-    //date of analysis (not set if it's not analyzed yet)
-    analyzed_date: Date,
-});
-
-//function for each instances
-imageSchema.methods.speak = function() {
-    console.log(this.headers.StudyDate);
-}
-exports.image = mongoose.model('Image', imageSchema);;
-*/
-
-///////////////////////////////////////////////////////////////////////////////////////////////////

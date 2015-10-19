@@ -2,3 +2,4 @@
 
 pm2 delete dicom
 pm2 start dicom.js --watch --ignore-watch="\.log$ test/ .sh$"
+pm2 save

@@ -50,7 +50,7 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
             var jwt = localStorage.getItem(appconf.jwt_id);
             if(jwt == null || jwtHelper.isTokenExpired(jwt)) {
                 //localStorage.setItem('post_auth_redirect', next.originalPath);
-                document.location = appconf.url.login+"?redirect="+encodeURIComponent(document.location);
+                document.location = appconf.auth_url+"?redirect="+encodeURIComponent(document.location);
                 event.preventDefault();
             }
         }
@@ -105,16 +105,8 @@ app.factory('serverconf', ['appconf', '$http', 'jwtHelper', function(appconf, $h
 //https://www.airpair.com/angularjs/posts/angularjs-promises
 app.factory('menu', ['appconf', '$http', 'jwtHelper', function(appconf, $http, jwtHelper) {
     var menu = {};
-    return $http.get(appconf.shared_api+'/menu').then(function(res) {
-        //look for top menu
-        //TODO - add ?id= param to shared_api/menu so that I don't have to do this - ant don't load unnecessary stuff
-        res.data.forEach(function(m) {
-            switch(m.id) {
-            case 'top':
-                menu.top = m;
-                break;
-            }
-        });
+    return $http.get(appconf.shared_api+'/menu/top').then(function(res) {
+        menu.top = res.data;
 
         //then load user profile (if we have jwt)
         var jwt = localStorage.getItem(appconf.jwt_id);
@@ -123,7 +115,7 @@ app.factory('menu', ['appconf', '$http', 'jwtHelper', function(appconf, $http, j
         //TODO - jwt could be invalid
         return $http.get(appconf.profile_api+'/public/'+user.sub);
     }, function(err) {
-        console.log("failed to load menu");
+        console.log("failed to load /menu/top");
     }).then(function(res) {
         //TODO - this function is called with either valid profile, or just menu if jwt is not provided... only do following if res is profile
         //if(res.status != 200) return $q.reject("Failed to load profile");

@@ -223,6 +223,27 @@ function handle_message(h, msg_h, info, ack) {
                 });
             });
         },
+        
+        //increment counter
+        function(next) {
+            if(h.qc_istemplate) return next();  //if template then skip
+
+            //group by day
+            var dategroup = new Date();
+            dategroup.setHours(0,0,0,0); //set to beginning of the day
+
+            db.Counter.findOneAndUpdate({
+                date: dategroup,
+                research_id: research._id,
+                series_id: series._id,
+                study_id: study._id,
+            }, {
+                $inc: { count: 1 }, //increment the count
+            }, {upsert:true, 'new': true}, function(err, _template) {
+                if(err) return next(err);
+                next();
+            });
+        },
 
     ], function(err) {
         //all done

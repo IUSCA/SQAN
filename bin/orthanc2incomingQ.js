@@ -57,15 +57,6 @@ function process(since) {
                     }
                 }, function(err) {
                     if(err) throw err;
-                    /*
-                    var done = json.Done; //true / false
-                    var last = json.Last; //Seq id of last change event receieved
-                    if(done) {
-                        cb();
-                    } else {
-                        process(last, limit, ex, cb);
-                    }
-                    */
                     logger.debug("last:"+json.Last);
                     if(json.Done) setTimeout(function() { process(json.Last)}, 1000*30);
                     else setTimeout(function() {process(json.Last)}, 0);

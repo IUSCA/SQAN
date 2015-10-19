@@ -243,10 +243,13 @@ function convertToInt(v, f) {
         return newa;
     } else {
         var i = parseInt(v);
+        if(i != v) throw new Error(f+":\""+v+"\" converted to " +i);
+        /*
         var check = i.toString();
-        if(v != i) {
+        if(v != check) {
             throw new Error(f+":"+v + " converted to " +i);
         }
+        */
         return i;
     }
 }
@@ -262,10 +265,13 @@ function convertToFloat(v, f) {
         return newa;
     } else {
         var i = parseFloat(v);
+        if(i != v) throw new Error(f+":\""+v+"\" converted to " +i);
+        /*
         var check = i.toString();
-        if(v != i) {
+        if(v != check) {
             throw new Error(f+":"+v + " converted to " +i);
         }
+        */
         return i;
     }
 }
