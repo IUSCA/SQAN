@@ -35,7 +35,7 @@ db.init(function(err) {
 function run(cb) {
     logger.info("querying un-qc-ed images");
     //find images that needs QC in a batch
-    db.Image.find({qc: {$exists: false}}).limit(20).exec(function(err, images) {
+    db.Image.find({qc: {$exists: false}}).limit(2000).exec(function(err, images) {
         if(err) return cb(err);
         async.forEach(images, qc, function(err) {
             if(err) return cb(err);
@@ -53,37 +53,22 @@ function qc(image, next) {
         var qc = {
             template_id: null,
             date: new Date(),
-            errors: []
+            errors: [],
+            warnings: [],
         };
         if(template) { 
             qc.template_id = template.id;
-
-            //find exclusion list
-            var exclusions = null;
-            switch(image.headers.Modality) {
-            case "MR": exclusions = qc_template.exclusions.mr; break;
-            default:
-                qc.errors.push({type: 'unknown_modality', msg: "unknown modality "+image.headers.Modality+" found for image:"+image.id});
-            }
-            if(exclusions) {
-                //compare each fields
-                for(var k in image.headers) {
-                    var v = image.headers[k];
-                    var tv = template.headers[k];
-                    if(~exclusions.indexOf(k)) continue;
-                    if(k.indexOf("qc_") === 0) continue;
-                    //if(v != template.headers[k]) {
-                    if(!_.isEqual(v, tv)) {
-                        qc.errors.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "value doesn't match with template value"});
-                    }
-                }; 
-                console.log(image.id);
-                console.log(JSON.stringify(image.headers, null, 4));
-                console.log(JSON.stringify(template.headers, null, 4));
-                console.log(JSON.stringify(qc, null, 4));
-            }
+            var ret = qc_template.match(image, template);
+            qc.errors = ret.errors;
+            qc.warnings = ret.warnings;
         } else {
             qc.errors.push({type: 'template_missing', msg: "couldn't find a template for image:"+image.id});
+        }
+
+        //debug
+        if(qc.errors.length > 0 || qc.warnings.length > 0) {
+            console.log(image.id);
+            console.log(JSON.stringify(qc, null, 4));
         }
 
         //logger.info("storing qc results");

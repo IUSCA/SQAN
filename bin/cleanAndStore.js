@@ -1,6 +1,6 @@
 #!/usr/bin/node
 
-//os
+//node
 var fs = require('fs');
 
 //contrib
