@@ -9,7 +9,9 @@ var app = angular.module('app', [
     'toaster',
     'angular-loading-bar',
     'angular-jwt',
+    'angular-inview',
     'ui.bootstrap',
+    'ui.bootstrap.tabs',
     'sca-shared',
 ]);
 
@@ -18,6 +20,28 @@ app.config(['cfpLoadingBarProvider', function(cfpLoadingBarProvider) {
     cfpLoadingBarProvider.includeSpinner = false;
 }]);
 
+//can't quite do the slidedown animation through pure angular/css.. borrowing slideDown from jQuery..
+app.animation('.slide-down', ['$animateCss', function($animateCss) {
+    return {
+        enter: function(elem, done) {
+            $(elem).hide().slideDown("slow", done);
+        },
+        leave: function(elem, done) {
+            $(elem).slideUp("slow", done);
+        }
+    };
+}]);
+
+/*
+//http://stackoverflow.com/questions/26474920/order-by-object-key-in-ng-repeat
+app.filter('toArray', function() { return function(obj) {
+    if (!(obj instanceof Object)) return obj;
+    return _.map(obj, function(val, key) {
+        return Object.defineProperty(val, '$key', {__proto__: null, value: key});
+    });
+}});
+*/
+
 //configure route
 app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
     $routeProvider.
@@ -25,6 +49,14 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         templateUrl: 't/study.html',
         controller: 'StudyController',
         requiresLogin: true
+    })
+    .when('/about', {
+        templateUrl: 't/about.html',
+        controller: 'AboutController'
+    })
+    .when('/recent', {
+        templateUrl: 't/recent.html',
+        controller: 'RecentController'
     })
     /*
     .when('/series/:date/:studyid/:seriesid', {
@@ -39,7 +71,7 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
     })
     */
     .otherwise({
-        redirectTo: '/study'
+        redirectTo: '/about'
     });
     
     //console.dir($routeProvider);
@@ -57,27 +89,34 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
     });
 }]);
 
+//configure httpProvider to send jwt unless skipAuthorization is set in config (not tested yet..)
 app.config(['appconf', '$httpProvider', 'jwtInterceptorProvider', 
 function(appconf, $httpProvider, jwtInterceptorProvider) {
-
-    //configure httpProvider to send jwt unless skipAuthorization is set in config (not tested yet..)
-    jwtInterceptorProvider.tokenGetter = function(jwtHelper, config, $http) {
+    jwtInterceptorProvider.tokenGetter = function(jwtHelper, config, $http, toaster) {
         //don't send jwt for template requests
+        //(I don't think angular will ever load css/js - browsers do)
         if (config.url.substr(config.url.length - 5) == '.html') {
             return null;
         }
+
         var jwt = localStorage.getItem(appconf.jwt_id);
+        if(!jwt) return null; //not jwt
+
+        //TODO - I should probably put this in $interval instead so that jwt will be renewed regardless
+        //of if user access server or not.. (as long as the page is opened?)
+        //(also, make it part of shared or auth module?)
         var expdate = jwtHelper.getTokenExpirationDate(jwt);
         var ttl = expdate - Date.now();
         if(ttl < 0) {
-            //expired already.. redirect to login form
-            document.location = appconf.url.login+"?redirect="+encodeURIComponent(document.location);
+            toaster.error("Your login session has expired. Please re-sign in");
+            localStorage.removeItem(appconf.jwt_id);
+            return null;
         } else if(ttl < 3600*1000) {
-            //jwt expring in less than an hour! refresh!
             //console.dir(config);
-            //console.log("jwt expiring in an hour.. refreshing first");
+            console.log("jwt expiring in an hour.. refreshing first");
+            //jwt expring in less than an hour! refresh!
             return $http({
-                url: appconf.api.auth+'/refresh',
+                url: appconf.auth_api+'/refresh',
                 skipAuthorization: true,  //prevent infinite recursion
                 headers: {'Authorization': 'Bearer '+jwt},
                 method: 'POST'

@@ -12,6 +12,7 @@ During the meeting tomorrow, I'd like to discuss the workflow / algorithm on how
 
 //node
 var fs = require('fs');
+//var assert = require('assert');
 
 //contrib
 var winston = require('winston');
@@ -48,35 +49,47 @@ function run(cb) {
 //iii) Compare headers on the images with the chosen template (on fields configured to be checked against) and store discrepancies. 
 function qc(image, next) {
     logger.info("QC-ing "+image.id);
-    find_template(image, function(err, template) {
+    find_template(image, function(err, template, templateheaders) {
         if(err) return next(err);
         var qc = {
             template_id: null,
             date: new Date(),
             errors: [],
             warnings: [],
+            //notes: [],
         };
         if(template) { 
-            qc.template_id = template.id;
-            var ret = qc_template.match(image, template);
-            qc.errors = ret.errors;
-            qc.warnings = ret.warnings;
+            if(templateheaders) {
+                qc.template_id = template.id;
+                qc_template.match(image, templateheaders, qc);
+            } else {
+                qc.errors.push({
+                    type: 'template_header_missing', 
+                    msg: "couldn't find a template header in template:"+template._id,
+                    AcquisitionNumber: image.headers.AcquisitionNumber,
+                    InstanceNumber: image.headers.InstanceNumber,
+                });
+            }
         } else {
-            qc.errors.push({type: 'template_missing', msg: "couldn't find a template for image:"+image.id});
+            qc.warnings.push({type: 'template_missing', msg: "couldn't find a template"});
         }
 
         //debug
-        if(qc.errors.length > 0 || qc.warnings.length > 0) {
+        if(qc.errors.length > 0 || qc.warnings.length > 0/* || qc.notes.length > 0*/) {
             console.log(image.id);
             console.log(JSON.stringify(qc, null, 4));
         }
 
         //logger.info("storing qc results");
         //logger.debug(qc);
-        
         //store qc results and next
         image.qc = qc;
-        image.save(next);
+        image.save(function(err) {
+            if(err) return next(err);
+            //invalidate study qc
+            //db.Study.update({_id: image.study_id}, {$unset: {qc: 1}}, {multi: true}, next);
+            next(null);
+        });
     });
 }
 
@@ -90,16 +103,30 @@ function find_template(image, cb) {
             //load template specified for this study
             db.Tempalte.find({id: study.template_id}, function(err, template) {
                 if(err) return cb(err);
-                cb(null, template);
+                find_templateheader(template, image, function(err, templateheader) {
+                    cb(err, template, templateheader);
+                });
             }); 
         } else {
             //template not specified. Just find the latest template for that series
             db.Template.find({series_id: image.series_id}).sort({date: -1}).exec(function(err, templates) {
                 if(err) return cb(err);
-                cb(null, templates[0]);
+                var template = templates[0]; //pick the latest
+                find_templateheader(template, image, function(err, templateheader) {
+                    cb(err, template, templateheader);
+                });
             });
         }
     });
+}
+
+function find_templateheader(template, image, cb) {
+    if(!template) return cb(null, null);
+    db.TemplateHeader.findOne({
+        template_id: template._id, 
+        "headers.AcquisitionNumber": image.headers.AcquisitionNumber,
+        "headers.InstanceNumber": image.headers.InstanceNumber,
+    }, cb);
 }
 
 /*

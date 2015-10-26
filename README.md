@@ -1,6 +1,10 @@
 # dicom-qc
 Quality Control service for Dicom prototype
 
+# Reference
+
+For VR (Value Representation) see chapter 6.2 of http://dicom.nema.org/dicom/2004/04_05pu.pdf
+
 # TODO
 
 Register private tags via OrthancPluginRegisterDictionaryTag
@@ -44,3 +48,6 @@ I think you could do this only via a plugin by calling OrthancPluginRegisterDict
 Br
 
 Alain.
+
+
+

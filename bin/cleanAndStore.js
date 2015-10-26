@@ -156,10 +156,22 @@ function handle_message(h, msg_h, info, ack) {
                 date: h.qc_StudyTimestamp, //TODO qc_StudyTimestamp the best choice?
             }, {
                 $inc: { count: 1 }, //increment the count
-                headers: h, //update with the latest headers (or mabe we should store all under an array?)
+                research_id: research._id,
+                //headers: h, //update with the latest headers (or mabe we should store all under an array?)
             }, {upsert:true, 'new': true}, function(err, _template) {
                 if(err) return next(err);
-                next();
+
+                //store template header
+                var ih = new db.TemplateHeader({
+                    template_id: _template._id,
+                    AcquisitionNumber: h.AcquisitionNumber,
+                    InstanceNumber: h.InstanceNumber,
+                    headers: h,
+                });
+                ih.save(function(err) {
+                    if(err) return next(err);
+                    next();
+                });
             });
         },
         
@@ -173,7 +185,8 @@ function handle_message(h, msg_h, info, ack) {
                 StudyInstanceUID: h.StudyInstanceUID,
             }, {
                 StudyTimestamp: h.qc_StudyTimestamp,
-            }, {upsert:true, 'new': true}, function(err, _study) {
+                research_id: research._id,
+            }, {upsert: true, 'new': true}, function(err, _study) {
                 if(err) return next(err);
                 study = _study;
                 next();
@@ -205,17 +218,18 @@ function handle_message(h, msg_h, info, ack) {
                     study_id: study._id,
                     series_id: series._id,
                     acquisition_id: aq._id,
-                    headers: h,
+                    headers: h
                 }
                 if(image) {
                     //if image already exists, update it!
                     logger.warn("SOPInstanceUID: "+h.SOPInstanceUID+" already exists.. updating header");
-                    db.Image.update({SOPInstanceUID: h.SOPInstanceUID}, {$set: data}, function(err, res) {
+                    db.Image.update({SOPInstanceUID: h.SOPInstanceUID}, {$set: data, $unset: {qc: 1}}, function(err, res) {
                         if(err) logger.error(err); //continue anyway..
                         return next(); 
                     });
                 } else {
                     //new image!
+                    logger.info("new image! SOPInstanceUID: "+h.SOPInstanceUID);
                     data.SOPInstanceUID = h.SOPInstanceUID;
                     var image = new db.Image(data);
                     image.save(function(err) {

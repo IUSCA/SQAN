@@ -34,7 +34,7 @@ var exclusions = {
         "PatientBirthDate",
         "PatientAge",
         "LargestImagePixelValue",
-        "InstanceNumber",
+        //"InstanceNumber",
         "InstanceCreationTime",
         "InstanceCreationDate",
         "ImagingFrequency",
@@ -50,6 +50,9 @@ var exclusions = {
         
         "PatientName",
         "SequenceName",
+        "ImagePositionPatient",
+        "TableHeight",
+        "RelatedSeriesSequence",
     ],
     "CT": [
         "AcquisitionDate",
@@ -57,10 +60,17 @@ var exclusions = {
         "AcquisitionTime",
         "ContentDate",
         "ContentTime",
+        "CTDIPhantomTypeCodeSequence",
+        "CTDIvol",
+        "DataCollectionCenterPatient",
         "DateOfLastCalibration",
         "DeidentificationMethod",
         "DeidentificationMethodCodeSequence",
+        "EstimatedDoseSaving",
+        "Exposure",
+        "ExposureTime",
         "FrameOfReferenceUID",
+        "ImagePositionPatient",
         "IrradiationEventUID",
         "PatientAge",
         "PatientBirthDate",
@@ -69,11 +79,14 @@ var exclusions = {
         "PatientSex",
         "PatientSize",
         "PatientWeight",
+        "PixelData",
+        "ReconstructionTargetCenterPatient",
         "ReferringPhysicianName",
         "SeriesDate",
         "SeriesInstanceUID",
         "SeriesNumber",
         "SeriesTime",
+        "SliceLocation",
         "SOPClassUID",
         "SOPInstanceUID",
         "StudyDate",
@@ -82,6 +95,8 @@ var exclusions = {
         "StudyTime",
         "TimeOfLastCalibration",
         "Unknown Tag & Data",
+        "TableHeight",
+        "RelatedSeriesSequence",
     ],
     "PT": [
         "AcquisitionDate",
@@ -113,21 +128,22 @@ var exclusions = {
         "StudyTime",
         "TimeOfLastCalibration",
         "Unknown Tag & Data",
+
+        //"InstanceNumber",
+        "ImagePositionPatient",
+        "TableHeight",
+        "RelatedSeriesSequence",
     ]
 };
 
 //compare image headers against template headers
-exports.match = function(image, template) {
-    var ret = {
-        warnings: [],
-        errors: [],
-    }
+exports.match = function(image, template, qc) {
 
     //find exclusion list
     var exs = exclusions[image.headers.Modality];
     if(!exs) {
-        ret.errors.push({type: 'unknown_modality', msg: "unknown modality "+image.headers.Modality+" found for image:"+image.id});
-        return ret;
+        qc.errors.push({type: 'unknown_modality', msg: "unknown modality "+image.headers.Modality+" found for image:"+image.id});
+        return;
     }
     
     //compare each fields
@@ -139,7 +155,7 @@ exports.match = function(image, template) {
 
         //raise error if the field is missing
         if(v === undefined) {
-            ret.errors.push({type: 'not_set', k: k, tv: tv, msg: "key is missing"});
+            qc.errors.push({type: 'not_set', k: k, tv: tv, msg: "key is missing"});
             continue;
         }
 
@@ -152,27 +168,24 @@ exports.match = function(image, template) {
                 //compute percent diff.
                 var diff = Math.abs((v - tv)/((v+tv)/2));
                 if(diff > 0.1) {
-                    ret.errors.push({type: 'template_mismatch', k: k, v: v, tv: tv, perdiff: diff, msg: "value is more than 10% off template value."});
+                    qc.errors.push({type: 'template_mismatch', k: k, v: v, tv: tv, perdiff: diff, msg: "value is more than 10% off template value."});
                 /*
                 } else if(diff > 0.01) {
-                    ret.warnings.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "value is more than 0.01% off template value"});
+                    qc.warnings.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "value is more than 0.01% off template value"});
                 } else if (diff != 0) {
-                    ret.warnings.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "value is not exact match template value:"+diff});
+                    qc.warnings.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "value is not exact match template value:"+diff});
                 }
                 */
                 } else if(diff != 0) {
-                    ret.warnings.push({type: 'template_mismatch', k: k, v: v, tv: tv, perdiff: diff, msg: "value does not match the template value."});
+                    qc.warnings.push({type: 'template_mismatch', k: k, v: v, tv: tv, perdiff: diff, msg: "value does not match the template value."});
                 }
-
             }
         } else {
             //string / array of something
             if(!_.isEqual(v, tv)) {
-                ret.errors.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "value doesn't match with template value"});
+                qc.errors.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "value doesn't match with template value"});
             }
         }
     }; 
-
-    return ret;
 }
 

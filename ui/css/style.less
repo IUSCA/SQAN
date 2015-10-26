@@ -133,3 +133,35 @@ height: 100px;
     opacity: 0;
   }
 }
+
+ul.images {
+    list-style: none;
+    padding: 0px;
+
+    li {
+        display: inline-block;
+        height: 10px; 
+        width: 10px; 
+        margin-left: 1px;
+        cursor: pointer;
+        &:hover {
+            background-color: #008cba;
+        }
+        &.active {
+            background-color: #008cba !important;
+        }
+    }   
+}
+
+.image-detail {
+    ul.qc-errors {
+        list-style: none;
+        padding: 0px;
+    }
+    .headers {
+        max-height: 250px;
+        overflow: auto;
+    }
+}
+
+

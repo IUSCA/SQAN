@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body ng-cloak>
-    <toaster-container></toaster-container>
+    <toaster-container toaster-options="{'position-class': 'toast-bottom-right'}"></toaster-container>
     <ng-view></ng-view><!-- <ng-view/> will cause route looping-->
     <ng-include src="'t/footer.html'"></ng-include> <!--should this be part of view?-->
 
@@ -35,6 +35,7 @@
     <script src="bower_components/angular-bootstrap/ui-bootstrap.min.js"></script>
     <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
     <script src="bower_components/angularjs-toaster/toaster.min.js"></script>
+    <script src="bower_components/angular-inview/angular-inview.js"></script>
 
     <script>
     angular.module('app.config', [])

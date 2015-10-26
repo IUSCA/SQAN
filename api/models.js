@@ -81,16 +81,37 @@ var templateSchema = mongoose.Schema({
     //study_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     date: Date, //date when this template is received (probabbly use StudyTimestamp of the template?)
+    //AcquisitionNumber: Number,
+    //InstanceNumber: Number,
     //
     ///////////////////////////////////////////////////////////////////////////
     
-    count: Number, //number of images in a given series
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //foreign key to assist lookup
+    //
+    research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     
-    //sample headers (right now, it just stores the *last* set of template sent for a given study/series
+    count: Number, //number of images in a given series
+});
+exports.Template = mongoose.model('Template', templateSchema);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+var templateHeaderSchema = mongoose.Schema({
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // keys
+    //
+    template_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    AcquisitionNumber: Number,
+    InstanceNumber: Number,
+    //
+    ///////////////////////////////////////////////////////////////////////////
+    
     headers: mongoose.Schema.Types.Mixed, 
 });
-
-exports.Template = mongoose.model('Template', templateSchema);
+exports.TemplateHeader = mongoose.model('TemplateHeader', templateHeaderSchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -104,10 +125,22 @@ var studySchema = mongoose.Schema({
     StudyInstanceUID: String,
     //
     ///////////////////////////////////////////////////////////////////////////
+    
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //foreign key to assist lookup
+    //
+    research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+
+    ///////////////////////////////////////////////////////////////////////////
 
     StudyTimestamp: Date,
 
-    template_id: mongoose.Schema.Types.ObjectId,  //template to use for QC (if not, latest version will be used)
+    //template to use for QC (if not, latest version will be used) specified by a user - to override the auto selection
+    template_id: {type: mongoose.Schema.Types.ObjectId, index: true},
+
+    //study-wide qc result 
+    //qc: mongoose.Schema.Types.Mixed,
 });
 
 exports.Study = mongoose.model('Study', studySchema);
@@ -125,7 +158,14 @@ var acquisitionSchema = mongoose.Schema({
     AcquisitionNumber: Number,
     //
     ///////////////////////////////////////////////////////////////////////////
-
+    
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //foreign key to assist lookup
+    //
+    research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    study_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+ 
     //series that this aq belongs to
     //series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     //AcquisitionTimestamp: Date, 
@@ -149,11 +189,15 @@ var imageSchema = mongoose.Schema({
     headers: mongoose.Schema.Types.Mixed, 
 
     //qc result (null if not qc-ed)
-    qc: {
+    qc: mongoose.Schema.Types.Mixed,
+    /*
+    {
         template_id: mongoose.Schema.Types.ObjectId,  //template used for the qc
         date: Date, //date when the QC was last performed
         errors: [ mongoose.Schema.Types.Mixed ], //list of qc dicrepancies, etc..
-    }
+        warnings: [ mongoose.Schema.Types.Mixed ], //list of qc dicrepancies, etc..
+        notes: [ mongoose.Schema.Types.Mixed ], //list of qc dicrepancies, etc..
+    }*/
 });
 exports.Image = mongoose.model('Image', imageSchema);
 

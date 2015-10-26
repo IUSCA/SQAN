@@ -123,3 +123,28 @@ height: 100px;
     opacity: 0;
   }
 }
+ul.images {
+  list-style: none;
+  padding: 0px;
+}
+ul.images li {
+  display: inline-block;
+  height: 10px;
+  width: 10px;
+  margin-left: 1px;
+  cursor: pointer;
+}
+ul.images li:hover {
+  background-color: #008cba;
+}
+ul.images li.active {
+  background-color: #008cba !important;
+}
+.image-detail ul.qc-errors {
+  list-style: none;
+  padding: 0px;
+}
+.image-detail .headers {
+  max-height: 250px;
+  overflow: auto;
+}
