@@ -25,6 +25,10 @@
                 </div>
             </form>
             -->
+            <small class="pull-right">
+                Templates:
+                <span class="label label-default" ng-repeat="(id, t) in series.templates" style="margin-right: 3px;">{{t.date | date:'yyyy-MM-dd'}}</span>
+            </small>
             <h5>{{series.series.series_desc}}</h5>
             <ul class="list-group">
                 <li class="list-group-item" ng-repeat="(study_id, study) in series.studies" in-view="load_study(study)">
@@ -36,7 +40,7 @@
                         |
                         <span>{{study.images.length}} images</span>
                         | 
-                        <small>StudyInstanceUID: {{study.StudyInstanceUID}}</small>
+                        <small>StudyInstanceUID: <a href="{{appconf.kibana_url}}#/discover?_g=()&_a=(columns:!(_source),index:'dicom-{{research.research.Modality | lowercase}}.*',interval:auto,query:(query_string:(analyze_wildcard:!t,query:'StudyInstanceUID: {{study.StudyInstanceUID}}')),sort:!(_score,desc))" target="_blank">{{study.StudyInstanceUID}}</a></small>
                     </p>
 
                     <div class="row">

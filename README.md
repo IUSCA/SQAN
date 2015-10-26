@@ -45,9 +45,5 @@ However, you may access their value through instances/:id/content/8889,8889 and 
 
 I think you could do this only via a plugin by calling OrthancPluginRegisterDictionaryTag
 
-Br
-
-Alain.
-
-
+Apply IIBISID based access control (what should I do with kibana?)
 

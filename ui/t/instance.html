@@ -1,4 +1,4 @@
-
+<button class="btn btn-xs pull-right" ng-click="study.active_image = null;"><i class="fa fa-times"></i></button>
 <ul class="nav nav-tabs" role="tablist">
     <li role="presentation" ng-class="{active: study.active_tab == 'issues'}"><a href="" role="tab" data-toggle="tab" ng-click="study.active_tab = 'issues';">Issues</a></li>
     <li role="presentation" ng-class="{active: study.active_tab == 'headers'}"><a href="" role="tab" data-toggle="tab" ng-click="study.active_tab = 'headers';">Headers</a></li>
@@ -6,12 +6,17 @@
 <br>
 <div class="tab-content">
     <div role="tabpanel" class="tab-pane" ng-class="{active: study.active_tab == 'issues'}">
-        <p>Instance: {{study.active_image.headers.InstanceNumber}} | <small>
-            <span>SOPInstanceUID: {{study.active_image.SOPInstanceUID}}</span>
-        </small></p>
+        <p class="pull-right"> with Template:
+            <span class="label label-default">{{series.templates[study.active_image.qc.template_id].date | date:'yyyy-MM-dd'}}</span>
+        </p>
+        <p class="pull-right">QC-ed at <time>{{study.active_image.qc.date | date: 'medium'}}</time></p>
+        <p>Instance: {{study.active_image.headers.InstanceNumber}} | 
+            <small>
+                <span>SOPInstanceUID: <a href="{{appconf.kibana_url}}#/discover?_g=()&_a=(columns:!(_source),index:'dicom-{{study.active_image.headers.Modality | lowercase}}.*',interval:auto,query:(query_string:(analyze_wildcard:!t,query:'SOPInstanceUID: {{study.active_image.SOPInstanceUID}}')),sort:!(_score,desc))" target="_blank">{{study.active_image.SOPInstanceUID}}</a></span>
+            </small>
+        </p>
         <p ng-if="!study.active_image.qc" class="text-muted">Not QC-ed yet</p>
         <p ng-if="study.active_image.qc.errors.length == 0 && study.active_image.qc.warnings.length == 0" class="text-muted">No issues detected</p>
-        <p class="pull-right">QC Date: <time>{{study.active_image.qc.date | date: 'medium'}}</time></p>
         <div ng-if="study.active_image.qc.errors.length > 0">
             <h5>Errors</h5>
             <ul class="qc-errors">
@@ -27,7 +32,6 @@
     </div>
     <div role="tabpanel" class="tab-pane" ng-class="{active: study.active_tab == 'headers'}">
         <!--<p>Template Used: {{series.templates[study.active_image.qc.template_id]}}</p>-->
-        <p>Template Date: {{series.templates[study.active_image.qc.template_id].date | date:'medium'}}</p>
         <div class="headers">
             <table>
                 <thead>

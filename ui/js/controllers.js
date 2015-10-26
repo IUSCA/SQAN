@@ -17,6 +17,7 @@ app.controller('RecentController', ['$scope', 'appconf', 'toaster', '$http', 'jw
 function($scope, appconf, toaster, $http, jwtHelper, $cookies, $location, menu, serverconf) {
     menu.then(function(_menu) { $scope.menu = _menu; });
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
+    $scope.appconf = appconf;
 
     $http.get(appconf.api+'/study/recent')
     .then(function(res) {

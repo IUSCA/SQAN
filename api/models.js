@@ -122,7 +122,7 @@ var studySchema = mongoose.Schema({
     //
     series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     subject: String,
-    StudyInstanceUID: String,
+    StudyInstanceUID: String, //StudyInstanceUID alone can not uniquely identify a "study" as I understand it. 
     //
     ///////////////////////////////////////////////////////////////////////////
     
