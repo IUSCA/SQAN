@@ -1,147 +1,256 @@
 
 var _ = require('underscore');
 
-var exclusions = {
-    "MR": [
-        "dBdt",
-        "WindowWidth",
-        "WindowCenterWidthExplanation",
-        "WindowCenter",
-        "StudyTime",
-        "Unknown Tag & Data",
-        "StudyInstanceUID",
-        "StudyID",
-        "StudyDate",
-        "SpecificCharacterSet",
-        "SmallestImagePixelValue",
-        "SliceLocation",
-        "SeriesTime",
-        "SeriesNumber",
-        "SeriesInstanceUID",
-        "SeriesDate",
-        "SequenceVariant",
-        "SOPInstanceUID",
-        "SOPClassUID",
-        "SAR",
-        "ReferringPhysicianName",
-        "PrivateCreator",
-        "PixelData",
-        "PhotometricInterpretation",
-        "PatientWeight",
-        "PatientSize",
-        "PatientSex",
-        "PatientIdentityRemoved",
-        "PatientBirthDate",
-        "PatientAge",
-        "LargestImagePixelValue",
-        //"InstanceNumber",
-        "InstanceCreationTime",
-        "InstanceCreationDate",
-        "ImagingFrequency",
-        "ImagePositionPatient",
-        "FrameOfReferenceUID",
-        "DeidentificationMethodCodeSequence",
-        "DeidentificationMethod",
-        "ContentTime",
-        "ContentDate",
-        "AcquisitionTime",
-        "AcquisitionNumber",
-        "AcquisitionDate",
-        
-        "PatientName",
-        "SequenceName",
-        "ImagePositionPatient",
-        "TableHeight",
-        "RelatedSeriesSequence",
-    ],
-    "CT": [
-        "AcquisitionDate",
-        "AcquisitionDateTime",
-        "AcquisitionTime",
-        "ContentDate",
-        "ContentTime",
-        "CTDIPhantomTypeCodeSequence",
-        "CTDIvol",
-        "DataCollectionCenterPatient",
-        "DateOfLastCalibration",
-        "DeidentificationMethod",
-        "DeidentificationMethodCodeSequence",
-        "EstimatedDoseSaving",
-        "Exposure",
-        "ExposureTime",
-        "FrameOfReferenceUID",
-        "ImagePositionPatient",
-        "IrradiationEventUID",
-        "PatientAge",
-        "PatientBirthDate",
-        "PatientIdentityRemoved",
-        "PatientName",
-        "PatientSex",
-        "PatientSize",
-        "PatientWeight",
-        "PixelData",
-        "ReconstructionTargetCenterPatient",
-        "ReferringPhysicianName",
-        "SeriesDate",
-        "SeriesInstanceUID",
-        "SeriesNumber",
-        "SeriesTime",
-        "SliceLocation",
-        "SOPClassUID",
-        "SOPInstanceUID",
-        "StudyDate",
-        "StudyID",
-        "StudyInstanceUID",
-        "StudyTime",
-        "TimeOfLastCalibration",
-        "Unknown Tag & Data",
-        "TableHeight",
-        "RelatedSeriesSequence",
-    ],
-    "PT": [
-        "AcquisitionDate",
-        "AcquisitionTime",
-        "ContentDate",
-        "ContentTime",
-        "DateOfLastCalibration",
-        "DeidentificationMethod",
-        "DeidentificationMethodCodeSequence",
-        "FrameOfReferenceUID",
-        "FrameReferenceTime",
-        "PatientAge",
-        "PatientBirthDate",
-        "PatientIdentityRemoved",
-        "PatientName",
-        "PatientSex",
-        "PatientSize",
-        "PatientWeight",
-        "ReferringPhysicianName",
-        "SeriesDate",
-        "SeriesInstanceUID",
-        "SeriesNumber",
-        "SeriesTime",
-        "SOPClassUID",
-        "SOPInstanceUID",
-        "StudyDate",
-        "StudyID",
-        "StudyInstanceUID",
-        "StudyTime",
-        "TimeOfLastCalibration",
-        "Unknown Tag & Data",
+var customs = {
+    "MR": {
+        "AccessionNumber": skip,
+        "AcquisitionDate": skip,
+        "AcquisitionNumber": skip,
+        "AcquisitionTime": skip,
 
-        //"InstanceNumber",
-        "ImagePositionPatient",
-        "TableHeight",
-        "RelatedSeriesSequence",
-    ]
+        "BluePaletteColorLookupTableData": skip,
+        "BluePaletteColorLookupTableDescriptor": skip,
+        "CodeMeaning": skip,
+        "CodeValue": skip,
+        "CodingSchemeDesignator": skip,
+        "CodingSchemeVersion": skip,
+        "CommentsOnThePerformedProcedureStep": skip,
+        "ContentDate": skip,
+        "ContentTime": skip,
+
+        "ContinuityOfContent": skip,
+        "DateOfLastCalibration": skip,
+        "dBdt": skip,
+        "GenericGroupLength": skip,
+        "GreenPaletteColorLookupTableData": skip,
+        "GreenPaletteColorLookupTableDescriptor": skip,
+        "ImageComments": skip,
+        "ImagePositionPatient": skip,
+        "ImagingFrequency": skip,
+        "ImplementationVersionName": skip,
+        "InstanceCreationDate": skip,
+        "InstanceCreationTime": skip,
+        "LargestImagePixelValue": skip,
+        "MappingResource": skip,
+        "NumericValue": skip,
+        "OperatorsName": skip,
+        "PatientAge": skip,
+        "PatientBirthDate": skip,
+        "PatientComments": skip,
+        "PatientID": skip,
+        "PatientName": skip,
+        "PatientSex": skip,
+        "PatientSize": skip,
+        "PatientWeight": skip,
+        "PerformedProcedureStepDescription": skip,
+        "PerformedProcedureStepID": skip,
+        "PerformedProcedureStepStartDate": skip,
+        "PerformedProcedureStepStartTime": skip,
+        "PerformingPhysicianName": skip,
+        "PersonName": skip,
+        "PhotometricInterpretation": skip,
+        "PrivateCreator": skip,
+        "PrivateGroupLength": skip,
+        "RedPaletteColorLookupTableData": skip,
+        "RedPaletteColorLookupTableDescriptor": skip,
+        "ReferringPhysicianName": skip,
+        "RelationshipType": skip,
+        "SequenceName": skip,
+        "SequenceVariant": skip,
+        "SeriesDate": skip,
+        "SeriesNumber": skip,
+        "SeriesTime": skip,
+        "SliceLocation": skip,
+        "SmallestImagePixelValue": skip,
+        "SpecificCharacterSet": skip,
+        "StudyDate": skip,
+        "StudyDescription": skip,
+        "StudyID": skip,
+        "StudyTime": skip,
+        "TextValue": skip,
+        "TimeOfLastCalibration": skip,
+        "ValueType": skip,
+        "VerificationFlag": skip,
+        "WindowCenter": skip,
+        "WindowCenterWidthExplanation": skip,
+        "WindowWidth": skip,
+    
+        "StudyInstanceUID": skip,
+        "SeriesInstanceUID": skip,
+        "SOPInstanceUID": skip,
+        "SOPClassUID": skip,
+        "SAR": skip,
+        "PixelData": skip,
+        "PatientIdentityRemoved": skip,
+        "FrameOfReferenceUID": skip,
+        "DeidentificationMethodCodeSequence": skip,
+        "DeidentificationMethod": skip,
+        
+        "PatientName": skip,
+        "ImagePositionPatient": skip,
+        "TableHeight": skip,
+        "RelatedSeriesSequence": skip,
+        "Unknown Tag & Data": skip,
+    },
+    "CT": {
+        "AcquisitionDate": skip,
+        "AcquisitionDateTime": skip,
+        "AcquisitionTime": skip,
+        "ContentDate": skip,
+        "ContentTime": skip,
+        "CTDIPhantomTypeCodeSequence": skip,
+        "CTDIvol": skip,
+        "DataCollectionCenterPatient": skip,
+        "DateOfLastCalibration": skip,
+        "DeidentificationMethod": skip,
+        "DeidentificationMethodCodeSequence": skip,
+        "EstimatedDoseSaving": skip,
+        "Exposure": skip,
+        "ExposureTime": skip,
+        "FrameOfReferenceUID": skip,
+        "ImagePositionPatient": skip,
+        "IrradiationEventUID": skip,
+        "PatientAge": skip,
+        "PatientBirthDate": skip,
+        "PatientIdentityRemoved": skip,
+        "PatientName": skip,
+        "PatientSex": skip,
+        "PatientSize": skip,
+        "PatientWeight": skip,
+        "PixelData": skip,
+        "ReconstructionTargetCenterPatient": skip,
+        "ReferringPhysicianName": skip,
+        "SeriesDate": skip,
+        "SeriesInstanceUID": skip,
+        "SeriesNumber": skip,
+        "SeriesTime": skip,
+        "SliceLocation": skip,
+        "SOPClassUID": skip,
+        "SOPInstanceUID": skip,
+        "StudyDate": skip,
+        "StudyID": skip,
+        "StudyInstanceUID": skip,
+        "StudyTime": skip,
+        "TimeOfLastCalibration": skip,
+        "Unknown Tag & Data": skip,
+        "TableHeight": skip,
+        "RelatedSeriesSequence": skip,
+    },
+    "PT": {
+        "AcquisitionDate": skip,
+        "AcquisitionTime": skip,
+        "ActualFrameDuration": skip,
+        "ContentDate": skip,
+        "ContentTime": skip,
+        "DateOfLastCalibration": skip,
+        "DeidentificationMethod": skip,
+        "DeidentificationMethodCodeSequence": skip,
+        "DoseCalibrationFactor": skip,
+        "FrameOfReferenceUID": skip,
+        "FrameReferenceTime": skip,
+        "ImagePositionPatient": skip,
+        "LargestImagePixelValue": skip,
+        "NumberOfTimeSlices ": function(k, v, tv, qc) {
+            if(v === undefined) return; //ok if it doesn't exist This tag appears in dynamic PET scans only.
+            check_equal(k, v, tv, qc);
+        },
+        "PatientAge": skip,
+        "PatientBirthDate": skip,
+        "PatientIdentityRemoved": skip,
+        "PatientName": skip,
+        "PatientSex": skip,
+        "PatientSize": skip,
+        "PatientWeight": skip,
+        "PixelData": skip,
+        "RadiopharmaceuticalInformationSequence": function(k, v, tv, qc) {
+            if(!check_set(k, v, tv, qc)) return;
+            delete tv.RadiopharmaceuticalStartTime;
+            delete v.RadiopharmaceuticalStartTime; 
+            check_equal(k, v, tv, qc);
+        },
+        "ReferringPhysicianName": skip,
+        "RelatedSeriesSequence": function(k, v, tv, qc) {
+            if(!check_set(k, v, tv, qc)) return;
+            delete tv.StudyInstanceUID;
+            delete v.StudyInstanceUID;
+            delete tv.SeriesInstanceUID;
+            delete v.SeriesInstanceUID;
+            check_equal(k, v, tv, qc);
+        },
+        "RescaleIntercept": skip,
+        "RescaleSlope": skip,
+        "ScatterFractionFactor": skip,
+        "SeriesDate": skip,
+        "SeriesInstanceUID": skip,
+        "SeriesNumber": skip,
+        "SeriesTime": skip,
+        "SliceLocation": skip,
+        "SmallestImagePixelValue": skip,
+        "SOPClassUID": skip,
+        "SOPInstanceUID": skip,
+        "StudyDate": skip,
+        "StudyID": skip,
+        "StudyInstanceUID": skip,
+        "StudyTime": skip,
+        "TimeOfLastCalibration": skip,
+        "Unknown Tag & Data": skip,
+        "WindowCenter": skip,
+        "WindowWidth": skip,
+
+        //"InstanceNumber": skip,
+        "TableHeight": skip,
+    }
 };
+
+function skip(k, v, tv, qc) {
+    return;
+}
+
+function check_set(k, v, tv, qc) {
+    //raise error if the field is missing
+    if(v === undefined) {
+        qc.errors.push({type: 'not_set', k: k, tv: tv, msg: "key is missing"});
+        return false;
+    }
+    return true;
+}
+
+//just compare v v.s. tv and raise error if they don't match
+function check_equal(k, v, tv, qc) {
+    if(typeof v === 'number') {
+        //sundar (Regarding ranges, for example: we can use color green for +/-  for target 0.01% difference. Color Yellow for 10% difference, and color Red beyond.)
+        if(v == 0 && tv == 0) {
+            //both 0.. can't calculate percent difference (and it matches!)
+        } else {
+            //compute percent diff.
+            var diff = Math.abs((v - tv)/((v+tv)/2));
+            if(diff > 0.1) {
+                qc.errors.push({type: 'template_mismatch', k: k, v: v, tv: tv, perdiff: diff, msg: "value is more than 10% off template value."});
+            /*
+            } else if(diff > 0.01) {
+                qc.warnings.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "value is more than 0.01% off template value"});
+            } else if (diff != 0) {
+                qc.warnings.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "value is not exact match template value:"+diff});
+            }
+            */
+            } else if(diff != 0) {
+                qc.warnings.push({type: 'template_mismatch', k: k, v: v, tv: tv, perdiff: diff, msg: "value does not match the template value."});
+            }
+        }
+    } else {
+        //string / array of something
+        if(!_.isEqual(v, tv)) {
+            qc.errors.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "value doesn't match with template value"});
+        }
+    }
+}
 
 //compare image headers against template headers
 exports.match = function(image, template, qc) {
 
     //find exclusion list
-    var exs = exclusions[image.headers.Modality];
-    if(!exs) {
+    var cus = customs[image.headers.Modality];
+    if(!cus) {
         qc.errors.push({type: 'unknown_modality', msg: "unknown modality "+image.headers.Modality+" found for image:"+image.id});
         return;
     }
@@ -150,41 +259,12 @@ exports.match = function(image, template, qc) {
     for(var k in template.headers) {
         var v = image.headers[k];
         var tv = template.headers[k];
-        if(exs && ~exs.indexOf(k)) continue;//ignore fields in exclusion list
-        if(k.indexOf("qc_") === 0) continue;//ignore qc fields
-
-        //raise error if the field is missing
-        if(v === undefined) {
-            qc.errors.push({type: 'not_set', k: k, tv: tv, msg: "key is missing"});
-            continue;
-        }
-
-        //now the fun part
-        if(typeof v === 'number') {
-            //sundar (Regarding ranges, for example: we can use color green for +/-  for target 0.01% difference. Color Yellow for 10% difference, and color Red beyond.)
-            if(v == 0 && tv == 0) {
-                //both 0.. can't calculate percent difference (and it matches!)
-            } else {
-                //compute percent diff.
-                var diff = Math.abs((v - tv)/((v+tv)/2));
-                if(diff > 0.1) {
-                    qc.errors.push({type: 'template_mismatch', k: k, v: v, tv: tv, perdiff: diff, msg: "value is more than 10% off template value."});
-                /*
-                } else if(diff > 0.01) {
-                    qc.warnings.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "value is more than 0.01% off template value"});
-                } else if (diff != 0) {
-                    qc.warnings.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "value is not exact match template value:"+diff});
-                }
-                */
-                } else if(diff != 0) {
-                    qc.warnings.push({type: 'template_mismatch', k: k, v: v, tv: tv, perdiff: diff, msg: "value does not match the template value."});
-                }
-            }
+        if(k.indexOf("qc_") === 0) continue;//ignore all qc fields
+        if(cus[k]) {
+            cus[k](k, v, tv, qc);
         } else {
-            //string / array of something
-            if(!_.isEqual(v, tv)) {
-                qc.errors.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "value doesn't match with template value"});
-            }
+            if(!check_set(k, v, tv, qc)) continue;
+            check_equal(k, v, tv, qc);
         }
     }; 
 }

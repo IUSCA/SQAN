@@ -1,0 +1,59 @@
+<sca-menubar menu="menu.top" active="'dicom'" profile="menu._profile"></sca-menubar>
+<sca-menutab menu="serverconf.menu" active="'recent'"></sca-menutab>
+<div class="container-fluid">
+    <div ng-repeat="(research_id, research) in researches">
+        <!--
+        <time class="pull-right">{{study.StudyTimestamp | date:'medium'}}</time>
+        <h4>StudyInstanceUID: {{study.StudyInstanceUID}}</h4>
+        <pre>{{study}}</pre>
+        -->
+        <!--{{research.research}}-->
+        <h3>IIBISID: {{research.research.IIBISID}}
+            <small>Modality: <b>{{research.research.Modality}}</b> StationName: <b>{{research.research.StationName}}</b></small>
+        </h3>
+        <!--<h4>Series</h4>-->
+        <div ng-repeat="(series_id, series) in research.serieses">
+            <!--
+            <form class="form-inline pull-right">
+                <div class="form-group">
+                    <label>Template</label>
+                    <select class="form-control">
+                        <option ng-repeat="template in series.templates" value="{{template._id}}">
+                            {{template.date}} <small>({{template.count}} images)</small>
+                        </option>
+                    </select>
+                </div>
+            </form>
+            -->
+            <h5>{{series.series.series_desc}}</h5>
+            <ul class="list-group">
+                <li class="list-group-item" ng-repeat="(study_id, study) in series.studies" in-view="load_study(study)">
+                    <div class="pull-right">
+                        Study Date: <time>{{study.StudyTimestamp | date:'medium'}}</time>
+                    </div>
+                    <p>
+                        <span>Subject: <b>{{study.subject}}</b></span>
+                        |
+                        <span>{{study.images.length}} images</span>
+                        | 
+                        <small>StudyInstanceUID: {{study.StudyInstanceUID}}</small>
+                    </p>
+
+                    <div class="row">
+                        <div class="col-sm-10">
+                            <ul class="images">
+                                <li ng-repeat="image in study.images" style="background-color: {{image.color}};" ng-class="{active: study.active_image == image}" 
+                                    ng-click="load_image(study, series, image)"></li>
+                            </ul>
+                        </div>
+                        <div class="col-sm-2">
+                            <button type="button" class="btn btn-xs" ng-click="invalidate_qc(study)">Invalidate QC</button>
+                        </div>
+                    </div><!--row-->
+                    <div ng-if="study.loading == true"><i class="fa fa-spinner fa-pulse"></i> Loading...</div>
+                    <div ng-if="study.active_image" class="slide-down image-detail" ng-include="'t/instance.html'"></div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

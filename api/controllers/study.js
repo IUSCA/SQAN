@@ -18,7 +18,7 @@ router.get('/recent', jwt({secret: config.express.jwt.secret}), function(req, re
     db.Study
     .find()
     //.where('StudyTimestamp').gt(last_week)
-    .limit(20)
+    .limit(40)
     .sort('-StudyTimestamp')
     .exec(function(err, studies) {
         if(err) return next(err);
@@ -82,9 +82,10 @@ router.get('/qc/:study_id', jwt({secret: config.express.jwt.secret}), function(r
                 _id: _image._id,
             };
             if(_image.qc) {
-                if(_image.qc.errors) image.e = _image.qc.errors.length;
-                if(_image.qc.warnings) image.w = _image.qc.warnings.length;
-                if(_image.qc.notes) image.n = _image.qc.notes.length;
+                image.qc = {e: 0, w: 0};
+                if(_image.qc.errors) image.qc.e = _image.qc.errors.length;
+                if(_image.qc.warnings) image.qc.w = _image.qc.warnings.length;
+                //if(_image.qc.notes) image.n = _image.qc.notes.length;
             }
             images.push(image);
         });

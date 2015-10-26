@@ -107,22 +107,22 @@ function($scope, appconf, toaster, $http, jwtHelper, $cookies, $location, menu, 
         var h = 0; 
         var s = "0%"; //saturation (default to gray)
         var l = "50%"; //light
-        if(image.e !== undefined) {
-            if(image.e > 0) {
+        if(image.qc) {
+            if(image.qc.e > 0) {
                 h = 0; //red
-                var _s = 50-image.e;
+                var _s = 50-image.qc.e;
                 if(_s < 0) _l = 0;
                 s = _s+"%";
-            } else if(image.w > 0) {
+            } else if(image.qc.w > 0) {
                 h = 60; //yellow
-                var _s = 50-image.w;
+                var _s = 50-image.qc.w;
                 if(_s < 0) _l = 0;
                 s = _s+"%";
             } else {
+                console.log("green!");
                 h = 120; //green
+                s = "50%";
             }
-        } else {
-            //not qc-ed yet
         }
         image.color = "hsl("+h+","+s+","+l+")";
     }
