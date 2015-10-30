@@ -38,7 +38,7 @@ function run(cb) {
     //find images that needs QC in a batch
     db.Image.find({qc: {$exists: false}}).limit(2000).exec(function(err, images) {
         if(err) return cb(err);
-        async.forEach(images, qc, function(err) {
+        async.each(images, qc, function(err) {
             if(err) return cb(err);
             logger.info("batch complete. sleeping before next batch");
             setTimeout(run, 1000*5);
@@ -87,8 +87,7 @@ function qc(image, next) {
         image.save(function(err) {
             if(err) return next(err);
             //invalidate study qc
-            //db.Study.update({_id: image.study_id}, {$unset: {qc: 1}}, {multi: true}, next);
-            next(null);
+            db.Study.update({_id: image.study_id}, {$unset: {qc: 1}}, {multi: true}, next);
         });
     });
 }

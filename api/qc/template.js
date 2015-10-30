@@ -154,6 +154,7 @@ var customs = {
             if(v === undefined) return; //ok if it doesn't exist This tag appears in dynamic PET scans only.
             check_equal(k, v, tv, qc);
         },
+        "PaletteColorLookupTableUID": skip,
         "PatientAge": skip,
         "PatientBirthDate": skip,
         "PatientIdentityRemoved": skip,
@@ -162,21 +163,30 @@ var customs = {
         "PatientSize": skip,
         "PatientWeight": skip,
         "PixelData": skip,
+
         "RadiopharmaceuticalInformationSequence": function(k, v, tv, qc) {
             if(!check_set(k, v, tv, qc)) return;
-            delete tv.RadiopharmaceuticalStartTime;
-            delete v.RadiopharmaceuticalStartTime; 
+            delete tv[0].RadiopharmaceuticalStartTime;
+            delete v[0].RadiopharmaceuticalStartTime; 
+            delete tv[0].RadionuclideTotalDose;
+            delete v[0].RadionuclideTotalDose; 
             check_equal(k, v, tv, qc);
         },
         "ReferringPhysicianName": skip,
+
+        //we are receiving unhashed SOPInstanceUID inside this field. Sundar told me to skip this for now
+        "RelatedSeriesSequence": skip,
+        /*
         "RelatedSeriesSequence": function(k, v, tv, qc) {
             if(!check_set(k, v, tv, qc)) return;
-            delete tv.StudyInstanceUID;
-            delete v.StudyInstanceUID;
-            delete tv.SeriesInstanceUID;
-            delete v.SeriesInstanceUID;
+            delete tv[0].StudyInstanceUID;
+            delete v[0].StudyInstanceUID;
+            delete tv[0].SeriesInstanceUID;
+            delete v[0].SeriesInstanceUID;
             check_equal(k, v, tv, qc);
         },
+        */
+
         "RescaleIntercept": skip,
         "RescaleSlope": skip,
         "ScatterFractionFactor": skip,

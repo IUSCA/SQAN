@@ -6,19 +6,155 @@
  * to add it to app.js's module list
  * */
 
-app.controller('AboutController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$cookies', '$location', 'menu', 'serverconf',
-function($scope, appconf, toaster, $http, jwtHelper, $cookies, $location, menu, serverconf) {
+app.controller('AboutController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'menu', 'serverconf', 'scaMessage',
+function($scope, appconf, toaster, $http, jwtHelper,  $location, menu, serverconf, scaMessage) {
+    $scope.appconf = appconf;
+    scaMessage.show(toaster);
     menu.then(function(_menu) { $scope.menu = _menu; });
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
     //todo
 }]);
 
-app.controller('RecentController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$cookies', '$location', 'menu', 'serverconf',
-function($scope, appconf, toaster, $http, jwtHelper, $cookies, $location, menu, serverconf) {
+app.controller('RecentController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'menu', 'serverconf', 'scaMessage', '$anchorScroll',
+function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf, scaMessage, $anchorScroll) {
+    $scope.appconf = appconf;
+    scaMessage.show(toaster);
+
+    serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
+    menu.then(function(_menu) { $scope.menu = _menu; });
+
+    /*
+    $scope.selected_research = null;
+    $http.get(appconf.api+'/researches')
+    .then(function(res) {
+        $scope.researches = res.data;
+        //doesn't work!
+        //$scope.selected_research = res.data[0]._id;
+    });
+    */
+
+    /*
+    //data loaded so far..
+    $scope.researches = {};
+    $scope.serieses = {};
+    $scope.templates = {};
+    $scope.studies = []; //only one that's array (ordered by studytime)
+    */
+
+    $http.get(appconf.api+'/study/query', {params: {
+        skip: 0, 
+        limit: 400
+    }})
+    .then(function(res) {
+        /*
+        res.data.researches.forEach(function(r) {
+            researches[r._id] = r;
+        });
+        res.data.serieses.forEach(function(s) {
+            serieses[s._id] = s;
+        });
+        res.data.templates.forEach(function(t) {
+            templates[t._id] = t;
+        });
+        res.data.studies.forEach(function(s) {
+            studies.push(s); 
+        });
+        */
+        var researches = {};
+        res.data.researches.forEach(function(research) {
+            researches[research._id] = research;
+        });
+        
+        var serieses = {};
+        res.data.serieses.forEach(function(series) {
+            serieses[series._id] = series;
+            //series.research = researches[series.research_id];
+        });
+
+        //store study
+        $scope.researches = {};
+        $scope.study_count = 0;
+        res.data.studies.forEach(function(study) {
+            $scope.study_count++;
+            //study.series = serieses[study.series_id];
+            
+            //organize study under iibisid / modality / subject / series / study(series_number)
+            var research_detail = researches[study.research_id];
+            var research = $scope.researches[research_detail.IIBISID];
+            if(research === undefined) {
+                research = {
+                    //_detail: researches[study.research_id], (stored under modality)
+                    modalities: {},
+                };
+                $scope.researches[research_detail.IIBISID] = research;
+            }
+
+            var modality = research.modalities[research_detail.Modality];
+            if(modality === undefined) {
+                modality = {
+                    _detail: researches[study.research_id],
+                    subjects: {}, //contains serieses for each subject
+                    template: { serieses: {} }, //contains serieses right beneath it
+                };
+                research.modalities[research_detail.Modality] = modality;
+            }
+            //series.studies[study._id] = study;
+
+            var subject = modality.subjects[study.subject];
+            if(subject === undefined) {
+                subject = {
+                    serieses: {}
+                };
+                modality.subjects[study.subject] = subject;
+            }
+
+            var series = subject.serieses[study.series_id];
+            if(series === undefined) {
+                series = {
+                    _detail: serieses[study.series_id],
+                    studies: {}
+                };
+                subject.serieses[study.series_id] = series;
+            }
+            series.studies[study._id] = study;
+        });
+        
+        //store templates
+        res.data.templates.forEach(function(template) {
+            var research_detail = researches[template.research_id];
+            var research = $scope.researches[research_detail.IIBISID];
+            var modality = research.modalities[research_detail.Modality];
+            var series = modality.template.serieses[template.series_id];
+            if(series === undefined) {
+                series = {
+                    _detail: serieses[template.series_id],
+                    templates: {}
+                };
+                modality.template.serieses[template.series_id] = series;
+            }
+            series.templates[template._id] = template;
+        });
+
+        //debug
+        console.log("$scope.researches dump");
+        console.dir($scope.researches);
+    });
+
+    $scope.openstudy = function(study_id) {
+        $location.path("/study/"+study_id);
+    }
+    $scope.scrollto = function(id) {
+        $anchorScroll(id);
+    }
+}]);
+
+app.controller('RecentOldController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'menu', 'serverconf',
+function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf) {
     menu.then(function(_menu) { $scope.menu = _menu; });
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
     $scope.appconf = appconf;
 
+    //alert('deprecated');
     $http.get(appconf.api+'/study/recent')
     .then(function(res) {
 
@@ -34,9 +170,11 @@ function($scope, appconf, toaster, $http, jwtHelper, $cookies, $location, menu, 
         });
 
         $scope.researches = {};
+        $scope.study_count = 0;
         
         //add series/research object references
         res.data.studies.forEach(function(study) {
+            $scope.study_count++;
             study.series = serieses[study.series_id];
             
             //organize each study under research / series
@@ -96,7 +234,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $cookies, $location, menu, 
                 if(template)  {
                     $http.get(appconf.api+'/template/'+template._id+'/'+image.headers.InstanceNumber)
                     .then(function(res) {
-                        console.dir(res.data);
+                        //console.dir(res.data);
                         study.active_image.template = res.data;
                     });
                 }
@@ -120,7 +258,6 @@ function($scope, appconf, toaster, $http, jwtHelper, $cookies, $location, menu, 
                 if(_s < 0) _l = 0;
                 s = _s+"%";
             } else {
-                console.log("green!");
                 h = 120; //green
                 s = "50%";
             }
@@ -137,21 +274,79 @@ function($scope, appconf, toaster, $http, jwtHelper, $cookies, $location, menu, 
     }
 }]);
 
-app.controller('StudyController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$cookies', '$location', 'menu', 'serverconf',
-function($scope, appconf, toaster, $http, jwtHelper, $cookies, $location, menu, serverconf) {
+app.controller('StudyController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'menu', 'serverconf', '$routeParams', 'scaMessage',
+function($scope, appconf, toaster, $http, jwtHelper,  $location, menu, serverconf, $routeParams, scaMessage) {
+    scaMessage.show(toaster);
     menu.then(function(_menu) { $scope.menu = _menu; });
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
-    //var jwt = localStorage.getItem(appconf.jwt_id);
-    //var user = jwtHelper.decodeToken(jwt);
 
-    /*
-    return $http.get(appconf.api+'/study/recent')
+    $http.get(appconf.api+'/study/id/'+$routeParams.studyid)
     .then(function(res) {
-        $scope.studies = res.data.studies;
-        $scope.serieses = res.data.serieses;
-        $scope.researches = res.data.researches;
+        $scope.data = res.data;
+
+        /*
+        //process qc result.
+        if($scope.data.study.qc) {
+            var images = [];
+            var qc = $scope.data.study.qc;
+            //images.length = qc.image_count;
+            for(var i = 0;i < qc.image_count;++i) images.push({id: });
+            qc.errors.forEach(function(error) {
+                if(error.type == "qc_error") {
+                    //TODO - I need to group insts under acqusitionnumber (aqid)
+                    //console.dir(error.instid);
+                    images[error.instid-1].errors = error.c;
+                }
+            });
+            qc.warnings.forEach(function(warning) {
+                if(warning.type == "qc_warning") {
+                    //TODO - I need to group insts under acqusitionnumber (aqid)
+                    images[warning.instid-1].warnings = warning.c;
+                }
+            });
+            images.forEach(computeColor);
+            //console.dir(images);
+            $scope.data.images = images;
+        }
+        */
+        if($scope.data.images) $scope.data.images.forEach(computeColor);
+        //console.dir($scope.data);
     });
-    */
+
+    function computeColor(image) {
+        var h = 0; 
+        var s = "0%"; //saturation (default to gray)
+        var l = "50%"; //light
+        if(image.errors > 0) {
+            h = 0; //red
+            var _s = 50-image.errors;
+            if(_s < 0) _l = 0;
+            s = _s+"%";
+        } else if(image.warnings > 0) {
+            h = 60; //yellow
+            var _s = 50-image.warnings;
+            if(_s < 0) _l = 0;
+            s = _s+"%";
+        } else {
+            h = 120; //green
+            s = "50%";
+        }
+        image.color = "hsl("+h+","+s+","+l+")";
+    }
+
+    $scope.load_image = function(image) {
+        if($scope.active_image == image) {
+            return $scope.active_image = null;
+        }
+        //console.dir(image);
+        $scope.active_image = image;
+        $http.get(appconf.api+'/image/'+image._id)
+        .then(function(res) {
+            $scope.image_detail = res.data;
+            console.dir($scope.image_detail);
+        });
+    }
+
 }]);
 
 

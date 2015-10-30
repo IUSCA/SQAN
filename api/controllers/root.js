@@ -47,6 +47,12 @@ router.get('/config', jwt({secret: config.express.jwt.secret, credentialsRequire
     res.json(conf);
 });
 
+router.get('/researches', jwt({secret: config.express.jwt.secret, credentialsRequired: false}), function(req, res) {
+    db.Research.find().then(function(rs) {
+        res.json(rs);
+    });
+});
+
 //all test specs are open to public for read access
 router.get('/', function(req, res, next) {
     /*

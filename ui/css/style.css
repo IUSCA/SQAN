@@ -140,6 +140,27 @@ ul.images li:hover {
 ul.images li.active {
   background-color: #008cba !important;
 }
+ol.subjects {
+  list-style: none;
+  padding: 0px;
+  margin: 0px;
+}
+ul.studies {
+  list-style: none;
+  padding: 0px;
+  margin: 0px;
+}
+ul.studies li {
+  padding: 3px;
+  margin: 2px;
+  background-color: #eee;
+  border: 1px solid #ddd;
+  display: inline-block;
+}
+ul.studies li:hover {
+  cursor: pointer;
+  background-color: #ddd;
+}
 .image-detail ul.qc-errors {
   list-style: none;
   padding: 0px;
@@ -147,4 +168,7 @@ ul.images li.active {
 .image-detail .headers {
   max-height: 250px;
   overflow: auto;
+}
+.panel-body {
+  padding: 0px 15px;
 }

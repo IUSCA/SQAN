@@ -154,8 +154,9 @@ function handle_message(h, msg_h, info, ack) {
             db.Template.findOneAndUpdate({
                 series_id: series._id,
                 date: h.qc_StudyTimestamp, //TODO qc_StudyTimestamp the best choice?
+                SeriesNumber: h.SeriesNumber,
             }, {
-                $inc: { count: 1 }, //increment the count
+                //$inc: { count: 1 }, //increment the count
                 research_id: research._id,
                 //headers: h, //update with the latest headers (or mabe we should store all under an array?)
             }, {upsert:true, 'new': true}, function(err, _template) {
@@ -183,9 +184,12 @@ function handle_message(h, msg_h, info, ack) {
                 series_id: series._id,
                 subject: h.qc_subject,
                 StudyInstanceUID: h.StudyInstanceUID,
+                SeriesNumber: h.SeriesNumber,
             }, {
-                StudyTimestamp: h.qc_StudyTimestamp,
+                //$inc: { count: 1 }, //increment the count
                 research_id: research._id,
+                StudyTimestamp: h.qc_StudyTimestamp,
+                //Modality: h.Modality,
             }, {upsert: true, 'new': true}, function(err, _study) {
                 if(err) return next(err);
                 study = _study;
@@ -265,6 +269,7 @@ function handle_message(h, msg_h, info, ack) {
             */
         },
         
+        /* what was this for?
         //increment counter
         function(next) {
             if(h.qc_istemplate) return next();  //if template then skip
@@ -279,12 +284,13 @@ function handle_message(h, msg_h, info, ack) {
                 series_id: series._id,
                 study_id: study._id,
             }, {
-                $inc: { count: 1 }, //increment the count
+                //$inc: { count: 1 }, //increment the count
             }, {upsert:true, 'new': true}, function(err, _template) {
                 if(err) return next(err);
                 next();
             });
         },
+        */
 
     ], function(err) {
         //all done

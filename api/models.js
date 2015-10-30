@@ -43,7 +43,7 @@ var researchSchema = mongoose.Schema({
     //SeriesInstanceUID: [String],
    
     //list of templates available for this study (the last should be applied to all new series - unless overridden)
-    //template_ids: [ mongoose.Schema.Types.ObjectId] ,
+    //template_ids: [ mongoose.Schema.Types.ObjectId ] ,
 });
 
 exports.Research = mongoose.model('Research', researchSchema);
@@ -81,6 +81,8 @@ var templateSchema = mongoose.Schema({
     //study_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     date: Date, //date when this template is received (probabbly use StudyTimestamp of the template?)
+    SeriesNumber: Number,
+    
     //AcquisitionNumber: Number,
     //InstanceNumber: Number,
     //
@@ -121,26 +123,30 @@ var studySchema = mongoose.Schema({
     // keys
     //
     series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+
     subject: String,
     StudyInstanceUID: String, //StudyInstanceUID alone can not uniquely identify a "study" as I understand it. 
+    SeriesNumber: Number, //some study has repeated series
     //
     ///////////////////////////////////////////////////////////////////////////
     
     ///////////////////////////////////////////////////////////////////////////
     //
-    //foreign key to assist lookup
+    //foreign key/value to assist lookup
     //
     research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    //Modality: String,
+    StudyTimestamp: Date,
 
     ///////////////////////////////////////////////////////////////////////////
 
-    StudyTimestamp: Date,
-
+    //count: Number, //number of images in this study
+    
     //template to use for QC (if not, latest version will be used) specified by a user - to override the auto selection
     template_id: {type: mongoose.Schema.Types.ObjectId, index: true},
 
-    //study-wide qc result 
-    //qc: mongoose.Schema.Types.Mixed,
+    //study level qc result 
+    qc: mongoose.Schema.Types.Mixed,
 });
 
 exports.Study = mongoose.model('Study', studySchema);
@@ -203,6 +209,7 @@ exports.Image = mongoose.model('Image', imageSchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+/*
 var counterSchema = mongoose.Schema({
     date: Date, 
     research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
@@ -211,5 +218,5 @@ var counterSchema = mongoose.Schema({
     count: Number, //number of images in a given study 
 });
 exports.Counter = mongoose.model('Count', counterSchema);
-
+*/
 

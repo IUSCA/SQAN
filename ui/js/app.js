@@ -45,7 +45,7 @@ app.filter('toArray', function() { return function(obj) {
 //configure route
 app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
     $routeProvider.
-    when('/study', {
+    when('/study/:studyid', {
         templateUrl: 't/study.html',
         controller: 'StudyController',
         requiresLogin: true
@@ -57,6 +57,10 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
     .when('/recent', {
         templateUrl: 't/recent.html',
         controller: 'RecentController'
+    })
+    .when('/recentold', {
+        templateUrl: 't/recent_old.html',
+        controller: 'RecentOldController'
     })
     /*
     .when('/series/:date/:studyid/:seriesid', {
@@ -75,14 +79,16 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
     });
     
     //console.dir($routeProvider);
-}]).run(['$rootScope', '$location', 'toaster', 'jwtHelper', 'appconf', function($rootScope, $location, toaster, jwtHelper, appconf) {
+}]).run(['$rootScope', '$location', 'toaster', 'jwtHelper', 'appconf', 'scaMessage',
+function($rootScope, $location, toaster, jwtHelper, appconf, scaMessage) {
     $rootScope.$on("$routeChangeStart", function(event, next, current) {
         //redirect to /login if user hasn't authenticated yet
         if(next.requiresLogin) {
             var jwt = localStorage.getItem(appconf.jwt_id);
             if(jwt == null || jwtHelper.isTokenExpired(jwt)) {
-                //localStorage.setItem('post_auth_redirect', next.originalPath);
-                document.location = appconf.auth_url+"?redirect="+encodeURIComponent(document.location);
+                sessionStorage.setItem('auth_redirect', document.location.toString());
+                scaMessage.info("Please signin first!");
+                document.location = appconf.auth_url;
                 event.preventDefault();
             }
         }
@@ -142,7 +148,7 @@ app.factory('serverconf', ['appconf', '$http', 'jwtHelper', function(appconf, $h
 
 //http://www.codelord.net/2015/09/24/$q-dot-defer-youre-doing-it-wrong/
 //https://www.airpair.com/angularjs/posts/angularjs-promises
-app.factory('menu', ['appconf', '$http', 'jwtHelper', function(appconf, $http, jwtHelper) {
+app.factory('menu', ['appconf', '$http', 'jwtHelper', 'scaMessage', function(appconf, $http, jwtHelper, scaMessage) {
     var menu = {};
     return $http.get(appconf.shared_api+'/menu/top').then(function(res) {
         menu.top = res.data;
@@ -152,16 +158,22 @@ app.factory('menu', ['appconf', '$http', 'jwtHelper', function(appconf, $http, j
         if(!jwt)  return menu;
         var user = jwtHelper.decodeToken(jwt);
         //TODO - jwt could be invalid
-        return $http.get(appconf.profile_api+'/public/'+user.sub);
+        return $http.get(appconf.profile_api+'/public/'+user.sub).then(function(res) {
+            menu._profile = res.data;
+            if(res.data.email) {
+                return menu; //let it resolve
+            } else {
+                //force user to update profile
+                //TODO - do I really need it?
+                scaMessage.info("Please update your profile information in order to access this service."); 
+                sessionStorage.setItem('profile_settings_redirect', window.location.toString());
+                document.location = appconf.profile_url;
+            }
+        }, function(err) {
+            console.log("failed to load user profile");
+        });
     }, function(err) {
         console.log("failed to load /menu/top");
-    }).then(function(res) {
-        //TODO - this function is called with either valid profile, or just menu if jwt is not provided... only do following if res is profile
-        //if(res.status != 200) return $q.reject("Failed to load profile");
-        menu._profile = res.data;
-        return menu;
-    }, function(err) {
-        console.log("couldn't load profile");
     });
 }]);
 

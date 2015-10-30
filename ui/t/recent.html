@@ -1,63 +1,105 @@
 <sca-menubar menu="menu.top" active="'dicom'" profile="menu._profile"></sca-menubar>
 <sca-menutab menu="serverconf.menu" active="'recent'"></sca-menutab>
 <div class="container-fluid">
-    <div ng-repeat="(research_id, research) in researches">
-        <!--
-        <time class="pull-right">{{study.StudyTimestamp | date:'medium'}}</time>
-        <h4>StudyInstanceUID: {{study.StudyInstanceUID}}</h4>
-        <pre>{{study}}</pre>
-        -->
-        <!--{{research.research}}-->
-        <h3>IIBISID: {{research.research.IIBISID}}
-            <small>Modality: <b>{{research.research.Modality}}</b> StationName: <b>{{research.research.StationName}}</b></small>
-        </h3>
-        <!--<h4>Series</h4>-->
-        <div ng-repeat="(series_id, series) in research.serieses">
-            <!--
-            <form class="form-inline pull-right">
-                <div class="form-group">
-                    <label>Template</label>
-                    <select class="form-control">
-                        <option ng-repeat="template in series.templates" value="{{template._id}}">
-                            {{template.date}} <small>({{template.count}} images)</small>
-                        </option>
-                    </select>
-                </div>
-            </form>
-            -->
-            <small class="pull-right">
-                Templates:
-                <span class="label label-default" ng-repeat="(id, t) in series.templates" style="margin-right: 3px;">{{t.date | date:'yyyy-MM-dd'}}</span>
-            </small>
-            <h5>{{series.series.series_desc}}</h5>
-            <ul class="list-group">
-                <li class="list-group-item" ng-repeat="(study_id, study) in series.studies" in-view="load_study(study)">
-                    <div class="pull-right">
-                        Study Date: <time>{{study.StudyTimestamp | date:'medium'}}</time>
+    <!--
+    <label>Research</label> {{selected_research}}
+    <select ng-model="selected_research" class="form-control">
+        <option value="">(Show All)</option>
+        <option ng-repeat="research in researches" value="{{research._id}}">
+            IIBISID:{{research.IIBISID}} 
+            Modality:{{research.Modality}} 
+            Radiopharmaceutical:{{research.Radiopharmaceutical}} 
+            StationName:{{research.StationName}} 
+        </option>
+    </select>
+    -->
+    <div class="row">
+        <div class="col-md-9">
+            <div ng-repeat="(iibisid, research) in researches">
+                <h2>IIBISID: {{iibisid}}</h2>
+                <div ng-repeat="(modality_id, modality) in research.modalities">
+                    <h3>
+                        Modality: <b>{{modality._detail.Modality}}</b> 
+                        StationName: <b>{{modality._detail.StationName}}</b>
+                        Radiopharmaceutical: <b>{{modality._detail.Radiopharmaceutical}}</b>
+                    </h3>
+                    
+                    <div id="{{subject_id}}" class="panel panel-default" ng-repeat="(subject_id, subject) in modality.subjects"> 
+                        <div class="panel-heading"><span class="text-muted">Subject</span> {{subject_id}}</div>
+                        <div class="panel-body">
+                            <table class="table table-condensed" style="margin-bottom: 0px;">
+                                <thead><tr><th width="30%">Series Description</th><th>Studies</th></tr></thead>
+                                <tbody>                     
+                                    <tr ng-repeat="(series_id, series) in subject.serieses">
+                                        <td>{{series._detail.series_desc}}</td>
+                                        <td>
+                                            <ul class="studies">
+                                                <li ng-repeat="(study_id, study) in series.studies" ng-click="openstudy(study_id)">
+                                                    <span class="label label-info" ng-if="!study.qc">Not Yet QCed</span>
+                                                    <span class="label label-danger" ng-if="study.qc.errors.length > 0">Errors: {{study.qc.errors.length}}</span>
+                                                    <span class="label label-warning" ng-if="study.qc.warnings.length > 0">Warnings: {{study.qc.warnings.length}}</span>
+                                                    <span class="label label-success" ng-if="study.qc.warnings.length == 0 && study.qc.errors.length == 0">OK</span>
+                                                    <time>{{study.StudyTimestamp | date:'medium' }}</time> <span class="text-muted">(SeriesNumber: {{study.SeriesNumber}})</span>
+                                                </li> 
+                                            </ul>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <p>
-                        <span>Subject: <b>{{study.subject}}</b></span>
-                        |
-                        <span>{{study.images.length}} images</span>
-                        | 
-                        <small>StudyInstanceUID: <a href="{{appconf.kibana_url}}#/discover?_g=()&_a=(columns:!(_source),index:'dicom-{{research.research.Modality | lowercase}}.*',interval:auto,query:(query_string:(analyze_wildcard:!t,query:'StudyInstanceUID: {{study.StudyInstanceUID}}')),sort:!(_score,desc))" target="_blank">{{study.StudyInstanceUID}}</a></small>
-                    </p>
 
-                    <div class="row">
-                        <div class="col-sm-10">
-                            <ul class="images">
-                                <li ng-repeat="image in study.images" style="background-color: {{image.color}};" ng-class="{active: study.active_image == image}" 
-                                    ng-click="load_image(study, series, image)"></li>
-                            </ul>
+                    <div class="panel panel-default">
+                        <div id="{{modality_id}}" class="panel-heading">Templates</div>
+                        <div class="panel-body">
+                            <table class="table table-condensed" style="margin-bottom: 0px;">
+                                <thead><tr><th width="30%">Series Description</th><th>Templates</th></tr></thead>
+                                <tbody>                     
+                                    <tr ng-repeat="(series_id, series) in modality.template.serieses">
+                                        <td>{{series._detail.series_desc}}</td>
+                                        <td>
+                                            <ul class="templates">
+                                                <li ng-repeat="(template_id, template) in series.templates">
+                                                    {{template.date | date:'medium'}} <span class="text-muted">(SeriesNumber: {{template.SeriesNumber}})</span>
+                                                </li> 
+                                            </ul>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="col-sm-2">
-                            <button type="button" class="btn btn-xs" ng-click="invalidate_qc(study)">Invalidate QC</button>
-                        </div>
-                    </div><!--row-->
-                    <div ng-if="study.loading == true"><i class="fa fa-spinner fa-pulse"></i> Loading...</div>
-                    <div ng-if="study.active_image" class="slide-down image-detail" ng-include="'t/instance.html'"></div>
-                </li>
-            </ul>
-        </div>
-    </div>
+                    </div> 
+                    
+                </div><!--modality-->
+            </div><!--research-iibisid-->
+        </div><!--col-md-9-->
+        <div class="col-md-3">
+            <div ng-repeat="(iibisid, research) in researches">
+                <h4>IIBISID: {{iibisid}}</h4>
+                <div class="list-group">
+                    <div class="list-group-item" ng-repeat="(modality_id, modality) in research.modalities">
+                        <h4 class="list-group-item-heading">
+                            {{modality._detail.Modality}} / {{modality._detail.StationName}}
+                            <!-- Radiopharmaceutical: <b>{{modality._detail.Radiopharmaceutical}}</b>-->
+                        </h4>
+                        <p class="list-group-item-text">
+                            <ol class="subjects">
+                                <li ng-repeat="(subject_id, subject) in modality.subjects"> 
+                                    <!--subject_id is not unique across all iibisid / modality..-->
+                                    <a href="javascript:void(0)" ng-click="scrollto(subject_id)">{{subject_id}}</a>
+                                </li>
+                                <li><a href="javascript:void(0)" ng-click="scrollto(modality_id)">Template</a></li>
+                            </ol>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div> 
+    </div><!--row-->
 </div>
+
+<script>
+$('#myAffix').affix({
+  offset: 15
+})
+</script>
