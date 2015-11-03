@@ -160,15 +160,24 @@ app.factory('menu', ['appconf', '$http', 'jwtHelper', 'scaMessage', function(app
         //TODO - jwt could be invalid
         return $http.get(appconf.profile_api+'/public/'+user.sub).then(function(res) {
             menu._profile = res.data;
-            if(res.data.email) {
-                return menu; //let it resolve
+            //TODO - this function is called with either valid profile, or just menu if jwt is not provided... only do following if res is profile
+            //if(res.status != 200) return $q.reject("Failed to load profile");
+            menu._profile = res.data;
+            if(res.data) {
+                if(res.data.email) {
+                    return menu;
+                } else {
+                    //force user to update profile
+                    //TODO - do I really need to?
+                    scaMessage.info("Please update your profile before using this application.");
+                    sessionStorage.setItem('profile_settings_redirect', window.location.toString());
+                    document.location = appconf.profile_url;
+                }
             } else {
-                //force user to update profile
-                //TODO - do I really need it?
-                scaMessage.info("Please update your profile information in order to access this service."); 
-                sessionStorage.setItem('profile_settings_redirect', window.location.toString());
-                document.location = appconf.profile_url;
+                //user not logged in probably
+                return menu;
             }
+
         }, function(err) {
             console.log("failed to load user profile");
         });
@@ -176,4 +185,18 @@ app.factory('menu', ['appconf', '$http', 'jwtHelper', 'scaMessage', function(app
         console.log("failed to load /menu/top");
     });
 }]);
+
+app.filter('orderDetailBy', function() {
+  return function(items, field, reverse) {
+    var filtered = [];
+    angular.forEach(items, function(item) {
+      filtered.push(item);
+    });
+    filtered.sort(function (a, b) {
+      return (a._detail[field] > b._detail[field] ? 1 : -1);
+    });
+    if(reverse) filtered.reverse();
+    return filtered;
+  };
+});
 

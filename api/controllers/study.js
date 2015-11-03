@@ -71,7 +71,7 @@ router.get('/recent', jwt({secret: config.express.jwt.secret}), function(req, re
 router.get('/query', jwt({secret: config.express.jwt.secret}), function(req, res, next) {
     var query = db.Study.find();
 
-    query.sort('-StudyTimestamp');
+    query.sort({StudyTimestamp: -1});
     query.limit(req.query.limit || 50); 
     if(req.query.skip) {
         query.skip(req.query.skip);
@@ -119,6 +119,7 @@ router.get('/query', jwt({secret: config.express.jwt.secret}), function(req, res
                 //load all templates referenced
                 db.Template.find()
                 .where('series_id')
+                .sort({date: -1})
                 .in(seriesids)
                 //.select({series_id: 1, date: 1, count: 1}) //don't load the headers
                 .exec(function(err, templates) {

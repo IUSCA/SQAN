@@ -14,6 +14,41 @@
     </select>
     -->
     <div class="row">
+        <!--to-be-affix-->
+        <div class="col-md-3">
+            <div ng-repeat="(iibisid, research) in researches">
+                <h4>IIBISID: {{iibisid}}</h4>
+                <div class="list-group">
+                    <div class="list-group-item" ng-repeat="(modality_id, modality) in research.modalities">
+                        <h4 class="list-group-item-heading">
+                            {{modality._detail.Modality}} / {{modality._detail.StationName}}
+                            <!-- Radiopharmaceutical: <b>{{modality._detail.Radiopharmaceutical}}</b>-->
+                        </h4>
+                        <p class="list-group-item-text">
+                            <ol class="subjects">
+                                <li ng-repeat="(subject_id, subject) in modality.subjects"  ng-click="scrollto(iibisid+modality_id+subject_id)"> 
+                                    <!--subject_id is not unique across all iibisid / modality..-->
+                                    <a href="javascript:void(0)">
+                                        <span ng-if="subject.non_qced != 0" class="label label-info" ng-if="!study.qc">{{subject.non_qced}} Not Yet QCed</span>
+                                        <span ng-if="subject.oks != 0" class="label label-success">{{subject.oks}} OKs</span>
+                                        <span ng-if="subject.errors != 0" class="label label-danger">{{subject.errors}} Errors</span>
+                                        <span ng-if="subject.warnings != 0" class="label label-warning">{{subject.warnings}} Warnings</span>
+                                        {{subject_id}}
+                                    </a>
+                                </li>
+                                <li ng-click="scrollto(modality_id)" style="background-color: #bbb">
+                                    <a href="javascript:void(0)" style="color: white;">
+                                        <!--<span class="label label-default">OK</span>-->
+                                        Template
+                                    </a>
+                                </li>
+                            </ol>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div> <!--col-md-3-->
+
         <div class="col-md-9">
             <div ng-repeat="(iibisid, research) in researches">
                 <h2>IIBISID: {{iibisid}}</h2>
@@ -24,22 +59,22 @@
                         Radiopharmaceutical: <b>{{modality._detail.Radiopharmaceutical}}</b>
                     </h3>
                     
-                    <div id="{{subject_id}}" class="panel panel-default" ng-repeat="(subject_id, subject) in modality.subjects"> 
+                    <div id="{{iibisid+modality_id+subject_id}}" class="panel panel-default" ng-repeat="(subject_id, subject) in modality.subjects"> 
                         <div class="panel-heading"><span class="text-muted">Subject</span> {{subject_id}}</div>
                         <div class="panel-body">
                             <table class="table table-condensed" style="margin-bottom: 0px;">
-                                <thead><tr><th width="30%">Series Description</th><th>Studies</th></tr></thead>
+                                <thead><tr><th width="30%">Series Description</th><th>Studies <span class="text-muted">(Series Number)</span></th></tr></thead>
                                 <tbody>                     
-                                    <tr ng-repeat="(series_id, series) in subject.serieses">
+                                    <tr ng-repeat="series in subject.serieses | orderDetailBy:'series_desc'">
                                         <td>{{series._detail.series_desc}}</td>
-                                        <td>
+                                        <td style="padding: 1px 5px;">
                                             <ul class="studies">
                                                 <li ng-repeat="(study_id, study) in series.studies" ng-click="openstudy(study_id)">
                                                     <span class="label label-info" ng-if="!study.qc">Not Yet QCed</span>
                                                     <span class="label label-danger" ng-if="study.qc.errors.length > 0">Errors: {{study.qc.errors.length}}</span>
                                                     <span class="label label-warning" ng-if="study.qc.warnings.length > 0">Warnings: {{study.qc.warnings.length}}</span>
                                                     <span class="label label-success" ng-if="study.qc.warnings.length == 0 && study.qc.errors.length == 0">OK</span>
-                                                    <time>{{study.StudyTimestamp | date:'medium' }}</time> <span class="text-muted">(SeriesNumber: {{study.SeriesNumber}})</span>
+                                                    <time>{{study.StudyTimestamp | date:'medium' }}</time> <span class="text-muted">(#{{study.SeriesNumber}})</span>
                                                 </li> 
                                             </ul>
                                         </td>
@@ -50,17 +85,17 @@
                     </div>
 
                     <div class="panel panel-default">
-                        <div id="{{modality_id}}" class="panel-heading">Templates</div>
-                        <div class="panel-body">
+                        <div id="{{modality_id}}" class="panel-heading panel-heading-template">Templates</div>
+                        <div class="panel-body panel-body-template">
                             <table class="table table-condensed" style="margin-bottom: 0px;">
                                 <thead><tr><th width="30%">Series Description</th><th>Templates</th></tr></thead>
                                 <tbody>                     
-                                    <tr ng-repeat="(series_id, series) in modality.template.serieses">
+                                    <tr ng-repeat="series in modality.template.serieses | orderDetailBy:'series_desc'">
                                         <td>{{series._detail.series_desc}}</td>
-                                        <td>
+                                        <td style="padding: 1px 5px;">
                                             <ul class="templates">
                                                 <li ng-repeat="(template_id, template) in series.templates">
-                                                    {{template.date | date:'medium'}} <span class="text-muted">(SeriesNumber: {{template.SeriesNumber}})</span>
+                                                    {{template.date | date:'medium'}} (#{{template.SeriesNumber}})
                                                 </li> 
                                             </ul>
                                         </td>
@@ -73,33 +108,7 @@
                 </div><!--modality-->
             </div><!--research-iibisid-->
         </div><!--col-md-9-->
-        <div class="col-md-3">
-            <div ng-repeat="(iibisid, research) in researches">
-                <h4>IIBISID: {{iibisid}}</h4>
-                <div class="list-group">
-                    <div class="list-group-item" ng-repeat="(modality_id, modality) in research.modalities">
-                        <h4 class="list-group-item-heading">
-                            {{modality._detail.Modality}} / {{modality._detail.StationName}}
-                            <!-- Radiopharmaceutical: <b>{{modality._detail.Radiopharmaceutical}}</b>-->
-                        </h4>
-                        <p class="list-group-item-text">
-                            <ol class="subjects">
-                                <li ng-repeat="(subject_id, subject) in modality.subjects"> 
-                                    <!--subject_id is not unique across all iibisid / modality..-->
-                                    <a href="javascript:void(0)" ng-click="scrollto(subject_id)">{{subject_id}}</a>
-                                </li>
-                                <li><a href="javascript:void(0)" ng-click="scrollto(modality_id)">Template</a></li>
-                            </ol>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div> 
+
     </div><!--row-->
 </div>
 
-<script>
-$('#myAffix').affix({
-  offset: 15
-})
-</script>

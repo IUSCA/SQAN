@@ -157,7 +157,22 @@ ol.subjects {
     list-style: none;
     padding: 0px;
     margin: 0px;
+    li {
+        background-color: #eee;
+        border: 1px solid #ddd;
+        padding: 2px;
+        margin: 2px 0px;
+        a {
+            text-decoration: none;
+            color: black;
+        }
+    }
+    li:hover {
+        background-color: #ddd;
+        cursor: pointer;
+    }
 }
+ul.templates,
 ul.studies {
     list-style: none;
     padding: 0px;
@@ -177,6 +192,21 @@ ul.studies {
     }
 }
 
+ul.templates {
+    li {
+        border: 1px solid white;
+        color: #aaa;
+        &:first-child {
+            color: black;
+            /*
+            background-color: #43ac6a;
+            background-color: #999;
+            */
+        }
+    }
+    
+}
+
 .image-detail {
     ul.qc-errors {
         list-style: none;
@@ -190,4 +220,14 @@ ul.studies {
 
 .panel-body {
     padding: 0px 15px;
+}
+
+.panel-default {
+    .panel-heading-template {
+        color: white;
+        background-color: #bbb;
+    }
+    .panel-body-template {
+    background-color: #fafafa;
+    }
 }

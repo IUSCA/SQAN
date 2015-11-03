@@ -118,6 +118,37 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
             }
             series.studies[study._id] = study;
         });
+
+        //count number of status for each subject
+        for(var rid in $scope.researches) {
+            var research = $scope.researches[rid];
+            for(var modality_id in research.modalities) {
+                var modality = research.modalities[modality_id];
+                for(var subject_id in modality.subjects) {
+                    var subject = modality.subjects[subject_id];
+                    
+                    subject.non_qced = 0; //assume qc-ed
+                    subject.oks = 0;
+                    subject.errors = 0;
+                    subject.warnings = 0;
+                    for(var series_id in subject.serieses) {
+                        var series = subject.serieses[series_id];
+                        for(var study_id in series.studies) {
+                            var study = series.studies[study_id];
+                            if(study.qc) {
+                                if(study.qc.errors && study.qc.errors.length > 0) {
+                                    subject.errors++; //study.qc.errors.length;
+                                } else if (study.qc.warnings && study.qc.warnings.length > 0) {
+                                    subject.warnings++; //study.qc.warnings.length;
+                                } else subject.oks++;
+                            } else {
+                                subject.non_qced++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
         
         //store templates
         res.data.templates.forEach(function(template) {
