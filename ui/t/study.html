@@ -29,6 +29,7 @@
     <ul>
         <li ng-repeat="warning in data.study.qc.warnings" ng-if="warning.type != 'qc_warning'">{{warning}}</li>
     </ul>
+    <p>Template Missing: {{data.study.qc.notemps}} </p>
 
     <h4>
         {{data.study.qc.image_count}} Images
@@ -47,6 +48,7 @@
             <p>Image QC Template ID: {{image_detail.qc.template_id}}</p>
             <p>AcquisitionNumber: {{image_detail.headers.AcquisitionNumber}}</p>
             <p>InstanceNumber: {{image_detail.headers.InstanceNumber}}</p>
+            <b ng-if="image_detail.qc.notemp">Template Missing</b>
             <h4>Image Errors</h4>
             <ul>
                 <li ng-repeat="error in image_detail.qc.errors">{{error}}</li>

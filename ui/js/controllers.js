@@ -127,19 +127,23 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
                 for(var subject_id in modality.subjects) {
                     var subject = modality.subjects[subject_id];
                     
-                    subject.non_qced = 0; //assume qc-ed
+                    subject.non_qced = 0; 
                     subject.oks = 0;
                     subject.errors = 0;
                     subject.warnings = 0;
+                    subject.notemps = 0;
                     for(var series_id in subject.serieses) {
                         var series = subject.serieses[series_id];
                         for(var study_id in series.studies) {
                             var study = series.studies[study_id];
                             if(study.qc) {
+                                //decide the overall status(with error>warning>notemp precedence) for each study and count that.. 
                                 if(study.qc.errors && study.qc.errors.length > 0) {
-                                    subject.errors++; //study.qc.errors.length;
+                                    subject.errors++; 
                                 } else if (study.qc.warnings && study.qc.warnings.length > 0) {
-                                    subject.warnings++; //study.qc.warnings.length;
+                                    subject.warnings++; 
+                                } else if (study.qc.notemps > 0) {
+                                    subject.notemps++; 
                                 } else subject.oks++;
                             } else {
                                 subject.non_qced++;
@@ -197,7 +201,6 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
     $scope.appconf = appconf;
 
-    //alert('deprecated');
     $http.get(appconf.api+'/study/recent')
     .then(function(res) {
 
@@ -209,7 +212,6 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
         var serieses = {};
         res.data.serieses.forEach(function(series) {
             serieses[series._id] = series;
-            //series.research = researches[series.research_id];
         });
 
         $scope.researches = {};
@@ -326,54 +328,37 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, menu, servercon
     $http.get(appconf.api+'/study/id/'+$routeParams.studyid)
     .then(function(res) {
         $scope.data = res.data;
-
-        /*
-        //process qc result.
-        if($scope.data.study.qc) {
-            var images = [];
-            var qc = $scope.data.study.qc;
-            //images.length = qc.image_count;
-            for(var i = 0;i < qc.image_count;++i) images.push({id: });
-            qc.errors.forEach(function(error) {
-                if(error.type == "qc_error") {
-                    //TODO - I need to group insts under acqusitionnumber (aqid)
-                    //console.dir(error.instid);
-                    images[error.instid-1].errors = error.c;
-                }
-            });
-            qc.warnings.forEach(function(warning) {
-                if(warning.type == "qc_warning") {
-                    //TODO - I need to group insts under acqusitionnumber (aqid)
-                    images[warning.instid-1].warnings = warning.c;
-                }
-            });
-            images.forEach(computeColor);
-            //console.dir(images);
-            $scope.data.images = images;
-        }
-        */
         if($scope.data.images) $scope.data.images.forEach(computeColor);
-        //console.dir($scope.data);
     });
 
     function computeColor(image) {
+        //TODO - what about non-qced? 
         var h = 0; 
         var s = "0%"; //saturation (default to gray)
         var l = "50%"; //light
         if(image.errors > 0) {
-            h = 0; //red
+            //error - red
+            h = 0; 
             var _s = 50-image.errors;
             if(_s < 0) _l = 0;
             s = _s+"%";
         } else if(image.warnings > 0) {
-            h = 60; //yellow
+            //warning - yello
+            h = 60; 
             var _s = 50-image.warnings;
             if(_s < 0) _l = 0;
             s = _s+"%";
+        } else if(image.notemp) {
+            //no temp - dark blue
+            h = 195;
+            s = "100%";
+            l = "36%";
         } else {
-            h = 120; //green
+            //ok - green
+            h = 120; 
             s = "50%";
         }
+        console.dir(image);
         image.color = "hsl("+h+","+s+","+l+")";
     }
 

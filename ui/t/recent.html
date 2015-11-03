@@ -18,10 +18,11 @@
                                 <li ng-repeat="(subject_id, subject) in modality.subjects"  ng-click="scrollto(iibisid+modality_id+subject_id)"> 
                                     <!--subject_id is not unique across all iibisid / modality..-->
                                     <a href="javascript:void(0)">
-                                        <span ng-if="subject.non_qced != 0" class="label label-info" ng-if="!study.qc">{{subject.non_qced}} Not Yet QCed</span>
                                         <span ng-if="subject.oks != 0" class="label label-success">{{subject.oks}} OKs</span>
                                         <span ng-if="subject.errors != 0" class="label label-danger">{{subject.errors}} Errors</span>
                                         <span ng-if="subject.warnings != 0" class="label label-warning">{{subject.warnings}} Warnings</span>
+                                        <span ng-if="subject.notemps != 0" class="label label-primary">{{subject.notemps}} NoTemps</span>
+                                        <span ng-if="subject.non_qced != 0" class="label label-info" ng-if="!study.qc">{{subject.non_qced}} Not Yet QCed</span>
                                         {{subject_id}}
                                     </a>
                                 </li>
@@ -61,9 +62,10 @@
                                             <ul class="studies">
                                                 <li ng-repeat="(study_id, study) in series.studies" ng-click="openstudy(study_id)">
                                                     <span class="label label-info" ng-if="!study.qc">Not Yet QCed</span>
+                                                    <span class="label label-primary" ng-if="study.qc.notemps > 0">NoTemp: {{study.qc.notemps}}</span>
                                                     <span class="label label-danger" ng-if="study.qc.errors.length > 0">Errors: {{study.qc.errors.length}}</span>
                                                     <span class="label label-warning" ng-if="study.qc.warnings.length > 0">Warnings: {{study.qc.warnings.length}}</span>
-                                                    <span class="label label-success" ng-if="study.qc.warnings.length == 0 && study.qc.errors.length == 0">OK</span>
+                                                    <span class="label label-success" ng-if="study.qc.warnings.length == 0 && study.qc.errors.length == 0 && study.qc.notemps == 0">OK</span>
                                                     <time>{{study.StudyTimestamp | date:'medium' }}</time> <span class="text-muted">(#{{study.SeriesNumber}})</span>
                                                 </li> 
                                             </ul>

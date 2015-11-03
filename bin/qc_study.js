@@ -47,51 +47,29 @@ function qc_study(study, next) {
         var qc = {
             //images: {}, //stores acquisition/instance and issue counts
 
-            image_count: images.length, 
+            image_count: images.length,  //number of images in this study
 
-            template_id: null,
-            date: new Date(),
-            errors: [],
+            template_id: null, //template set used to do qc for this study
+
+            date: new Date(), //study-qc time
+
+            //study-qc errros / warnings
+            errors: [], 
             warnings: [],
 
-            /*
-            total: {
-                qced: 0,
-                errors: 0,
-                warnings: 0,
-                notes: 0,
-            },
-
-            //study specify issues goes here (TODO)
-            errors: [],
-            warnings: [],
-            notes: [],
-            */
+            //number of images with no temp
+            notemps: 0,
         }
         
         //count total number of errors / warnings from images
-        var qced = true;
+        var all_qced = true;
         images.forEach(function(image) {
-            /*
-            if(qc.images[image.headers.AcquisitionNumber] == undefined) {
-                qc.images[image.headers.AcquisitionNumber] = {};
-            }
-            var img = {
-                id: image.id,
-            };
-            if(image.qc) {
-
-                template_id = image.template_id;
-
-                img.errors = image.qc.errors.length;
-                img.warnings = image.qc.warnings.length;
-                //img.notes = image.qc.notes.length;
-            }
-            qc.images[image.headers.AcquisitionNumber][image.headers.InstanceNumber] = img;
-            */
             if(image.qc) {
                 
-                //TODO all images under the study should be compared against the same template. should I check that fact?
+                //TODO all images for study should be compared against the same template_id (with templateheader for each imageinstance)
+                //but, if some images are already qc-ed, then another images could be qc-ed against different template_id
+                //should I raise warning if such images are around?
+
                 if(!qc.template_id) qc.template_id = image.qc.template_id;
 
                 if(image.qc.errors.length > 0) {
@@ -112,30 +90,30 @@ function qc_study(study, next) {
                         c: image.qc.warnings.length
                     });
                 }
+                if(image.qc.notemp) qc.notemps++;
             } else {
-                qced = false;
+                all_qced = false;
             }
         });
 
-        //check against template (if all images are qc-ed)
-        if(qced) {
-            if(qc.template_id) {
-                db.TemplateHeader.where({template_id: qc.template_id}).count(function(err, template_count) {
-                    if(template_count != images.length) {
-                        qc.errors.push({type: "template_count_mismatch", msg: "Template image count doesn't match", c: images.length, tc: template_count});
-                    }
-                    console.dir(qc);
-                    study.qc = qc;
-                    study.save(next);
-                });
-            } else {
-                qc.warnings.push({type: "template_missing", msg: "none of the image has matching template"});
+    
+        //if there is an image that's not yet all qc-ed, I can't qc the study
+        if(!all_qced) return next();
+
+        if(qc.template_id) {
+            //check for template header count 
+            db.TemplateHeader.where({template_id: qc.template_id}).count(function(err, template_count) {
+                if(template_count != images.length) {
+                    qc.errors.push({type: "template_count_mismatch", msg: "Template image count doesn't match", c: images.length, tc: template_count});
+                }
+                console.dir(qc);
                 study.qc = qc;
                 study.save(next);
-            }
+            });
         } else {
-            //if there is an image that's not yet qc-ed, I can't qc the study
-            next();
+            //none of the images has template id..
+            study.qc = qc;
+            study.save(next);
         }
     });
 }

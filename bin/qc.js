@@ -56,7 +56,7 @@ function qc(image, next) {
             date: new Date(),
             errors: [],
             warnings: [],
-            //notes: [],
+            notemp: false, //set to true if no template was found
         };
         if(template) { 
             if(templateheaders) {
@@ -71,7 +71,8 @@ function qc(image, next) {
                 });
             }
         } else {
-            qc.warnings.push({type: 'template_missing', msg: "couldn't find a template"});
+            //qc.warnings.push({type: 'template_missing', msg: "couldn't find a template"});
+            qc.notemp = true;
         }
 
         //debug

@@ -201,32 +201,12 @@ router.get('/id/:study_id', jwt({secret: config.express.jwt.secret}), function(r
                                     image.warnings = 0;
                                     if(_image.qc.errors) image.errors = _image.qc.errors.length;
                                     if(_image.qc.warnings) image.warnings = _image.qc.warnings.length;
-                                    //if(_image.qc.notes) image.n = _image.qc.notes.length;
+                                    image.notemp = _image.qc.notemp;
                                 }
                                 ret.images.push(image);
                             });
                             res.json(ret);
                         }); 
-
-                        /*
-                        db.TemplateHeader.find()
-                        .where('template_id').equals(study.qc.template_id)
-                        .sort('headers.InstanceNumber')
-                        .exec(function(err, template_images) {
-                            if(err) return next(err);
-                            ret.template_images = template_images;
-
-                            db.Image.find()
-                            .where('study_id').equals(study._id)
-                            .sort('headers.InstanceNumber')
-                            .exec(function(err, images) {
-                                if(err) return next(err);
-                                ret.images = images;
-                                res.json(ret);
-                            });
-                        });
-                        res.json(ret);
-                        */
                     });
                 } else {
                     //not-QCed .. this is all I can get
