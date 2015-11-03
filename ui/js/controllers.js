@@ -15,8 +15,8 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, menu, servercon
     //todo
 }]);
 
-app.controller('RecentController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'menu', 'serverconf', 'scaMessage', '$anchorScroll',
-function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf, scaMessage, $anchorScroll) {
+app.controller('RecentController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'menu', 'serverconf', 'scaMessage', '$anchorScroll', '$document',
+function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf, scaMessage, $anchorScroll, $document) {
     $scope.appconf = appconf;
     scaMessage.show(toaster);
 
@@ -170,6 +170,18 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
         console.log("$scope.researches dump");
         console.dir($scope.researches);
     });
+
+    /*
+    $document.on('scroll', function() {
+        $scope.$apply(function() {
+            if(window.scrollY < 100) {
+                $scope.content_affix = false;
+            } else {
+                $scope.content_affix = true;
+            }
+        });
+    });
+    */
 
     $scope.openstudy = function(study_id) {
         $location.path("/study/"+study_id);

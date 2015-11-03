@@ -2,14 +2,12 @@
 
 var app = angular.module('app', [
     'app.config',
-    'ngSanitize',
     'ngRoute',
     'ngCookies',
     'ngAnimate',
     'toaster',
     'angular-loading-bar',
     'angular-jwt',
-    'angular-inview',
     'ui.bootstrap',
     'ui.bootstrap.tabs',
     'sca-shared',

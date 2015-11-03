@@ -1,21 +1,10 @@
 <sca-menubar menu="menu.top" active="'dicom'" profile="menu._profile"></sca-menubar>
 <sca-menutab menu="serverconf.menu" active="'recent'"></sca-menutab>
 <div class="container-fluid">
-    <!--
-    <label>Research</label> {{selected_research}}
-    <select ng-model="selected_research" class="form-control">
-        <option value="">(Show All)</option>
-        <option ng-repeat="research in researches" value="{{research._id}}">
-            IIBISID:{{research.IIBISID}} 
-            Modality:{{research.Modality}} 
-            Radiopharmaceutical:{{research.Radiopharmaceutical}} 
-            StationName:{{research.StationName}} 
-        </option>
-    </select>
-    -->
     <div class="row">
         <!--to-be-affix-->
         <div class="col-md-3">
+            <!--doesn't work.. <div data-spy="affix" data-offset-top="100" data-offset-bottom="200">-->
             <div ng-repeat="(iibisid, research) in researches">
                 <h4>IIBISID: {{iibisid}}</h4>
                 <div class="list-group">
@@ -46,7 +35,8 @@
                         </p>
                     </div>
                 </div>
-            </div>
+            </div><!--ng-repeat-->
+            <!--</div>--><!--content-->
         </div> <!--col-md-3-->
 
         <div class="col-md-9">
