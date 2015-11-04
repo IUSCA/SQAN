@@ -4,10 +4,13 @@
 #find /usr/local/dicom-raw/2008-00050 -name *.json | node post.js
 
 #mr
-find /usr/local/dicom-raw/2014-00006 -name *.json | node post.js
-find /usr/local/dicom-raw/0000-00001 -name *.json | node post.js
+#find /usr/local/dicom-raw/2014-00006 -name *.json | node post.js
+#find /usr/local/dicom-raw/0000-00001 -name *.json | node post.js
 #pt/ct
-find /usr/local/dicom-raw/2014-00004 -name *.json | node post.js
+#find /usr/local/dicom-raw/2014-00006 -name *.json | node post.js
+
+#everything
+find /usr/local/dicom-raw -name *.json | node post.js
 
 #mr (>100k?)
 #find /usr/local/dicom-raw/0000-00001 -name *.json | node post.js

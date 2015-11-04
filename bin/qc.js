@@ -58,28 +58,31 @@ function qc(image, next) {
             warnings: [],
             notemp: false, //set to true if no template was found
         };
-        if(template) { 
-            if(templateheaders) {
-                qc.template_id = template.id;
-                qc_template.match(image, templateheaders, qc);
-            } else {
-                qc.errors.push({
-                    type: 'template_header_missing', 
-                    msg: "couldn't find a template header in template:"+template._id,
-                    AcquisitionNumber: image.headers.AcquisitionNumber,
-                    InstanceNumber: image.headers.InstanceNumber,
-                });
-            }
+
+        /*
+        qc.errors.push({
+            type: 'template_header_missing', 
+            msg: "couldn't find a template header in template:"+template._id,
+            AcquisitionNumber: image.headers.AcquisitionNumber,
+            InstanceNumber: image.headers.InstanceNumber,
+        });
+        */
+        if(template && templateheaders) {
+            qc.template_id = template.id;
+            qc_template.match(image, templateheaders, qc);
         } else {
-            //qc.warnings.push({type: 'template_missing', msg: "couldn't find a template"});
+            //templte missing for the entire series, or just for this instance number
+            //either way.. just mark it as notemp
             qc.notemp = true;
         }
 
+        /*
         //debug
-        if(qc.errors.length > 0 || qc.warnings.length > 0/* || qc.notes.length > 0*/) {
+        if(qc.errors.length > 0 || qc.warnings.length > 0) {
             console.log(image.id);
             console.log(JSON.stringify(qc, null, 4));
         }
+        */
 
         //logger.info("storing qc results");
         //logger.debug(qc);

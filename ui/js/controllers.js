@@ -23,43 +23,11 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
     menu.then(function(_menu) { $scope.menu = _menu; });
 
-    /*
-    $scope.selected_research = null;
-    $http.get(appconf.api+'/researches')
-    .then(function(res) {
-        $scope.researches = res.data;
-        //doesn't work!
-        //$scope.selected_research = res.data[0]._id;
-    });
-    */
-
-    /*
-    //data loaded so far..
-    $scope.researches = {};
-    $scope.serieses = {};
-    $scope.templates = {};
-    $scope.studies = []; //only one that's array (ordered by studytime)
-    */
-
     $http.get(appconf.api+'/study/query', {params: {
         skip: 0, 
         limit: 400
     }})
     .then(function(res) {
-        /*
-        res.data.researches.forEach(function(r) {
-            researches[r._id] = r;
-        });
-        res.data.serieses.forEach(function(s) {
-            serieses[s._id] = s;
-        });
-        res.data.templates.forEach(function(t) {
-            templates[t._id] = t;
-        });
-        res.data.studies.forEach(function(s) {
-            studies.push(s); 
-        });
-        */
         var researches = {};
         res.data.researches.forEach(function(research) {
             researches[research._id] = research;
@@ -153,7 +121,19 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
                 }
             }
         }
-        
+       
+        //create uid for subject 
+        for(var rid in $scope.researches) {
+            var research = $scope.researches[rid];
+            for(var modality_id in research.modalities) {
+                var modality = research.modalities[modality_id];
+                for(var subject_id in modality.subjects) {
+                    var subject = modality.subjects[subject_id];
+                    subject.uid = rid+modality_id+subject_id;
+                }
+            }
+        }
+  
         //store templates
         res.data.templates.forEach(function(template) {
             var research_detail = researches[template.research_id];
@@ -175,17 +155,30 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
         console.dir($scope.researches);
     });
 
-    /*
     $document.on('scroll', function() {
-        $scope.$apply(function() {
-            if(window.scrollY < 100) {
+        if(window.scrollY < 100) {
+            if($scope.content_affix) $scope.$apply(function() {
                 $scope.content_affix = false;
-            } else {
+            });
+        } else {
+            if(!$scope.content_affix) $scope.$apply(function() {
                 $scope.content_affix = true;
+            });
+        }
+        
+        //find first subject displayed
+        var it = null;
+        $(".subject, .template").each(function(id, subject) {
+            if(it) return; //already found
+            if($(subject).offset().top >= window.scrollY) {
+                it = subject;
             }
         });
+        //and update inview
+        if($scope.inview_id != it.id) $scope.$apply(function() {
+            $scope.inview_id = it.id;
+        });
     });
-    */
 
     $scope.openstudy = function(study_id) {
         $location.path("/study/"+study_id);
@@ -358,7 +351,6 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, menu, servercon
             h = 120; 
             s = "50%";
         }
-        console.dir(image);
         image.color = "hsl("+h+","+s+","+l+")";
     }
 
@@ -371,7 +363,7 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, menu, servercon
         $http.get(appconf.api+'/image/'+image._id)
         .then(function(res) {
             $scope.image_detail = res.data;
-            console.dir($scope.image_detail);
+            //console.dir($scope.image_detail);
         });
     }
 

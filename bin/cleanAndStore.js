@@ -123,11 +123,17 @@ function handle_message(h, msg_h, info, ack) {
 
         //make sure we know about this research
         function(next) {
+            //TODO radio_tracer should always be set for CT.. right? Should I validate?
+            var radio_tracer = undefined;
+            if(h.RadiopharmaceuticalInformationSequence) {
+                radio_tracer = h.RadiopharmaceuticalInformationSequence[0].Radiopharmaceutical;
+            }
+
             db.Research.findOneAndUpdate({
                 IIBISID: h.qc_iibisid,
                 Modality: h.Modality,
                 StationName: h.StationName,
-                Radiopharmaceutical: h.Radiopharmaceutical, //undefined for MR
+                radio_tracer: radio_tracer,
             }, {}, {upsert:true, 'new': true}, function(err, _research) {
                 if(err) return next(err);
                 research = _research;

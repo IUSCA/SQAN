@@ -138,7 +138,8 @@ ul.images li:hover {
   background-color: #008cba;
 }
 ul.images li.active {
-  background-color: #008cba !important;
+  /*background-color: #008cba !important;*/
+  border: 2px solid red;
 }
 ol.subjects {
   list-style: none;
@@ -154,6 +155,9 @@ ol.subjects li {
 ol.subjects li a {
   text-decoration: none;
   color: black;
+}
+ol.subjects li.inview {
+  background-color: #cde;
 }
 ol.subjects li:hover {
   background-color: #ddd;
@@ -206,4 +210,10 @@ ul.templates li:first-child {
 }
 .panel-default .panel-body-template {
   background-color: #fafafa;
+}
+.affix {
+  position: fixed;
+  top: 0;
+  height: 100%;
+  overflow-y: auto;
 }

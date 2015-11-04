@@ -5,7 +5,7 @@
     <h3>
         Modality: <b>{{data.research.Modality}}</b> 
         StationName: <b>{{data.research.StationName}}</b>
-        Radiopharmaceutical: <b>{{data.research.Radiopharmaceutical}}</b>
+        RadioTracer: <b>{{data.research.radio_tracer}}</b>
     </h3>
     <p>
         Subject: <b>{{data.study.subject}}</b><br>
@@ -13,59 +13,66 @@
         Series Description: <b>{{data.series.series_desc}}</b><br>
         Series Number: <b>{{data.study.SeriesNumber}}</b><br>
     </p>
+    <hr>
 
-    <h3>
-        <small class="pull-right">Date: {{data.study.qc.date | date:'medium'}}</small>
-        Study QC
-    </h3>
-
-    <p>Template Date: {{data.template.date | date:'medium'}}</p>
-    <p>Template ID: {{data.template._id}}</p>
-    <h4>Study Errors</h4>
-    <ul>
-        <li ng-repeat="error in data.study.qc.errors" ng-if="error.type != 'qc_error'">{{error}}</li>
-    </ul>
-    <h4>Study Warnings</h4>
-    <ul>
-        <li ng-repeat="warning in data.study.qc.warnings" ng-if="warning.type != 'qc_warning'">{{warning}}</li>
-    </ul>
-    <p>Template Missing: {{data.study.qc.notemps}} </p>
-
-    <h4>
-        {{data.study.qc.image_count}} Images
-    </h4>
-    <ul class="images">
-        <li ng-repeat="image in data.images" 
-            style="background-color: {{::image.color}};" 
-            ng-class="{active: active_image == image}" 
-            ng-click="load_image(image)">
-        </li>
-    </ul>
-    <!--<div ng-if="loading == true"><i class="fa fa-spinner fa-pulse"></i> Loading...</div>-->
-    <div ng-if="active_image" class="slide-down image-detail">
-        <div ng-if="image_detail.qc">
-            <p>Image QC Date: {{image_detail.qc.date | date:'medium'}}</p>
-            <p>Image QC Template ID: {{image_detail.qc.template_id}}</p>
-            <p>AcquisitionNumber: {{image_detail.headers.AcquisitionNumber}}</p>
-            <p>InstanceNumber: {{image_detail.headers.InstanceNumber}}</p>
-            <b ng-if="image_detail.qc.notemp">Template Missing</b>
-            <h4>Image Errors</h4>
+    <div class="panel panel-default">
+        <div class="panel-heading">Study</div>
+        <div class="panel-body">
+            <p>Study Date: {{data.study.qc.date | date:'medium'}}</p>
+            <h4>Study Errors</h4>
             <ul>
-                <li ng-repeat="error in image_detail.qc.errors">{{error}}</li>
+                <li ng-repeat="error in data.study.qc.errors" ng-if="error.type != 'qc_error'">{{error}}</li>
             </ul>
-
-            <h4>Image Warnings</h4>
+            <h4>Study Warnings</h4>
             <ul>
-                <li ng-repeat="warning in image_detail.qc.warnings">{{warning}}</li>
+                <li ng-repeat="warning in data.study.qc.warnings" ng-if="warning.type != 'qc_warning'">{{warning}}</li>
             </ul>
+            <p>Images: {{data.study.qc.image_count}}</p>
+            <p>Template Missing: {{data.study.qc.notemps}}</p>
+        </div>
 
-            <h4>Image Headers</h4>
-            <div class="row" ng-repeat="(k,v) in image_detail.headers">
-                <div class="col-md-6">{{k}}</div>
-                <div class="col-md-6">{{v}}</div>
+        <div class="panel-heading">Template</div>
+        <div class="panel-body">
+            <p>Template Date: {{data.template.date | date:'medium'}}</p>
+            <p>Template ID: {{data.template._id}}</p>
+        </div>
+        <div class="panel-heading">Images</div>
+        <div class="panel-body">
+            <ul class="images">
+                <li ng-repeat="image in data.images" 
+                    style="background-color: {{::image.color}};" 
+                    ng-class="{active: active_image == image}" 
+                    ng-click="load_image(image)">
+                </li>
+            </ul>
+            <!--<div ng-if="loading == true"><i class="fa fa-spinner fa-pulse"></i> Loading...</div>-->
+            <div ng-if="active_image" class="slide-down image-detail">
+                <div ng-if="image_detail.qc">
+                    <p>Image QC Date: {{image_detail.qc.date | date:'medium'}}</p>
+                    <p>Image QC Template ID: {{image_detail.qc.template_id}}</p>
+                    <p>AcquisitionNumber: {{image_detail.headers.AcquisitionNumber}}</p>
+                    <p>InstanceNumber: {{image_detail.headers.InstanceNumber}}</p>
+                    <b ng-if="image_detail.qc.notemp">Template Missing</b>
+                    <h4>Image Errors</h4>
+                    <ul>
+                        <li ng-repeat="error in image_detail.qc.errors">{{error}}</li>
+                    </ul>
+
+                    <h4>Image Warnings</h4>
+                    <ul>
+                        <li ng-repeat="warning in image_detail.qc.warnings">{{warning}}</li>
+                    </ul>
+
+                    <h4>Image Headers</h4>
+                    <div class="row" ng-repeat="(k,v) in image_detail.headers">
+                        <div class="col-md-6">{{k}}</div>
+                        <div class="col-md-6">{{v}}</div>
+                    </div>
+                </div>
+                
             </div>
         </div>
-        
     </div>
+
 </div>
 

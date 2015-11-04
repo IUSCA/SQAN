@@ -290,6 +290,9 @@ exports.parseMeta = function(h) {
         meta.template = true;
     }
 
+    //TODO.. it looks like Radiologist won't be able to consistently use ^ as version number separator.
+    //we've discussed an alternative to strip all trailing number instead.. but I need to discuss a bit 
+    //more on this again
     if(h.SeriesDescription) {
         var ts = h.SeriesDescription.split("^");
         meta.series_desc = ts[0];

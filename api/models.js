@@ -25,7 +25,7 @@ var researchSchema = mongoose.Schema({
     IIBISID: String, //like.. 2016-00001
     Modality: String,  //like.. PT
     StationName: String,  //like.. CT71271
-    Radiopharmaceutical: String, //like DOTA NOC (aka. Radio Tracer - only used for PT / CT)
+    raidio_tracer: String, //like DOTA NOC (from RadiopharmaceuticalInformationSequence.Radiopharmaceutical - only used for CT)
     //
     ///////////////////////////////////////////////////////////////////////////
 
@@ -127,6 +127,7 @@ var studySchema = mongoose.Schema({
     subject: String,
     StudyInstanceUID: String, //StudyInstanceUID alone can not uniquely identify a "study" as I understand it. 
     SeriesNumber: Number, //some study has repeated series
+    
     //
     ///////////////////////////////////////////////////////////////////////////
     

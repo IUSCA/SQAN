@@ -148,7 +148,8 @@ ul.images {
             background-color: #008cba;
         }
         &.active {
-            background-color: #008cba !important;
+            /*background-color: #008cba !important;*/
+            border: 2px solid red;
         }
     }   
 }
@@ -165,6 +166,9 @@ ol.subjects {
         a {
             text-decoration: none;
             color: black;
+        }
+        &.inview {
+            background-color: #cde;
         }
     }
     li:hover {
@@ -230,5 +234,12 @@ ul.templates {
     .panel-body-template {
     background-color: #fafafa;
     }
+}
+
+.affix {
+position: fixed;
+top: 0;
+height: 100%;
+overflow-y: auto;
 }
 
