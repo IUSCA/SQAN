@@ -23,7 +23,6 @@ var _ = require('underscore');
 var config = require('../api/config/config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../api/models');
-var qc_instance = require('../api/qc/instance');
 var qc_template = require('../api/qc/template');
 
 //connect to db and start processing batch indefinitely

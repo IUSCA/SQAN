@@ -12,12 +12,6 @@ var config = require('../config/config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
 
-/*
-router.get('/', function(req, res, next) {
-    logger.debug("root / ");
-    res.json({status: 'root'});
-});
-*/
 router.get('/health', function(req, res, next) {
     res.json({status: 'ok'});
 });
@@ -63,7 +57,6 @@ router.get('/', function(req, res, next) {
     });
     */
 });
-
 
 module.exports = router;
 

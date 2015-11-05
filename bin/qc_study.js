@@ -29,7 +29,7 @@ function run(cb) {
         if(err) return cb(err);
         async.each(studies, qc_study, function(err) {
             if(err) return cb(err);
-            logger.info("batch complete. sleeping before next batch");
+            logger.info("batch complete. sleeping before the next try");
             setTimeout(run, 1000*5);
         });
     });
@@ -39,29 +39,23 @@ function run(cb) {
 function qc_study(study, next) {
     logger.info("QC-ing study:"+study.id);
 
-    //find images for this study
+    //find all images for this study 
     db.Image
     .find({study_id: study.id})
     .select('qc headers.AcquisitionNumber headers.InstanceNumber')
     .exec(function(err, images) {
         var qc = {
-            //images: {}, //stores acquisition/instance and issue counts
-
             image_count: images.length,  //number of images in this study
-
-            template_id: null, //template set used to do qc for this study
-
+            template_id: null, //template set used to do qc for this study (sampled from one images's qc.template_id)
             date: new Date(), //study-qc time
 
-            //study-qc errros / warnings
+            //study-qc errros / warnings / notemp count
             errors: [], 
             warnings: [],
-
-            //number of images with no temp
-            notemps: 0,
+            notemps: 0, 
         }
         
-        //count total number of errors / warnings from images
+        //count total number of errors / warnings from all images
         var all_qced = true;
         images.forEach(function(image) {
             if(image.qc) {
@@ -95,11 +89,11 @@ function qc_study(study, next) {
                 all_qced = false;
             }
         });
-
     
         //if there is an image that's not yet all qc-ed, I can't qc the study
         if(!all_qced) return next();
 
+        //now do study level QC (TODO - there aren't much to do right now)
         if(qc.template_id) {
             //check for template header count 
             db.TemplateHeader.where({template_id: qc.template_id}).count(function(err, template_count) {
