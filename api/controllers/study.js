@@ -10,7 +10,9 @@ var jwt = require('express-jwt');
 var config = require('../config/config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
+var qc = require('../qc');
 
+/*
 //return most recent studies (DEPRECATED)
 router.get('/recent', jwt({secret: config.express.jwt.secret}), function(req, res, next) {
     logger.error("/study/recent called - deprecated");
@@ -66,6 +68,7 @@ router.get('/recent', jwt({secret: config.express.jwt.secret}), function(req, re
         });
     });
 });
+*/
 
 //query against all studies
 router.get('/query', jwt({secret: config.express.jwt.secret}), function(req, res, next) {
@@ -91,53 +94,54 @@ router.get('/query', jwt({secret: config.express.jwt.secret}), function(req, res
     }
     */
 
+    var serieses = {};
+
     query.exec(function(err, studies) {
         if(err) return next(err);
 
-        //load all series referenced
-        var seriesids = [];
+        //pull unique serieses and see if it's excluded or not
+        //TODO - instead of not doing QC, I am thinking about going ahead with QC, but let UI / report deal with
+        //how to handle excluded series
         studies.forEach(function(study) {
-            seriesids.push(study.series_id);
+            //check for series exclusion
+            if(serieses[study.Modality] == undefined) serieses[study.Modality] = {};
+            if(serieses[study.Modality][study.series_desc] == undefined) {
+                serieses[study.Modality][study.series_desc] = qc.series.isExcluded(study.Modality, study.series_desc);
+            }
         });
-        db.Series.find()
+
+        //load all researches referenced by studies
+        var rids = [];
+        studies.forEach(function(study) {
+            rids.push(study.research_id);
+        });
+        db.Research.find()
         .where('_id')
-        .in(seriesids)
-        .exec(function(err, serieses) {
+        .in(rids)
+        .exec(function(err, researches) {
             if(err) return next(err);
 
-            //load all researches referenced
-            var rids = [];
-            serieses.forEach(function(series) {
-                rids.push(series.research_id);
-            });
-            db.Research.find()
-            .where('_id')
+            //load all templates referenced also
+            db.Template.find()
+            .where('research_id')
+            .sort({date: -1})
             .in(rids)
-            .exec(function(err, researches) {
+            .exec(function(err, templates) {
                 if(err) return next(err);
 
-                //load all templates referenced
-                db.Template.find()
-                .where('series_id')
-                .sort({date: -1})
-                .in(seriesids)
-                //.select({series_id: 1, date: 1, count: 1}) //don't load the headers
-                .exec(function(err, templates) {
-                    if(err) return next(err);
-
-                    res.json({
-                        studies: studies,
-                        serieses: serieses,
-                        researches: researches,
-                        templates: templates,
-                    });
+                res.json({
+                    studies: studies,
+                    researches: researches,
+                    templates: templates,
+                    serieses: serieses,
                 });
-
             });
+
         });
     });
 });
 
+/*
 //deprecated
 router.get('/qc/:study_id', jwt({secret: config.express.jwt.secret}), function(req, res, next) {
     var study_id = req.params.study_id;
@@ -165,6 +169,7 @@ router.get('/qc/:study_id', jwt({secret: config.express.jwt.secret}), function(r
         res.json(images);
     }); 
 });
+*/
 
 router.get('/id/:study_id', jwt({secret: config.express.jwt.secret}), function(req, res, next) {
     var ret = {};
@@ -176,43 +181,38 @@ router.get('/id/:study_id', jwt({secret: config.express.jwt.secret}), function(r
             if(err) return next(err);
             ret.research = research;
 
-            db.Series.findById(study.series_id).exec(function(err, series) {
-                if(err) return next(err);
-                ret.series = series;
+            if(study.qc) {
+                db.Template.findById(study.qc.template_id).exec(function(err, template) {
+                    if(err) return next(err);
+                    ret.template = template;
 
-                if(study.qc) {
-                    db.Template.findById(study.qc.template_id).exec(function(err, template) {
+                    db.Image.find()
+                    .where('study_id').equals(study._id)
+                    .sort('headers.InstanceNumber')
+                    .select({qc: 1})
+                    .exec(function(err, _images) {
                         if(err) return next(err);
-                        ret.template = template;
-
-                        db.Image.find()
-                        .where('study_id').equals(study._id)
-                        .sort('headers.InstanceNumber')
-                        .select({qc: 1})
-                        .exec(function(err, _images) {
-                            if(err) return next(err);
-                            //don't return the qc.. just return counts of errors / warnings
-                            ret.images = [];
-                            _images.forEach(function(_image) {
-                                //count number of errors / warnings
-                                var image = { _id: _image._id };
-                                if(_image.qc) {
-                                    image.errors = 0;
-                                    image.warnings = 0;
-                                    if(_image.qc.errors) image.errors = _image.qc.errors.length;
-                                    if(_image.qc.warnings) image.warnings = _image.qc.warnings.length;
-                                    image.notemp = _image.qc.notemp;
-                                }
-                                ret.images.push(image);
-                            });
-                            res.json(ret);
-                        }); 
-                    });
-                } else {
-                    //not-QCed .. this is all I can get
-                    res.json(ret);
-                }
-            });
+                        //don't return the qc.. just return counts of errors / warnings
+                        ret.images = [];
+                        _images.forEach(function(_image) {
+                            //count number of errors / warnings
+                            var image = { _id: _image._id };
+                            if(_image.qc) {
+                                image.errors = 0;
+                                image.warnings = 0;
+                                if(_image.qc.errors) image.errors = _image.qc.errors.length;
+                                if(_image.qc.warnings) image.warnings = _image.qc.warnings.length;
+                                image.notemp = _image.qc.notemp;
+                            }
+                            ret.images.push(image);
+                        });
+                        res.json(ret);
+                    }); 
+                });
+            } else {
+                //not-QCed .. this is all I can get
+                res.json(ret);
+            }
         });
     });
 });

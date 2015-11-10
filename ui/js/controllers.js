@@ -25,7 +25,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
 
     $http.get(appconf.api+'/study/query', {params: {
         skip: 0, 
-        limit: 400
+        limit: 600
     }})
     .then(function(res) {
         var researches = {};
@@ -33,20 +33,20 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
             researches[research._id] = research;
         });
         
+        /*
         var serieses = {};
         res.data.serieses.forEach(function(series) {
             serieses[series._id] = series;
             //series.research = researches[series.research_id];
         });
+        */
 
-        //store study
+        //organize study under iibisid / modality / subject / series / study(#series_number)
         $scope.researches = {};
         $scope.study_count = 0;
         res.data.studies.forEach(function(study) {
             $scope.study_count++;
-            //study.series = serieses[study.series_id];
             
-            //organize study under iibisid / modality / subject / series / study(series_number)
             var research_detail = researches[study.research_id];
             var research = $scope.researches[research_detail.IIBISID];
             if(research === undefined) {
@@ -61,12 +61,11 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
             if(modality === undefined) {
                 modality = {
                     _detail: researches[study.research_id],
-                    subjects: {}, //contains serieses for each subject
-                    template: { serieses: {} }, //contains serieses right beneath it
+                    subjects: {}, 
+                    template: { serieses: {} }, 
                 };
                 research.modalities[research_detail.Modality] = modality;
             }
-            //series.studies[study._id] = study;
 
             var subject = modality.subjects[study.subject];
             if(subject === undefined) {
@@ -76,13 +75,14 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
                 modality.subjects[study.subject] = subject;
             }
 
-            var series = subject.serieses[study.series_id];
+            var series = subject.serieses[study.series_desc];
             if(series === undefined) {
                 series = {
-                    _detail: serieses[study.series_id],
+                    //_detail: subject.serieses[study.series_desc],
+                    series_desc: study.series_desc, 
                     studies: {}
                 };
-                subject.serieses[study.series_id] = series;
+                subject.serieses[study.series_desc] = series;
             }
             series.studies[study._id] = study;
         });
@@ -100,8 +100,8 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
                     subject.errors = 0;
                     subject.warnings = 0;
                     subject.notemps = 0;
-                    for(var series_id in subject.serieses) {
-                        var series = subject.serieses[series_id];
+                    for(var series_desc in subject.serieses) {
+                        var series = subject.serieses[series_desc];
                         for(var study_id in series.studies) {
                             var study = series.studies[study_id];
                             if(study.qc) {
@@ -121,7 +121,23 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
                 }
             }
         }
-       
+        //organize templates as well.
+        res.data.templates.forEach(function(template) {
+            var research_detail = researches[template.research_id];
+            var research = $scope.researches[research_detail.IIBISID];
+            var modality = research.modalities[research_detail.Modality];
+            var series = modality.template.serieses[template.series_desc];
+            if(series === undefined) {
+                series = {
+                    //_detail: subject.serieses[template.series_desc],
+                    series_desc: template.series_desc,
+                    templates: {}
+                };
+                modality.template.serieses[template.series_desc] = series;
+            }
+            series.templates[template._id] = template;
+        });
+        
         //create uid for subject 
         for(var rid in $scope.researches) {
             var research = $scope.researches[rid];
@@ -133,22 +149,6 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
                 }
             }
         }
-  
-        //store templates
-        res.data.templates.forEach(function(template) {
-            var research_detail = researches[template.research_id];
-            var research = $scope.researches[research_detail.IIBISID];
-            var modality = research.modalities[research_detail.Modality];
-            var series = modality.template.serieses[template.series_id];
-            if(series === undefined) {
-                series = {
-                    _detail: serieses[template.series_id],
-                    templates: {}
-                };
-                modality.template.serieses[template.series_id] = series;
-            }
-            series.templates[template._id] = template;
-        });
 
         //debug
         console.log("$scope.researches dump");
@@ -175,6 +175,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
             }
         });
         //and update inview
+        console.log(it);
         if($scope.inview_id != it.id) $scope.$apply(function() {
             $scope.inview_id = it.id;
         });
@@ -188,6 +189,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
     }
 }]);
 
+/*
 app.controller('RecentOldController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'menu', 'serverconf',
 function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf) {
     menu.then(function(_menu) { $scope.menu = _menu; });
@@ -311,6 +313,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
         });
     }
 }]);
+*/
 
 app.controller('StudyController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'menu', 'serverconf', '$routeParams', 'scaMessage',
 function($scope, appconf, toaster, $http, jwtHelper,  $location, menu, serverconf, $routeParams, scaMessage) {

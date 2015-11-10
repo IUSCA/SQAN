@@ -158,6 +158,10 @@ ol.subjects {
     list-style: none;
     padding: 0px;
     margin: 0px;
+    li:hover {
+        background-color: #ddd;
+        cursor: pointer;
+    }
     li {
         background-color: #eee;
         border: 1px solid #ddd;
@@ -167,15 +171,42 @@ ol.subjects {
             text-decoration: none;
             color: black;
         }
+        &.template-link {
+            background-color: #ccc;
+        }
         &.inview {
-            background-color: #cde;
+            background-color: white;
         }
     }
-    li:hover {
-        background-color: #ddd;
-        cursor: pointer;
+}
+.template {
+    .template-head {
+        background-color: #ccc;
+    }
+    .template-body {
+        border-top: 0px;
+    }
+    th {
+        opacity: 0.4;
     }
 }
+
+.subject {
+    .list-group-item-subject {
+        border-bottom: 0px;
+        padding: 3px 10px;
+    }
+    .subject-body {
+        background-color: #eee;
+    }
+    th {
+        opacity: 0.4;
+    }
+    &.template {
+        background-color: #008cba;
+    }
+}
+
 ul.templates,
 ul.studies {
     list-style: none;
@@ -208,7 +239,10 @@ ul.templates {
             */
         }
     }
-    
+}
+
+h3 {
+margin-top: 0px;
 }
 
 .image-detail {
@@ -237,9 +271,14 @@ ul.templates {
 }
 
 .affix {
-position: fixed;
-top: 0;
-height: 100%;
-overflow-y: auto;
+position: inherit;
 }
 
+@media (min-width: 992px) {
+    .affix {
+        position: fixed;
+        top: 0;
+        height: 100%;
+        overflow-y: auto;
+    }
+}

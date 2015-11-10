@@ -57,10 +57,12 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         templateUrl: 't/recent.html',
         controller: 'RecentController'
     })
+    /*
     .when('/recentold', {
         templateUrl: 't/recent_old.html',
         controller: 'RecentOldController'
     })
+    */
     /*
     .when('/series/:date/:studyid/:seriesid', {
         templateUrl: 't/series.html',
@@ -185,6 +187,7 @@ app.factory('menu', ['appconf', '$http', 'jwtHelper', 'scaMessage', function(app
     });
 }]);
 
+/*
 app.filter('orderDetailBy', function() {
   return function(items, field, reverse) {
     var filtered = [];
@@ -198,4 +201,14 @@ app.filter('orderDetailBy', function() {
     return filtered;
   };
 });
+*/
+
+/*
+app.filter('toArray', function() { return function(obj) {
+    if (!(obj instanceof Object)) return obj;
+    return _.map(obj, function(val, key) {
+        return Object.defineProperty(val, '$key', {__proto__: null, value: key});
+    });
+}});
+*/
 

@@ -29,25 +29,11 @@ var researchSchema = mongoose.Schema({
     //
     ///////////////////////////////////////////////////////////////////////////
 
-    //StudyTimestamp: Date,
-    //StudyDescription: String, //PHI now
-    //StudyID: String,
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    // let's store some key fields (TODO - should these be indexed?)
-
-
-    //"what people say "Modality" is actually defined by combination of Modality+StationMame fields
-   
-    //list of series for this study
-    //SeriesInstanceUID: [String],
-   
-    //list of templates available for this study (the last should be applied to all new series - unless overridden)
-    //template_ids: [ mongoose.Schema.Types.ObjectId ] ,
 });
 
 exports.Research = mongoose.model('Research', researchSchema);
 
+/*
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 var seriesSchema = mongoose.Schema({
     ///////////////////////////////////////////////////////////////////////////
@@ -61,16 +47,8 @@ var seriesSchema = mongoose.Schema({
 
     //SeriesTimestamp: Date, //from qc_SeriesTimestamp
 });
-
-/*
-//function for each instances
-templateSchema.methods.speak = function() {
-    //demo purpose only
-    console.log(this.headers.StudyDate);
-}
-*/
 exports.Series = mongoose.model('Series', seriesSchema);
-
+*/
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 var templateSchema = mongoose.Schema({
@@ -79,12 +57,11 @@ var templateSchema = mongoose.Schema({
     // keys
     //
     //study_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-    series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    series_desc: String, //original SeriesDescription minut anything after ^
+    //series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     date: Date, //date when this template is received (probabbly use StudyTimestamp of the template?)
     SeriesNumber: Number,
     
-    //AcquisitionNumber: Number,
-    //InstanceNumber: Number,
     //
     ///////////////////////////////////////////////////////////////////////////
     
@@ -93,6 +70,7 @@ var templateSchema = mongoose.Schema({
     //foreign key to assist lookup
     //
     research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    Modality: String,  //like.. PT
     
     count: Number, //number of images in a given series
 });
@@ -122,12 +100,10 @@ var studySchema = mongoose.Schema({
     //
     // keys
     //
-    series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-
+    series_desc: String, //original SeriesDescription minut anything after ^
     subject: String,
     StudyInstanceUID: String, //StudyInstanceUID alone can not uniquely identify a "study" as I understand it. 
     SeriesNumber: Number, //some study has repeated series
-    
     //
     ///////////////////////////////////////////////////////////////////////////
     
@@ -136,13 +112,11 @@ var studySchema = mongoose.Schema({
     //foreign key/value to assist lookup
     //
     research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-    //Modality: String,
+    Modality: String,  //like.. PT
     StudyTimestamp: Date,
 
     ///////////////////////////////////////////////////////////////////////////
 
-    //count: Number, //number of images in this study
-    
     //template to use for QC (if not, latest version will be used) specified by a user - to override the auto selection
     template_id: {type: mongoose.Schema.Types.ObjectId, index: true},
 
@@ -172,10 +146,6 @@ var acquisitionSchema = mongoose.Schema({
     //
     research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     study_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
- 
-    //series that this aq belongs to
-    //series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-    //AcquisitionTimestamp: Date, 
 });
 exports.Acquisition = mongoose.model('Acquisition', acquisitionSchema);
 
@@ -188,7 +158,7 @@ var imageSchema = mongoose.Schema({
 
     //foreigh keys to make it easier to find related information
     research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-    series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    //series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     study_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     acquisition_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
 
@@ -197,27 +167,7 @@ var imageSchema = mongoose.Schema({
 
     //qc result (null if not qc-ed)
     qc: mongoose.Schema.Types.Mixed,
-    /*
-    {
-        template_id: mongoose.Schema.Types.ObjectId,  //template used for the qc
-        date: Date, //date when the QC was last performed
-        errors: [ mongoose.Schema.Types.Mixed ], //list of qc dicrepancies, etc..
-        warnings: [ mongoose.Schema.Types.Mixed ], //list of qc dicrepancies, etc..
-        notes: [ mongoose.Schema.Types.Mixed ], //list of qc dicrepancies, etc..
-    }*/
 });
 exports.Image = mongoose.model('Image', imageSchema);
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-/*
-var counterSchema = mongoose.Schema({
-    date: Date, 
-    research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-    series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-    study_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-    count: Number, //number of images in a given study 
-});
-exports.Counter = mongoose.model('Count', counterSchema);
-*/
 

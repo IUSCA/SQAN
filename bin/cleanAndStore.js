@@ -13,7 +13,7 @@ var mkdirp = require('mkdirp');
 var config = require('../api/config/config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../api/models');
-var instance = require('../api/qc/instance');
+var qc = require('../api/qc');
 
 //to-be-initizalied
 var conn = null;
@@ -63,7 +63,7 @@ function handle_message(h, msg_h, info, ack) {
                 //parse some special fields
                 //if these fields fails to set, rest of the behavior is undefined.
                 //according to john, however, iibisid and subject should always be found
-                var meta = instance.parseMeta(h);
+                var meta = qc.instance.parseMeta(h);
                 h.qc_iibisid = meta.iibisid;
                 h.qc_subject = meta.subject;
                 h.qc_istemplate = meta.template;
@@ -71,7 +71,7 @@ function handle_message(h, msg_h, info, ack) {
                 h.qc_series_desc_version = meta.series_desc_version;
 
                 //construct esindex
-                var esindex = instance.composeESIndex(h);
+                var esindex = qc.instance.composeESIndex(h);
                 logger.info(h.qc_iibisid+" esindex:"+esindex+" "+h.SOPInstanceUID);
                 h.qc_esindex = esindex;
 
@@ -94,7 +94,7 @@ function handle_message(h, msg_h, info, ack) {
 
         function(next) {
             try {       
-                instance.clean(h);
+                qc.instance.clean(h);
                 next();
             } catch(err) {
                 next(err);
@@ -110,16 +110,6 @@ function handle_message(h, msg_h, info, ack) {
                 next();
             });
         },
-
-        /* let's do this for truely unique image
-        function(next) {
-            if(h.qc_istemplate) return next(); //if template then don't send to es
-            logger.debug("publishing to cleaned_ex");
-            cleaned_ex.publish('', h, {}, function(err) {
-                next(err);
-            });
-        },
-        */
 
         //make sure we know about this research
         function(next) {
@@ -141,6 +131,7 @@ function handle_message(h, msg_h, info, ack) {
             });
         },
 
+        /*
         //make sure we know about this series
         function(next) {
             db.Series.findOneAndUpdate({
@@ -152,18 +143,20 @@ function handle_message(h, msg_h, info, ack) {
                 next();
             });
         },
+        */
         
         //make sure we know about this template 
         function(next) {
             if(!h.qc_istemplate) return next();  //if not template then skip
 
             db.Template.findOneAndUpdate({
-                series_id: series._id,
-                date: h.qc_StudyTimestamp, //TODO qc_StudyTimestamp the best choice?
+                series_desc: h.qc_series_desc,
+                date: h.qc_StudyTimestamp, 
                 SeriesNumber: h.SeriesNumber,
             }, {
                 //$inc: { count: 1 }, //increment the count
                 research_id: research._id,
+                Modality: h.Modality,
                 //headers: h, //update with the latest headers (or mabe we should store all under an array?)
             }, {upsert:true, 'new': true}, function(err, _template) {
                 if(err) return next(err);
@@ -187,15 +180,15 @@ function handle_message(h, msg_h, info, ack) {
             if(h.qc_istemplate) return next();  //if it's template then skip
 
             db.Study.findOneAndUpdate({
-                series_id: series._id,
+                series_desc: h.qc_series_desc,
                 subject: h.qc_subject,
                 StudyInstanceUID: h.StudyInstanceUID,
                 SeriesNumber: h.SeriesNumber,
             }, {
                 //$inc: { count: 1 }, //increment the count
                 research_id: research._id,
+                Modality: h.Modality,
                 StudyTimestamp: h.qc_StudyTimestamp,
-                //Modality: h.Modality,
             }, {upsert: true, 'new': true}, function(err, _study) {
                 if(err) return next(err);
                 study = _study;
@@ -226,7 +219,6 @@ function handle_message(h, msg_h, info, ack) {
                 var data = {
                     research_id: research._id,
                     study_id: study._id,
-                    series_id: series._id,
                     acquisition_id: aq._id,
                     headers: h
                 }
@@ -252,52 +244,7 @@ function handle_message(h, msg_h, info, ack) {
                     });
                 }
             });
-            /*
-            //upsert image
-            var image = {
-                //SOPInstanceUID: h.SOPInstanceUID,
-                research_id: research._id,
-                study_id: study._id,
-                series_id: series._id,
-                acquisition_id: aq._id,
-                headers: h,
-            };
-            db.Image.update({SOPInstanceUID: h.SOPInstanceUID}, {$set: image}, {upsert: true}, function(err, res) {
-                if(err) logger.error(err); //continue to publish anyway..
-                if(res.nInserted) {
-                    logger.error("new record - senging to cleaned ex");
-                    //ship to es
-                    cleaned_ex.publish('', h, {}, function(err) {
-                        next(err);
-                    });
-                } else next();
-            });
-            */
         },
-        
-        /* what was this for?
-        //increment counter
-        function(next) {
-            if(h.qc_istemplate) return next();  //if template then skip
-
-            //group by day
-            var dategroup = new Date();
-            dategroup.setHours(0,0,0,0); //set to beginning of the day
-
-            db.Counter.findOneAndUpdate({
-                date: dategroup,
-                research_id: research._id,
-                series_id: series._id,
-                study_id: study._id,
-            }, {
-                //$inc: { count: 1 }, //increment the count
-            }, {upsert:true, 'new': true}, function(err, _template) {
-                if(err) return next(err);
-                next();
-            });
-        },
-        */
-
     ], function(err) {
         //all done
         if(err) {

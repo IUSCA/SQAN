@@ -146,6 +146,10 @@ ol.subjects {
   padding: 0px;
   margin: 0px;
 }
+ol.subjects li:hover {
+  background-color: #ddd;
+  cursor: pointer;
+}
 ol.subjects li {
   background-color: #eee;
   border: 1px solid #ddd;
@@ -156,12 +160,33 @@ ol.subjects li a {
   text-decoration: none;
   color: black;
 }
-ol.subjects li.inview {
-  background-color: #cde;
+ol.subjects li.template-link {
+  background-color: #ccc;
 }
-ol.subjects li:hover {
-  background-color: #ddd;
-  cursor: pointer;
+ol.subjects li.inview {
+  background-color: white;
+}
+.template .template-head {
+  background-color: #ccc;
+}
+.template .template-body {
+  border-top: 0px;
+}
+.template th {
+  opacity: 0.4;
+}
+.subject .list-group-item-subject {
+  border-bottom: 0px;
+  padding: 3px 10px;
+}
+.subject .subject-body {
+  background-color: #eee;
+}
+.subject th {
+  opacity: 0.4;
+}
+.subject.template {
+  background-color: #008cba;
 }
 ul.templates,
 ul.studies {
@@ -193,6 +218,9 @@ ul.templates li:first-child {
             background-color: #999;
             */
 }
+h3 {
+  margin-top: 0px;
+}
 .image-detail ul.qc-errors {
   list-style: none;
   padding: 0px;
@@ -212,8 +240,13 @@ ul.templates li:first-child {
   background-color: #fafafa;
 }
 .affix {
-  position: fixed;
-  top: 0;
-  height: 100%;
-  overflow-y: auto;
+  position: inherit;
+}
+@media (min-width: 992px) {
+  .affix {
+    position: fixed;
+    top: 0;
+    height: 100%;
+    overflow-y: auto;
+  }
 }
