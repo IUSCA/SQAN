@@ -58,12 +58,12 @@
                             <b ng-if="image_detail.qc.notemp">Template Missing</b>
                             <h4>Image Errors</h4>
                             <ul>
-                                <li ng-repeat="error in image_detail.qc.errors">{{error}}</li>
+                                <li ng-repeat="error in image_detail.qc.errors"><pre>{{error|json}}</pre></li>
                             </ul>
 
                             <h4>Image Warnings</h4>
                             <ul>
-                                <li ng-repeat="warning in image_detail.qc.warnings">{{warning}}</li>
+                                <li ng-repeat="warning in image_detail.qc.warnings"><pre>{{warning|json}}</pre></li>
                             </ul>
 
                             <h4>Image Headers</h4>

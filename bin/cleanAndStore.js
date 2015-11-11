@@ -150,12 +150,12 @@ function handle_message(h, msg_h, info, ack) {
             if(!h.qc_istemplate) return next();  //if not template then skip
 
             db.Template.findOneAndUpdate({
+                research_id: research._id,
                 series_desc: h.qc_series_desc,
                 date: h.qc_StudyTimestamp, 
                 SeriesNumber: h.SeriesNumber,
             }, {
                 //$inc: { count: 1 }, //increment the count
-                research_id: research._id,
                 Modality: h.Modality,
                 //headers: h, //update with the latest headers (or mabe we should store all under an array?)
             }, {upsert:true, 'new': true}, function(err, _template) {
@@ -180,13 +180,13 @@ function handle_message(h, msg_h, info, ack) {
             if(h.qc_istemplate) return next();  //if it's template then skip
 
             db.Study.findOneAndUpdate({
+                research_id: research._id,
                 series_desc: h.qc_series_desc,
                 subject: h.qc_subject,
                 StudyInstanceUID: h.StudyInstanceUID,
                 SeriesNumber: h.SeriesNumber,
             }, {
                 //$inc: { count: 1 }, //increment the count
-                research_id: research._id,
                 Modality: h.Modality,
                 StudyTimestamp: h.qc_StudyTimestamp,
             }, {upsert: true, 'new': true}, function(err, _study) {

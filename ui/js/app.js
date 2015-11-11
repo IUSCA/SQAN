@@ -23,10 +23,10 @@ app.config(['cfpLoadingBarProvider', function(cfpLoadingBarProvider) {
 app.animation('.slide-down', ['$animateCss', function($animateCss) {
     return {
         enter: function(elem, done) {
-            $(elem).hide().slideDown("slow", done);
+            $(elem).hide().slideDown("normal", done);
         },
         leave: function(elem, done) {
-            $(elem).slideUp("slow", done);
+            $(elem).slideUp("normal", done);
         }
     };
 }]);
@@ -47,6 +47,11 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
     when('/study/:studyid', {
         templateUrl: 't/study.html',
         controller: 'StudyController',
+        requiresLogin: true
+    })
+    .when('/template/:templateid', {
+        templateUrl: 't/template.html',
+        controller: 'TemplateController',
         requiresLogin: true
     })
     .when('/about', {

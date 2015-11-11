@@ -98,7 +98,10 @@ function find_template(image, cb) {
             }); 
         } else {
             //template not specified. Just find the latest template for that series_desc
-            db.Template.find({series_desc: image.headers.qc_series_desc}).sort({date: -1}).exec(function(err, templates) {
+            db.Template.find({
+                research_id: image.research_id,
+                series_desc: image.headers.qc_series_desc, //TODO remove this and do "longest-common-string" search
+            }).sort({date: -1}).exec(function(err, templates) {
                 if(err) return cb(err);
                 var template = templates[0]; //pick the latest
                 find_templateheader(template, image, function(err, templateheader) {
@@ -117,5 +120,4 @@ function find_templateheader(template, image, cb) {
         "headers.InstanceNumber": image.headers.InstanceNumber,
     }, cb);
 }
-
 

@@ -28,43 +28,49 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
         limit: 600
     }})
     .then(function(res) {
-        var researches = {};
-        res.data.researches.forEach(function(research) {
-            researches[research._id] = research;
+        var iibisids = {};
+        res.data.iibisids.forEach(function(research) {
+            iibisids[research._id] = research;
         });
         
         /*
         var serieses = {};
         res.data.serieses.forEach(function(series) {
             serieses[series._id] = series;
-            //series.research = researches[series.research_id];
+            //series.research = iibisids[series.research_id];
         });
         */
 
+        //serises catalog (organized under Modality)
+        var serieses = res.data.serieses;
+        //console.dir($scope.serieses);
+
         //organize study under iibisid / modality / subject / series / study(#series_number)
-        $scope.researches = {};
+        $scope.iibisids = {};
         $scope.study_count = 0;
         res.data.studies.forEach(function(study) {
             $scope.study_count++;
             
-            var research_detail = researches[study.research_id];
-            var research = $scope.researches[research_detail.IIBISID];
+            var research_detail = iibisids[study.research_id];
+            var research = $scope.iibisids[research_detail.IIBISID];
             if(research === undefined) {
                 research = {
-                    //_detail: researches[study.research_id], (stored under modality)
+                    //_detail: iibisids[study.research_id], (stored under modality)
                     modalities: {},
                 };
-                $scope.researches[research_detail.IIBISID] = research;
+                $scope.iibisids[research_detail.IIBISID] = research;
             }
 
-            var modality = research.modalities[research_detail.Modality];
+            var modality_id = research_detail.Modality+"."+research_detail.StationName+"."+research_detail.radio_tracer;
+            //console.log(modality_id);
+            var modality = research.modalities[modality_id];
             if(modality === undefined) {
                 modality = {
-                    _detail: researches[study.research_id],
+                    _detail: iibisids[study.research_id],
                     subjects: {}, 
                     template: { serieses: {} }, 
                 };
-                research.modalities[research_detail.Modality] = modality;
+                research.modalities[modality_id] = modality;
             }
 
             var subject = modality.subjects[study.subject];
@@ -78,7 +84,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
             var series = subject.serieses[study.series_desc];
             if(series === undefined) {
                 series = {
-                    //_detail: subject.serieses[study.series_desc],
+                    _detail: serieses[research_detail.Modality][study.series_desc],
                     series_desc: study.series_desc, 
                     studies: {}
                 };
@@ -88,8 +94,9 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
         });
 
         //count number of status for each subject
-        for(var rid in $scope.researches) {
-            var research = $scope.researches[rid];
+        //console.dir($scope.iibisids);
+        for(var iibisid in $scope.iibisids) {
+            var research = $scope.iibisids[iibisid];
             for(var modality_id in research.modalities) {
                 var modality = research.modalities[modality_id];
                 for(var subject_id in modality.subjects) {
@@ -102,6 +109,8 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
                     subject.notemps = 0;
                     for(var series_desc in subject.serieses) {
                         var series = subject.serieses[series_desc];
+                        var series_detail = serieses[modality._detail.Modality][series_desc];
+                        if(series_detail.excluded) continue;
                         for(var study_id in series.studies) {
                             var study = series.studies[study_id];
                             if(study.qc) {
@@ -121,11 +130,13 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
                 }
             }
         }
+        
         //organize templates as well.
         res.data.templates.forEach(function(template) {
-            var research_detail = researches[template.research_id];
-            var research = $scope.researches[research_detail.IIBISID];
-            var modality = research.modalities[research_detail.Modality];
+            var research_detail = iibisids[template.research_id];
+            var research = $scope.iibisids[research_detail.IIBISID];
+            var modality_id = research_detail.Modality+"."+research_detail.StationName+"."+research_detail.radio_tracer;
+            var modality = research.modalities[modality_id];
             var series = modality.template.serieses[template.series_desc];
             if(series === undefined) {
                 series = {
@@ -139,20 +150,20 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
         });
         
         //create uid for subject 
-        for(var rid in $scope.researches) {
-            var research = $scope.researches[rid];
+        for(var iibisid in $scope.iibisids) {
+            var research = $scope.iibisids[iibisid];
             for(var modality_id in research.modalities) {
                 var modality = research.modalities[modality_id];
                 for(var subject_id in modality.subjects) {
                     var subject = modality.subjects[subject_id];
-                    subject.uid = rid+modality_id+subject_id;
+                    subject.uid = iibisid+modality_id+subject_id;
                 }
             }
         }
 
         //debug
-        console.log("$scope.researches dump");
-        console.dir($scope.researches);
+        //console.log("$scope.iibisids dump");
+        //console.dir($scope.iibisids);
     });
 
     $document.on('scroll', function() {
@@ -175,14 +186,17 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
             }
         });
         //and update inview
-        console.log(it);
-        if($scope.inview_id != it.id) $scope.$apply(function() {
+        //console.log(it);
+        if(it && $scope.inview_id != it.id) $scope.$apply(function() {
             $scope.inview_id = it.id;
         });
     });
 
     $scope.openstudy = function(study_id) {
         $location.path("/study/"+study_id);
+    }
+    $scope.opentemplate = function(id) {
+        $location.path("/template/"+id);
     }
     $scope.scrollto = function(id) {
         $anchorScroll(id);
@@ -199,9 +213,9 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
     $http.get(appconf.api+'/study/recent')
     .then(function(res) {
 
-        var researches = {};
-        res.data.researches.forEach(function(research) {
-            researches[research._id] = research;
+        var iibisids = {};
+        res.data.iibisids.forEach(function(research) {
+            iibisids[research._id] = research;
         });
         
         var serieses = {};
@@ -209,7 +223,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
             serieses[series._id] = series;
         });
 
-        $scope.researches = {};
+        $scope.iibisids = {};
         $scope.study_count = 0;
         
         //add series/research object references
@@ -218,13 +232,13 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
             study.series = serieses[study.series_id];
             
             //organize each study under research / series
-            var research = $scope.researches[study.series.research_id];
+            var research = $scope.iibisids[study.series.research_id];
             if(research === undefined) {
                 research = {
-                    research: researches[study.series.research_id],
+                    research: iibisids[study.series.research_id],
                     serieses: {}
                 };
-                $scope.researches[study.series.research_id] = research;
+                $scope.iibisids[study.series.research_id] = research;
             }
             var series = research.serieses[study.series_id];
             if(series === undefined) {
@@ -372,4 +386,25 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, menu, servercon
 
 }]);
 
+app.controller('TemplateController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'menu', 'serverconf', '$routeParams', 'scaMessage',
+function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf, $routeParams, scaMessage) {
+    scaMessage.show(toaster);
+    menu.then(function(_menu) { $scope.menu = _menu; });
+    serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
 
+    $http.get(appconf.api+'/template/head/'+$routeParams.templateid)
+    .then(function(res) {
+        $scope.head = res.data;
+        //if($scope.data.images) $scope.data.images.forEach(computeColor);
+    });
+
+    $scope.active_template = null;
+    $scope.load_template = function(template) {
+        $scope.active_template = template;
+        $http.get(appconf.api+'/template/inst/'+template._id)
+        .then(function(res) {
+            $scope.inst = res.data;    
+        });
+    }
+
+}]);

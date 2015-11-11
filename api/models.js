@@ -56,6 +56,7 @@ var templateSchema = mongoose.Schema({
     //
     // keys
     //
+    research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     //study_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     series_desc: String, //original SeriesDescription minut anything after ^
     //series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
@@ -69,7 +70,6 @@ var templateSchema = mongoose.Schema({
     //
     //foreign key to assist lookup
     //
-    research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     Modality: String,  //like.. PT
     
     count: Number, //number of images in a given series
@@ -100,6 +100,7 @@ var studySchema = mongoose.Schema({
     //
     // keys
     //
+    research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     series_desc: String, //original SeriesDescription minut anything after ^
     subject: String,
     StudyInstanceUID: String, //StudyInstanceUID alone can not uniquely identify a "study" as I understand it. 
@@ -111,7 +112,6 @@ var studySchema = mongoose.Schema({
     //
     //foreign key/value to assist lookup
     //
-    research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     Modality: String,  //like.. PT
     StudyTimestamp: Date,
 

@@ -11,15 +11,35 @@ var config = require('../config/config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
 
-router.get('/:template_id/:inst_id', jwt({secret: config.express.jwt.secret}), function(req, res, next) {
-    db.TemplateHeader.findOne({
-        template_id: req.params.template_id,
-        InstanceNumber: req.params.inst_id,
-    }, function(err, templateheaders) {
+//get template head record
+router.get('/head/:template_id', jwt({secret: config.express.jwt.secret}), function(req, res, next) {
+    db.Template.findById(req.params.template_id, function(err, template) {
+        if(err) return next(err);
+        db.Research.findById(template.research_id, function(err, research) {
+            if(err) return next(err);
+            db.TemplateHeader.find({template_id: template.id})
+            .select('AcquisitionNumber InstanceNumber')
+            .sort('AcquisitionNumber InstanceNumber')
+            .exec(function(err, templates) {
+                if(err) return next(err);
+                res.json({
+                    research: research,
+                    template: template,
+                    templates: templates,
+                });
+            });
+        });
+    });
+});
+
+//get one template header intance
+router.get('/inst/:inst_id', jwt({secret: config.express.jwt.secret}), function(req, res, next) {
+    db.TemplateHeader.findById(req.params.inst_id, function(err, templateheaders) {
         if(err) return next(err);
         res.json(templateheaders);
     }); 
 });
+
 
 module.exports = router;
 

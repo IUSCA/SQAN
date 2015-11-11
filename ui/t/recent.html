@@ -3,15 +3,12 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-3" ng-class="{affix: content_affix}">
-            <div ng-repeat="(iibisid, research) in researches">
+            <div ng-repeat="(iibisid, research) in iibisids">
                 <h4>IIBISID: {{iibisid}}</h4>
                 <div class="list-group">
                     <div class="list-group-item" ng-repeat="(modality_id, modality) in research.modalities">
                         <h4 class="list-group-item-heading">
-                            {{modality._detail.Modality}} / {{modality._detail.StationName}}
-                            <small ng-if="modality._detail.Modality == 'PT'">
-                                / {{modality._detail.radio_tracer}}
-                            </small>
+                            {{modality._detail.Modality}} / {{modality._detail.StationName}} <small ng-if="modality._detail.Modality == 'PT'"> / {{modality._detail.radio_tracer}} </small>
                         </h4>
                         <p class="list-group-item-text">
                             <ol class="subjects">
@@ -43,7 +40,7 @@
         </div> <!--col-md-3-->
 
         <div class="col-md-9" ng-class="{'col-md-offset-3': content_affix}">
-            <div ng-repeat="(iibisid, research) in researches">
+            <div ng-repeat="(iibisid, research) in iibisids">
                 <h2>IIBISID: {{iibisid}}</h2>
                 <div ng-repeat="(modality_id, modality) in research.modalities">
                     <h3>
@@ -65,6 +62,8 @@
                                             <td>{{series.series_desc}}</td>
                                             <td style="padding: 1px 5px;">
                                                 <ul class="studies">
+                                                    <li ng-if="series._detail.excluded" class="text-muted" ng-click="series._detail.excluded = false">Excluded</li>
+                                                    <div ng-if="!series._detail.excluded" class="slide-down">
                                                     <li ng-repeat="(study_id, study) in series.studies" ng-click="openstudy(study_id)">
                                                         <span class="label label-info" ng-if="!study.qc">Not Yet QCed</span>
                                                         <span class="label label-primary" ng-if="study.qc.notemps > 0">NoTemp: {{study.qc.notemps}}</span>
@@ -73,6 +72,7 @@
                                                         <span class="label label-success" ng-if="study.qc.warnings.length == 0 && study.qc.errors.length == 0 && study.qc.notemps == 0">OK</span>
                                                         <time>{{study.StudyTimestamp | date:'medium' }}</time> <span class="text-muted">(#{{study.SeriesNumber}})</span>
                                                     </li> 
+                                                    </div>
                                                 </ul>
                                             </td>
                                         </tr>
@@ -91,7 +91,7 @@
                                             <td>{{series.series_desc}}</td>
                                             <td style="padding: 1px 5px;">
                                                 <ul class="templates">
-                                                    <li ng-repeat="(template_id, template) in series.templates">
+                                                    <li ng-repeat="(template_id, template) in series.templates" ng-click="opentemplate(template_id)">
                                                         {{template.date | date:'medium'}} (#{{template.SeriesNumber}})
                                                     </li> 
                                                 </ul>

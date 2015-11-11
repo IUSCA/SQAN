@@ -1,0 +1,11 @@
+<sca-menubar menu="menu.top" active="'dicom'" profile="menu._profile"></sca-menubar>
+<sca-menutab menu="serverconf.menu" active="'recent'"></sca-menutab>
+<div class="container-fluid">
+    {{head.research}}
+    {{head.template}}
+    <ul class="images">
+        <li ng-repeat="template in head.templates" style="background-color: green" ng-click="load_template(template)" ng-class="{active: active_template == template}"></li>
+    </ul>
+    <pre> {{inst.headers | json}} </pre>
+</div>
+

@@ -100,13 +100,13 @@ router.get('/query', jwt({secret: config.express.jwt.secret}), function(req, res
         if(err) return next(err);
 
         //pull unique serieses and see if it's excluded or not
-        //TODO - instead of not doing QC, I am thinking about going ahead with QC, but let UI / report deal with
-        //how to handle excluded series
         studies.forEach(function(study) {
             //check for series exclusion
             if(serieses[study.Modality] == undefined) serieses[study.Modality] = {};
             if(serieses[study.Modality][study.series_desc] == undefined) {
-                serieses[study.Modality][study.series_desc] = qc.series.isExcluded(study.Modality, study.series_desc);
+                serieses[study.Modality][study.series_desc] = {
+                    excluded: qc.series.isExcluded(study.Modality, study.series_desc) 
+                };
             }
         });
 
@@ -131,7 +131,7 @@ router.get('/query', jwt({secret: config.express.jwt.secret}), function(req, res
 
                 res.json({
                     studies: studies,
-                    researches: researches,
+                    iibisids: researches,
                     templates: templates,
                     serieses: serieses,
                 });
