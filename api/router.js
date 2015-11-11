@@ -6,7 +6,7 @@ var router = express.Router();
 var jwt = require('express-jwt');
 
 //mine
-var config = require('./config/config');
+var config = require('./config');
 
 router.use('/', require('./controllers/root'));
 router.use('/study', require('./controllers/study'));

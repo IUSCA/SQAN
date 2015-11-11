@@ -10,7 +10,7 @@ var async = require('async');
 var mkdirp = require('mkdirp');
 
 //mine
-var config = require('../api/config/config');
+var config = require('../api/config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../api/models');
 var qc = require('../api/qc');

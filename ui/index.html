@@ -56,7 +56,34 @@
         auth_api: '/api/auth',
         auth_url: '/auth',
 
-        jwt_id: 'jwt'
+        jwt_id: 'jwt',
+        menu: [
+            {
+                id: "about",
+                label: "About",
+                url: "/dicom/#/about",
+            },
+            {
+                id: "recent",
+                label: "Recent Study",
+                url: "/dicom/#/recent",
+                show: function(scope) {
+                    if(~scope.common.indexOf('user')) return true;
+                    return false;
+                }
+            },
+            /*
+            {
+                id: "admin",
+                label: "Administration",
+                url: "/dicom/#/admin",
+                show: function(scope) {
+                    if(~scope.common.indexOf('admin')) return true;
+                    return false;
+                }
+            },
+            */
+        ]    
     });
     </script>
 

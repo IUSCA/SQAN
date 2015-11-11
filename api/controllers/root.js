@@ -8,7 +8,7 @@ var jwt = require('express-jwt');
 var _ = require('underscore');
 
 //mine
-var config = require('../config/config');
+var config = require('../config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
 
@@ -17,6 +17,7 @@ router.get('/health', function(req, res, next) {
 });
 
 router.get('/config', jwt({secret: config.express.jwt.secret, credentialsRequired: false}), function(req, res) {
+    /*
     function get_menu(user) {
         var scopes = {
             common: []
@@ -33,10 +34,11 @@ router.get('/config', jwt({secret: config.express.jwt.secret, credentialsRequire
         });
         return menus;
     }
+    */
     var conf = {
         //service_types: config.service_types,
         //defaults: config.defaults,
-        menu: get_menu(req.user),
+        //menu: get_menu(req.user),
     };
     res.json(conf);
 });

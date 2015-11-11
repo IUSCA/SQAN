@@ -17,7 +17,7 @@ var amqp = require('amqp');
 var winston = require('winston');
 
 //mine
-var config = require('../api/config/config.js');
+var config = require('../api/config');
 var logger = new winston.Logger(config.logger.winston);
 
 logger.info("orthanc2incomingQ starting");

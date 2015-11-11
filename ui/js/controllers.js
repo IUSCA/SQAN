@@ -12,7 +12,11 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, menu, servercon
     scaMessage.show(toaster);
     menu.then(function(_menu) { $scope.menu = _menu; });
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
-    //todo
+
+    var jwt = localStorage.getItem(appconf.jwt_id);
+    if(jwt) {
+        $scope.user = jwtHelper.decodeToken(jwt);
+    }
 }]);
 
 app.controller('RecentController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'menu', 'serverconf', 'scaMessage', '$anchorScroll', '$document',
@@ -331,6 +335,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
 
 app.controller('StudyController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'menu', 'serverconf', '$routeParams', 'scaMessage',
 function($scope, appconf, toaster, $http, jwtHelper,  $location, menu, serverconf, $routeParams, scaMessage) {
+    $scope.appconf = appconf;
     scaMessage.show(toaster);
     menu.then(function(_menu) { $scope.menu = _menu; });
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
@@ -388,6 +393,7 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, menu, servercon
 
 app.controller('TemplateController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'menu', 'serverconf', '$routeParams', 'scaMessage',
 function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf, $routeParams, scaMessage) {
+    $scope.appconf = appconf;
     scaMessage.show(toaster);
     menu.then(function(_menu) { $scope.menu = _menu; });
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });

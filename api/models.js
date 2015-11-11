@@ -4,7 +4,7 @@
 var mongoose = require('mongoose');
 
 //mine
-var config = require('./config/config');
+var config = require('./config');
 
 //var sequelize = new Sequelize('database', 'username', 'password', config.sequelize);
 exports.init = function(cb) {
