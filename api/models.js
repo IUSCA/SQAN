@@ -153,14 +153,16 @@ exports.Acquisition = mongoose.model('Acquisition', acquisitionSchema);
 
 var imageSchema = mongoose.Schema({
     
+    ///////////////////////////////////////////////////////////////////////////////////////////////
     //key
-    SOPInstanceUID: String,
+    //SOPInstanceUID: String,
+    acquisition_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    InstanceNumber: Number,
+    //
 
     //foreigh keys to make it easier to find related information
     research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-    //series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     study_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-    acquisition_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
 
     //the actual headers for this instance (cleaned)
     headers: mongoose.Schema.Types.Mixed, 

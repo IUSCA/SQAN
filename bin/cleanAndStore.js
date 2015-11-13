@@ -60,6 +60,11 @@ function handle_message(h, msg_h, info, ack) {
     async.series([
         function(next) {
             try {
+                //debug - remove qc_ fields... it shouldn't be there, but there are.. maybe I've corrupted the data?
+                for(var k in h) {
+                    if(k.indexOf("qc_") === 0) delete h[k];
+                }
+                
                 //parse some special fields
                 //if these fields fails to set, rest of the behavior is undefined.
                 //according to john, however, iibisid and subject should always be found
@@ -162,6 +167,17 @@ function handle_message(h, msg_h, info, ack) {
                 if(err) return next(err);
 
                 //store template header
+                db.TemplateHeader.findOneAndUpdate({
+                    template_id: _template._id,
+                    AcquisitionNumber: h.AcquisitionNumber,
+                    InstanceNumber: h.InstanceNumber,
+                }, {
+                    headers: h,
+                }, {upsert:true, 'new': true}, function(err, _templateheader) {
+                    if(err) return next(err);
+                    next();
+                });
+                /*
                 var ih = new db.TemplateHeader({
                     template_id: _template._id,
                     AcquisitionNumber: h.AcquisitionNumber,
@@ -172,6 +188,7 @@ function handle_message(h, msg_h, info, ack) {
                     if(err) return next(err);
                     next();
                 });
+                */
             });
         },
         
@@ -214,12 +231,35 @@ function handle_message(h, msg_h, info, ack) {
         function(next) {
             if(h.qc_istemplate) return next();  //if template then skip
 
-            db.Image.findOne({SOPInstanceUID: h.SOPInstanceUID}, function(err, image) {
+            db.Image.findOneAndUpdate({
+                acquisition_id: aq._id,
+                InstanceNumber: h.InstanceNumber,
+            }, {
+                research_id: research._id,
+                study_id: study._id,
+                headers: h,
+                $unset: {qc: 1},
+            }, {upsert: true, 'new': true}, function(err, _study) {
+                if(err) return next(err);
+                study = _study;
+                
+                //send to elastic search
+                //TODO - somehow only do this when the record is first inserted.. fineOneAndUpdate seems to give me this info, 
+                //but maybe I can add a counter for each record?
+                cleaned_ex.publish('', h, {}, function(err) {
+                    next(err);
+                });
+            });
+
+            /*
+            db.Image.findOne({
+                acquisition_id: aq._id,
+                InstanceNumber: h.InstanceNumber,
+            }, function(err, image) {
                 if(err) return next(err);
                 var data = {
                     research_id: research._id,
                     study_id: study._id,
-                    acquisition_id: aq._id,
                     headers: h
                 }
                 if(image) {
@@ -244,6 +284,7 @@ function handle_message(h, msg_h, info, ack) {
                     });
                 }
             });
+            */
         },
     ], function(err) {
         //all done

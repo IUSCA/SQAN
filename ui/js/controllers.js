@@ -5,12 +5,17 @@
  * all controllers. In the future, we should refactor into multiple modules. When I do, don't forget
  * to add it to app.js's module list
  * */
+app.controller('HeaderController', ['$scope', 'appconf', '$route', 'toaster', '$http', 'jwtHelper', 'serverconf', 'menu',
+function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, menu) {
+    $scope.title = appconf.title;
+    serverconf.then(function(_c) { $scope.serverconf = _c; });
+    $scope.menu = menu;
+}]);
 
-app.controller('AboutController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'menu', 'serverconf', 'scaMessage',
-function($scope, appconf, toaster, $http, jwtHelper,  $location, menu, serverconf, scaMessage) {
+app.controller('AboutController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', 'scaMessage',
+function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, scaMessage) {
     $scope.appconf = appconf;
     scaMessage.show(toaster);
-    menu.then(function(_menu) { $scope.menu = _menu; });
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
 
     var jwt = localStorage.getItem(appconf.jwt_id);
@@ -19,13 +24,18 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, menu, servercon
     }
 }]);
 
-app.controller('RecentController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'menu', 'serverconf', 'scaMessage', '$anchorScroll', '$document',
-function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf, scaMessage, $anchorScroll, $document) {
+app.controller('RecentController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', 'scaMessage', '$anchorScroll', '$document',
+function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaMessage, $anchorScroll, $document) {
     $scope.appconf = appconf;
     scaMessage.show(toaster);
 
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
-    menu.then(function(_menu) { $scope.menu = _menu; });
+    //menu.then(function(_menu) { $scope.menu = _menu; });
+
+    var jwt = localStorage.getItem(appconf.jwt_id);
+    if(jwt) {
+        $scope.user = jwtHelper.decodeToken(jwt);
+    }
 
     $http.get(appconf.api+'/study/query', {params: {
         skip: 0, 
@@ -333,12 +343,17 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf
 }]);
 */
 
-app.controller('StudyController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'menu', 'serverconf', '$routeParams', 'scaMessage',
-function($scope, appconf, toaster, $http, jwtHelper,  $location, menu, serverconf, $routeParams, scaMessage) {
+app.controller('StudyController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', '$routeParams', 'scaMessage',
+function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $routeParams, scaMessage) {
     $scope.appconf = appconf;
     scaMessage.show(toaster);
-    menu.then(function(_menu) { $scope.menu = _menu; });
+    //menu.then(function(_menu) { $scope.menu = _menu; });
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
+
+    var jwt = localStorage.getItem(appconf.jwt_id);
+    if(jwt) {
+        $scope.user = jwtHelper.decodeToken(jwt);
+    }
 
     $http.get(appconf.api+'/study/id/'+$routeParams.studyid)
     .then(function(res) {
@@ -391,12 +406,17 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, menu, servercon
 
 }]);
 
-app.controller('TemplateController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'menu', 'serverconf', '$routeParams', 'scaMessage',
-function($scope, appconf, toaster, $http, jwtHelper, $location, menu, serverconf, $routeParams, scaMessage) {
+app.controller('TemplateController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', '$routeParams', 'scaMessage',
+function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, $routeParams, scaMessage) {
     $scope.appconf = appconf;
     scaMessage.show(toaster);
-    menu.then(function(_menu) { $scope.menu = _menu; });
+    //menu.then(function(_menu) { $scope.menu = _menu; });
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
+
+    var jwt = localStorage.getItem(appconf.jwt_id);
+    if(jwt) {
+        $scope.user = jwtHelper.decodeToken(jwt);
+    }
 
     $http.get(appconf.api+'/template/head/'+$routeParams.templateid)
     .then(function(res) {

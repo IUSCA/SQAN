@@ -1,5 +1,4 @@
-<sca-menubar menu="menu.top" active="'dicom'" profile="menu._profile"></sca-menubar>
-<sca-menutab menu="appconf.menu" active="'recent'"></sca-menutab>
+<sca-menutab menu="appconf.menu" active="'recent'" user="user"></sca-menutab>
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-3" ng-class="{affix: content_affix}">
@@ -17,12 +16,12 @@
                                     ng-class="{inview: inview_id == subject.uid}"> 
                                     <!--subject_desc is not unique across all iibisid / modality..-->
                                     <a href="javascript:void(0)">
+                                        {{subject_desc}} &nbsp;
                                         <span ng-if="subject.oks != 0" class="label label-success">{{subject.oks}} OKs</span>
                                         <span ng-if="subject.errors != 0" class="label label-danger">{{subject.errors}} Errors</span>
                                         <span ng-if="subject.warnings != 0" class="label label-warning">{{subject.warnings}} Warnings</span>
                                         <span ng-if="subject.notemps != 0" class="label label-primary">{{subject.notemps}} NoTemps</span>
                                         <span ng-if="subject.non_qced != 0" class="label label-info" ng-if="!study.qc">{{subject.non_qced}} Not Yet QCed</span>
-                                        {{subject_desc}}
                                     </a>
                                 </li>
                                 <li ng-click="scrollto(iibisid+modality_id)"

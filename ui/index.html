@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html ng-app="app">
+<html ng-app="app" ng-controller="HeaderController as header">
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="initial-scale=1, width=device-width">
-    <title>Dicom QC</title>
+    <title ng-bind="title">Loading..</title>
 
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="css/bootstrap.yeti.css">
@@ -14,10 +14,11 @@
     <link rel="stylesheet" href="bower_components/angular-loading-bar/build/loading-bar.min.css">
     <link rel="stylesheet" href="bower_components/angularjs-toaster/toaster.min.css">
 
-    <link rel="stylesheet" href="/shared/css/style.css"><!--TODO should be configurable-->
+    <link rel="stylesheet" href="../shared/css/style.css"><!--TODO should be configurable-->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body ng-cloak>
+    <sca-menubar header="menu.header" menu="menu.top" active="'dicom'" profile="menu._profile" user="menu.user"></sca-menubar>
     <toaster-container toaster-options="{'position-class': 'toast-bottom-right'}"></toaster-container>
     <ng-view></ng-view><!-- <ng-view/> will cause route looping-->
     <ng-include src="'t/footer.html'"></ng-include> <!--should this be part of view?-->
@@ -87,7 +88,7 @@
     });
     </script>
 
-    <script src="/shared/shared.js"></script> <!-- TODO make this configurable? don't forget the shared/css/style.css -->
+    <script src="../shared/dist/shared.js"></script> <!-- TODO make this configurable? don't forget the shared/css/style.css -->
 
     <script src="js/app.js"></script>
     <script src="js/controllers.js"></script>

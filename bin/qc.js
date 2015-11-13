@@ -86,9 +86,9 @@ function qc(image, next) {
 function find_template(image, cb) {
     //find template_id specified for the study (if it's set, query for that template)
     //TODO - not unit tested
-    db.Study.findById(image.study_id, 'template_id', function(err, study) {
+    db.Study.findById(image.study_id, 'template_id series_desc', function(err, study) {
         if(err) return cb(err);
-        if(study.template_id) {
+        if(study && study.template_id) {
             //load template specified for this study
             db.Tempalte.find({id: study.template_id}, function(err, template) {
                 if(err) return cb(err);
@@ -100,12 +100,30 @@ function find_template(image, cb) {
             //template not specified. Just find the latest template for that series_desc
             db.Template.find({
                 research_id: image.research_id,
-                series_desc: image.headers.qc_series_desc, //TODO remove this and do "longest-common-string" search
+                //series_desc: image.headers.qc_series_desc, //TODO remove this and do "longest-common-string" search
             }).sort({date: -1}).exec(function(err, templates) {
                 if(err) return cb(err);
-                var template = templates[0]; //pick the latest
-                find_templateheader(template, image, function(err, templateheader) {
-                    cb(err, template, templateheader);
+                if(templates.length == 0) return cb(new Error("no templates found for research_id:"+image.research_id));
+
+                
+                //find series with longest prefix
+                var longest = null;
+                templates.forEach(function(template) {
+                    if(!longest) {
+                        longest = template;
+                        return;
+                    }
+                    if(~study.series_desc.indexOf(template.series_desc)) {
+                        if(longest.series_desc.length < template.series_desc.length) {
+                            //found a better match
+                            longest = template;
+                        }
+                    }
+                });
+                console.log(longest.series_desc);
+
+                find_templateheader(longest, image, function(err, templateheader) {
+                    cb(err, longest, templateheader);
                 });
             });
         }

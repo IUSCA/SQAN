@@ -74,7 +74,8 @@ router.get('/recent', jwt({secret: config.express.jwt.secret}), function(req, re
 router.get('/query', jwt({secret: config.express.jwt.secret}), function(req, res, next) {
     var query = db.Study.find();
 
-    query.sort({StudyTimestamp: -1});
+    //query.sort({StudyTimestamp: -1});
+    query.sort({StudyTimestamp: -1, SeriesNumber: 1});
     query.limit(req.query.limit || 50); 
     if(req.query.skip) {
         query.skip(req.query.skip);
