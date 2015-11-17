@@ -1,0 +1,22 @@
+<div class="alert alert-danger qcalert" role="alert" ng-switch="error.type">
+    <div ng-switch-when="template_count_mismatch">
+        <strong>{{error.msg}}</strong> | Study contains <b>{{error.c}}</b> images - it should be <b>{{error.tc}}</b>
+    </div>
+    <div ng-switch-when="qc_error">
+        <strong>{{error.msg}}</strong> | Error Rate: <b>{{error.per * 100}}%</b>
+    </div>
+    <!-- moved out 
+    <div ng-switch-when="template_mismatch">
+        <b>{{error.k}}</b><br>
+        {{error.msg}}
+        <pre>{{error.v|json}}</pre>
+
+        <b>Template</b>
+        <pre>{{error.tv|json}}</pre>
+    </div>
+    -->
+    <div ng-switch-default>
+        <strong>{{error.type}}</strong>
+        <pre>{{error}}</pre>
+    </div>
+</div>

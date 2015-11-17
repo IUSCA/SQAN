@@ -1,0 +1,8 @@
+<div class="studynote">
+    <span class="label label-info" ng-if="!study.qc">Not Yet QCed</span>
+    <span class="label label-primary" ng-if="study.qc.notemps > 0">NoTemp: {{study.qc.notemps}}</span>
+    <span class="label label-danger" ng-if="study.qc.errors.length > 0">Errors: {{study.qc.errors.length}}</span>
+    <span class="label label-warning" ng-if="study.qc.warnings.length > 0">Warnings: {{study.qc.warnings.length}}</span>
+    <span class="label label-success" ng-if="study.qc.warnings.length == 0 && study.qc.errors.length == 0 && study.qc.notemps == 0">OK</span>
+    <time>{{study.StudyTimestamp | date:'medium' }}</time> <span class="text-muted">(#{{study.SeriesNumber}})</span>
+</div>
