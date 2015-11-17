@@ -1,7 +1,7 @@
 <sca-menutab menu="appconf.menu" active="'recent'" user="user"></sca-menutab>
-<div class="container-fluid">
+<div class="container-fluid recent">
     <div class="row">
-        <div class="col-md-3" ng-class="{affix: content_affix}">
+        <div class="col-md-3" ng-class="{affix: content_affix, affix_bottom: content_affix_bottom}">
             <div ng-repeat="(iibisid, research) in iibisids">
                 <h4>IIBISID: {{iibisid}}</h4>
                 <div class="list-group">
@@ -61,7 +61,7 @@
                                             <td>{{series.series_desc}}</td>
                                             <td style="padding: 1px 5px;">
                                                 <div class="studies">
-                                                    <div ng-if="series._detail.excluded" class="text-muted" 
+                                                    <div ng-if="series._detail.excluded" class="text-muted excluded" 
                                                         ng-click="series._detail.excluded = false">Excluded</div>
                                                     <div ng-if="!series._detail.excluded" class="slide-down">
                                                         <studynote ng-repeat="(study_id, study) in series.studies" ng-click="openstudy(study_id)" study="study">

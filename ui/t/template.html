@@ -1,10 +1,68 @@
-<sca-menutab menu="appconf.menu" active="'recent'" user="user"></sca-menutab>
-<div class="container-fluid">
-    {{head.research}}
-    {{head.template}}
-    <ul class="images">
-        <li ng-repeat="template in head.templates" style="background-color: green" ng-click="load_template(template)" ng-class="{active: active_template == template}"></li>
-    </ul>
-    <pre> {{inst.headers | json}} </pre>
+<sca-menutab menu="appconf.menu" active="'_template'" user="user"></sca-menutab>
+<div class="container-fluid template">
+    <h2 style="display: inline-block">IIBISID: {{data.research.IIBISID}}</h2> &nbsp;
+    <h3 style="display: inline-block">
+        Modality: <b>{{data.research.Modality}}</b> 
+        StationName: <b>{{data.research.StationName}}</b>
+        <span ng-if="data.research.Modality == 'PT'">RadioTracer: <b>{{data.research.radio_tracer}}</b></span>
+    </h3>
+
+    <div class="panel panel-default">
+        <ul class="list-group">
+            <li class="list-group-item" style="background-color: #eee;">
+                <div class="row">
+                    <div class="col-md-2" style="margin-top: 5px;"><b>Template</b></div>
+                    <div class="col-md-10">
+                        <div class="studynote">
+                            {{data.template.date | date:'medium'}} <span class="text-muted">(#{{data.template.SeriesNumber}})</span>
+                        </div>
+                    </div>
+                </div>
+            </li>
+            <li class="list-group-item">
+                <div class="row">
+                    <div class="col-md-2"><span class="text-muted">Series Description</span></div>
+                    <div class="col-md-10">{{data.template.series_desc}}</div>
+                </div>
+            </li>
+            <li class="list-group-item">
+                <div class="row">
+                    <div class="col-md-2">
+                        <span class="text-muted">Template Images</span> 
+                        <span class="label label-default">{{data.templates.length}}</span>
+                    </div>
+                    <div class="col-md-10">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <ul class="images">
+                                    <li ng-repeat="template in data.templates" 
+                                        ng-class="{active: active_template == template}" 
+                                        ng-click="load_template(template)" title="{{template.AcquisitionNumber}}-{{template.InstanceNumber}}">
+                                    </li>
+                                </ul>
+                            </div>
+                            <ul class="list-group">
+                                <li class="list-group-item" ng-if="!image_detail">
+                                    <span class="text-muted">(Click an image to see details)</span>
+                                </li>
+                                <li class="list-group-item" ng-if="image_detail">
+                                    Aq#{{image_detail.headers.AcquisitionNumber}} - Inst#{{image_detail.InstanceNumber}}
+                                </li>
+                                <table class="table table-condensed table-imageheader" ng-if="image_detail">
+                                    <tr ng-repeat="(k,v) in image_detail.headers">
+                                        <th>{{k}}</th>
+                                        <td>
+                                            <pre>{{v|json}}</pre>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </ul><!--list-group-->
+                        </div><!--panel-->
+                    </div><!--col-md-10-->
+                </div><!--row-->
+            </li>
+        </ul>
+    </div>
+
 </div>
 

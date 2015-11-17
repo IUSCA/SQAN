@@ -117,12 +117,14 @@ ul.images {
         width: 10px; 
         margin-left: 1px;
         cursor: pointer;
-        &:hover {
-            background-color: #008cba;
-        }
+        background-color: gray;
         &.active {
             /*border-radius: 5px;*/
-            border-bottom: 3px solid black;
+            border-bottom: 3px solid white;
+        }
+        &:hover {
+            background-color: #008cba;
+            /*background-color: black;*/
         }
     }   
 }
@@ -148,19 +150,22 @@ ol.subjects {
             background-color: #ccc;
         }
         &.inview {
+            a { color: white }
             background-color: #008cba;
         }
     }
 }
-.template {
-    .template-head {
-        background-color: #ccc;
-    }
-    .template-body {
-        border-top: 0px;
-    }
-    th {
-        opacity: 0.4;
+.recent {
+    .template {
+        .template-head {
+            background-color: #ccc;
+        }
+        .template-body {
+            border-top: 0px;
+        }
+        th {
+            opacity: 0.4;
+        }
     }
 }
 
@@ -199,6 +204,7 @@ ul.templates {
     }
 }
 
+.excluded,
 .studynote {
     padding: 3px;
     margin: 2px;
@@ -268,6 +274,7 @@ position: inherit;
     }
 }
 
+.template,
 .study {
     .qcalert {
         display: inline-block;

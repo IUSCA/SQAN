@@ -1,4 +1,4 @@
-<sca-menutab menu="appconf.menu" active="'recent'" user="user"></sca-menutab>
+<sca-menutab menu="appconf.menu" active="'_study'" user="user"></sca-menutab>
 <div class="container-fluid study">
     <h2 style="display: inline-block">IIBISID: {{data.research.IIBISID}}</h2> &nbsp;
     <h3 style="display: inline-block">
@@ -8,30 +8,53 @@
     </h3>
 
     <div class="panel panel-default">
+        <!--
         <div class="panel-heading">
-            <span class="text-muted">Subject</span> {{data.study.subject}}
+                <div class="row">
+                    <div class="col-md-2"> <span class="text-muted">Study</span> </div>
+                    <div class="col-md-10">
+                        <studynote study="data.study"></studynote> 
+                    </div>
+                </div>
         </div>
+        -->
         <ul class="list-group">
+            <li class="list-group-item" style="background-color: #eee;">
+                <div class="row">
+                    <div class="col-md-2" style="margin-top: 5px;"><b>Study</b></div>
+                    <div class="col-md-10">
+                        <studynote study="data.study"></studynote> 
+                    </div>
+                </div>
+            </li>
+            <li class="list-group-item">
+                <div class="row">
+                    <div class="col-md-2"><span class="text-muted">Subject</span></div>
+                    <div class="col-md-10">{{data.study.subject}}</div>
+                </div>
+            </li>
             <li class="list-group-item">
                 <div class="row">
                     <div class="col-md-2"><span class="text-muted">Series Description</span></div>
                     <div class="col-md-10">{{data.study.series_desc}}</div>
                 </div>
             </li>
+            <!--
             <li class="list-group-item">
                 <div class="row">
                     <div class="col-md-2"> <span class="text-muted">Study</span> </div>
                     <div class="col-md-10">
                         <studynote study="data.study"></studynote> 
                     </div>
-                </div><!--row-->
+                </div>
             </li>
+            -->
             <li class="list-group-item" ng-if="data.template">
                 <div class="row">
                     <div class="col-md-2"><span class="text-muted">QC Template</span></div>
                     <div class="col-md-10">
                         <time class="pull-right"><span class="text-muted">Study QC Date:</span> {{data.study.qc.date | date:'medium'}}</time>
-                        <div class="studynote">
+                        <div class="studynote" ng-click="opentemplate(data.template._id)">
                             {{data.template.date | date:'medium'}} <span class="text-muted">(#{{data.template.SeriesNumber}})</span>
                         </div>
                     </div>
@@ -53,7 +76,10 @@
             </li>
             <li class="list-group-item">
                 <div class="row">
-                    <div class="col-md-2"><span class="text-muted">{{data.study.qc.image_count}} Images</span></div>
+                    <div class="col-md-2">
+                        <span class="text-muted">Images</span> 
+                        <span class="label label-default">{{data.study.qc.image_count}}</span>
+                    </div>
                     <div class="col-md-10">
                         <div class="panel panel-default">
                             <div class="panel-heading">
@@ -67,7 +93,7 @@
                             </div>
                             <ul class="list-group">
                                 <li class="list-group-item" ng-if="!image_detail">
-                                    <p class="text-muted">(Click an image to see details)</p>
+                                    <span class="text-muted">(Click an image to see details)</span>
                                 </li>
                                 <!-- <p>AcquisitionNumber: {{image_detail.acquisition_id}}</p>-->
                                 <li class="list-group-item" ng-if="image_detail">
