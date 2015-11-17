@@ -60,19 +60,13 @@
                                         <tr ng-repeat="series in subject.serieses">
                                             <td>{{series.series_desc}}</td>
                                             <td style="padding: 1px 5px;">
-                                                <ul class="studies">
-                                                    <li ng-if="series._detail.excluded" class="text-muted" ng-click="series._detail.excluded = false">Excluded</li>
+                                                <div class="studies">
+                                                    <div ng-if="series._detail.excluded" class="text-muted" 
+                                                        ng-click="series._detail.excluded = false">Excluded</div>
                                                     <div ng-if="!series._detail.excluded" class="slide-down">
-                                                    <li ng-repeat="(study_id, study) in series.studies" ng-click="openstudy(study_id)">
-                                                        <span class="label label-info" ng-if="!study.qc">Not Yet QCed</span>
-                                                        <span class="label label-primary" ng-if="study.qc.notemps > 0">NoTemp: {{study.qc.notemps}}</span>
-                                                        <span class="label label-danger" ng-if="study.qc.errors.length > 0">Errors: {{study.qc.errors.length}}</span>
-                                                        <span class="label label-warning" ng-if="study.qc.warnings.length > 0">Warnings: {{study.qc.warnings.length}}</span>
-                                                        <span class="label label-success" ng-if="study.qc.warnings.length == 0 && study.qc.errors.length == 0 && study.qc.notemps == 0">OK</span>
-                                                        <time>{{study.StudyTimestamp | date:'medium' }}</time> <span class="text-muted">(#{{study.SeriesNumber}})</span>
-                                                    </li> 
+                                                        <studynote ng-repeat="(study_id, study) in series.studies" ng-click="openstudy(study_id)" study="study">
                                                     </div>
-                                                </ul>
+                                                </div>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -91,7 +85,7 @@
                                             <td style="padding: 1px 5px;">
                                                 <ul class="templates">
                                                     <li ng-repeat="(template_id, template) in series.templates" ng-click="opentemplate(template_id)">
-                                                        {{template.date | date:'medium'}} (#{{template.SeriesNumber}})
+                                                        {{template.date | date:'medium'}} <span class="text-muted">(#{{template.SeriesNumber}})</span>
                                                     </li> 
                                                 </ul>
                                             </td>

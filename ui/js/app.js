@@ -152,6 +152,27 @@ app.factory('serverconf', ['appconf', '$http', 'jwtHelper', function(appconf, $h
     });
 }]);
 
+app.directive('studynote', function() {
+    return {
+        scope: { study: '=', },
+        templateUrl: 't/studynote.html',
+    } 
+});
+
+app.directive('qcerror', function() {
+    return {
+        scope: { error: '=', },
+        templateUrl: 't/qcerror.html',
+    } 
+});
+
+app.directive('qcwarning', function() {
+    return {
+        scope: { warning: '=', },
+        templateUrl: 't/qcwarning.html',
+    } 
+});
+
 app.factory('menu', ['appconf', '$http', 'jwtHelper', '$sce', 'scaMessage', 'scaMenu', 
 function(appconf, $http, jwtHelper, $sce, scaMessage, scaMenu) {
 

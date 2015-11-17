@@ -13,6 +13,7 @@ font-weight: bold;
 h2 {
 color: gray;
 font-weight: bold;
+margin-top: 0px;
 }
 div.instance {
 background-color: gray;
@@ -26,7 +27,7 @@ div.instance:hover {
 opacity: 0.6;
 }
 div.instance_warning {
-  background-color: orange;
+background-color: orange;
 }
 div.instance_error {
   background-color: red;
@@ -34,16 +35,9 @@ div.instance_error {
 div.instance.instance_active {
 -animation: bigger .5s;
 -webkit-animation: bigger .5s;
-/*width: 28px;
-height: 28px;
-*/
 background-color: #337ab7;
 }
 @keyframes bigger {
-/*
-from {width: 14px;height: 14px;}
-to {width: 28px; height: 28px; }
-*/
 from {background-color: inherit;}
 to {background-color: #337ab7;}
 }
@@ -52,12 +46,6 @@ to {background-color: #337ab7;}
     -animation: spin .7s infinite linear;
     -webkit-animation: spin .7s infinite linear;
 }
-/*
-@-webkit-keyframes spin2 {
-    from { -webkit-transform: rotate(0deg);}
-    to { -webkit-transform: rotate(360deg);}
-}
-*/
 @keyframes spin {
     from { transform: scale(1) rotate(0deg);}
     to { transform: scale(1) rotate(360deg);}
@@ -67,22 +55,7 @@ to {background-color: #337ab7;}
 maring-right: 2px;
 border-left: 4px solid #ccc;
 padding-left: 10px;
-/*
--animation: expand .7s;
--webkit-animation: expand .7s;
-height: 100px;
-*/
 }
-/*
-@keyframes expand {
-    from { height: 0; }
-    to { height: 100px; }
-}
-*/
-/* when hiding the picture */
-/*
-.instance-detail.ng-hide-add         { animation:0.5s lightSpeedOut ease; }
-*/
 
 /* when showing the picture */
 .instance-detail.ng-hide-remove      { animation:0.5s flipInX ease; }
@@ -148,8 +121,8 @@ ul.images {
             background-color: #008cba;
         }
         &.active {
-            /*background-color: #008cba !important;*/
-            border: 2px solid red;
+            /*border-radius: 5px;*/
+            border-bottom: 3px solid black;
         }
     }   
 }
@@ -207,8 +180,7 @@ ol.subjects {
     }
 }
 
-ul.templates,
-ul.studies {
+ul.templates {
     list-style: none;
     padding: 0px;
     margin: 0px;
@@ -224,6 +196,19 @@ ul.studies {
             cursor: pointer;
             background-color: #ddd;
         }
+    }
+}
+
+.studynote {
+    padding: 3px;
+    margin: 2px;
+    background-color: #eee;
+    border: 1px solid #ddd;
+    display: inline-block;
+
+    &:hover {
+        cursor: pointer;
+        background-color: #ddd;
     }
 }
 
@@ -280,5 +265,40 @@ position: inherit;
         top: 0;
         height: 100%;
         overflow-y: auto;
+    }
+}
+
+.study {
+    .qcalert {
+        display: inline-block;
+        padding: 5px 10px;
+        margin-bottom: 3px;
+        pre {
+            margin-bottom: 0px;
+            padding: 3px;
+        }
+    }
+    .table-imageheader {
+        pre {
+            margin: 0px;
+            padding: 0px;
+            border: none;
+            font-size: inherit;
+            background-color: inherit;
+        }
+        th {
+            padding-left: 15px;
+        }
+    }
+    .template-mismatch {
+        color: #f04124;
+        border: 2px solid #f04124;
+        padding: 5px;
+        margin: 5px;
+        background-color: #f2dede;
+        pre {
+            padding: 5px;
+            background-color: white;
+        }
     }
 }

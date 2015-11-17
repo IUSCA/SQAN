@@ -190,14 +190,18 @@ router.get('/id/:study_id', jwt({secret: config.express.jwt.secret}), function(r
                     db.Image.find()
                     .where('study_id').equals(study._id)
                     .sort('headers.InstanceNumber')
-                    .select({qc: 1})
+                    .select({qc: 1, 'headers.InstanceNumber': 1, 'headers.AcquisitionNumber': 1})
                     .exec(function(err, _images) {
                         if(err) return next(err);
                         //don't return the qc.. just return counts of errors / warnings
                         ret.images = [];
                         _images.forEach(function(_image) {
                             //count number of errors / warnings
-                            var image = { _id: _image._id };
+                            var image = { 
+                                _id: _image._id, 
+                                inum: _image.headers.InstanceNumber,
+                                anum: _image.headers.AcquisitionNumber,
+                            };
                             if(_image.qc) {
                                 image.errors = 0;
                                 image.warnings = 0;

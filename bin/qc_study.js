@@ -46,6 +46,7 @@ function qc_study(study, next) {
     .exec(function(err, images) {
         var qc = {
             image_count: images.length,  //number of images in this study
+            clean: 0, //number of images with no problems
             template_id: null, //template set used to do qc for this study (sampled from one images's qc.template_id)
             date: new Date(), //study-qc time
 
@@ -55,8 +56,10 @@ function qc_study(study, next) {
             notemps: 0, 
         }
         
-        //count total number of errors / warnings from all images
+        //count number of images with error / warnings
         var all_qced = true;
+        var errors = 0;
+        var warnings = 0;
         images.forEach(function(image) {
             if(image.qc) {
                 
@@ -67,6 +70,7 @@ function qc_study(study, next) {
                 if(!qc.template_id) qc.template_id = image.qc.template_id;
 
                 if(image.qc.errors.length > 0) {
+                    /*
                     qc.errors.push({
                         type: "qc_error", 
                         msg: "Image Instance:"+image.headers.InstanceNumber+" contains QC errors", 
@@ -74,8 +78,11 @@ function qc_study(study, next) {
                         aqid: image.headers.AcquisitionNumber, 
                         c: image.qc.errors.length
                     });
+                    */
+                    errors++;
                 }
                 if(image.qc.warnings.length > 0) {
+                    /*
                     qc.warnings.push({
                         type: "qc_warning", 
                         msg: "Image Instance:"+image.headers.InstanceNumber+" contains QC warnings", 
@@ -83,8 +90,17 @@ function qc_study(study, next) {
                         aqid: image.headers.AcquisitionNumber, 
                         c: image.qc.warnings.length
                     });
+                    */
+                    warnings++;
                 }
+
+
                 if(image.qc.notemp) qc.notemps++;
+
+                //no problem
+                if(!image.qc.notemp && image.qc.errors.length == 0 && image.qc.warnings.length == 0) {
+                    qc.clean++;
+                }
             } else {
                 all_qced = false;
             }
@@ -92,6 +108,31 @@ function qc_study(study, next) {
     
         //if there is an image that's not yet all qc-ed, I can't qc the study
         if(!all_qced) return next();
+
+        if(errors > 0) {
+            qc.errors.push({
+                type: "qc_error", 
+                msg: "Study contains "+errors+" images with QC errors", 
+                c: errors,
+                per: errors / images.length,
+            });        
+        }
+        if(warnings > 0) {
+            qc.warnings.push({
+                type: "qc_warning", 
+                msg: "Study contains "+warning+" images with QC warnings", 
+                c: warnings,
+                per: warnings / images.length,
+            });        
+        }
+        /*
+        if(qc.notemps > 0) {
+            qc.warnings.push({
+                type: "qc_notemp", 
+                msg: "Study contains "+qc.notemps+" images with with no matching template"
+            });        
+        }
+        */
 
         //now do study level QC (TODO - there aren't much to do right now)
         if(qc.template_id) {

@@ -358,7 +358,9 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
     $http.get(appconf.api+'/study/id/'+$routeParams.studyid)
     .then(function(res) {
         $scope.data = res.data;
-        if($scope.data.images) $scope.data.images.forEach(computeColor);
+        if($scope.data.images) {
+            $scope.data.images.forEach(computeColor);
+        }
     });
 
     function computeColor(image) {
@@ -391,17 +393,42 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
         image.color = "hsl("+h+","+s+","+l+")";
     }
 
+
     $scope.load_image = function(image) {
         if($scope.active_image == image) {
             return $scope.active_image = null;
         }
-        //console.dir(image);
         $scope.active_image = image;
         $http.get(appconf.api+'/image/'+image._id)
         .then(function(res) {
             $scope.image_detail = res.data;
-            //console.dir($scope.image_detail);
+
+            //move any issues with specifc k to image_errors/warnings
+            $scope.image_errors = {};
+            $scope.image_warnings = {};
+            $scope.other_errors = [];
+            $scope.other_warnings = [];
+            if(res.data.qc) {
+                res.data.qc.errors.forEach(function(error) {
+                    if(error.k) $scope.image_errors[error.k] = error;
+                    else $scope.other_errors.push(error);
+                });
+                res.data.qc.warnings.forEach(function(warning) {
+                    if(warning.k) $scope.image_warning[warning.k] = warning;
+                    else $scope.other_warning.push(warning);
+                });
+            }
+        
+            //if there is no error to show, show all headers by default
+            if($scope.image_detail.qc.errors == 0 && $scope.image_detail.qc.warnings == 0) {
+                $scope.show_all_headers = true;
+            } else {
+                $scope.show_all_headers = false;
+            }
         });
+    }
+    $scope.showallheaders = function() {
+        $scope.show_all_headers = true;
     }
 
 }]);
