@@ -167,18 +167,29 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
     });
 
     $document.on('scroll', function() {
-        if(window.scrollY < 100) {
+        var top_offset = 100;
+        var bottom_offset = 176;
+        if(window.scrollY < top_offset) {
+            //at the top - no need for affix
             if($scope.content_affix) $scope.$apply(function() {
                 $scope.content_affix = false;
             });
         } else {
-            if(!$scope.content_affix) $scope.$apply(function() {
-                $scope.content_affix = true;
-            });
-
-            if(window.scrollY > document.body.clientHeight - window.innerHeight - 200) {
-                //affix, but I need to raise the bottom
-                console.log("TODO - raise bottom!");
+            var affix = document.getElementById("affix");
+            if(window.scrollY > document.body.clientHeight - affix.scrollHeight + affix.scrollTop - bottom_offset) {
+                //un affix and move to bottom if user scroll to the bottom
+                if($scope.content_affix) $scope.$apply(function() {
+                    $scope.content_affix = false;
+                    affix.style.top = parseInt(document.body.clientHeight - affix.scrollHeight - bottom_offset - top_offset)+"px";
+                    affix.scrollTop = 0; //cheat so that I don't have to fix scroll pos when user scroll back to top
+                    //console.log("unaffix");
+                });
+            } else if(!$scope.content_affix) {
+                //affix it!
+                $scope.$apply(function() {
+                    $scope.content_affix = true;
+                    affix.style.top = "0px";
+                });
             }
         }
         

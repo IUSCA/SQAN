@@ -60,7 +60,8 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
     })
     .when('/recent', {
         templateUrl: 't/recent.html',
-        controller: 'RecentController'
+        controller: 'RecentController',
+        requiresLogin: true,
     })
     /*
     .when('/recentold', {

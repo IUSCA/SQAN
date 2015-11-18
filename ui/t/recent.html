@@ -1,7 +1,7 @@
 <sca-menutab menu="appconf.menu" active="'recent'" user="user"></sca-menutab>
 <div class="container-fluid recent">
     <div class="row">
-        <div class="col-md-3" ng-class="{affix: content_affix, affix_bottom: content_affix_bottom}">
+        <div class="col-md-3" id="affix" ng-class="{affix: content_affix, affix_bottom: content_affix_bottom}">
             <div ng-repeat="(iibisid, research) in iibisids">
                 <h4>IIBISID: {{iibisid}}</h4>
                 <div class="list-group">

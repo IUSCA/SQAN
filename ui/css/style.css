@@ -227,6 +227,7 @@ h3 {
 .panel-default .panel-body-template {
   background-color: #fafafa;
 }
+/*bootstrap fixer*/
 .affix {
   position: inherit;
 }
