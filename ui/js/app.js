@@ -108,9 +108,9 @@ function(appconf, $httpProvider, jwtInterceptorProvider) {
     jwtInterceptorProvider.tokenGetter = function(jwtHelper, config, $http, toaster) {
         //don't send jwt for template requests
         //(I don't think angular will ever load css/js - browsers do)
-        if (config.url.substr(config.url.length - 5) == '.html') {
-            return null;
-        }
+        if (config.url.substr(config.url.length - 5) == '.html') { return null; }
+        return localStorage.getItem(appconf.jwt_id);
+/*
 
         var jwt = localStorage.getItem(appconf.jwt_id);
         if(!jwt) return null; //not jwt
@@ -141,6 +141,7 @@ function(appconf, $httpProvider, jwtInterceptorProvider) {
             });
         }
         return jwt;
+*/
     }
     $httpProvider.interceptors.push('jwtInterceptor');
 }]);
@@ -190,7 +191,30 @@ function(appconf, $http, jwtHelper, $sce, scaMessage, scaMenu) {
     };
 
     var jwt = localStorage.getItem(appconf.jwt_id);
-    if(jwt) menu.user = jwtHelper.decodeToken(jwt);
+    if(jwt) {
+        var expdate = jwtHelper.getTokenExpirationDate(jwt);
+        var ttl = expdate - Date.now();
+        if(ttl < 0) {
+            toaster.error("Your login session has expired. Please re-sign in");
+            localStorage.removeItem(appconf.jwt_id);
+        } else {
+            menu.user = jwtHelper.decodeToken(jwt);
+            if(ttl < 3600*1000) {
+                //jwt expring in less than an hour! refresh!
+                console.log("jwt expiring in an hour.. refreshing first");
+                $http({
+                    url: appconf.auth_api+'/refresh',
+                    //skipAuthorization: true,  //prevent infinite recursion
+                    //headers: {'Authorization': 'Bearer '+jwt},
+                    method: 'POST'
+                }).then(function(response) {
+                    var jwt = response.data.jwt;
+                    localStorage.setItem(appconf.jwt_id, jwt);
+                    menu.user = jwtHelper.decodeToken(jwt);
+                });
+            }
+        }
+    }
     if(menu.user) {
         $http.get(appconf.profile_api+'/public/'+menu.user.sub).then(function(res) {
             menu._profile = res.data;
