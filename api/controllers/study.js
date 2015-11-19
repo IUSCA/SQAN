@@ -12,66 +12,11 @@ var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
 var qc = require('../qc');
 
-/*
-//return most recent studies (DEPRECATED)
-router.get('/recent', jwt({secret: config.express.jwt.secret}), function(req, res, next) {
-    logger.error("/study/recent called - deprecated");
-    //var today = new Date();
-    //var last_week = new Date(today.getTime() - 3600*24*7*1000); //1 week
-    var query = db.Study.find();
-    //.where('StudyTimestamp').gt(last_week)
-    query.sort('-StudyTimestamp');
-    query.limit(200);
-
-    query.exec(function(err, studies) {
-        if(err) return next(err);
-
-        //load all series referenced
-        var seriesids = [];
-        studies.forEach(function(study) {
-            seriesids.push(study.series_id);
-        });
-        db.Series.find()
-        .where('_id')
-        .in(seriesids)
-        .exec(function(err, serieses) {
-            if(err) return next(err);
-
-            //load all researches referenced
-            var rids = [];
-            serieses.forEach(function(series) {
-                rids.push(series.research_id);
-            });
-            db.Research.find()
-            .where('_id')
-            .in(rids)
-            .exec(function(err, researches) {
-                if(err) return next(err);
-
-                //load all templates referenced
-                db.Template.find()
-                .where('series_id')
-                .in(seriesids)
-                //.select({series_id: 1, date: 1, count: 1, research_id: 1}) //don't load the headers
-                .exec(function(err, templates) {
-                    if(err) return next(err);
-
-                    res.json({
-                        studies: studies,
-                        serieses: serieses,
-                        researches: researches,
-                        templates: templates,
-                    });
-                });
-
-            });
-        });
-    });
-});
-*/
-
 //query against all studies
 router.get('/query', jwt({secret: config.express.jwt.secret}), function(req, res, next) {
+    //limit to admin for now (in the future allow normal user with iibisid auth)
+    if(!~req.user.scopes.dicom.indexOf('admin')) return res.status(401).end();
+
     var query = db.Study.find();
 
     //query.sort({StudyTimestamp: -1});
@@ -173,6 +118,9 @@ router.get('/qc/:study_id', jwt({secret: config.express.jwt.secret}), function(r
 */
 
 router.get('/id/:study_id', jwt({secret: config.express.jwt.secret}), function(req, res, next) {
+    //limit to admin for now (in the future allow normal user with iibisid auth)
+    if(!~req.user.scopes.dicom.indexOf('admin')) return res.status(401).end();
+
     var ret = {};
     db.Study.findById(req.params.study_id).exec(function(err, study) {
         if(err) return next(err);
@@ -224,6 +172,9 @@ router.get('/id/:study_id', jwt({secret: config.express.jwt.secret}), function(r
 
 //invalidate qc on all images for this study
 router.put('/qc/invalidate/:study_id', jwt({secret: config.express.jwt.secret}), function(req, res, next) {
+    //limit to admin for now (in the future allow normal user with iibisid auth)
+    if(!~req.user.scopes.dicom.indexOf('admin')) return res.status(401).end();
+
     var study_id = req.params.study_id;
     db.Image.update({study_id: study_id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
         if(err) return next(err);

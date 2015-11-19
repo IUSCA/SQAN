@@ -175,8 +175,8 @@ app.directive('qcwarning', function() {
     } 
 });
 
-app.factory('menu', ['appconf', '$http', 'jwtHelper', '$sce', 'scaMessage', 'scaMenu', 
-function(appconf, $http, jwtHelper, $sce, scaMessage, scaMenu) {
+app.factory('menu', ['appconf', '$http', 'jwtHelper', '$sce', 'scaMessage', 'scaMenu', 'toaster',
+function(appconf, $http, jwtHelper, $sce, scaMessage, scaMenu, toaster) {
 
     var jwt = localStorage.getItem(appconf.jwt_id);
     var menu = {
