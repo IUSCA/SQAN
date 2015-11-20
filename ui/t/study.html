@@ -8,51 +8,31 @@
     </h3>
 
     <div class="panel panel-default">
-        <!--
-        <div class="panel-heading">
-                <div class="row">
-                    <div class="col-md-2"> <span class="text-muted">Study</span> </div>
-                    <div class="col-md-10">
-                        <studynote study="data.study"></studynote> 
-                    </div>
-                </div>
-        </div>
-        -->
         <ul class="list-group">
             <li class="list-group-item" style="background-color: #eee;">
                 <div class="row">
-                    <div class="col-md-2" style="margin-top: 5px;"><b>Study</b></div>
-                    <div class="col-md-10">
+                    <div class="col-sm-2" style="margin-top: 5px;"><b>Study</b></div>
+                    <div class="col-sm-10">
                         <studynote study="data.study"></studynote> 
                     </div>
                 </div>
             </li>
             <li class="list-group-item">
                 <div class="row">
-                    <div class="col-md-2"><span class="text-muted">Subject</span></div>
-                    <div class="col-md-10">{{data.study.subject}}</div>
+                    <div class="col-sm-2"><span class="text-muted">Subject</span></div>
+                    <div class="col-sm-10">{{data.study.subject}}</div>
                 </div>
             </li>
             <li class="list-group-item">
                 <div class="row">
-                    <div class="col-md-2"><span class="text-muted">Series Description</span></div>
-                    <div class="col-md-10">{{data.study.series_desc}}</div>
+                    <div class="col-sm-2"><span class="text-muted">Series Description</span></div>
+                    <div class="col-sm-10">{{data.study.series_desc}}</div>
                 </div>
             </li>
-            <!--
-            <li class="list-group-item">
-                <div class="row">
-                    <div class="col-md-2"> <span class="text-muted">Study</span> </div>
-                    <div class="col-md-10">
-                        <studynote study="data.study"></studynote> 
-                    </div>
-                </div>
-            </li>
-            -->
             <li class="list-group-item" ng-if="data.template">
                 <div class="row">
-                    <div class="col-md-2"><span class="text-muted">QC Template</span></div>
-                    <div class="col-md-10">
+                    <div class="col-sm-2"><span class="text-muted">QC Template</span></div>
+                    <div class="col-sm-10">
                         <time class="pull-right"><span class="text-muted">Study QC Date:</span> {{data.study.qc.date | date:'medium'}}</time>
                         <div class="studynote" ng-click="opentemplate(data.template._id)">
                             {{data.template.date | date:'medium'}} <span class="text-muted">(#{{data.template.SeriesNumber}})</span>
@@ -62,8 +42,8 @@
             </li>
             <li class="list-group-item" ng-if="data.study.qc.errors.length > 0 || data.study.qc.warnings.length > 0 || data.study.qc.notemps > 0">
                 <div class="row">
-                    <div class="col-md-2"><span class="text-muted">QC Problems</span></div>
-                    <div class="col-md-10">
+                    <div class="col-sm-2"><span class="text-muted">QC Problems</span></div>
+                    <div class="col-sm-10">
                         <div style="max-height: 300px; overflow: auto;">
                             <qcerror ng-repeat="error in data.study.qc.errors" error="error"></qcerror>
                             <qcwarning ng-repeat="warning in data.study.qc.warnings" warning="warning"></qcwarning>
@@ -76,11 +56,11 @@
             </li>
             <li class="list-group-item">
                 <div class="row">
-                    <div class="col-md-2">
+                    <div class="col-sm-2">
                         <span class="text-muted">Images</span> 
                         <span class="label label-default">{{data.study.qc.image_count}}</span>
                     </div>
-                    <div class="col-md-10">
+                    <div class="col-sm-10">
                         <div class="panel panel-default">
                             <div class="panel-heading">
                                 <ul class="images">
@@ -108,23 +88,36 @@
                                     </div>
                                 </li>
                                 <table class="table table-condensed table-imageheader" ng-if="image_detail">
-                                    <tr ng-repeat="(k,v) in image_detail.headers" ng-if="image_errors[k] || show_all_headers">
+                                    <tr ng-repeat="(k,v) in image_detail.headers" ng-if="image_errors[k] || image_warnings[k] || show_all_headers">
                                         <th>{{k}}</th>
                                         <td>
-                                            <div ng-if="image_errors[k]" class="template-mismatch">
+                                            <div ng-if="image_errors[k]" class="image-error">
                                                 <strong>{{image_errors[k].msg}}</strong>
                                                 <div class="row"> 
                                                     <div class="col-md-6">
                                                         Image Value
-                                                        <pre style="background-color: #fee;">{{v|json}}</pre>
+                                                        <pre>{{v|json}}</pre>
                                                     </div>
-                                                    <div class="col-md-6">
+                                                    <div class="col-md-6" style="opacity: 0.7;">
                                                         Template Value
                                                         <pre>{{image_errors[k].tv|json}}</pre>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div ng-if="!image_errors[k]">
+                                            <div ng-if="image_warnings[k]" class="image-warning">
+                                                <strong>{{image_warnings[k].msg}}</strong>
+                                                <div class="row"> 
+                                                    <div class="col-md-6">
+                                                        Image Value
+                                                        <pre>{{v|json}}</pre>
+                                                    </div>
+                                                    <div class="col-md-6" style="opacity: 0.7;">
+                                                        Template Value
+                                                        <pre>{{image_warnings[k].tv|json}}</pre>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div ng-if="!image_errors[k] && !image_warnings[k]">
                                                 <pre>{{v|json}}</pre>
                                             </div>
                                         </td>
@@ -136,12 +129,10 @@
                                 <br clear="both">
                             </div>
                         </div><!--panel-->
-                    </div><!--col-md-10-->
+                    </div><!--col-sm-10-->
                 </div><!--row-->
             </li>
         </ul>
     </div>
-
-
 </div>
 

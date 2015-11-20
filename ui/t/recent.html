@@ -2,6 +2,7 @@
 <div class="container-fluid recent">
     <div class="row">
         <div class="col-md-3" id="affix" ng-class="{affix: content_affix, affix_bottom: content_affix_bottom}">
+            <p ng-if="!iibisids"><i class="fa fa-circle-o-notch fa-spin"></i> Loading ...</p>
             <div ng-repeat="(iibisid, research) in iibisids">
                 <h4>IIBISID: {{iibisid}}</h4>
                 <div class="list-group">

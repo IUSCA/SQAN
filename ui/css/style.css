@@ -262,16 +262,29 @@ h3 {
 .study .table-imageheader th {
   padding-left: 15px;
 }
-.template .template-mismatch,
-.study .template-mismatch {
+.template .image-error,
+.study .image-error {
   color: #f04124;
   border: 2px solid #f04124;
   padding: 5px;
   margin: 5px;
   background-color: #f2dede;
 }
-.template .template-mismatch pre,
-.study .template-mismatch pre {
+.template .image-error pre,
+.study .image-error pre {
+  padding: 5px;
+  background-color: white;
+}
+.template .image-warning,
+.study .image-warning {
+  color: #e99002;
+  border: 2px solid #e99002;
+  padding: 5px;
+  margin: 5px;
+  background-color: #fcf8e3;
+}
+.template .image-warning pre,
+.study .image-warning pre {
   padding: 5px;
   background-color: white;
 }

@@ -3,7 +3,7 @@
         <strong>{{error.msg}}</strong> | Study contains <b>{{error.c}}</b> images - it should be <b>{{error.tc}}</b>
     </div>
     <div ng-switch-when="qc_error">
-        <strong>{{error.msg}}</strong> | Error Rate: <b>{{error.per * 100}}%</b>
+        <strong>{{error.msg}}</strong> | Error Rate: <b>{{error.per * 100 | number}}%</b>
     </div>
     <!-- moved out 
     <div ng-switch-when="template_mismatch">

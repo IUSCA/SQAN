@@ -25,7 +25,7 @@ db.init(function(err) {
 function run(cb) {
     logger.info("querying un-qc-ed studies");
     //find images that needs QC in a batch
-    db.Study.find({qc: {$exists: false}}).limit(30).exec(function(err, studies) {
+    db.Study.find({qc: {$exists: false}}).limit(100).exec(function(err, studies) {
         if(err) return cb(err);
         async.each(studies, qc_study, function(err) {
             if(err) return cb(err);
@@ -120,7 +120,7 @@ function qc_study(study, next) {
         if(warnings > 0) {
             qc.warnings.push({
                 type: "qc_warning", 
-                msg: "Study contains "+warning+" images with QC warnings", 
+                msg: "Study contains "+warnings+" images with QC warnings", 
                 c: warnings,
                 per: warnings / images.length,
             });        

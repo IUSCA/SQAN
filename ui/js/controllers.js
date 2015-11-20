@@ -290,8 +290,8 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
                     else $scope.other_errors.push(error);
                 });
                 res.data.qc.warnings.forEach(function(warning) {
-                    if(warning.k) $scope.image_warning[warning.k] = warning;
-                    else $scope.other_warning.push(warning);
+                    if(warning.k) $scope.image_warnings[warning.k] = warning;
+                    else $scope.other_warnings.push(warning);
                 });
             }
         
