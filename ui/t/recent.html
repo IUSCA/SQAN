@@ -74,8 +74,14 @@
                                         <!-- missing series -->
                                         <tr ng-repeat="series in subject.missing_series">
                                             <td>{{series.series_desc}}</td>
-                                            <td>
-                                                <span class="label label-info">Missing</span>
+                                            <td style="padding: 1px 5px;">
+                                                <ul class="templates">
+                                                    <li ng-repeat="(template_id, template) in series.templates" ng-click="opentemplate(template_id)">
+                                                        <span class="label label-info">Missing</span> 
+                                                        {{template.date | date:'medium'}} 
+                                                        <span class="text-muted">(Template #{{template.SeriesNumber}})</span>
+                                                    </li> 
+                                                </ul>
                                             </td>
                                         </tr>
                                     </tbody>
