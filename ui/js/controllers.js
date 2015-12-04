@@ -23,20 +23,17 @@ app.controller('RecentController', ['$scope', 'appconf', 'toaster', '$http', 'jw
 function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaMessage, $anchorScroll, $document) {
     $scope.appconf = appconf;
     scaMessage.show(toaster);
-
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
-    //menu.then(function(_menu) { $scope.menu = _menu; });
 
     var jwt = localStorage.getItem(appconf.jwt_id);
-    if(jwt) {
-        $scope.user = jwtHelper.decodeToken(jwt);
-    }
+    if(jwt) { $scope.user = jwtHelper.decodeToken(jwt); }
 
     $http.get(appconf.api+'/study/query', {params: {
         skip: 0, 
         limit: 600
     }})
     .then(function(res) {
+        //TODO - maybe move all these logics to api?
         var iibisids = {};
         res.data.iibisids.forEach(function(research) {
             iibisids[research._id] = research;
@@ -47,6 +44,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
 
         //organize study under iibisid / modality / subject / series / study(#series_number)
         $scope.iibisids = {};
+
         $scope.study_count = 0;
         res.data.studies.forEach(function(study) {
             $scope.study_count++;
@@ -157,6 +155,34 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
                 for(var subject_id in modality.subjects) {
                     var subject = modality.subjects[subject_id];
                     subject.uid = iibisid+modality_id+subject_id;
+                }
+            }
+        }
+
+        //find missing series 
+        for(var iibisid in $scope.iibisids) {
+            var research = $scope.iibisids[iibisid];
+            for(var modality_id in research.modalities) {
+                var modality = research.modalities[modality_id];
+                //for each subject
+                for(var subject_id in modality.subjects) {
+                    var subject = modality.subjects[subject_id];
+                    subject.missing_series = [];
+                    
+                    //find the series that starts with template_series_desc
+                    for(var template_series_desc in modality.template.serieses) {
+                        var found = false;
+                        for(var series_desc in subject.serieses) {
+                            if(series_desc.startsWith(template_series_desc)) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if(!found) {
+                            //console.log("Failed to find "+template_series_desc+" under "+subject_id);
+                            subject.missing_series.push(modality.template.serieses[template_series_desc]);
+                        }
+                    }
                 }
             }
         }

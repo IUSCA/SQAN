@@ -23,6 +23,7 @@
                                         <span ng-if="subject.warnings != 0" class="label label-warning">{{subject.warnings}} Warnings</span>
                                         <span ng-if="subject.notemps != 0" class="label label-primary">{{subject.notemps}} NoTemps</span>
                                         <span ng-if="subject.non_qced != 0" class="label label-info" ng-if="!study.qc">{{subject.non_qced}} Not Yet QCed</span>
+                                        <span ng-if="subject.missing_series.length != 0" class="label label-info">{{subject.missing_series.length}} Missing</span>
                                     </a>
                                 </li>
                                 <li ng-click="scrollto(iibisid+modality_id)"
@@ -62,12 +63,19 @@
                                             <td>{{series.series_desc}}</td>
                                             <td style="padding: 1px 5px;">
                                                 <div class="studies">
-                                                    <div ng-if="series._detail.excluded" class="text-muted excluded" 
-                                                        ng-click="series._detail.excluded = false">Excluded</div>
+                                                    <div ng-if="series._detail.excluded" class="text-muted excluded" ng-click="series._detail.excluded = false">Excluded</div>
                                                     <div ng-if="!series._detail.excluded" class="slide-down">
                                                         <studynote ng-repeat="(study_id, study) in series.studies" ng-click="openstudy(study_id)" study="study">
                                                     </div>
                                                 </div>
+                                            </td>
+                                        </tr>
+                
+                                        <!-- missing series -->
+                                        <tr ng-repeat="series in subject.missing_series">
+                                            <td>{{series.series_desc}}</td>
+                                            <td>
+                                                <span class="label label-info">Missing</span>
                                             </td>
                                         </tr>
                                     </tbody>

@@ -26,22 +26,7 @@ router.get('/query', jwt({secret: config.express.jwt.secret}), function(req, res
         query.skip(req.query.skip);
     }
 
-    /*
-    if(req.query.studytimestamp_gt) {
-        query.where('StudyTimestamp')
-        .gt(new Date(req.query.studytimestamp_gt))
-        .lt(new Date(req.query.studytimestamp_lt));
-    }
-    if(req.query.modality) {
-        query.where('Modality').equals(req.query.modality);
-    }
-    if(req.query.research_id) {
-        query.where('research_id').equals(req.query.research_id);
-    }
-    */
-
     var serieses = {};
-
     query.exec(function(err, studies) {
         if(err) return next(err);
 
@@ -86,36 +71,6 @@ router.get('/query', jwt({secret: config.express.jwt.secret}), function(req, res
         });
     });
 });
-
-/*
-//deprecated
-router.get('/qc/:study_id', jwt({secret: config.express.jwt.secret}), function(req, res, next) {
-    var study_id = req.params.study_id;
-    db.Image.find()
-    .where('study_id').equals(study_id)
-    .sort('headers.InstanceNumber')
-    .select({qc: 1})
-    .exec(function(err, _images) {
-        if(err) return next(err);
-        //don't return the qc.. just return counts of qc results
-        var images = [];
-        _images.forEach(function(_image) {
-            //count number of errors / warnings
-            var image = {
-                _id: _image._id,
-            };
-            if(_image.qc) {
-                image.qc = {e: 0, w: 0};
-                if(_image.qc.errors) image.qc.e = _image.qc.errors.length;
-                if(_image.qc.warnings) image.qc.w = _image.qc.warnings.length;
-                //if(_image.qc.notes) image.n = _image.qc.notes.length;
-            }
-            images.push(image);
-        });
-        res.json(images);
-    }); 
-});
-*/
 
 router.get('/id/:study_id', jwt({secret: config.express.jwt.secret}), function(req, res, next) {
     //limit to admin for now (in the future allow normal user with iibisid auth)
