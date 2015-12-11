@@ -48,29 +48,32 @@ router.get('/config', jwt({secret: config.express.jwt.pub, credentialsRequired: 
 router.get('/researches', jwt({secret: config.express.jwt.pub/*, credentialsRequired: false*/}), function(req, res, next) {
     var query = db.Research.find();
     query.exec(function(err, rs) {
-        var rs = JSON.parse(JSON.stringify(rs)); //mongoose object won't let me update the users array (since it's [String])
         if(err) return next(err);
+        /*
+        var rs = JSON.parse(JSON.stringify(rs)); //mongoose object won't let me update the users array (since it's [String])
         rs.forEach(function(r) {
             r.users = profile.load_profiles(r.users);
         });
+        */
         res.json(rs);
     });
 });
 
-//update researches - admin only
-router.put('/researches', jwt({secret: config.express.jwt.pub/*, credentialsRequired: false*/}), function(req, res, next) {
+router.get('/acl/:key', jwt({secret: config.express.jwt.pub/*, credentialsRequired: false*/}), function(req, res, next) {
     if(!~req.user.scopes.common.indexOf('admin')) return next(new Error("admin only"));
-    async.eachSeries(req.body, function(research, next) {
-        //replace user object with sub
-        var subs = [];
-        research.users.forEach(function(user) {
-            subs.push(user.sub);
-        });
-        research.users = subs;
-        db.Research.findByIdAndUpdate(research._id, research, next);
-    }, function(err) {
+    db.Acl.findOne({key: req.params.key}, function(err, acl) {
         if(err) return next(err);
-        res.json({status: "ok", message: "all research updated"}); 
+        if(!acl) return res.json({});
+        res.json(acl.value);
+    });
+});
+
+router.put('/acl/:key', jwt({secret: config.express.jwt.pub/*, credentialsRequired: false*/}), function(req, res, next) {
+    if(!~req.user.scopes.common.indexOf('admin')) return next(new Error("admin only"));
+    console.dir(req.body);
+    db.Acl.findOneAndUpdate({key: req.params.key}, {value: req.body}, {upsert:true}, function(err, doc){
+        if (err) return next(err);
+        res.json({status: "ok", acl: doc});
     });
 });
 

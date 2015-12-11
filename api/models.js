@@ -25,11 +25,10 @@ var researchSchema = mongoose.Schema({
     IIBISID: String, //like.. 2016-00001
     Modality: String,  //like.. PT
     StationName: String,  //like.. CT71271
-    raidio_tracer: String, //like DOTA NOC (from RadiopharmaceuticalInformationSequence.Radiopharmaceutical - only used for CT)
+    radio_tracer: String, //like DOTA NOC (from RadiopharmaceuticalInformationSequence.Radiopharmaceutical - only used for CT)
     //
     ///////////////////////////////////////////////////////////////////////////
 
-    users: [ String ], //list of user subs who has access to this research
 });
 
 exports.Research = mongoose.model('Research', researchSchema);
@@ -173,4 +172,13 @@ var imageSchema = mongoose.Schema({
 });
 exports.Image = mongoose.model('Image', imageSchema);
 
-
+var aclSchema = mongoose.Schema({
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //key
+    //SOPInstanceUID: String,
+    key: String,
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    value: mongoose.Schema.Types.Mixed, 
+});
+exports.Acl = mongoose.model('Acl', aclSchema);

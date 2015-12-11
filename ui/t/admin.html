@@ -4,12 +4,9 @@
     <div class="panel panel-default">
         <div class="panel-heading">Research Access</div>
         <div class="panel-body">
-            <div ng-repeat="research in researches">
-                <h4>{{research.IIBISID}} 
-                    <span class="text-muted">Modality:</span> {{research.Modality}}
-                    <span class="text-muted">StationName:</span> {{research.StationName}}
-                </h4>
-                <ui-select multiple ng-model="research.users">
+            <div ng-repeat="iibisid in iibisids">
+                <h4>{{iibisid}}</h4>
+                <ui-select multiple ng-model="_acl[iibisid]">
                     <ui-select-match placeholder="Select users who can access this search">
                         <img gravatar-src="$item.email" gravatar-size="17"/>
                         <b>{{$item.fullname}}</b> <span class="email">&lt;{{$item.email}}&gt;</span>

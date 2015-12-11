@@ -380,10 +380,33 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, use
             research.users = [];
         });
         */
-        $scope.researches = res.data;
-        console.dir($scope.researches);
+        //find unique iibisids
+        $scope.iibisids = [];
+        res.data.forEach(function(research) {
+            if(!~$scope.iibisids.indexOf(research.IIBISID)) $scope.iibisids.push(research.IIBISID);
+        });
     }, function(err) {
         toaster.error(err);
+    })
+    .then(function(res) {
+        $http.get(appconf.api+'/acl/iibisid')
+        .then(function(res) {
+            $scope.acl = res.data;
+            $scope._acl = {};
+            $scope.iibisids.forEach(function(id) {
+                if($scope.acl[id] == undefined) {
+                    $scope.acl[id] = {users: []};
+                } 
+    
+                //convert user id to object
+                $scope._acl[id] = [];
+                $scope.acl[id].users.forEach(function(sub) {
+                    $scope._acl[id].push($scope.users[sub]);
+                });
+            });
+        }, function(err) {
+            toaster.error(err);
+        });
     });
 
     //load all users used to populate the user list
@@ -396,18 +419,17 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, use
     });
     $scope.update_acl = function() {
 
-        /*
-        $scope.researches.forEach(function(r) {
-            var us = [];
-            r.users.forEach(function(user) {
-                console.dir(user.sub);
-                us.push(user.sub);
+        //convert object to id
+        for(var id in $scope._acl) {
+            var users = $scope._acl[id];
+            var ids = [];
+            users.forEach(function(user) {
+                ids.push(user.sub);
             });
-            r.users = us;
-        });
-        */
+            $scope.acl[id].users = ids;
+        };
 
-        $http.put(appconf.api+'/researches', $scope.researches)
+        $http.put(appconf.api+'/acl/iibisid', $scope.acl)
         .then(function(res) {
             $scope.form.$setPristine();
             //$location.url("/configs");
