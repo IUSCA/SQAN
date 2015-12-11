@@ -13,7 +13,7 @@ var db = require('../models');
 var qc = require('../qc');
 
 //query against all studies
-router.get('/query', jwt({secret: config.express.jwt.secret}), function(req, res, next) {
+router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     //limit to admin for now (in the future allow normal user with iibisid auth)
     if(!~req.user.scopes.dicom.indexOf('admin')) return res.status(401).end();
 
@@ -72,7 +72,7 @@ router.get('/query', jwt({secret: config.express.jwt.secret}), function(req, res
     });
 });
 
-router.get('/id/:study_id', jwt({secret: config.express.jwt.secret}), function(req, res, next) {
+router.get('/id/:study_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     //limit to admin for now (in the future allow normal user with iibisid auth)
     if(!~req.user.scopes.dicom.indexOf('admin')) return res.status(401).end();
 
@@ -126,7 +126,7 @@ router.get('/id/:study_id', jwt({secret: config.express.jwt.secret}), function(r
 });
 
 //invalidate qc on all images for this study
-router.put('/qc/invalidate/:study_id', jwt({secret: config.express.jwt.secret}), function(req, res, next) {
+router.put('/qc/invalidate/:study_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     //limit to admin for now (in the future allow normal user with iibisid auth)
     if(!~req.user.scopes.dicom.indexOf('admin')) return res.status(401).end();
 

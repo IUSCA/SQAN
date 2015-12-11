@@ -29,6 +29,7 @@ var researchSchema = mongoose.Schema({
     //
     ///////////////////////////////////////////////////////////////////////////
 
+    users: [ String ], //list of user subs who has access to this research
 });
 
 exports.Research = mongoose.model('Research', researchSchema);

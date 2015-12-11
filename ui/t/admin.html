@@ -1,0 +1,32 @@
+<sca-menutab menu="appconf.menu" active="'admin'" user="user"></sca-menutab>
+<div class="container-fluid">
+    <form ng-submit="update_acl();" name="form" confirm-on-exit>
+    <div class="panel panel-default">
+        <div class="panel-heading">Research Access</div>
+        <div class="panel-body">
+            <div ng-repeat="research in researches">
+                <h4>{{research.IIBISID}} 
+                    <span class="text-muted">Modality:</span> {{research.Modality}}
+                    <span class="text-muted">StationName:</span> {{research.StationName}}
+                </h4>
+                <ui-select multiple ng-model="research.users">
+                    <ui-select-match placeholder="Select users who can access this search">
+                        <img gravatar-src="$item.email" gravatar-size="17"/>
+                        <b>{{$item.fullname}}</b> <span class="email">&lt;{{$item.email}}&gt;</span>
+                    </ui-select-match>
+                    <ui-select-choices repeat="user in users_a | propsFilter: {fullname: $select.search, email: $select.search}">
+                      <img gravatar-src="user.email" gravatar-size="17"/>
+                      <b>{{user.fullname}}</b> <small>&lt;{{user.email}}&gt;</small>
+                    </ui-select-choices>
+                </ui-select>
+            </div>
+            <br>
+        </div>
+        <div class="panel-footer">
+            <input type="submit" class="btn" value="Update"/>
+        </div>
+    </div>
+    </form>
+
+</div>
+

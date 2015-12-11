@@ -7,7 +7,7 @@
     <title ng-bind="title">Loading..</title>
 
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="css/bootstrap.yeti.css">
+    <link rel="stylesheet" href="bower_components/bootswatch/yeti/bootstrap.min.css">
     <link rel="stylesheet" href="bower_components/fontawesome/css/font-awesome.min.css">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:400,700">
     <link rel="stylesheet" href="bower_components/angular-ui-select/dist/select.min.css">
@@ -20,7 +20,7 @@
 <body ng-cloak>
     <sca-menubar header="menu.header" menu="menu.top" active="'dicom'" profile="menu._profile" user="menu.user"></sca-menubar>
     <toaster-container toaster-options="{'position-class': 'toast-bottom-right'}"></toaster-container>
-    <ng-view></ng-view><!-- <ng-view/> will cause route looping-->
+    <ng-view></ng-view>
     <ng-include src="'t/footer.html'"></ng-include>
 
     <script src="bower_components/jquery/dist/jquery.min.js"></script><!--bootstrap requires jquery-->
@@ -37,59 +37,8 @@
     <script src="bower_components/angularjs-toaster/toaster.min.js"></script>
     <script src="bower_components/angular-inview/angular-inview.js"></script>
 
-    <script>
-    angular.module('app.config', [])
-    .constant('appconf', {
-        title: 'Dicom QC',
-
-        api: '/api/dicom',
-
-        kibana_url: '/kibana/',
-
-        profile_api: '/api/profile',
-        profile_url: '/profile',
-
-        //shared servive api and ui urls (for menus and stuff)
-        shared_api: '/api/shared',
-        shared_url: '/shared',
-
-        //authentcation service API to refresh token, etc.
-        auth_api: '/api/auth',
-        auth_url: '/auth',
-
-        jwt_id: 'jwt',
-        menu: [
-            {
-                id: "about",
-                label: "About",
-                url: "/dicom/#/about",
-            },
-            {
-                id: "recent",
-                label: "Recent Study",
-                url: "/dicom/#/recent",
-                show: function(scope) {
-                    if(~scope.dicom.indexOf('admin')) return true;
-                    return false;
-                }
-            },
-            /*
-            {
-                id: "admin",
-                label: "Administration",
-                url: "/dicom/#/admin",
-                show: function(scope) {
-                    if(~scope.common.indexOf('admin')) return true;
-                    return false;
-                }
-            },
-            */
-        ]    
-    });
-    </script>
-
+    <script src="config.js"></script>
     <script src="../shared/dist/shared.js"></script> <!-- TODO make this configurable? don't forget the shared/css/style.css -->
-
     <script src="js/app.js"></script>
     <script src="js/controllers.js"></script>
 </body>

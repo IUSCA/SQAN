@@ -363,3 +363,62 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, $rou
     }
 
 }]);
+
+app.controller('AdminController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', 'serverconf', 'scaMessage', 'users',
+function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, users) {
+    $scope.appconf = appconf;
+    scaMessage.show(toaster);
+    serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
+
+    var jwt = localStorage.getItem(appconf.jwt_id);
+    if(jwt) { $scope.user = jwtHelper.decodeToken(jwt); }
+
+    $http.get(appconf.api+'/researches/')
+    .then(function(res) {
+        /*
+        res.data.forEach(function(research) {
+            research.users = [];
+        });
+        */
+        $scope.researches = res.data;
+        console.dir($scope.researches);
+    }, function(err) {
+        toaster.error(err);
+    });
+
+    //load all users used to populate the user list
+    users.then(function(_users) {
+        $scope.users = _users;
+        $scope.users_a = [];
+        for(var sub in $scope.users) {
+            $scope.users_a.push($scope.users[sub]);
+        }
+    });
+    $scope.update_acl = function() {
+
+        /*
+        $scope.researches.forEach(function(r) {
+            var us = [];
+            r.users.forEach(function(user) {
+                console.dir(user.sub);
+                us.push(user.sub);
+            });
+            r.users = us;
+        });
+        */
+
+        $http.put(appconf.api+'/researches', $scope.researches)
+        .then(function(res) {
+            $scope.form.$setPristine();
+            //$location.url("/configs");
+            toaster.success("Updated Successfully!");
+        }, function(res) {
+            if(res.data) toaster.error(res.data.message);
+            else {
+                toaster.error("Failed to update config");
+                console.dir(res);
+            }
+        });
+    }
+}]);
+

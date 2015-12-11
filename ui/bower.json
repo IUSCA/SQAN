@@ -22,5 +22,6 @@
     "angularjs-toaster": "~0.4.14",
     "angular-cookies": "~1.4.0",
     "angular-loading-bar": "~0.7.1",
+    "bootswatch": "~3.3.6"
   }
 }

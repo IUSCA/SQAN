@@ -12,7 +12,7 @@ var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
 
 //get template head record
-router.get('/head/:template_id', jwt({secret: config.express.jwt.secret}), function(req, res, next) {
+router.get('/head/:template_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     //limit to admin for now (in the future allow normal user with iibisid auth)
     if(!~req.user.scopes.dicom.indexOf('admin')) return res.status(401).end();
 
@@ -36,7 +36,7 @@ router.get('/head/:template_id', jwt({secret: config.express.jwt.secret}), funct
 });
 
 //get one template header intance
-router.get('/inst/:inst_id', jwt({secret: config.express.jwt.secret}), function(req, res, next) {
+router.get('/inst/:inst_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     //limit to admin for now (in the future allow normal user with iibisid auth)
     if(!~req.user.scopes.dicom.indexOf('admin')) return res.status(401).end();
 

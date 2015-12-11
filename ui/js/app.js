@@ -11,6 +11,7 @@ var app = angular.module('app', [
     //'angular-inview',
     'ui.bootstrap',
     'ui.bootstrap.tabs',
+    'ui.select',
     'sca-shared',
 ]);
 
@@ -61,6 +62,11 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
     .when('/recent', {
         templateUrl: 't/recent.html',
         controller: 'RecentController',
+        requiresLogin: true,
+    })
+    .when('/admin', {
+        templateUrl: 't/admin.html',
+        controller: 'AdminController',
         requiresLogin: true,
     })
     /*
@@ -175,9 +181,16 @@ app.directive('qcwarning', function() {
     } 
 });
 
+/*
+//generate unique id for this quiz session (so that we store only 1 set of answers)
+app.factory('sessionid', ['uuid', function() {
+    var id = uuid.v4();
+    return id;
+}]);
+*/
+
 app.factory('menu', ['appconf', '$http', 'jwtHelper', '$sce', 'scaMessage', 'scaMenu', 'toaster',
 function(appconf, $http, jwtHelper, $sce, scaMessage, scaMenu, toaster) {
-
     var jwt = localStorage.getItem(appconf.jwt_id);
     var menu = {
         header: {
@@ -304,4 +317,72 @@ app.filter('toArray', function() { return function(obj) {
     });
 }});
 */
+app.factory('users', ['appconf', '$http', 'jwtHelper', function(appconf, $http, jwtHelper) {
+    return $http.get(appconf.api+'/profiles')
+    .then(function(res) {
+        return res.data;
+    }, function(res) {
+        //console.log(res.statusText);
+    });
+}]);
+
+//http://plnkr.co/edit/juqoNOt1z1Gb349XabQ2?p=preview
+/**
+ * AngularJS default filter with the following expression:
+ * "person in people | filter: {name: $select.search, age: $select.search}"
+ * performs a AND between 'name: $select.search' and 'age: $select.search'.
+ * We want to perform a OR.
+ */
+app.filter('propsFilter', function() {
+  return function(items, props) {
+    var out = [];
+
+    if (angular.isArray(items)) {
+      items.forEach(function(item) {
+        var itemMatches = false;
+
+        var keys = Object.keys(props);
+        for (var i = 0; i < keys.length; i++) {
+          var prop = keys[i];
+          var text = props[prop].toLowerCase();
+          if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
+            itemMatches = true;
+            break;
+          }
+        }
+
+        if (itemMatches) {
+          out.push(item);
+        }
+      });
+    } else {
+      // Let the output be the input untouched
+      out = items;
+    }
+
+    return out;
+  };
+});
+
+//http://stackoverflow.com/questions/14852802/detect-unsaved-changes-and-alert-user-using-angularjs
+app.directive('confirmOnExit', function() {
+    return {
+        //scope: { form: '=', },
+        link: function($scope, elem, attrs) {
+            window.onbeforeunload = function(){
+                if ($scope.form.$dirty) {
+                    return "You have unsaved changes.";
+                }
+            }
+            $scope.$on('$locationChangeStart', function(event, next, current) {
+                if ($scope.form.$dirty) {
+                    if(!confirm("Do you want to abondon unsaved changes?")) {
+                        event.preventDefault();
+                    }
+                }
+            });
+        }
+    };
+});
+
 

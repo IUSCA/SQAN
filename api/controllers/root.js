@@ -6,17 +6,19 @@ var router = express.Router();
 var winston = require('winston');
 var jwt = require('express-jwt');
 var _ = require('underscore');
+var async = require('async');
 
 //mine
 var config = require('../config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
+var profile = require('../profile');
 
 router.get('/health', function(req, res, next) {
     res.json({status: 'ok'});
 });
 
-router.get('/config', jwt({secret: config.express.jwt.secret, credentialsRequired: false}), function(req, res) {
+router.get('/config', jwt({secret: config.express.jwt.pub, credentialsRequired: false}), function(req, res) {
     /*
     function get_menu(user) {
         var scopes = {
@@ -43,11 +45,37 @@ router.get('/config', jwt({secret: config.express.jwt.secret, credentialsRequire
     res.json(conf);
 });
 
-//used?
-router.get('/researches', jwt({secret: config.express.jwt.secret, credentialsRequired: false}), function(req, res) {
-    db.Research.find().then(function(rs) {
+router.get('/researches', jwt({secret: config.express.jwt.pub/*, credentialsRequired: false*/}), function(req, res, next) {
+    var query = db.Research.find();
+    query.exec(function(err, rs) {
+        var rs = JSON.parse(JSON.stringify(rs)); //mongoose object won't let me update the users array (since it's [String])
+        if(err) return next(err);
+        rs.forEach(function(r) {
+            r.users = profile.load_profiles(r.users);
+        });
         res.json(rs);
     });
+});
+
+//update researches - admin only
+router.put('/researches', jwt({secret: config.express.jwt.pub/*, credentialsRequired: false*/}), function(req, res, next) {
+    if(!~req.user.scopes.common.indexOf('admin')) return next(new Error("admin only"));
+    async.eachSeries(req.body, function(research, next) {
+        //replace user object with sub
+        var subs = [];
+        research.users.forEach(function(user) {
+            subs.push(user.sub);
+        });
+        research.users = subs;
+        db.Research.findByIdAndUpdate(research._id, research, next);
+    }, function(err) {
+        if(err) return next(err);
+        res.json({status: "ok", message: "all research updated"}); 
+    });
+});
+
+router.get('/profiles', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    res.json(profile.getall());
 });
 
 module.exports = router;
