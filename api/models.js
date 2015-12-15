@@ -1,10 +1,11 @@
 
 //contrib
-//var Sequelize = require('sequelize');
 var mongoose = require('mongoose');
+var winston = require('winston');
 
 //mine
 var config = require('./config');
+var logger = new winston.Logger(config.logger.winston);
 
 //var sequelize = new Sequelize('database', 'username', 'password', config.sequelize);
 exports.init = function(cb) {
@@ -90,6 +91,8 @@ var templateHeaderSchema = mongoose.Schema({
     ///////////////////////////////////////////////////////////////////////////
     
     headers: mongoose.Schema.Types.Mixed, 
+    IIBISID: String, //make it easier to do access control
+    
 });
 exports.TemplateHeader = mongoose.model('TemplateHeader', templateHeaderSchema);
 
@@ -114,6 +117,7 @@ var studySchema = mongoose.Schema({
     //
     Modality: String,  //like.. PT
     StudyTimestamp: Date,
+    IIBISID: String,  //for easy access control
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -159,10 +163,12 @@ var imageSchema = mongoose.Schema({
     acquisition_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     InstanceNumber: Number,
     //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     //foreigh keys to make it easier to find related information
     research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     study_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    IIBISID: String,  //for easy access control
 
     //the actual headers for this instance (cleaned)
     headers: mongoose.Schema.Types.Mixed, 
@@ -171,6 +177,8 @@ var imageSchema = mongoose.Schema({
     qc: mongoose.Schema.Types.Mixed,
 });
 exports.Image = mongoose.model('Image', imageSchema);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 var aclSchema = mongoose.Schema({
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -181,4 +189,13 @@ var aclSchema = mongoose.Schema({
     //////////////////////////////////////////////////////////////////////////////////////////////
     value: mongoose.Schema.Types.Mixed, 
 });
+aclSchema.statics.canAccessIIBISID = function(user, iibisid, cb) {
+    this.findOne({key: 'iibisid'}, function(err, acl) {
+        var _acl = acl.value[iibisid];
+        if(!_acl) return cb(false); //not set
+        return cb(~_acl.users.indexOf(user.sub));
+    });
+};
 exports.Acl = mongoose.model('Acl', aclSchema);
+
+

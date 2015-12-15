@@ -263,6 +263,8 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
         if($scope.data.images) {
             $scope.data.images.forEach(computeColor);
         }
+    }, function(err) {
+        toaster.error(err.data.message);
     });
 
     function computeColor(image) {
@@ -327,6 +329,8 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
             } else {
                 $scope.show_all_headers = false;
             }
+        }, function(err) {
+            toaster.error(err.data.message);
         });
     }
     $scope.showallheaders = function() {
@@ -352,6 +356,8 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, $rou
     $http.get(appconf.api+'/template/head/'+$routeParams.templateid)
     .then(function(res) {
         $scope.data = res.data;
+    }, function(res) {
+        toaster.error(res.data.message);
     });
 
     $scope.load_template = function(template) {
@@ -359,6 +365,8 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, $rou
         $http.get(appconf.api+'/template/inst/'+template._id)
         .then(function(res) {
             $scope.image_detail = res.data;
+        }, function(res) {
+            toaster.error(res.data.message);
         });
     }
 

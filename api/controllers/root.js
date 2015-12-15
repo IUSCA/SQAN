@@ -19,24 +19,6 @@ router.get('/health', function(req, res, next) {
 });
 
 router.get('/config', jwt({secret: config.express.jwt.pub, credentialsRequired: false}), function(req, res) {
-    /*
-    function get_menu(user) {
-        var scopes = {
-            common: []
-        };
-        if(user) scopes = user.scopes;
-        var menus = [];
-        config.menu.forEach(function(menu) {
-            if(menu.scope && !menu.scope(scopes)) return;
-            var _menu = _.clone(menu);
-            if(_menu.submenu) {
-                _menu.submenu = get_menu(_menu.submenu, scopes);
-            }
-            menus.push(_menu);
-        });
-        return menus;
-    }
-    */
     var conf = {
         //service_types: config.service_types,
         //defaults: config.defaults,
@@ -45,10 +27,14 @@ router.get('/config', jwt({secret: config.express.jwt.pub, credentialsRequired: 
     res.json(conf);
 });
 
+//used to list all iibisids, etc
 router.get('/researches', jwt({secret: config.express.jwt.pub/*, credentialsRequired: false*/}), function(req, res, next) {
     var query = db.Research.find();
     query.exec(function(err, rs) {
         if(err) return next(err);
+        //should I filter by iibisid acl? 
+        //admin needs to be able to see all iibisid - so that they can update the acl for all iibisids
+
         /*
         var rs = JSON.parse(JSON.stringify(rs)); //mongoose object won't let me update the users array (since it's [String])
         rs.forEach(function(r) {
@@ -70,7 +56,6 @@ router.get('/acl/:key', jwt({secret: config.express.jwt.pub/*, credentialsRequir
 
 router.put('/acl/:key', jwt({secret: config.express.jwt.pub/*, credentialsRequired: false*/}), function(req, res, next) {
     if(!~req.user.scopes.common.indexOf('admin')) return next(new Error("admin only"));
-    console.dir(req.body);
     db.Acl.findOneAndUpdate({key: req.params.key}, {value: req.body}, {upsert:true}, function(err, doc){
         if (err) return next(err);
         res.json({status: "ok", acl: doc});

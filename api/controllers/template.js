@@ -20,15 +20,22 @@ router.get('/head/:template_id', jwt({secret: config.express.jwt.pub}), function
         if(err) return next(err);
         db.Research.findById(template.research_id, function(err, research) {
             if(err) return next(err);
-            db.TemplateHeader.find({template_id: template.id})
-            .select('AcquisitionNumber InstanceNumber')
-            .sort('AcquisitionNumber InstanceNumber')
-            .exec(function(err, templates) {
-                if(err) return next(err);
-                res.json({
-                    research: research,
-                    template: template,
-                    templates: templates,
+
+            //make sure user has access to this IIBISID
+            db.Acl.canAccessIIBISID(req.user, research.IIBISID, function(can) {
+                if(!can) return res.status(401).json({message: "you are not authorized to access this IIBISID:"+research.IIBISID});
+
+                //finally, load the template headers
+                db.TemplateHeader.find({template_id: template.id})
+                .select('AcquisitionNumber InstanceNumber')
+                .sort('AcquisitionNumber InstanceNumber')
+                .exec(function(err, templates) {
+                    if(err) return next(err);
+                    res.json({
+                        research: research,
+                        template: template,
+                        templates: templates,
+                    });
                 });
             });
         });
@@ -42,10 +49,14 @@ router.get('/inst/:inst_id', jwt({secret: config.express.jwt.pub}), function(req
 
     db.TemplateHeader.findById(req.params.inst_id, function(err, templateheaders) {
         if(err) return next(err);
-        res.json(templateheaders);
+
+        //make sure user has access to this IIBISID
+        db.Acl.canAccessIIBISID(req.user, templateheaders.IIBISID, function(can) {
+            if(!can) return res.status(401).json({message: "you are not authorized to access this IIBISID:"+templateheaders.IIBISID});
+            res.json(templateheaders);
+        });
     }); 
 });
-
 
 module.exports = router;
 

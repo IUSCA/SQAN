@@ -14,120 +14,129 @@ var qc = require('../qc');
 
 //query against all studies
 router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    //limit to admin for now (in the future allow normal user with iibisid auth)
-    if(!~req.user.scopes.dicom.indexOf('admin')) return res.status(401).end();
-
-    var query = db.Study.find();
-
-    //query.sort({StudyTimestamp: -1});
-    query.sort({StudyTimestamp: -1, SeriesNumber: 1});
-    query.limit(req.query.limit || 50); 
-    if(req.query.skip) {
-        query.skip(req.query.skip);
-    }
-
-    var serieses = {};
-    query.exec(function(err, studies) {
+    //lookup iibisids that user has access to
+    db.Acl.findOne({key: 'iibisid'}, function(err, acl) {
         if(err) return next(err);
+        var iibisids = [];
+        for(var iibisid in acl.value) {
+            if(~acl.value[iibisid].users.indexOf(req.user.sub)) iibisids.push(iibisid);
+        } 
 
-        //pull unique serieses and see if it's excluded or not
-        studies.forEach(function(study) {
-            //check for series exclusion
-            if(serieses[study.Modality] == undefined) serieses[study.Modality] = {};
-            if(serieses[study.Modality][study.series_desc] == undefined) {
-                serieses[study.Modality][study.series_desc] = {
-                    excluded: qc.series.isExcluded(study.Modality, study.series_desc) 
-                };
-            }
-        });
-
-        //load all researches referenced by studies
-        var rids = [];
-        studies.forEach(function(study) {
-            rids.push(study.research_id);
-        });
-        db.Research.find()
-        .where('_id')
-        .in(rids)
-        .exec(function(err, researches) {
+        //not query all recent study for given iibisids
+        var query = db.Study.find();
+        query.sort({StudyTimestamp: -1, SeriesNumber: 1});
+        query.where('IIBISID').in(iibisids);
+        query.limit(req.query.limit || 50); 
+        if(req.query.skip) {
+            query.skip(req.query.skip);
+        }
+        query.exec(function(err, studies) {
             if(err) return next(err);
-
-            //load all templates referenced also
-            db.Template.find()
-            .where('research_id')
-            .sort({date: -1})
-            .in(rids)
-            .exec(function(err, templates) {
-                if(err) return next(err);
-
-                res.json({
-                    studies: studies,
-                    iibisids: researches,
-                    templates: templates,
-                    serieses: serieses,
-                });
+            
+            //pull unique serieses and see if it's excluded or not
+            var serieses = {};
+            studies.forEach(function(study) {
+                //check for series exclusion
+                if(serieses[study.Modality] == undefined) serieses[study.Modality] = {};
+                if(serieses[study.Modality][study.series_desc] == undefined) {
+                    serieses[study.Modality][study.series_desc] = {
+                        excluded: qc.series.isExcluded(study.Modality, study.series_desc) 
+                    };
+                }
             });
 
+            //load all researches referenced by studies
+            var rids = [];
+            studies.forEach(function(study) {
+                rids.push(study.research_id);
+            });
+            db.Research.find()
+            .where('_id')
+            .in(rids)
+            .exec(function(err, researches) {
+                if(err) return next(err);
+
+                //load all templates referenced also
+                db.Template.find()
+                .where('research_id')
+                .sort({date: -1})
+                .in(rids)
+                .exec(function(err, templates) {
+                    if(err) return next(err);
+
+                    res.json({
+                        studies: studies,
+                        iibisids: researches,
+                        templates: templates,
+                        serieses: serieses,
+                    });
+                });
+
+            });
         });
     });
+
 });
 
 router.get('/id/:study_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    //limit to admin for now (in the future allow normal user with iibisid auth)
-    if(!~req.user.scopes.dicom.indexOf('admin')) return res.status(401).end();
-
-    var ret = {};
     db.Study.findById(req.params.study_id).exec(function(err, study) {
         if(err) return next(err);
-        ret.study = study;
 
-        db.Research.findById(study.research_id).exec(function(err, research) {
-            if(err) return next(err);
-            ret.research = research;
+        //make sure user has access to this study
+        db.Acl.canAccessIIBISID(req.user, study.IIBISID, function(can) {
+            if(!can) return res.status(401).json({message: "you are not authorized to access this IIBISID:"+study.IIBISID});
 
-            if(study.qc) {
-                db.Template.findById(study.qc.template_id).exec(function(err, template) {
-                    if(err) return next(err);
-                    ret.template = template;
+            var ret = {};
+            ret.study = study;
+            db.Research.findById(study.research_id).exec(function(err, research) {
+                if(err) return next(err);
+                ret.research = research;
 
-                    db.Image.find()
-                    .where('study_id').equals(study._id)
-                    .sort('headers.InstanceNumber')
-                    .select({qc: 1, 'headers.InstanceNumber': 1, 'headers.AcquisitionNumber': 1})
-                    .exec(function(err, _images) {
+                if(study.qc) {
+                    db.Template.findById(study.qc.template_id).exec(function(err, template) {
                         if(err) return next(err);
-                        //don't return the qc.. just return counts of errors / warnings
-                        ret.images = [];
-                        _images.forEach(function(_image) {
-                            //count number of errors / warnings
-                            var image = { 
-                                _id: _image._id, 
-                                inum: _image.headers.InstanceNumber,
-                                anum: _image.headers.AcquisitionNumber,
-                            };
-                            if(_image.qc) {
-                                image.errors = 0;
-                                image.warnings = 0;
-                                if(_image.qc.errors) image.errors = _image.qc.errors.length;
-                                if(_image.qc.warnings) image.warnings = _image.qc.warnings.length;
-                                image.notemp = _image.qc.notemp;
-                            }
-                            ret.images.push(image);
-                        });
-                        res.json(ret);
-                    }); 
-                });
-            } else {
-                //not-QCed .. this is all I can get
-                res.json(ret);
-            }
+                        ret.template = template;
+
+                        db.Image.find()
+                        .where('study_id').equals(study._id)
+                        .sort('headers.InstanceNumber')
+                        .select({qc: 1, 'headers.InstanceNumber': 1, 'headers.AcquisitionNumber': 1})
+                        .exec(function(err, _images) {
+                            if(err) return next(err);
+                            //don't return the qc.. just return counts of errors / warnings
+                            ret.images = [];
+                            _images.forEach(function(_image) {
+                                //count number of errors / warnings
+                                var image = { 
+                                    _id: _image._id, 
+                                    inum: _image.headers.InstanceNumber,
+                                    anum: _image.headers.AcquisitionNumber,
+                                };
+                                if(_image.qc) {
+                                    image.errors = 0;
+                                    image.warnings = 0;
+                                    if(_image.qc.errors) image.errors = _image.qc.errors.length;
+                                    if(_image.qc.warnings) image.warnings = _image.qc.warnings.length;
+                                    image.notemp = _image.qc.notemp;
+                                }
+                                ret.images.push(image);
+                            });
+                            res.json(ret);
+                        }); 
+                    });
+                } else {
+                    //not-QCed .. this is all I can get
+                    res.json(ret);
+                }
+            });
         });
     });
 });
 
 //invalidate qc on all images for this study
 router.put('/qc/invalidate/:study_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    //limit to admin for now (in the future allow normal user with iibisid auth)
+    //TODO - I am not sure how to do access control this yet..
+    //for now limit to admin
     if(!~req.user.scopes.dicom.indexOf('admin')) return res.status(401).end();
 
     var study_id = req.params.study_id;

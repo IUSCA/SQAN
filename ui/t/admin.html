@@ -4,6 +4,7 @@
     <div class="panel panel-default">
         <div class="panel-heading">Research Access</div>
         <div class="panel-body">
+            <p class="help-block">Define users who has access to specific IIBISIDs</p>
             <div ng-repeat="iibisid in iibisids">
                 <h4>{{iibisid}}</h4>
                 <ui-select multiple ng-model="_acl[iibisid]">

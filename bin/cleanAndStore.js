@@ -173,6 +173,7 @@ function handle_message(h, msg_h, info, ack) {
                     InstanceNumber: h.InstanceNumber,
                 }, {
                     headers: h,
+                    IIBISID: h.qc_iibisid,
                 }, {upsert:true, 'new': true}, function(err, _templateheader) {
                     if(err) return next(err);
                     next();
@@ -206,6 +207,7 @@ function handle_message(h, msg_h, info, ack) {
                 //$inc: { count: 1 }, //increment the count
                 Modality: h.Modality,
                 StudyTimestamp: h.qc_StudyTimestamp,
+                IIBISID: h.qc_iibisid,
             }, {upsert: true, 'new': true}, function(err, _study) {
                 if(err) return next(err);
                 study = _study;
@@ -236,6 +238,7 @@ function handle_message(h, msg_h, info, ack) {
                 InstanceNumber: h.InstanceNumber,
             }, {
                 research_id: research._id,
+                IIBISID: h.qc_iibisid,
                 study_id: study._id,
                 headers: h,
                 $unset: {qc: 1},
