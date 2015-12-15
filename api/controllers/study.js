@@ -12,6 +12,53 @@ var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
 var qc = require('../qc');
 
+function load_related_info(studies, cb) {
+    //pull unique serieses and see if it's excluded or not
+    /*
+    var serieses = {};
+    studies.forEach(function(study) {
+        //check for series exclusion
+        if(serieses[study.Modality] == undefined) serieses[study.Modality] = {};
+        if(serieses[study.Modality][study.series_desc] == undefined) {
+            serieses[study.Modality][study.series_desc] = {
+                excluded: qc.series.isExcluded(study.Modality, study.series_desc) 
+            };
+        }
+    });
+    */
+
+    studies.forEach(function(study) {
+        study._excluded = qc.series.isExcluded(study.Modality, study.series_desc)
+    });
+
+    //load all researches referenced by studies
+    var rids = [];
+    studies.forEach(function(study) {
+        rids.push(study.research_id);
+    });
+    db.Research.find().lean()
+    .where('_id')
+    .in(rids)
+    .exec(function(err, researches) {
+        if(err) return cb(err);
+
+        //load all templates referenced also
+        db.Template.find().lean()
+        .where('research_id')
+        .sort({date: -1})
+        .in(rids)
+        .exec(function(err, templates) {
+            if(err) return cb(err);
+            cb(null, {
+                studies: studies,
+                iibisids: researches,
+                templates: templates,
+                //serieses: serieses,
+            });
+        });
+    });
+}
+
 //query against all studies
 router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     //lookup iibisids that user has access to
@@ -23,59 +70,23 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
         } 
 
         //not query all recent study for given iibisids
-        var query = db.Study.find();
-        query.sort({StudyTimestamp: -1, SeriesNumber: 1});
+        var query = db.Study.find().lean();
+        //TODO add filter to only load *recent* studies (maybe client sends the range already?)
         query.where('IIBISID').in(iibisids);
+        query.sort({StudyTimestamp: -1, SeriesNumber: 1});
         query.limit(req.query.limit || 50); 
+
         if(req.query.skip) {
             query.skip(req.query.skip);
         }
         query.exec(function(err, studies) {
             if(err) return next(err);
-            
-            //pull unique serieses and see if it's excluded or not
-            var serieses = {};
-            studies.forEach(function(study) {
-                //check for series exclusion
-                if(serieses[study.Modality] == undefined) serieses[study.Modality] = {};
-                if(serieses[study.Modality][study.series_desc] == undefined) {
-                    serieses[study.Modality][study.series_desc] = {
-                        excluded: qc.series.isExcluded(study.Modality, study.series_desc) 
-                    };
-                }
-            });
-
-            //load all researches referenced by studies
-            var rids = [];
-            studies.forEach(function(study) {
-                rids.push(study.research_id);
-            });
-            db.Research.find()
-            .where('_id')
-            .in(rids)
-            .exec(function(err, researches) {
+            load_related_info(studies, function(err, details){
                 if(err) return next(err);
-
-                //load all templates referenced also
-                db.Template.find()
-                .where('research_id')
-                .sort({date: -1})
-                .in(rids)
-                .exec(function(err, templates) {
-                    if(err) return next(err);
-
-                    res.json({
-                        studies: studies,
-                        iibisids: researches,
-                        templates: templates,
-                        serieses: serieses,
-                    });
-                });
-
+                res.json(details); 
             });
         });
     });
-
 });
 
 router.get('/id/:study_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
@@ -97,7 +108,7 @@ router.get('/id/:study_id', jwt({secret: config.express.jwt.pub}), function(req,
                         if(err) return next(err);
                         ret.template = template;
 
-                        db.Image.find()
+                        db.Image.find().lean()
                         .where('study_id').equals(study._id)
                         .sort('headers.InstanceNumber')
                         .select({qc: 1, 'headers.InstanceNumber': 1, 'headers.AcquisitionNumber': 1})

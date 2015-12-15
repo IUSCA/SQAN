@@ -63,8 +63,8 @@
                                             <td>{{series.series_desc}}</td>
                                             <td style="padding: 1px 5px;">
                                                 <div class="studies">
-                                                    <div ng-if="series._detail.excluded" class="text-muted excluded" ng-click="series._detail.excluded = false">Excluded</div>
-                                                    <div ng-if="!series._detail.excluded" class="slide-down">
+                                                    <div ng-if="series._excluded" class="text-muted excluded" ng-click="series._excluded = false">Excluded</div>
+                                                    <div ng-if="!series._excluded" class="slide-down">
                                                         <studynote ng-repeat="(study_id, study) in series.studies" ng-click="openstudy(study_id)" study="study">
                                                     </div>
                                                 </div>

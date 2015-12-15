@@ -40,7 +40,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
         });
        
         //serises catalog (organized under Modality)
-        var serieses = res.data.serieses;
+        //var serieses = res.data.serieses;
 
         //organize study under iibisid / modality / subject / series / study(#series_number)
         $scope.iibisids = {};
@@ -82,7 +82,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
             var series = subject.serieses[study.series_desc];
             if(series === undefined) {
                 series = {
-                    _detail: serieses[research_detail.Modality][study.series_desc],
+                    //_detail: serieses[research_detail.Modality][study.series_desc],
                     series_desc: study.series_desc, 
                     studies: {}
                 };
@@ -105,12 +105,17 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
                     subject.errors = 0;
                     subject.warnings = 0;
                     subject.notemps = 0;
+
                     for(var series_desc in subject.serieses) {
                         var series = subject.serieses[series_desc];
-                        var series_detail = serieses[modality._detail.Modality][series_desc];
-                        if(series_detail.excluded) continue;
+                        //var series_detail = serieses[modality._detail.Modality][series_desc];
+                        //if(series_detail.excluded) continue;
                         for(var study_id in series.studies) {
                             var study = series.studies[study_id];
+                            if(study._excluded) {
+                                series._excluded = true;
+                                continue;
+                            }
                             if(study.qc) {
                                 //decide the overall status(with error>warning>notemp precedence) for each study and count that.. 
                                 if(study.qc.errors && study.qc.errors.length > 0) {

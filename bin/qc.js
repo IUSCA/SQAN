@@ -48,14 +48,6 @@ function qc(image, next) {
             notemp: false, //set to true if no template was found
         };
 
-        /*
-        qc.errors.push({
-            type: 'template_header_missing', 
-            msg: "couldn't find a template header in template:"+template._id,
-            AcquisitionNumber: image.headers.AcquisitionNumber,
-            InstanceNumber: image.headers.InstanceNumber,
-        });
-        */
         if(template && templateheaders) {
             qc.template_id = template.id;
             qc_template.match(image, templateheaders, qc);
@@ -64,14 +56,6 @@ function qc(image, next) {
             //either way.. just mark it as notemp
             qc.notemp = true;
         }
-
-        /*
-        //debug
-        if(qc.errors.length > 0 || qc.warnings.length > 0) {
-            console.log(image.id);
-            console.log(JSON.stringify(qc, null, 4));
-        }
-        */
 
         //store qc results and next
         image.qc = qc;
@@ -109,15 +93,7 @@ function find_template(image, cb) {
 
                 //find series with longest prefix
                 var longest = null;
-                //logger.debug("possible template "+templates.length);
-                //logger.debug(JSON.stringify(templates, null, 4));
                 templates.forEach(function(template) {
-                    /*
-                    if(!longest) {
-                        longest = template;
-                        return;
-                    }
-                    */
                     if(~study.series_desc.indexOf(template.series_desc)) {
                         if(longest == null || longest.series_desc.length < template.series_desc.length) {
                             longest = template; //better match
