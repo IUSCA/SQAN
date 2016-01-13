@@ -7,7 +7,7 @@ var winston = require('winston');
 var jwt = require('express-jwt');
 
 //mine
-var config = require('../config');
+var config = require('../../config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
 

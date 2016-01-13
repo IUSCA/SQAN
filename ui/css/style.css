@@ -246,6 +246,10 @@ h3 {
     overflow-y: auto;
   }
 }
+.template.study-accepted .qc-issues,
+.study.study-accepted .qc-issues {
+  opacity: 0.3;
+}
 .template .qcalert,
 .study .qcalert {
   display: inline-block;
@@ -294,6 +298,11 @@ h3 {
 .study .image-warning pre {
   padding: 5px;
   background-color: white;
+}
+.activity {
+  padding-top: 5px;
+  padding-bottom: 10px;
+  font-size: 90%;
 }
 
 /*-----------------------------------------------

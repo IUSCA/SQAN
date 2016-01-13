@@ -7,7 +7,7 @@ var winston = require('winston');
 var jwt = require('express-jwt');
 
 //mine
-var config = require('../config');
+var config = require('../../config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
 var qc = require('../qc');
@@ -26,10 +26,6 @@ function load_related_info(studies, cb) {
         }
     });
     */
-
-    studies.forEach(function(study) {
-        study._excluded = qc.series.isExcluded(study.Modality, study.series_desc)
-    });
 
     //load all researches referenced by studies
     var rids = [];
@@ -81,6 +77,11 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
         }
         query.exec(function(err, studies) {
             if(err) return next(err);
+
+            studies.forEach(function(study) {
+                study._excluded = qc.series.isExcluded(study.Modality, study.series_desc)
+            });
+
             load_related_info(studies, function(err, details){
                 if(err) return next(err);
                 res.json(details); 
@@ -156,6 +157,49 @@ router.put('/qc/invalidate/:study_id', jwt({secret: config.express.jwt.pub}), fu
         res.json({status: "ok", affected: affected});
     });
 });
+
+router.post('/comment/:study_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    db.Study.findById(req.params.study_id).exec(function(err, study) {
+        if(err) return next(err);
+        //make sure user has access to this study
+        db.Acl.canAccessIIBISID(req.user, study.IIBISID, function(can) {
+            if(!can) return res.status(401).json({message: "you are not authorized to access this IIBISID:"+study.IIBISID});
+            if(!study.comments) study.comments = [];
+            var comment = {
+                user_id: req.user.sub,
+                comment: req.body.comment, //TODO - validate?
+                date: new Date(), //should be set by default, but UI needs this right away
+            };
+            study.comments.push(comment);
+            study.save(function(err) {
+                if(err) return(err);
+                res.json(comment);
+            });
+        });
+    });
+});
+
+router.post('/qcstate/:study_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    db.Study.findById(req.params.study_id).exec(function(err, study) {
+        if(err) return next(err);
+        //make sure user has access to this study
+        db.Acl.canAccessIIBISID(req.user, study.IIBISID, function(can) {
+            if(!can) return res.status(401).json({message: "you are not authorized to access this IIBISID:"+study.IIBISID});
+            var event = {
+                user_id: req.user.sub,
+                title: "Updated status to "+req.body.state,
+                date: new Date(), //should be set by default, but UI needs this right away
+            };
+            study.events.push(event);
+            study.qc.state = req.body.state; 
+            study.save(function(err) {
+                if(err) return(err);
+                res.json({message: "State updated to "+req.body.state, event: event});
+            });
+        });
+    });
+});
+
 
 module.exports = router;
 

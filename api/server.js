@@ -15,7 +15,7 @@ var expressWinston = require('express-winston');
 var compress = require('compression');
 
 //mine
-var config = require('./config');
+var config = require('../config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('./models');
 var profile = require('./profile');
@@ -25,7 +25,7 @@ var app = express();
 app.use(bodyParser.json()); //parse application/json
 app.use(bodyParser.urlencoded({ extended: false})); //parse application/x-www-form-urlencoded
 app.use(compress());
-app.use('/', require('./router'));
+app.use('/', require('./controllers'));
 
 //error handling
 app.use(expressWinston.errorLogger(config.logger.winston));

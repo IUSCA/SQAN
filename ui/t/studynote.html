@@ -5,4 +5,5 @@
     <span class="label label-warning" ng-if="study.qc.warnings.length > 0">Warnings: {{study.qc.warnings.length}}</span>
     <span class="label label-success" ng-if="study.qc.warnings.length == 0 && study.qc.errors.length == 0 && study.qc.notemps == 0">OK</span>
     <time>{{study.StudyTimestamp | date:'medium' }}</time> <span class="text-muted">(#{{study.SeriesNumber}})</span>
+    <span class="text-muted" ng-if="study.comments.length > 0">&nbsp;<i ng-if="study.comments" class="fa fa-comment"></i></span>
 </div>

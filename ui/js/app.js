@@ -13,6 +13,7 @@ var app = angular.module('app', [
     'ui.bootstrap.tabs',
     'ui.select',
     'sca-shared',
+    'ui.gravatar',
 ]);
 
 //show loading bar at the page top

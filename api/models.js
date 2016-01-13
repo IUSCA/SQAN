@@ -4,7 +4,7 @@ var mongoose = require('mongoose');
 var winston = require('winston');
 
 //mine
-var config = require('./config');
+var config = require('../config');
 var logger = new winston.Logger(config.logger.winston);
 
 //var sequelize = new Sequelize('database', 'username', 'password', config.sequelize);
@@ -14,6 +14,10 @@ exports.init = function(cb) {
         console.log("connected to mongo");
         cb();
     });
+}
+
+exports.disconnect = function(cb) {
+    mongoose.disconnect(cb);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -124,8 +128,36 @@ var studySchema = mongoose.Schema({
     //template to use for QC (if not, latest version will be used) specified by a user - to override the auto selection
     template_id: {type: mongoose.Schema.Types.ObjectId, index: true},
 
+    //study first received
+    create_date: {type: Date, default: Date.now},
+
     //study level qc result 
-    qc: mongoose.Schema.Types.Mixed,
+    qc: { //mongoose.Schema.Types.Mixed,
+        notemps: Number,
+        warnings: [ mongoose.Schema.Types.Mixed ],
+        errors: [ mongoose.Schema.Types.Mixed ],
+        date: Date,
+        template_id: mongoose.Schema.Types.ObjectId,
+        clean: Number,
+        image_count: Number,
+        state: String, //(null), passed, failed, accepted, rejected
+    },
+
+    //pipeline status (see sundar's data qc & pipeline)
+
+    events: [ mongoose.Schema({
+        service_id: String, //if event was performeed by a system, this is set
+        user_id: String, //if event was performed by a user, this is set to req.user.sub
+        title: String,
+        detail: String,
+        date: {type: Date, default: Date.now},
+    }) ],
+
+    comments: [ mongoose.Schema({
+        user_id: String, //req.user.sub
+        comment: String,
+        date: {type: Date, default: Date.now},
+    }) ],
 });
 
 exports.Study = mongoose.model('Study', studySchema);

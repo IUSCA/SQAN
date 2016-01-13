@@ -10,7 +10,7 @@ var async = require('async');
 var mkdirp = require('mkdirp');
 
 //mine
-var config = require('../api/config');
+var config = require('../config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../api/models');
 var qc = require('../api/qc');
@@ -25,7 +25,7 @@ var incoming_q = null;
 //connect to AMQP, ensure exchange / queues exists, and subscribe to the incoming q
 db.init(function(err) {
     if(err) throw err; //will crash
-    conn = amqp.createConnection(config.amqp);
+    conn = amqp.createConnection(config.cleaner.amqp);
     conn.on('ready', function () {
         logger.info("connected to amqp - connecting to ex:"+config.cleaner.ex);
         conn.exchange(config.cleaner.ex, {confirm: true, autoDelete: false, durable: true, type: 'topic'}, function(_cleaned_ex) {

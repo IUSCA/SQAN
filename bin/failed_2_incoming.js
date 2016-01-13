@@ -10,11 +10,11 @@ var amqp = require('amqp');
 var winston = require('winston');
 
 //mine
-var config = require('../api/config');
+var config = require('../config');
 var logger = new winston.Logger(config.logger.winston);
 
 var ex = null;
-var conn = amqp.createConnection(config.amqp);
+var conn = amqp.createConnection(config.incoming.amqp);
 conn.on('ready', function () {
     logger.info("connected to amqp");
     conn.exchange(config.incoming.ex, {confirm: true, autoDelete: false, durable: true, type: 'topic'}, function(_ex) {

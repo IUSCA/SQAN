@@ -1,138 +1,222 @@
 <sca-menutab menu="appconf.menu" active="'_study'" user="user"></sca-menutab>
-<div class="container-fluid study">
-    <h2 style="display: inline-block">IIBISID: {{data.research.IIBISID}}</h2> &nbsp;
-    <h3 style="display: inline-block">
-        Modality: <b>{{data.research.Modality}}</b> 
-        StationName: <b>{{data.research.StationName}}</b>
-        <span ng-if="data.research.Modality == 'PT'">RadioTracer: <b>{{data.research.radio_tracer}}</b></span>
-    </h3>
+<div class="container-fluid study" ng-class="{'study-accepted': data.study.qc.state == 'accepted'}">
+    <div class="row-fluid">
+        <div class="col-md-9">
+            <h2 style="display: inline-block">IIBISID: {{data.research.IIBISID}}</h2> &nbsp;
+            <h3 style="display: inline-block">
+                Modality: <b>{{data.research.Modality}}</b> 
+                StationName: <b>{{data.research.StationName}}</b>
+                <span ng-if="data.research.Modality == 'PT'">RadioTracer: <b>{{data.research.radio_tracer}}</b></span>
+            </h3>
 
-    <div class="panel panel-default">
-        <ul class="list-group">
-            <li class="list-group-item" style="background-color: #eee;">
-                <div class="row">
-                    <div class="col-sm-2" style="margin-top: 5px;"><b>Study</b></div>
-                    <div class="col-sm-10">
-                        <studynote study="data.study"></studynote> 
-                    </div>
-                </div>
-            </li>
-            <li class="list-group-item">
-                <div class="row">
-                    <div class="col-sm-2"><span class="text-muted">Subject</span></div>
-                    <div class="col-sm-10">{{data.study.subject}}</div>
-                </div>
-            </li>
-            <li class="list-group-item">
-                <div class="row">
-                    <div class="col-sm-2"><span class="text-muted">Series Description</span></div>
-                    <div class="col-sm-10">{{data.study.series_desc}}</div>
-                </div>
-            </li>
-            <li class="list-group-item" ng-if="data.template">
-                <div class="row">
-                    <div class="col-sm-2"><span class="text-muted">QC Template</span></div>
-                    <div class="col-sm-10">
-                        <time class="pull-right"><span class="text-muted">Study QC Date:</span> {{data.study.qc.date | date:'medium'}}</time>
-                        <div class="studynote" ng-click="opentemplate(data.template._id)">
-                            {{data.template.date | date:'medium'}} <span class="text-muted">(#{{data.template.SeriesNumber}})</span>
+            <div class="panel panel-default">
+                <ul class="list-group">
+                    <li class="list-group-item" style="background-color: #eee;">
+                        <div class="row">
+                            <div class="col-sm-2" style="margin-top: 5px;"><b>Study</b></div>
+                            <div class="col-sm-10">
+                                <studynote study="data.study"></studynote> 
+                            </div>
+                            <!--
+                            <div class="col-sm-2" style="margin-top: 5px;"><b class="pull-right">QC Status</b></div>
+                            -->
                         </div>
-                    </div>
-                </div>
-            </li>
-            <li class="list-group-item" ng-if="data.study.qc.errors.length > 0 || data.study.qc.warnings.length > 0 || data.study.qc.notemps > 0">
-                <div class="row">
-                    <div class="col-sm-2"><span class="text-muted">QC Problems</span></div>
-                    <div class="col-sm-10">
-                        <div style="max-height: 300px; overflow: auto;">
-                            <qcerror ng-repeat="error in data.study.qc.errors" error="error"></qcerror>
-                            <qcwarning ng-repeat="warning in data.study.qc.warnings" warning="warning"></qcwarning>
-                            <div class="alert alert-info qcalert" role="alert" ng-if="data.study.qc.notemps > 0">
-                                Study contains {{data.study.qc.notemps}} images with no matching template
+                    </li>
+                    <li class="list-group-item">
+                        <div class="row">
+                            <div class="col-sm-2"><span class="text-muted">Subject</span></div>
+                            <div class="col-sm-10">{{data.study.subject}}</div>
+                        </div>
+                    </li>
+                    <li class="list-group-item">
+                        <div class="row">
+                            <div class="col-sm-2"><span class="text-muted">Series Description</span></div>
+                            <div class="col-sm-10">{{data.study.series_desc}}</div>
+                        </div>
+                    </li>
+                    <li class="list-group-item" ng-if="data.template">
+                        <div class="row">
+                            <div class="col-sm-2"><span class="text-muted">QC Template</span></div>
+                            <div class="col-sm-10">
+                                <!--<time class="pull-right"><span class="text-muted">Study QC Date:</span> {{data.study.qc.date | date:'medium'}}</time>-->
+                                <div class="studynote" ng-click="opentemplate(data.template._id)">
+                                    {{data.template.date | date:'medium'}} <span class="text-muted">(#{{data.template.SeriesNumber}})</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div><!--row-->
-            </li>
-            <li class="list-group-item">
-                <div class="row">
-                    <div class="col-sm-2">
-                        <span class="text-muted">Images</span> 
-                        <span class="label label-default">{{data.study.qc.image_count}}</span>
-                    </div>
-                    <div class="col-sm-10">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <ul class="images">
-                                    <li style="background-color: {{::image.color}};" 
-                                        ng-repeat="image in data.images" 
-                                        ng-class="{active: active_image == image}" 
-                                        ng-click="load_image(image)" title="{{image.anum}}-{{image.inum}}">
-                                    </li>
+                    </li>
+                    <li class="list-group-item" ng-if="data.study.qc && (
+                            data.study.qc.errors.length > 0 || data.study.qc.warnings.length > 0 || data.study.qc.notemps > 0
+                        )">
+                        <div class="row">
+                            <div class="col-sm-2"><span class="text-muted">QC Issues</span></div>
+                            <div class="col-sm-10">
+                                <!--
+                                <ul class="nav nav-pills">
+                                    <li class="active"><a href="#">Passed</a></li>
+                                    <li><a href="#">Failed</a></li>
                                 </ul>
-                            </div>
-                            <ul class="list-group">
-                                <li class="list-group-item" ng-if="!image_detail">
-                                    <span class="text-muted">(Click an image to see details)</span>
-                                </li>
-                                <!-- <p>AcquisitionNumber: {{image_detail.acquisition_id}}</p>-->
-                                <li class="list-group-item" ng-if="image_detail">
-                                    <div class="pull-right"><span class="text-muted">Image QC Date:</span> {{image_detail.qc.date | date:'medium'}}</div>
-                                    Aq#{{image_detail.headers.AcquisitionNumber}} - Inst#{{image_detail.InstanceNumber}}
-                                </li>
-                                <li class="list-group-item" ng-if="other_errors.length > 0 || other_warnings.length > 0 || image_detail.qc.notemp">
-                                    <div style="max-height: 300px; overflow: auto;">
-                                        <qcerror ng-repeat="error in other_errors" error="error"></qcerror>
-                                        <qcwarning ng-repeat="warning in other_warnings" warning="warning"></qcwarning>
-                                        <div class="alert alert-info qcalert" role="alert" ng-if="image_detail.qc.notemp"> Template Missing </div>
+                                -->
+
+                                <!-- qc errors / warnings -->
+                                <div style="max-height: 300px; overflow: auto;" class="qc-issues">
+                                    <qcerror ng-repeat="error in data.study.qc.errors" error="error"></qcerror>
+                                    <qcwarning ng-repeat="warning in data.study.qc.warnings" warning="warning"></qcwarning>
+                                    <div class="alert alert-info qcalert" role="alert" ng-if="data.study.qc.notemps > 0">
+                                        Study contains {{data.study.qc.notemps}} images with no matching template
                                     </div>
-                                </li>
-                                <table class="table table-condensed table-imageheader" ng-if="image_detail">
-                                    <tr ng-repeat="(k,v) in image_detail.headers" ng-if="image_errors[k] || image_warnings[k] || show_all_headers">
-                                        <th>{{k}}</th>
-                                        <td>
-                                            <div ng-if="image_errors[k]" class="image-error">
-                                                <strong>{{image_errors[k].msg}}</strong>
-                                                <div class="row"> 
-                                                    <div class="col-md-6">
-                                                        Image Value
-                                                        <pre>{{v|json}}</pre>
-                                                    </div>
-                                                    <div class="col-md-6" style="opacity: 0.7;">
-                                                        Template Value
-                                                        <pre>{{image_errors[k].tv|json}}</pre>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div ng-if="image_warnings[k]" class="image-warning">
-                                                <strong>{{image_warnings[k].msg}}</strong>
-                                                <div class="row"> 
-                                                    <div class="col-md-6">
-                                                        Image Value
-                                                        <pre>{{v|json}}</pre>
-                                                    </div>
-                                                    <div class="col-md-6" style="opacity: 0.7;">
-                                                        Template Value
-                                                        <pre>{{image_warnings[k].tv|json}}</pre>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div ng-if="!image_errors[k] && !image_warnings[k]">
-                                                <pre>{{v|json}}</pre>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </ul><!--list-group-->
-                            <div class="panel-footer" ng-if="image_detail && show_all_headers == false">
-                                <button type="button" class="btn btn-xs pull-right" ng-click="showallheaders()">Show All Headers</button>
-                                <br clear="both">
+                                </div>
                             </div>
-                        </div><!--panel-->
-                    </div><!--col-sm-10-->
-                </div><!--row-->
-            </li>
-        </ul>
-    </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item">
+                        <div class="row">
+                            <div class="col-sm-2">
+                                <span class="text-muted">Images</span> 
+                                <span class="label label-default">{{data.study.qc.image_count}}</span>
+                            </div>
+                            <div class="col-sm-10">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <ul class="images">
+                                            <li style="background-color: {{::image.color}};" 
+                                                ng-repeat="image in data.images" 
+                                                ng-class="{active: active_image == image}" 
+                                                ng-click="load_image(image)" title="{{image.anum}}-{{image.inum}}">
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <ul class="list-group">
+                                        <li class="list-group-item" ng-if="!image_detail">
+                                            <span class="text-muted">(Click an image to see details)</span>
+                                        </li>
+                                        <!-- <p>AcquisitionNumber: {{image_detail.acquisition_id}}</p>-->
+                                        <li class="list-group-item" ng-if="image_detail">
+                                            <div class="pull-right"><span class="text-muted">Image QC Date:</span> {{image_detail.qc.date | date:'medium'}}</div>
+                                            Aq#{{image_detail.headers.AcquisitionNumber}} - Inst#{{image_detail.InstanceNumber}}
+                                        </li>
+                                        <li class="list-group-item" ng-if="other_errors.length > 0 || other_warnings.length > 0 || image_detail.qc.notemp">
+                                            <div style="max-height: 300px; overflow: auto;">
+                                                <qcerror ng-repeat="error in other_errors" error="error"></qcerror>
+                                                <qcwarning ng-repeat="warning in other_warnings" warning="warning"></qcwarning>
+                                                <div class="alert alert-info qcalert" role="alert" ng-if="image_detail.qc.notemp"> Template Missing </div>
+                                            </div>
+                                        </li>
+                                        <table class="table table-condensed table-imageheader" ng-if="image_detail">
+                                            <tr ng-repeat="(k,v) in image_detail.headers" ng-if="image_errors[k] || image_warnings[k] || show_all_headers">
+                                                <th>{{k}}</th>
+                                                <td>
+                                                    <div ng-if="image_errors[k]" class="image-error">
+                                                        <strong>{{image_errors[k].msg}}</strong>
+                                                        <div class="row"> 
+                                                            <div class="col-md-6">
+                                                                Image Value
+                                                                <pre>{{v|json}}</pre>
+                                                            </div>
+                                                            <div class="col-md-6" style="opacity: 0.7;">
+                                                                Template Value
+                                                                <pre>{{image_errors[k].tv|json}}</pre>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div ng-if="image_warnings[k]" class="image-warning">
+                                                        <strong>{{image_warnings[k].msg}}</strong>
+                                                        <div class="row"> 
+                                                            <div class="col-md-6">
+                                                                Image Value
+                                                                <pre>{{v|json}}</pre>
+                                                            </div>
+                                                            <div class="col-md-6" style="opacity: 0.7;">
+                                                                Template Value
+                                                                <pre>{{image_warnings[k].tv|json}}</pre>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div ng-if="!image_errors[k] && !image_warnings[k]">
+                                                        <pre>{{v|json}}</pre>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </ul><!--list-group-->
+                                    <div class="panel-footer" ng-if="image_detail && show_all_headers == false">
+                                        <button type="button" class="btn btn-xs pull-right" ng-click="showallheaders()">Show All Headers</button>
+                                        <br clear="both">
+                                    </div>
+                                </div><!--panel-->
+                            </div><!--col-sm-10-->
+                        </div><!--row-->
+                    </li>
+                </ul><!--list-group-->
+            </div><!--panel-->
+        </div><!--col-md-9-->
+        <div class="col-md-3">
+            <h4 class="text-muted">QC State</h4>
+            <div class="btn-group">
+                <button type="button" class="btn btn-sm" ng-class="{'btn-success':data.study.qc.state == 'passed'}" 
+                    ng-model="data.study.qc.state" ng-click="changestate('passed')" btn-radio="'passed'">Passed</button>
+                <button type="button" class="btn btn-sm" ng-class="{'btn-danger':data.study.qc.state == 'failed'}" 
+                    ng-model="data.study.qc.state" ng-click="changestate('failed')" btn-radio="'failed'">Failed</button>
+                <button type="button" class="btn btn-sm" ng-class="{'btn-info':data.study.qc.state == 'accepted'}"
+                    ng-model="data.study.qc.state " ng-click="changestate('accepted')" btn-radio="'accepted'">Accepted</button>
+                <button type="button" class="btn btn-sm" ng-class="{'btn-warning':data.study.qc.state == 'rejected'}"
+                    ng-model="data.study.qc.state" ng-click="changestate('rejected')" btn-radio="'rejected'">Rejected</button>
+            </div>
+            <hr>
+            <h4 class="text-muted">Events</h4>
+            <div class="activity">
+                <div class="row">
+                    <div class="col-md-2"><i class="fa fa-video-camera"></i></div>
+                    <div class="col-md-10">
+                        <time class="pull-right text-muted">{{data.study.StudyTimestamp |date:'short'}}</time>
+                        Studied
+                    </div>
+                </div>
+            </div>
+            <div class="activity">
+                <div class="row">
+                    <div class="col-md-2"><i class="fa fa-server"></i></div>
+                    <div class="col-md-10">
+                        <time class="pull-right text-muted">{{data.study.create_date |date:'short'}}</time>
+                        Data Recieved by SCA
+                    </div>
+                </div>
+            </div>
+            <div class="activity" ng-if="data.study.qc">
+                <div class="row">
+                    <div class="col-md-2"><i class="fa fa-stethoscope"></i></div>
+                    <div class="col-md-10">
+                        <time class="pull-right text-muted">{{data.study.qc.date |date:'short'}}</time>
+                        Stage 1 QC performed
+                    </div>
+                </div>
+            </div>
+            <div class="activity" ng-repeat="event in data.study.events" ng-init="user = users[event.user_id]">
+                <div class="row">
+                    <div class="col-md-2"><img gravatar-src="user.email" gravatar-size="32"></img></div>
+                    <div class="col-md-10">
+                        <time class="pull-right text-muted">{{event.date|date:'short'}}</time>
+                        <b>{{user.fullname}}</b>
+                        <p ng-if="event.title">{{event.title}}</p>
+                        <p ng-if="event.detail">{{event.detail}}</p>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <h4 class="text-muted">Comments<!--<i class="fa fa-comment"></i>--></h4>
+            <div class="activity" ng-repeat="comment in data.study.comments" ng-init="user = users[comment.user_id]">
+                <div class="row">
+                    <div class="col-md-2"><img gravatar-src="user.email" gravatar-size="32"></img></div>
+                    <div class="col-md-10">
+                        <time class="pull-right text-muted">{{comment.date|date:'short'}}</time>
+                        <b>{{user.fullname}}</b>
+                        <p>{{comment.comment}}</p>
+                    </div>
+                </div>
+            </div>
+            <textarea class="form-control" placeholder="Add a comment" ng-model="newcomment"></textarea>
+            <button type="button" class="btn btn-xs" ng-click="addcomment()" ng-if="newcomment"><i class="fa fa-check"></i></button>
+        </div>
+    </div><!--row-->
 </div>
 

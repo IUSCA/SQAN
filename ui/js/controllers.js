@@ -250,8 +250,8 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
     }
 }]);
 
-app.controller('StudyController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', '$routeParams', 'scaMessage',
-function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $routeParams, scaMessage) {
+app.controller('StudyController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', '$routeParams', 'scaMessage', 'users',
+function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $routeParams, scaMessage, users) {
     $scope.appconf = appconf;
     scaMessage.show(toaster);
     //menu.then(function(_menu) { $scope.menu = _menu; });
@@ -261,16 +261,23 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
     if(jwt) {
         $scope.user = jwtHelper.decodeToken(jwt);
     }
-
+    
     $http.get(appconf.api+'/study/id/'+$routeParams.studyid)
     .then(function(res) {
         $scope.data = res.data;
         if($scope.data.images) {
             $scope.data.images.forEach(computeColor);
         }
-    }, function(err) {
-        toaster.error(err.data.message);
+        //console.log("comments");
+        //console.dir($scope.data.study.comments);
+    }, function(res) {
+        if(res.data && res.data.message) toaster.error(res.data.message);
+        else toaster.error(res.statusText);
     });
+    
+    //load userprofiles for comments..
+    //TODO loading all user isn't stupid.. just load the users who are authors of comments
+    users.then(function(_users) { $scope.users = _users; });
 
     function computeColor(image) {
         //TODO - what about non-qced? 
@@ -301,7 +308,6 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
         }
         image.color = "hsl("+h+","+s+","+l+")";
     }
-
 
     $scope.load_image = function(image) {
         if($scope.active_image == image) {
@@ -334,8 +340,9 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
             } else {
                 $scope.show_all_headers = false;
             }
-        }, function(err) {
-            toaster.error(err.data.message);
+        }, function(res) {
+            if(res.data && res.data.message) toaster.error(res.data.message);
+            else toaster.error(res.statusText);
         });
     }
     $scope.showallheaders = function() {
@@ -343,6 +350,28 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
     }
     $scope.opentemplate = function(id) {
         $location.path("/template/"+id);
+    }
+
+    $scope.addcomment = function() {
+        $http.post(appconf.api+'/study/comment/'+$routeParams.studyid, {comment: $scope.newcomment})
+        .then(function(res) {
+            $scope.data.study.comments.push(res.data);
+            $scope.newcomment = "";
+        }, function(res) {
+            if(res.data && res.data.message) toaster.error(res.data.message);
+            else toaster.error(res.statusText);
+        });
+    }
+    $scope.changestate = function(state) {
+        $scope.data.study.qc.state = state;
+        $http.post(appconf.api+'/study/qcstate/'+$routeParams.studyid, {state: state})
+        .then(function(res) {
+            $scope.data.study.events.push(res.data.event);
+            toaster.success(res.data.message);
+        }, function(res) {
+            if(res.data && res.data.message) toaster.error(res.data.message);
+            else toaster.error(res.statusText);
+        });
     }
 }]);
 
@@ -362,7 +391,8 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, $rou
     .then(function(res) {
         $scope.data = res.data;
     }, function(res) {
-        toaster.error(res.data.message);
+        if(res.data && res.data.message) toaster.error(res.data.message);
+        else toaster.error(res.statusText);
     });
 
     $scope.load_template = function(template) {
@@ -371,7 +401,8 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, $rou
         .then(function(res) {
             $scope.image_detail = res.data;
         }, function(res) {
-            toaster.error(res.data.message);
+            if(res.data && res.data.message) toaster.error(res.data.message);
+            else toaster.error(res.statusText);
         });
     }
 
@@ -398,8 +429,9 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, use
         res.data.forEach(function(research) {
             if(!~$scope.iibisids.indexOf(research.IIBISID)) $scope.iibisids.push(research.IIBISID);
         });
-    }, function(err) {
-        toaster.error(err);
+    }, function(res) {
+        if(res.data && res.data.message) toaster.error(res.data.message);
+        else toaster.error(res.statusText);
     })
     .then(function(res) {
         $http.get(appconf.api+'/acl/iibisid')
@@ -417,8 +449,9 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, use
                     $scope._acl[id].push($scope.users[sub]);
                 });
             });
-        }, function(err) {
-            toaster.error(err);
+        }, function(res) {
+            if(res.data && res.data.message) toaster.error(res.data.message);
+            else toaster.error(res.statusText);
         });
     });
 
@@ -448,11 +481,8 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, use
             //$location.url("/configs");
             toaster.success("Updated Successfully!");
         }, function(res) {
-            if(res.data) toaster.error(res.data.message);
-            else {
-                toaster.error("Failed to update config");
-                console.dir(res);
-            }
+            if(res.data && res.data.message) toaster.error(res.data.message);
+            else toaster.error(res.statusText);
         });
     }
 }]);

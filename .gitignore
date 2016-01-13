@@ -1,5 +1,5 @@
 node_modules
-api/config
+config
 nohup_*.out
 ui/bower_components
 bin/barn

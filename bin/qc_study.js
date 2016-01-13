@@ -11,7 +11,7 @@ var async = require('async');
 var _ = require('underscore'); 
 
 //mine
-var config = require('../api/config');
+var config = require('../config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../api/models');
 
@@ -142,11 +142,14 @@ function qc_study(study, next) {
                     qc.errors.push({type: "template_count_mismatch", msg: "Template image count doesn't match", c: images.length, tc: template_count});
                 }
                 console.dir(qc);
+                qc.state = (qc.errors.length > 0 ? "failed" : "passed");
                 study.qc = qc;
                 study.save(next);
             });
+
         } else {
             //none of the images has template id..
+            qc.status = "failed"; //TODO - or should I leave it null?
             study.qc = qc;
             study.save(next);
         }

@@ -9,7 +9,7 @@ var _ = require('underscore');
 var async = require('async');
 
 //mine
-var config = require('../config');
+var config = require('../../config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
 var profile = require('../profile');
@@ -46,7 +46,7 @@ router.get('/researches', jwt({secret: config.express.jwt.pub/*, credentialsRequ
 });
 
 router.get('/acl/:key', jwt({secret: config.express.jwt.pub/*, credentialsRequired: false*/}), function(req, res, next) {
-    if(!~req.user.scopes.common.indexOf('admin')) return next(new Error("admin only"));
+    if(!~req.user.scopes.dicom.indexOf('admin')) return next(new Error("admin only"));
     db.Acl.findOne({key: req.params.key}, function(err, acl) {
         if(err) return next(err);
         if(!acl) return res.json({});
@@ -55,7 +55,7 @@ router.get('/acl/:key', jwt({secret: config.express.jwt.pub/*, credentialsRequir
 });
 
 router.put('/acl/:key', jwt({secret: config.express.jwt.pub/*, credentialsRequired: false*/}), function(req, res, next) {
-    if(!~req.user.scopes.common.indexOf('admin')) return next(new Error("admin only"));
+    if(!~req.user.scopes.dicom.indexOf('admin')) return next(new Error("admin only"));
     db.Acl.findOneAndUpdate({key: req.params.key}, {value: req.body}, {upsert:true}, function(err, doc){
         if (err) return next(err);
         res.json({status: "ok", acl: doc});

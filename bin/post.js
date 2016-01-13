@@ -12,9 +12,9 @@ var split = require('split');
 var throttle = require('stream-throttle');
 
 //mine
-var config = require('../api/config');
+var config = require('../config');
 
-var conn = amqp.createConnection(config.amqp);
+var conn = amqp.createConnection(config.incoming.amqp);
 
 conn.on('ready', function () {
     conn.exchange(config.incoming.ex, {autoDelete: false, durable: true, type: 'topic'}, function(ex) {

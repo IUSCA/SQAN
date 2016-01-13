@@ -38,7 +38,7 @@ angular.module('app.config', [])
             label: "Administration",
             url: "/dicom/#/admin",
             show: function(scope) {
-                if(~scope.common.indexOf('admin')) return true;
+                if(~scope.dicom.indexOf('admin')) return true;
                 return false;
             }
         },
