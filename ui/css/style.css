@@ -246,6 +246,11 @@ h3 {
     overflow-y: auto;
   }
 }
+/*
+.studynote.study-accepted {
+    background-color: #43ac6a;
+}
+*/
 .template.study-accepted .qc-issues,
 .study.study-accepted .qc-issues {
   opacity: 0.3;
