@@ -2,6 +2,7 @@ node_modules
 config
 nohup_*.out
 ui/bower_components
+ui/config.js
 bin/barn
 debug
 **/*.log
