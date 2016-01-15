@@ -140,9 +140,10 @@ var studySchema = mongoose.Schema({
         template_id: mongoose.Schema.Types.ObjectId,
         clean: Number,
         image_count: Number,
-        state: String, //(null), passed, failed, accepted, rejected
     },
 
+    qc1_state: String, //(null), autopass, accept, reject
+    qc2_state: String, //(null), accept, condaccept, reject
     //pipeline status (see sundar's data qc & pipeline)
 
     events: [ mongoose.Schema({

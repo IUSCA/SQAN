@@ -179,6 +179,8 @@ router.post('/comment/:study_id', jwt({secret: config.express.jwt.pub}), functio
     });
 });
 
+//req.body.state (accept, reject, etc..)
+//req.body.level (1 or 2)
 router.post('/qcstate/:study_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     db.Study.findById(req.params.study_id).exec(function(err, study) {
         if(err) return next(err);
@@ -187,11 +189,13 @@ router.post('/qcstate/:study_id', jwt({secret: config.express.jwt.pub}), functio
             if(!can) return res.status(401).json({message: "you are not authorized to access this IIBISID:"+study.IIBISID});
             var event = {
                 user_id: req.user.sub,
-                title: "Updated status to "+req.body.state,
+                title: "Updated QC "+req.body.level+" state to "+req.body.state,
                 date: new Date(), //should be set by default, but UI needs this right away
+                detail: req.body.comment,
             };
             study.events.push(event);
-            study.qc.state = req.body.state; 
+            if(req.body.level == "1") study.qc1_state = req.body.state; 
+            if(req.body.level == "2") study.qc2_state = req.body.state; 
             study.save(function(err) {
                 if(err) return(err);
                 res.json({message: "State updated to "+req.body.state, event: event});

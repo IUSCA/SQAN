@@ -19,8 +19,8 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, sca
     }
 }]);
 
-app.controller('RecentController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', 'scaMessage', '$anchorScroll', '$document',
-function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaMessage, $anchorScroll, $document) {
+app.controller('RecentController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', 'scaMessage', '$anchorScroll', '$document', '$window',
+function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaMessage, $anchorScroll, $document, $window) {
     $scope.appconf = appconf;
     scaMessage.show(toaster);
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
@@ -241,6 +241,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
 
     $scope.openstudy = function(study_id) {
         $location.path("/study/"+study_id);
+        //$window.open("#/study/"+study_id); //works but it opens separate window for same url..
     }
     $scope.opentemplate = function(id) {
         $location.path("/template/"+id);
@@ -362,9 +363,12 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
             else toaster.error(res.statusText);
         });
     }
-    $scope.changestate = function(state) {
-        $scope.data.study.qc.state = state;
-        $http.post(appconf.api+'/study/qcstate/'+$routeParams.studyid, {state: state})
+    $scope.changestate = function(level, state) {
+        var comment = null;
+        if(state != "accept") comment = prompt("Please enter comment for this state change");
+
+        $scope.data.study.qc1state = state;
+        $http.post(appconf.api+'/study/qcstate/'+$routeParams.studyid, {level: level, state: state, comment: comment})
         .then(function(res) {
             $scope.data.study.events.push(res.data.event);
             toaster.success(res.data.message);

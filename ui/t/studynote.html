@@ -1,11 +1,13 @@
 
 <div class="studynote" style="position: relative;" ng-class-dis="{'study-accepted': study.qc.state == 'accepted'}">
-    <span ng-if="study.qc.state == 'accepted'">
+    <!--
+    <span ng-if="study.qc1_state == 'accepted'">
         <span class="label label-success">Accepted</span>
     </span>
-    <span ng-if="study.qc.state == 'rejected'">
+    <span ng-if="study.qc1_state == 'rejected'">
         <span class="label label-warning">Rejected</span>
     </span>
+    -->
     <span class="label label-info" ng-if="!study.qc">Not Yet QCed</span>
     <span class="label label-primary" ng-if="study.qc.notemps > 0">NoTemp: {{study.qc.notemps}}</span>
     <span class="label label-danger" ng-if="study.qc.errors.length > 0">Errors: {{study.qc.errors.length}}</span>
@@ -13,4 +15,10 @@
     <span class="label label-success" ng-if="study.qc.warnings.length == 0 && study.qc.errors.length == 0 && study.qc.notemps == 0">OK</span>
     <time>{{study.StudyTimestamp | date:'medium' }}</time> <span class="text-muted">(#{{study.SeriesNumber}})</span>
     <span class="text-muted" style="position: absolute; right: -7px; top: -10px; text-shadow: 0px 0px 2px white;" ng-if="study.comments.length > 0">&nbsp;<i ng-if="study.comments" class="fa fa-comment"></i></span>
+    <span ng-if="study.qc1_state">
+        QC1:{{study.qc1_state}}
+    </span>
+    <span ng-if="study.qc2_state">
+        QC2:{{study.qc2_state}}
+    </span>
 </div>
