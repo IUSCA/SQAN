@@ -60,6 +60,7 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
     //lookup iibisids that user has access to
     db.Acl.findOne({key: 'iibisid'}, function(err, acl) {
         if(err) return next(err);
+        if(!acl) return res.status(401).json({message: "you are not authorized to access any IIBISID:"});
         var iibisids = [];
         for(var iibisid in acl.value) {
             if(~acl.value[iibisid].users.indexOf(req.user.sub)) iibisids.push(iibisid);
