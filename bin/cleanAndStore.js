@@ -120,7 +120,8 @@ function handle_message(h, msg_h, info, ack) {
         function(next) {
             //TODO radio_tracer should always be set for CT.. right? Should I validate?
             var radio_tracer = undefined;
-            if(h.RadiopharmaceuticalInformationSequence) {
+            if(h.RadiopharmaceuticalInformationSequence && h.RadiopharmaceuticalInformationSequence.length > 0) {
+                //TODO - what should I do if there are more than 1? - for now just pick the first one
                 radio_tracer = h.RadiopharmaceuticalInformationSequence[0].Radiopharmaceutical;
             }
 
