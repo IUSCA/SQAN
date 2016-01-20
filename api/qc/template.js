@@ -166,10 +166,15 @@ var customs = {
 
         "RadiopharmaceuticalInformationSequence": function(k, v, tv, qc) {
             if(!check_set(k, v, tv, qc)) return;
-            delete tv[0].RadiopharmaceuticalStartTime;
-            delete v[0].RadiopharmaceuticalStartTime; 
-            delete tv[0].RadionuclideTotalDose;
-            delete v[0].RadionuclideTotalDose; 
+            //sometimes they are not set..
+            if(tv[0]) {
+                delete tv[0].RadiopharmaceuticalStartTime;
+                delete tv[0].RadionuclideTotalDose;
+            }
+            if(v[0]) {
+                delete v[0].RadiopharmaceuticalStartTime; 
+                delete v[0].RadionuclideTotalDose; 
+            }
             check_equal(k, v, tv, qc);
         },
         "ReferringPhysicianName": skip,
