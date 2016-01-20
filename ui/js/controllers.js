@@ -203,17 +203,16 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
         var affix = document.getElementById("affix");
         if(window.scrollY < top_offset) {
             //at the top - no need for affix
+            affix.style.top = 0; //keep it out of following if - incase user scroll bottom to top in a single click (could happen)
             if($scope.content_affix) $scope.$apply(function() {
                 $scope.content_affix = false;
-                affix.style.top = 0;
             });
         } else {
             if(window.scrollY > document.body.clientHeight - window.innerHeight - bottom_offset) {
                 //un affix and move to bottom if user scroll to the bottom
                 if($scope.content_affix) $scope.$apply(function() {
-                    //console.log("reached bottom: "+(document.body.clientHeight - window.innerHeight - bottom_offset - top_offset - window.scrollY));
                     $scope.content_affix = false;
-                    affix.style.top = parseInt(document.body.clientHeight - window.innerHeight - bottom_offset - top_offset)+"px";
+                    affix.style.top = parseInt(document.body.clientHeight - affix.scrollHeight - bottom_offset - top_offset)+"px";
                     affix.scrollTop = 0; //cheat so that I don't have to fix scroll pos when user scroll back to top
                 });
             } else {
