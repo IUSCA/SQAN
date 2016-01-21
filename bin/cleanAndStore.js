@@ -42,7 +42,7 @@ db.init(function(err) {
                         conn.queue(config.incoming.q, {autoDelete: false, durable: true}, function (_incoming_q) {
                             incoming_q = _incoming_q;
                             logger.info("finally, subscribing to incoming q");
-                            incoming_q.subscribe({ack: true, prefetchCount: 1}, handle_message);
+                            incoming_q.subscribe({ack: true, prefetchCount: 1}, incoming);
                         });
                     });
                 });
@@ -52,7 +52,7 @@ db.init(function(err) {
 });
 
 //here is the main business logic
-function handle_message(h, msg_h, info, ack) {
+function incoming(h, msg_h, info, ack) {
     var research = null;
     var series = null;
     var study = null;
@@ -86,6 +86,7 @@ function handle_message(h, msg_h, info, ack) {
             }
         },
 
+
         function(next) {
             //store a copy of raw input before cleaning
             var path = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
@@ -116,6 +117,15 @@ function handle_message(h, msg_h, info, ack) {
             });
         },
 
+        function(next) {
+            //ignore all image/template with SeriesNumber > 200
+            //console.dir(h.SeriesNumber);
+            if(h.SeriesNumber > 200) {
+                return next("SeriesNumber is >200:"+h.SeriesNumber);
+            } 
+            next();
+        },
+
         //make sure we know about this research
         function(next) {
             //TODO radio_tracer should always be set for CT.. right? Should I validate?
@@ -136,20 +146,6 @@ function handle_message(h, msg_h, info, ack) {
                 next();
             });
         },
-
-        /*
-        //make sure we know about this series
-        function(next) {
-            db.Series.findOneAndUpdate({
-                research_id: research._id,
-                series_desc: h.qc_series_desc,
-            }, {}, {upsert:true, 'new': true}, function(err, _series) {
-                if(err) return next(err);
-                series = _series;
-                next();
-            });
-        },
-        */
         
         //make sure we know about this template 
         function(next) {
@@ -179,18 +175,6 @@ function handle_message(h, msg_h, info, ack) {
                     if(err) return next(err);
                     next();
                 });
-                /*
-                var ih = new db.TemplateHeader({
-                    template_id: _template._id,
-                    AcquisitionNumber: h.AcquisitionNumber,
-                    InstanceNumber: h.InstanceNumber,
-                    headers: h,
-                });
-                ih.save(function(err) {
-                    if(err) return next(err);
-                    next();
-                });
-                */
             });
         },
         
@@ -254,41 +238,6 @@ function handle_message(h, msg_h, info, ack) {
                     next(err);
                 });
             });
-
-            /*
-            db.Image.findOne({
-                acquisition_id: aq._id,
-                InstanceNumber: h.InstanceNumber,
-            }, function(err, image) {
-                if(err) return next(err);
-                var data = {
-                    research_id: research._id,
-                    study_id: study._id,
-                    headers: h
-                }
-                if(image) {
-                    //if image already exists, update it!
-                    logger.warn("SOPInstanceUID: "+h.SOPInstanceUID+" already exists.. updating header");
-                    db.Image.update({SOPInstanceUID: h.SOPInstanceUID}, {$set: data, $unset: {qc: 1}}, function(err, res) {
-                        if(err) logger.error(err); //continue anyway..
-                        return next(); 
-                    });
-                } else {
-                    //new image!
-                    logger.info("new image! SOPInstanceUID: "+h.SOPInstanceUID);
-                    data.SOPInstanceUID = h.SOPInstanceUID;
-                    var image = new db.Image(data);
-                    image.save(function(err) {
-                        if(err) logger.error(err); //continue to publish anyway..
-                
-                        //send to elastic search
-                        cleaned_ex.publish('', h, {}, function(err) {
-                            next(err);
-                        });
-                    });
-                }
-            });
-            */
         },
     ], function(err) {
         //all done
@@ -296,10 +245,10 @@ function handle_message(h, msg_h, info, ack) {
             logger.error(err);
             h.qc_err = err;
             conn.publish(config.cleaner.failed_q, h); //publishing to default exchange can't be confirmed?
-            fs.writeFile(config.cleaner.failed_headers+"/"+h.SOPInstanceUID+".json", JSON.stringify(h,null,4), function(err) {
+            write_to_disk(config.cleaner.failed_headers, h, function(err) {
                 if(err) throw err; //TODO - will crash app. Maybe we should remove this if we want this to run continuously
                 ack.acknowledge(); 
-            }); 
+            });
         } else {
             //all good then.
             ack.acknowledge();
