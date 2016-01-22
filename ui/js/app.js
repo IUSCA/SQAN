@@ -164,6 +164,41 @@ app.directive('studynote', function() {
     return {
         scope: { study: '=', },
         templateUrl: 't/studynote.html',
+        link: function($scope, elem, attrs) {
+            update();
+            $scope.$watch('study', update, true);
+            function update() {
+                if($scope.study.qc) {
+                    if($scope.study.qc.notemps > 0) $scope.studystate = "notemp";
+                    else if($scope.study.qc.errors.length > 0) $scope.studystate = "error";
+                    else if($scope.study.qc.warnings.length > 0) $scope.studystate = "warning";
+                    else $scope.studystate = "ok";
+                }
+                if($scope.study.qc2_state)  {
+                    switch($scope.study.qc2_state) {
+                    case "accept": 
+                        //$scope.label = "QC2";
+                        $scope.qc2 = "success"; break;
+                    case "condaccept": 
+                        //$scope.label = "QC2";
+                        $scope.qc2 = "warning"; break;
+                    case "reject":
+                        //$scope.label = "QC2";
+                        $scope.qc2 = "danger"; break;
+                    }
+                }
+                if($scope.study.qc1_state) {
+                    switch($scope.study.qc1_state) {
+                    case "accept":
+                        $scope.qc1 = "warning"; break;
+                    case "autopass":
+                        $scope.qc1 = "success"; break;
+                    case "reject":
+                        $scope.qc1 = "danger"; break;
+                    }
+                }
+            }
+        }
     } 
 });
 

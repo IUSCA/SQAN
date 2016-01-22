@@ -309,6 +309,9 @@ h3 {
   padding-bottom: 10px;
   font-size: 90%;
 }
+.activity p {
+  margin-bottom: 0px;
+}
 
 /*-----------------------------------------------
 

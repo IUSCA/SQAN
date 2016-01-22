@@ -15,7 +15,7 @@
                         <div class="row">
                             <div class="col-sm-2" style="margin-top: 5px;"><b>Study</b></div>
                             <div class="col-sm-10">
-                                <studynote study="data.study"></studynote> 
+                                <studynote study="data.study" ng-if="data.study"></studynote> 
                             </div>
                             <!--
                             <div class="col-sm-2" style="margin-top: 5px;"><b class="pull-right">QC Status</b></div>
@@ -152,34 +152,32 @@
         </div><!--col-md-9-->
         <div class="col-md-3">
             <!-- TODO - prevent user from selecting button that's already selected -->
-            <h4 class="text-muted">QC1 State</h4>
-            <p class="help-block">Protocol Level QC</p>
-            <div class="btn-group2">
-                <button type="button" class="btn btn-sm" ng-if="data.study.qc1_state == 'autopass'" ng-class="{'btn-success':data.study.qc1_state == 'autopass'}" disabled
+            <div>
+                <h4 class="text-muted">QC1/Protocol State</h4>
+                <p class="help-block">Protocol Level QC</p>
+                <button type="button" class="btn btn-xs" ng-class="{'btn-success':data.study.qc1_state == 'autopass'}" disabled
+                    ng-if="data.study.qc1_state == 'autopass'"
                     ng-model="data.study.qc1_state" ng-click="changestate(1, 'autopass')" btn-radio="'autopass'">AutoPassed</button>
 
-                <button type="button" class="btn btn-sm" ng-class="{'btn-warning':data.study.qc1_state == 'accept'}" 
-                    ng-if="data.study.qc1_state != 'autopass'"
+                <button type="button" class="btn btn-xs" ng-class="{'btn-warning':data.study.qc1_state == 'accept'}" 
+                    ng-disabled="data.study.qc1_state == 'autopass'"
                     ng-model="data.study.qc1_state" ng-click="changestate(1, 'accept')" btn-radio="'accept'">Accepted</button>
 
-                <button type="button" class="btn btn-sm" ng-class="{'btn-danger':data.study.qc1_state == 'reject'}"
-                    ng-if="data.study.qc1_state != 'autopass'"
+                <button type="button" class="btn btn-xs" ng-class="{'btn-danger':data.study.qc1_state == 'reject'}"
+                    ng-disabled="data.study.qc1_state == 'autopass'"
                     ng-model="data.study.qc1_state" ng-click="changestate(1, 'reject')" btn-radio="'reject'">Rejected</button>
             </div>
-            <hr>
-            <div ng-if="data.study.qc1_state != 'reject' && data.study.qc1_state">
-                <h4 class="text-muted">QC2 State</h4>
+            <br>
+            <div ng-if="data.study.qc1_state && data.study.qc1_state != 'reject'">
+                <h4 class="text-muted">QC2</h4>
                 <p class="help-block">Image Level QC</p>
-                <div class="btn-group2">
-                    <button type="button" class="btn btn-sm" ng-class="{'btn-success':data.study.qc2_state == 'accept'}" 
-                        ng-model="data.study.qc2_state" ng-click="changestate(2, 'accept')" btn-radio="'accept'">Accepted</button>
-
-                    <button type="button" class="btn btn-sm" ng-class="{'btn-warning':data.study.qc2_state == 'condaccept'}" 
-                        ng-model="data.study.qc2_state" ng-click="changestate(2, 'condaccept')" btn-radio="'confaccept'">Conditional Accepted</button>
-
-                    <button type="button" class="btn btn-sm" ng-class="{'btn-danger':data.study.qc2_state == 'reject'}" 
-                        ng-model="data.study.qc2_state" ng-click="changestate(2, 'reject')" btn-radio="'reject'">Rejected</button>
-                </div>
+                <button type="button" class="btn btn-xs" ng-class="{'btn-success':data.study.qc2_state == 'accept'}" 
+                    ng-model="data.study.qc2_state" ng-click="changestate(2, 'accept')" btn-radio="'accept'">Accepted</button>
+                <button type="button" class="btn btn-xs" ng-class="{'btn-warning':data.study.qc2_state == 'condaccept'}" 
+                    ng-model="data.study.qc2_state" ng-click="changestate(2, 'condaccept')" btn-radio="'condaccept'"
+                    tooltip-dis="Conditionally accept this study despite the stage 2 QC issues">Cond. Accepted</button>
+                <button type="button" class="btn btn-xs" ng-class="{'btn-danger':data.study.qc2_state == 'reject'}" 
+                    ng-model="data.study.qc2_state" ng-click="changestate(2, 'reject')" btn-radio="'reject'">Rejected</button>
                 <hr>
             </div>
             <h4 class="text-muted">Events</h4>

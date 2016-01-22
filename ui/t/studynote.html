@@ -1,24 +1,40 @@
 
-<div class="studynote" style="position: relative;" ng-class-dis="{'study-accepted': study.qc.state == 'accepted'}">
+<div class="studynote" style="position: relative;">
+    <div style="display: inline;" ng-switch="studystate">
+        <span class="label label-info" ng-switch-when="na">Not Yet QCed</span>
+        <span class="label label-primary" ng-switch-when="notemp">NoTemp: {{study.qc.notemps}}</span>
+        <span class="label label-danger" ng-switch-when="error">Errors: {{study.qc.errors.length}}</span>
+        <span class="label label-warning" ng-switch-when="warning">Warnings: {{study.qc.warnings.length}}</span>
+        <span class="label label-success" ng-switch-when="ok">OK</span>
+    </div>
+
     <!--
-    <span ng-if="study.qc1_state == 'accepted'">
-        <span class="label label-success">Accepted</span>
-    </span>
-    <span ng-if="study.qc1_state == 'rejected'">
-        <span class="label label-warning">Rejected</span>
-    </span>
+    <div style="display: inline" ng-if="study.qc1_state && study.qc2_state === undefined">
+        <span class="label label-success">QC1:{{study.qc1_state}}</i></span>
+    </div>
+
+    <div style="display: inline" ng-if="study.qc2_state">
+        <span class="label label-success">QC2:{{study.qc2_state}}</i></span>
+    </div>
     -->
-    <span class="label label-info" ng-if="!study.qc">Not Yet QCed</span>
-    <span class="label label-primary" ng-if="study.qc.notemps > 0">NoTemp: {{study.qc.notemps}}</span>
-    <span class="label label-danger" ng-if="study.qc.errors.length > 0">Errors: {{study.qc.errors.length}}</span>
-    <span class="label label-warning" ng-if="study.qc.warnings.length > 0">Warnings: {{study.qc.warnings.length}}</span>
-    <span class="label label-success" ng-if="study.qc.warnings.length == 0 && study.qc.errors.length == 0 && study.qc.notemps == 0">OK</span>
+    <span class="label label-{{qc1}}" ng-if="qc1">QC1</span>
+    <span class="label label-{{qc2}}" ng-if="qc2">QC2</span>
+
+    <!--study time / series number-->
     <time>{{study.StudyTimestamp | date:'medium' }}</time> <span class="text-muted">(#{{study.SeriesNumber}})</span>
-    <span class="text-muted" style="position: absolute; right: -7px; top: -10px; text-shadow: 0px 0px 2px white;" ng-if="study.comments.length > 0">&nbsp;<i ng-if="study.comments" class="fa fa-comment"></i></span>
-    <span ng-if="study.qc1_state">
+
+    <!--comments-->
+    <span class="text-muted" style="position: absolute; right: -7px; top: -10px; text-shadow: 0px 0px 2px white;" ng-if="study.comments.length > 0">
+        &nbsp;
+        <i ng-if="study.comments" class="fa fa-comment"></i>
+    </span>
+
+    <!--
+    <span ng-if="study.qc1_state" class="badge">
         QC1:{{study.qc1_state}}
     </span>
-    <span ng-if="study.qc2_state">
+    <span ng-if="study.qc2_state" class="badge">
         QC2:{{study.qc2_state}}
     </span>
+    -->
 </div>

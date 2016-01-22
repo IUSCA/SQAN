@@ -197,10 +197,10 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
         //console.dir($scope.iibisids);
     });
 
-    $document.on('scroll', function() {
+    var affix = document.getElementById("affix");
+    if(affix) $document.on('scroll', function() {
         var top_offset = 100;
         var bottom_offset = 176;
-        var affix = document.getElementById("affix");
         if(window.scrollY < top_offset) {
             //at the top - no need for affix
             affix.style.top = 0; //keep it out of following if - incase user scroll bottom to top in a single click (could happen)
@@ -366,6 +366,8 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
     }
     $scope.changestate = function(level, state) {
         var comment = null;
+        //TODO - user can disable prompt via browser.. also, canceling doesn't prevent user from switching the ui-button state
+        //I should implement a bit more form like interface for state change
         if(state != "accept") comment = prompt("Please enter comment for this state change");
 
         $scope.data.study.qc1state = state;
