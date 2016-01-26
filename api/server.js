@@ -31,15 +31,17 @@ app.use('/', require('./controllers'));
 app.use(expressWinston.errorLogger(config.logger.winston));
 app.use(function(err, req, res, next) {
     logger.error(err);
-    logger.error(err.stack);
+    if(err.stack) {
+        logger.error(err.stack);
+        err.stack = "hidden"; //for ui
+    }
     res.status(err.status || 500);
-    res.json({message: err.message, /*stack: err.stack*/}); //let's hide callstack for now
+    res.json(err);
 });
 process.on('uncaughtException', function (err) {
     //TODO report this to somewhere!
     logger.error((new Date).toUTCString() + ' uncaughtException:', err.message)
     logger.error(err.stack)
-    //process.exit(1); //some people think we should do this.. but I am not so sure..
 })
 
 exports.app = app;
