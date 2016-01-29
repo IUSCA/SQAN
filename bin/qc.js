@@ -25,7 +25,7 @@ db.init(function(err) {
 function run(cb) {
     logger.info("querying un-qc-ed images");
     //find images that needs QC in a batch
-    db.Image.find({qc: {$exists: false}}).limit(2000).exec(function(err, images) {
+    db.Image.find({qc: {$exists: false}}).limit(config.qc.batch_size).exec(function(err, images) {
         if(err) return cb(err);
         async.each(images, qc, function(err) {
             if(err) return cb(err);
@@ -101,7 +101,7 @@ function find_template(image, cb) {
                     }
                 });
                 if(!longest) {
-                    logger.error("no good template found for study desc:"+study.series_desc);
+                    //logger.error("no good template found for study desc:"+study.series_desc);
                     cb();
                 } else {
                     //logger.debug("best template: "+longest.series_desc+" for "+study.series_desc);
