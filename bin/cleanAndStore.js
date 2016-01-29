@@ -120,8 +120,14 @@ function incoming(h, msg_h, info, ack) {
         function(next) {
             //ignore all image/template with SeriesNumber > 200
             //console.dir(h.SeriesNumber);
-            if(h.SeriesNumber > 200) {
-                return next("SeriesNumber is >200:"+h.SeriesNumber);
+            if(h.Modality == "MR") {
+                if(h.SeriesNumber > 200) {
+                    return next("SeriesNumber is >200:"+h.SeriesNumber);
+                }
+            } else {
+                if(h.SeriesNumber > 100) {
+                    return next("SeriesNumber is >100:"+h.SeriesNumber);
+                }
             } 
             next();
         },
