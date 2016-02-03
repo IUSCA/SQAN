@@ -86,7 +86,6 @@ function incoming(h, msg_h, info, ack) {
             }
         },
 
-
         function(next) {
             //store a copy of raw input before cleaning
             var path = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;

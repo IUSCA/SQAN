@@ -149,6 +149,7 @@ ol.subjects li.inview a {
 }
 .recent .template .template-body {
   border-top: 0px;
+  background-color: #f6f6f6;
 }
 .recent .template th {
   opacity: 0.4;
