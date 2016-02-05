@@ -60,7 +60,6 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
             }
 
             var modality_id = research_detail.Modality+"."+research_detail.StationName+"."+research_detail.radio_tracer;
-            //console.log(modality_id);
             var modality = research.modalities[modality_id];
             if(modality === undefined) {
                 modality = {
@@ -270,8 +269,7 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
         if($scope.data.images) {
             $scope.data.images.forEach(computeColor);
         }
-        //console.log("comments");
-        //console.dir($scope.data.study.comments);
+        console.dir(res.data);
     }, function(res) {
         if(res.data && res.data.message) toaster.error(res.data.message);
         else toaster.error(res.statusText);
@@ -281,8 +279,8 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
     //TODO loading all user isn't stupid.. just load the users who are authors of comments
     users.then(function(_users) { $scope.users = _users; });
 
+    //TODO this needs some overhawling
     function computeColor(image) {
-        //TODO - what about non-qced? 
         var h = 0; 
         var s = "0%"; //saturation (default to gray)
         var l = "50%"; //light

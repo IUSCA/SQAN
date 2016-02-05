@@ -248,8 +248,9 @@ function check_equal(k, v, tv, qc) {
                 qc.warnings.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "value is not exact match template value:"+diff});
             }
             */
-            } else if(diff != 0) {
-                qc.warnings.push({type: 'template_mismatch', k: k, v: v, tv: tv, perdiff: diff, msg: "value does not match the template value."});
+            //} else if(diff != 0) {
+            } else if(diff > 0.0001) {
+                qc.warnings.push({type: 'template_mismatch', k: k, v: v, tv: tv, perdiff: diff, msg: "value does not match within 0.0001% of the template value."});
             }
         }
     } else {
