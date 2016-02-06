@@ -94,7 +94,6 @@ function qc_study(study, next) {
                     warnings++;
                 }
 
-
                 if(image.qc.notemp) qc.notemps++;
 
                 //no problem
@@ -141,12 +140,10 @@ function qc_study(study, next) {
                 if(template_count != images.length) {
                     qc.errors.push({type: "template_count_mismatch", msg: "Template image count doesn't match", c: images.length, tc: template_count});
                 }
-                console.dir(qc);
                 study.qc1_state = (qc.errors.length > 0 ? "fail" : "autopass");
                 study.qc = qc;
                 study.save(next);
             });
-
         } else {
             //none of the images has template id..
             study.qc1_state = "fail"; //TODO - or should I leave it null?

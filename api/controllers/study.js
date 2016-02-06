@@ -104,10 +104,22 @@ router.get('/id/:study_id', jwt({secret: config.express.jwt.pub}), function(req,
                 if(err) return next(err);
                 ret.research = research;
 
-                if(study.qc) {
-                    db.Template.findById(study.qc.template_id).exec(function(err, template) {
-                        if(err) return next(err);
-                        ret.template = template;
+                //load all templates available for this research
+                db.Template.find({research_id: research._id}).exec(function(err, templates) {
+                    if(err) return next(err);
+                    ret.templates = templates;
+                    if(study.qc) {
+                        //find template used for QC
+                        /*
+                        templates.forEach(function(template) {
+                            if(template._id.toString() == study.qc.template_id.toString()) ret.template = template;    
+                        });
+                        */
+                        //ret.template_id = study.template_id; //template specified by user (could be undefined for auto-pick)
+                        //ret.qc_template_id = study.qc.template_id; //template actually used to run the QC
+                        //db.Template.findById(study.qc.template_id).exec(function(err, template) {
+                        //    if(err) return next(err);
+                        //    ret.template = template;
 
                         db.Image.find().lean()
                         .where('study_id').equals(study._id)
@@ -135,16 +147,18 @@ router.get('/id/:study_id', jwt({secret: config.express.jwt.pub}), function(req,
                             });
                             res.json(ret);
                         }); 
-                    });
-                } else {
-                    //not-QCed .. this is all I can get
-                    res.json(ret);
-                }
+                        //});
+                    } else {
+                        //not-QCed .. this is all I can get
+                        res.json(ret);
+                    }
+                });
             });
         });
     });
 });
 
+/*
 //invalidate qc on all images for this study
 router.put('/qc/invalidate/:study_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     //TODO - I am not sure how to do access control this yet..
@@ -157,6 +171,7 @@ router.put('/qc/invalidate/:study_id', jwt({secret: config.express.jwt.pub}), fu
         res.json({status: "ok", affected: affected});
     });
 });
+*/
 
 router.post('/comment/:study_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     db.Study.findById(req.params.study_id).exec(function(err, study) {
@@ -179,8 +194,6 @@ router.post('/comment/:study_id', jwt({secret: config.express.jwt.pub}), functio
     });
 });
 
-//req.body.state (accept, reject, etc..)
-//req.body.level (1 or 2)
 router.post('/qcstate/:study_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     db.Study.findById(req.params.study_id).exec(function(err, study) {
         if(err) return next(err);
@@ -199,6 +212,34 @@ router.post('/qcstate/:study_id', jwt({secret: config.express.jwt.pub}), functio
             study.save(function(err) {
                 if(err) return(err);
                 res.json({message: "State updated to "+req.body.state, event: event});
+            });
+        });
+    });
+});
+
+//change template and invalidate QC
+//TODO I haven't implemented unsetting of template yet..
+router.post('/template/:study_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    db.Study.findById(req.params.study_id).exec(function(err, study) {
+        if(err) return next(err);
+        //make sure user has access to this study
+        db.Acl.canAccessIIBISID(req.user, study.IIBISID, function(can) {
+            if(!can) return res.status(401).json({message: "you are not authorized to access this IIBISID:"+study.IIBISID});
+            //make sure template_id belongs to this study
+            db.Template.findById(req.body.template_id).exec(function(err, template) {
+                if(err) return next(err);
+                if(!template.research_id.equals(study.research_id)) return next("invalid template_id");
+                study.template_id = template._id;
+                study.qc = null;
+                study.save(function(err) {
+                    if(err) return(err);
+                    //invalidate image QC.
+                    db.Image.update({study_id: study._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
+                        if(err) return next(err);
+                        console.dir(affected);
+                        res.json({message: "Template updated. Re-running QC on "+affected.nModified+" images."});
+                    });
+                });
             });
         });
     });

@@ -168,6 +168,7 @@ app.directive('studynote', function() {
             update();
             $scope.$watch('study', update, true);
             function update() {
+                $scope.studystate = "na";
                 if($scope.study.qc) {
                     if($scope.study.qc.notemps > 0) $scope.studystate = "notemp";
                     else if($scope.study.qc.errors.length > 0) $scope.studystate = "error";

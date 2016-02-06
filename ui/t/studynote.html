@@ -1,7 +1,7 @@
 
 <div class="studynote" style="position: relative;">
     <div style="display: inline;" ng-switch="studystate">
-        <span class="label label-info" ng-switch-when="na">Not Yet QCed</span>
+        <span class="label label-info" ng-switch-when="na">QCing&nbsp;&nbsp;<i class="fa fa-spinner fa-spin"></i></span>
         <span class="label label-primary" ng-switch-when="notemp">NoTemp: {{study.qc.notemps}}</span>
         <span class="label label-danger" ng-switch-when="error">Errors: {{study.qc.errors.length}}</span>
         <span class="label label-warning" ng-switch-when="warning">Warnings: {{study.qc.warnings.length}}</span>

@@ -251,8 +251,8 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
     }
 }]);
 
-app.controller('StudyController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', '$routeParams', 'scaMessage', 'users',
-function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $routeParams, scaMessage, users) {
+app.controller('StudyController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', '$routeParams', 'scaMessage', 'users', '$timeout',
+function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $routeParams, scaMessage, users, $timeout) {
     $scope.appconf = appconf;
     scaMessage.show(toaster);
     //menu.then(function(_menu) { $scope.menu = _menu; });
@@ -263,48 +263,63 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
         $scope.user = jwtHelper.decodeToken(jwt);
     }
     
-    $http.get(appconf.api+'/study/id/'+$routeParams.studyid)
-    .then(function(res) {
-        $scope.data = res.data;
-        if($scope.data.images) {
-            $scope.data.images.forEach(computeColor);
-        }
-        console.dir(res.data);
-    }, function(res) {
-        if(res.data && res.data.message) toaster.error(res.data.message);
-        else toaster.error(res.statusText);
-    });
-    
     //load userprofiles for comments..
-    //TODO loading all user isn't stupid.. just load the users who are authors of comments
+    //TODO loading all user is stupid.. just load the users who are authors of comments
     users.then(function(_users) { $scope.users = _users; });
+    load_study();
+    
+    function load_study() {
+        $http.get(appconf.api+'/study/id/'+$routeParams.studyid)
+        .then(function(res) {
+            $scope.data = res.data;
+            if($scope.data.images) {
+                $scope.data.images.forEach(computeColor);
+            }
+            //find template object selected / used by QC
+            res.data.templates.forEach(function(template) {
+                //console.log(template._id);
+                if(template._id == res.data.study.template_id) res.data.template = template;
+                if(res.data.study.qc && template._id == res.data.study.qc.template_id) res.data.qc_template = template;
+            });
 
+            //reload if qc is not yet loaded
+            if(!res.data.study.qc) {
+                $timeout(load_study, 1000);
+            }
+        }, function(res) {
+            if(res.data && res.data.message) toaster.error(res.data.message);
+            else toaster.error(res.statusText);
+        });
+    }
+    
     //TODO this needs some overhawling
     function computeColor(image) {
         var h = 0; 
         var s = "0%"; //saturation (default to gray)
         var l = "50%"; //light
-        if(image.errors > 0) {
-            //error - red
-            h = 0; 
-            var _s = 50-image.errors;
-            if(_s < 0) _l = 0;
-            s = _s+"%";
-        } else if(image.warnings > 0) {
-            //warning - yello
-            h = 60; 
-            var _s = 50-image.warnings;
-            if(_s < 0) _l = 0;
-            s = _s+"%";
-        } else if(image.notemp) {
-            //no temp - dark blue
-            h = 195;
-            s = "100%";
-            l = "36%";
-        } else {
-            //ok - green
-            h = 120; 
-            s = "50%";
+        if(image.errors !== undefined) {
+            if(image.errors > 0) {
+                //error - red
+                h = 0; 
+                var _s = 50-image.errors;
+                if(_s < 0) _l = 0;
+                s = _s+"%";
+            } else if(image.warnings > 0) {
+                //warning - yello
+                h = 60; 
+                var _s = 50-image.warnings;
+                if(_s < 0) _l = 0;
+                s = _s+"%";
+            } else if(image.notemp) {
+                //no temp - dark blue
+                h = 195;
+                s = "100%";
+                l = "36%";
+            } else {
+                //ok - green
+                h = 120; 
+                s = "50%";
+            }
         }
         image.color = "hsl("+h+","+s+","+l+")";
     }
@@ -335,10 +350,11 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
             }
         
             //if there is no error to show, show all headers by default
-            if($scope.image_detail.qc.errors == 0 && $scope.image_detail.qc.warnings == 0) {
-                $scope.show_all_headers = true;
-            } else {
-                $scope.show_all_headers = false;
+            $scope.show_all_headers = true;
+            if($scope.image_detail.qc) {
+                if($scope.image_detail.qc.errors != 0 || $scope.image_detail.qc.warnings != 0) {
+                    $scope.show_all_headers = false;
+                }
             }
         }, function(res) {
             if(res.data && res.data.message) toaster.error(res.data.message);
@@ -372,6 +388,16 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
         $http.post(appconf.api+'/study/qcstate/'+$routeParams.studyid, {level: level, state: state, comment: comment})
         .then(function(res) {
             $scope.data.study.events.push(res.data.event);
+            toaster.success(res.data.message);
+        }, function(res) {
+            if(res.data && res.data.message) toaster.error(res.data.message);
+            else toaster.error(res.statusText);
+        });
+    }
+    $scope.select_template = function(item) {
+        $http.post(appconf.api+'/study/template/'+$routeParams.studyid, {template_id: item._id})
+        .then(function(res) {
+            load_study();
             toaster.success(res.data.message);
         }, function(res) {
             if(res.data && res.data.message) toaster.error(res.data.message);

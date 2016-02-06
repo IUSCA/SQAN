@@ -74,7 +74,7 @@ function find_template(image, cb) {
         if(study && study.template_id) {
             //TODO - not unit tested
             //load template specified for this study
-            db.Tempalte.find({id: study.template_id}, function(err, template) {
+            db.Template.findById(study.template_id, function(err, template) {
                 if(err) return cb(err);
                 find_templateheader(template, image, function(err, templateheader) {
                     cb(err, template, templateheader);
