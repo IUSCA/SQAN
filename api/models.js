@@ -132,6 +132,8 @@ var studySchema = mongoose.Schema({
     create_date: {type: Date, default: Date.now},
 
     //study level qc result 
+    qc: mongoose.Schema.Types.Mixed, //has to be Mixed so that mongoose will let me set to null
+    /*
     qc: { //mongoose.Schema.Types.Mixed,
         notemps: Number,
         warnings: [ mongoose.Schema.Types.Mixed ],
@@ -141,6 +143,7 @@ var studySchema = mongoose.Schema({
         clean: Number,
         image_count: Number,
     },
+    */
 
     qc1_state: String, //(null), autopass, accept, reject
     qc2_state: String, //(null), accept, condaccept, reject

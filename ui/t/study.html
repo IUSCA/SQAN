@@ -41,7 +41,7 @@
                                 {{data.qc_template.date | date:'medium'}} 
                                 <span class="text-muted">(#{{data.qc_template.SeriesNumber}})</span>
                             </div>
-                            <button class="btn btn-xs pull-right">Rerun QC</button>
+                            <button type="button" class="btn btn-xs pull-right" ng-click="reqc()">Rerun QC</button>
                         </div>
                     </div>
                 </li>

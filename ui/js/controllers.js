@@ -281,7 +281,7 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
                 if(template._id == res.data.study.template_id) res.data.template = template;
                 if(res.data.study.qc && template._id == res.data.study.qc.template_id) res.data.qc_template = template;
             });
-
+            //console.log(res.data);
             //reload if qc is not yet loaded
             if(!res.data.study.qc) {
                 $timeout(load_study, 1000);
@@ -326,7 +326,9 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
 
     $scope.load_image = function(image) {
         if($scope.active_image == image) {
-            return $scope.active_image = null;
+            $scope.image_detail = null;
+            $scope.active_image = null;
+            return;
         }
         $scope.active_image = image;
         $http.get(appconf.api+'/image/'+image._id)
@@ -395,6 +397,8 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
         });
     }
     $scope.select_template = function(item) {
+        $scope.image_detail = null;
+        $scope.active_image = null;
         $http.post(appconf.api+'/study/template/'+$routeParams.studyid, {template_id: item._id})
         .then(function(res) {
             load_study();
@@ -403,6 +407,19 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
             if(res.data && res.data.message) toaster.error(res.data.message);
             else toaster.error(res.statusText);
         });
+    }
+    $scope.reqc = function() {
+        $scope.image_detail = null;
+        $scope.active_image = null;
+        $http.post(appconf.api+'/study/reqc/'+$routeParams.studyid)
+        .then(function(res) {
+            load_study();
+            toaster.success(res.data.message);
+        }, function(res) {
+            if(res.data && res.data.message) toaster.error(res.data.message);
+            else toaster.error(res.statusText);
+        });
+        
     }
 }]);
 

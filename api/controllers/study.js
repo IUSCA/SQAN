@@ -108,7 +108,7 @@ router.get('/id/:study_id', jwt({secret: config.express.jwt.pub}), function(req,
                 db.Template.find({research_id: research._id}).exec(function(err, templates) {
                     if(err) return next(err);
                     ret.templates = templates;
-                    if(study.qc) {
+                    //if(study.qc) {
                         //find template used for QC
                         /*
                         templates.forEach(function(template) {
@@ -148,10 +148,12 @@ router.get('/id/:study_id', jwt({secret: config.express.jwt.pub}), function(req,
                             res.json(ret);
                         }); 
                         //});
+                    /*
                     } else {
                         //not-QCed .. this is all I can get
                         res.json(ret);
                     }
+                    */
                 });
             });
         });
@@ -225,13 +227,14 @@ router.post('/template/:study_id', jwt({secret: config.express.jwt.pub}), functi
         //make sure user has access to this study
         db.Acl.canAccessIIBISID(req.user, study.IIBISID, function(can) {
             if(!can) return res.status(401).json({message: "you are not authorized to access this IIBISID:"+study.IIBISID});
-            //make sure template_id belongs to this study
+            //make sure template_id belongs to this study (don't let user pick someone else's template)
             db.Template.findById(req.body.template_id).exec(function(err, template) {
                 if(err) return next(err);
                 if(!template.research_id.equals(study.research_id)) return next("invalid template_id");
                 study.template_id = template._id;
-                study.qc = null;
+                study.qc = undefined; //invalidate study qc
                 study.save(function(err) {
+                //db.Study.update({_id: study._id}, {$unset: {qc: 1}}, function(err) {
                     if(err) return(err);
                     //invalidate image QC.
                     db.Image.update({study_id: study._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
@@ -245,6 +248,25 @@ router.post('/template/:study_id', jwt({secret: config.express.jwt.pub}), functi
     });
 });
 
+router.post('/reqc/:study_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    db.Study.findById(req.params.study_id).exec(function(err, study) {
+        if(err) return next(err);
+        //make sure user has access to this study
+        db.Acl.canAccessIIBISID(req.user, study.IIBISID, function(can) {
+            if(!can) return res.status(401).json({message: "you are not authorized to access this IIBISID:"+study.IIBISID});
+            study.qc = undefined; //invalidate study qc
+            study.save(function(err) {
+                if(err) return(err);
+                //invalidate image QC.
+                db.Image.update({study_id: study._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
+                    if(err) return next(err);
+                    console.dir(affected);
+                    res.json({message: "Template updated. Re-running QC on "+affected.nModified+" images."});
+                });
+            });
+        });
+    });
+});
 
 module.exports = router;
 
