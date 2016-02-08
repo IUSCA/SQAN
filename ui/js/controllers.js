@@ -59,7 +59,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
                 $scope.iibisids[research_detail.IIBISID] = research;
             }
 
-            var modality_id = research_detail.Modality+"."+research_detail.StationName+"."+research_detail.radio_tracer;
+            var modality_id = compose_modalityid(research_detail);
             var modality = research.modalities[modality_id];
             if(modality === undefined) {
                 modality = {
@@ -137,7 +137,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
         res.data.templates.forEach(function(template) {
             var research_detail = iibisids[template.research_id];
             var research = $scope.iibisids[research_detail.IIBISID];
-            var modality_id = research_detail.Modality+"."+research_detail.StationName+"."+research_detail.radio_tracer;
+            var modality_id = compose_modalityid(research_detail);
             var modality = research.modalities[modality_id];
             var series = modality.template.serieses[template.series_desc];
             if(series === undefined) {
@@ -239,6 +239,10 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
         });
     });
 
+    function compose_modalityid(research_detail) {
+        return research_detail.Modality+"."+research_detail.StationName+"."+research_detail.radio_tracer;
+    }
+
     $scope.openstudy = function(study_id) {
         $location.path("/study/"+study_id);
         //$window.open("#/study/"+study_id); //works but it opens separate window for same url..
@@ -249,6 +253,19 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
     $scope.scrollto = function(id) {
         $anchorScroll(id);
     }
+    /* arvind reuqested to remove this for now (only add this on IIBISID view)
+    $scope.reqc = function(research_id) {
+        console.dir(research_id);
+        $http.post(appconf.api+'/study/reqc/byresearchid/'+research_id)
+        .then(function(res) {
+            //TODO reload page?
+            toaster.success(res.data.message);
+        }, function(res) {
+            if(res.data && res.data.message) toaster.error(res.data.message);
+            else toaster.error(res.statusText);
+        });
+    }
+    */
 }]);
 
 app.controller('StudyController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', '$routeParams', 'scaMessage', 'users', '$timeout',
@@ -419,7 +436,7 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
     $scope.reqc = function() {
         $scope.image_detail = null;
         $scope.active_image = null;
-        $http.post(appconf.api+'/study/reqc/'+$routeParams.studyid)
+        $http.post(appconf.api+'/study/reqc/bystudyid/'+$routeParams.studyid)
         .then(function(res) {
             load_study();
             toaster.success(res.data.message);
@@ -427,7 +444,6 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
             if(res.data && res.data.message) toaster.error(res.data.message);
             else toaster.error(res.statusText);
         });
-        
     }
 }]);
 
@@ -461,7 +477,6 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, $rou
             else toaster.error(res.statusText);
         });
     }
-
 }]);
 
 app.controller('AdminController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', 'serverconf', 'scaMessage', 'users',

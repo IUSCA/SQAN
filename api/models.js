@@ -35,7 +35,6 @@ var researchSchema = mongoose.Schema({
     ///////////////////////////////////////////////////////////////////////////
 
 });
-
 exports.Research = mongoose.model('Research', researchSchema);
 
 /*

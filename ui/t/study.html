@@ -14,7 +14,7 @@
                         <div class="col-sm-2" style="margin-top: 5px;"><b>Study</b></div>
                         <div class="col-sm-10">
                             <studynote study="data.study" ng-if="data.study"></studynote> 
-                            <button type="button" class="btn btn-xs pull-right" ng-click="reqc()">Rerun QC</button>
+                            <button type="button" class="btn btn-xs pull-right" ng-click="reqc()">Rerun QC1</button>
                         </div>
                         <!--
                         <div class="col-sm-2" style="margin-top: 5px;"><b class="pull-right">QC Status</b></div>
@@ -167,7 +167,7 @@
         <div class="col-md-3">
             <!-- TODO - prevent user from selecting button that's already selected -->
             <div>
-                <h4 class="text-muted">QC1/Protocol State</h4>
+                <h4 class="text-muted">QC1</h4>
                 <p class="help-block">Protocol Level QC</p>
                 <button type="button" class="btn btn-xs" ng-class="{'btn-success':data.study.qc1_state == 'autopass'}" disabled
                     ng-if="data.study.qc1_state == 'autopass'"

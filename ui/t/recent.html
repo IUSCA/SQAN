@@ -50,11 +50,16 @@
                         <small ng-if="modality._detail.Modality == 'PT'">
                             RadioTracer: <b>{{modality._detail.radio_tracer}}</b>
                         </small>
+                        <!--
+                        <button type="button" class="btn btn-xs pull-right" style="position: relative; top: -6px" ng-click="reqc(modality._detail._id)">Rerun QC</button>
+                        -->
                     </h3>
                     
                     <ul class="list-group">
                         <div ng-repeat="(subject_desc, subject) in modality.subjects" id="{{subject.uid}}" class="subject"> 
-                            <li class="list-group-item subject-body"><span class="text-muted">Subject</span> {{subject_desc}}</li>
+                            <li class="list-group-item subject-body">
+                                <span class="text-muted">Subject</span> {{subject_desc}}
+                            </li>
                             <li class="list-group-item list-group-item-subject">
                                 <table class="table table-condensed" style="margin-bottom: 0px;">
                                     <thead><tr><th width="30%">Series Description</th><th>Studies (Series Number)</th></tr></thead>

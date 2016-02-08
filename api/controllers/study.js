@@ -248,7 +248,7 @@ router.post('/template/:study_id', jwt({secret: config.express.jwt.pub}), functi
     });
 });
 
-router.post('/reqc/:study_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.post('/reqc/bystudyid/:study_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     db.Study.findById(req.params.study_id).exec(function(err, study) {
         if(err) return next(err);
         //make sure user has access to this study
@@ -256,7 +256,7 @@ router.post('/reqc/:study_id', jwt({secret: config.express.jwt.pub}), function(r
             if(!can) return res.status(401).json({message: "you are not authorized to access this IIBISID:"+study.IIBISID});
             study.qc = undefined; //invalidate study qc
             study.save(function(err) {
-                if(err) return(err);
+                if(err) return next(err);
                 //invalidate image QC.
                 db.Image.update({study_id: study._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
                     if(err) return next(err);
@@ -268,5 +268,25 @@ router.post('/reqc/:study_id', jwt({secret: config.express.jwt.pub}), function(r
     });
 });
 
+//rerun QC1 on the entire "research"
+router.post('/reqc/byresearchid/:research_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    db.Research.findById(req.params.research_id).exec(function(err, research) {
+        if(err) return next(err);
+        //make sure user has access to this research
+        db.Acl.canAccessIIBISID(req.user, research.IIBISID, function(can) {
+            if(!can) return res.status(401).json({message: "you are not authorized to access this IIBISID:"+research.IIBISID});
+            //invalidate study QC (although not exactly necessary..)
+            db.Study.update({research_id: research._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected) {
+                if(err) return next(err);
+                //invalidate image QC.
+                db.Image.update({research_id: research._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
+                    if(err) return next(err);
+                    console.dir(affected);
+                    res.json({message: "Template updated. Re-running QC on "+affected.nModified+" images."});
+                });
+            });
+        });
+    });
+});
 module.exports = router;
 
