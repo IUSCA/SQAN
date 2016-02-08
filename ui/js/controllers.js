@@ -267,8 +267,16 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
     //TODO loading all user is stupid.. just load the users who are authors of comments
     users.then(function(_users) { $scope.users = _users; });
     load_study();
+
+    /*
+    var tm = null;
+    $scope.$on('$routeChangeStart', function(event, next, current) {
+        if(tm) tm.cancel(); 
+    });
+    */
     
     function load_study() {
+        if(!$routeParams.studyid) return; //probably the route changed since last time
         $http.get(appconf.api+'/study/id/'+$routeParams.studyid)
         .then(function(res) {
             $scope.data = res.data;

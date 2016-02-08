@@ -14,6 +14,7 @@
                         <div class="col-sm-2" style="margin-top: 5px;"><b>Study</b></div>
                         <div class="col-sm-10">
                             <studynote study="data.study" ng-if="data.study"></studynote> 
+                            <button type="button" class="btn btn-xs pull-right" ng-click="reqc()">Rerun QC</button>
                         </div>
                         <!--
                         <div class="col-sm-2" style="margin-top: 5px;"><b class="pull-right">QC Status</b></div>
@@ -41,7 +42,6 @@
                                 {{data.qc_template.date | date:'medium'}} 
                                 <span class="text-muted">(#{{data.qc_template.SeriesNumber}})</span>
                             </div>
-                            <button type="button" class="btn btn-xs pull-right" ng-click="reqc()">Rerun QC</button>
                         </div>
                     </div>
                 </li>
