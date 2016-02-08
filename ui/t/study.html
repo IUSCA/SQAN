@@ -51,7 +51,7 @@
                         <div class="col-sm-10">
                             <!--<time class="pull-right"><span class="text-muted">Study QC Date:</span> {{data.study.qc.date | date:'medium'}}</time>-->
                             <ui-select class="template-selecter" ng-model="data.template" on-select="select_template($item, $model)">
-                                <ui-select-match placeholder="Specify template for QC or leave it blank to auto select the latest best matching template">
+                                <ui-select-match placeholder="Specify template for QC or leave it blank to auto select the best matching template">
                                     <div class_dis="studynote" ng-click_dis="opentemplate($select.selected._id)">
                                         <span class="label label-primary">{{$select.selected.series_desc}}</span>
                                         {{$select.selected.date | date:'medium'}} 
