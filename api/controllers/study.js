@@ -58,13 +58,17 @@ function load_related_info(studies, cb) {
 //query against all studies
 router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     //lookup iibisids that user has access to (TODO - refactor this to aclSchema statics?)
+    /*
     db.Acl.findOne({key: 'iibisid'}, function(err, acl) {
         if(err) return next(err);
         var iibisids = [];
         if(acl) for(var iibisid in acl.value) {
             if(~acl.value[iibisid].users.indexOf(req.user.sub)) iibisids.push(iibisid);
         } 
-
+    */
+    db.Acl.getAccessibleIIBISID(req.user, function(err, iibisids) {
+        if(err) return next(err);
+    
         //not query all recent study for given iibisids
         var query = db.Study.find().lean();
         //TODO add filter to only load *recent* studies (maybe client sends the range already?)

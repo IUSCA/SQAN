@@ -1,8 +1,9 @@
 <sca-menutab menu="appconf.menu" active="'recent'" user="user"></sca-menutab>
 <div class="container-fluid recent">
+    <p ng-if="!iibisids"><i class="fa fa-circle-o-notch fa-spin"></i> Loading ...</p>
+    <p ng-if="study_count == 0" class="text-muted">You don't have access to any IIBISIDs that has received data recently. Please contact your administrator for more info.</p>
     <div class="row">
         <div class="col-md-3" id="affix" ng-class="{affix: content_affix, affix_bottom: content_affix_bottom}">
-            <p ng-if="!iibisids"><i class="fa fa-circle-o-notch fa-spin"></i> Loading ...</p>
             <div ng-repeat="(iibisid, research) in iibisids">
                 <h4>IIBISID: {{iibisid}}</h4>
                 <div class="list-group">

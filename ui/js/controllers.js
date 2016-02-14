@@ -285,13 +285,6 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
     users.then(function(_users) { $scope.users = _users; });
     load_study();
 
-    /*
-    var tm = null;
-    $scope.$on('$routeChangeStart', function(event, next, current) {
-        if(tm) tm.cancel(); 
-    });
-    */
-    
     function load_study() {
         if(!$routeParams.studyid) return; //probably the route changed since last time
         $http.get(appconf.api+'/study/id/'+$routeParams.studyid)
@@ -479,8 +472,8 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, $rou
     }
 }]);
 
-app.controller('AdminController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', 'serverconf', 'scaMessage', 'users',
-function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, users) {
+app.controller('AdminController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', 'serverconf', 'scaMessage', 'groups',
+function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, groups) {
     $scope.appconf = appconf;
     scaMessage.show(toaster);
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
@@ -490,11 +483,6 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, use
 
     $http.get(appconf.api+'/researches/')
     .then(function(res) {
-        /*
-        res.data.forEach(function(research) {
-            research.users = [];
-        });
-        */
         //find unique iibisids
         $scope.iibisids = [];
         res.data.forEach(function(research) {
@@ -505,19 +493,30 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, use
         else toaster.error(res.statusText);
     })
     .then(function(res) {
+        groups.then(function(_groups) {
+            $scope.groups = _groups;
+            //conver to easy to lookup object
+            $scope.groups_o = [];
+            $scope.groups.forEach(function(group) {
+                $scope.groups_o[group.id] = group;
+            });
+        });
+    })
+    .then(function(res) {
         $http.get(appconf.api+'/acl/iibisid')
         .then(function(res) {
             $scope.acl = res.data;
+            //console.dir($scope.acl);
             $scope._acl = {};
             $scope.iibisids.forEach(function(id) {
                 if($scope.acl[id] == undefined) {
-                    $scope.acl[id] = {users: []};
+                    $scope.acl[id] = {groups: []};
                 } 
     
-                //convert user id to object
+                //convert group id to object
                 $scope._acl[id] = [];
-                $scope.acl[id].users.forEach(function(sub) {
-                    $scope._acl[id].push($scope.users[sub]);
+                if($scope.acl[id].groups) $scope.acl[id].groups.forEach(function(gid) {
+                    $scope._acl[id].push($scope.groups_o[gid]);
                 });
             });
         }, function(res) {
@@ -526,25 +525,28 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, use
         });
     });
 
-    //load all users used to populate the user list
-    users.then(function(_users) {
-        $scope.users = _users;
-        $scope.users_a = [];
-        for(var sub in $scope.users) {
-            $scope.users_a.push($scope.users[sub]);
+    /*
+    //load all groups used to populate the acl list
+    groups.then(function(_groups) {
+        $scope.groups = _groups;
+        $scope.groups_a = [];
+        for(var id in $scope.groups) {
+            $scope.groups_a.push($scope.groups[id]);
         }
     });
-    $scope.update_acl = function() {
+    */
 
+    $scope.update_acl = function() {
         //convert object to id
         for(var id in $scope._acl) {
-            var users = $scope._acl[id];
+            var groups = $scope._acl[id];
             var ids = [];
-            users.forEach(function(user) {
-                ids.push(user.sub);
+            groups.forEach(function(group) {
+                ids.push(group.id);
             });
-            $scope.acl[id].users = ids;
+            $scope.acl[id].groups = ids;
         };
+        //console.dir($scope.acl);
 
         $http.put(appconf.api+'/acl/iibisid', $scope.acl)
         .then(function(res) {

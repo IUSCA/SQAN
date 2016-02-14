@@ -224,13 +224,35 @@ var aclSchema = mongoose.Schema({
     //////////////////////////////////////////////////////////////////////////////////////////////
     value: mongoose.Schema.Types.Mixed, 
 });
+
 aclSchema.statics.canAccessIIBISID = function(user, iibisid, cb) {
     this.findOne({key: 'iibisid'}, function(err, acl) {
         var _acl = acl.value[iibisid];
         if(!_acl) return cb(false); //not set
-        return cb(~_acl.users.indexOf(user.sub));
+        //return cb(~_acl.users.indexOf(user.sub));
+        var inter = _acl.groups.filter(function(gid) {
+            return ~user.gids.indexOf(gid);
+        });
+        cb(inter.length > 0);
     });
-};
+}
+
+//get all iibisids that user has access to
+aclSchema.statics.getAccessibleIIBISID = function(user, cb) {
+    this.findOne({key: 'iibisid'}, function(err, acl) {
+        if(err) return cb(err);
+        var iibisids = [];
+        if(acl) for(var iibisid in acl.value) {
+            //if(~acl.value[iibisid].users.indexOf(req.user.sub)) iibisids.push(iibisid);
+            var inter = acl.value[iibisid].groups.filter(function(gid) {
+                return ~user.gids.indexOf(gid);
+            });
+            if(inter.length > 0) iibisids.push(iibisid);
+        } 
+        cb(null, iibisids);
+    });
+}
+
 exports.Acl = mongoose.model('Acl', aclSchema);
 
 

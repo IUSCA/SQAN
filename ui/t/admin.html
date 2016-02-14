@@ -4,17 +4,17 @@
     <div class="panel panel-default">
         <div class="panel-heading">Research Access</div>
         <div class="panel-body">
-            <p class="help-block">Define users who has access to specific IIBISIDs</p>
+            <p class="help-block">Define groups who has access to specific IIBISIDs</p>
             <div ng-repeat="iibisid in iibisids">
                 <h4>{{iibisid}}</h4>
                 <ui-select multiple ng-model="_acl[iibisid]">
-                    <ui-select-match placeholder="Select users who can access this search">
-                        <img gravatar-src="$item.email" gravatar-size="17"/>
-                        <b>{{$item.fullname}}</b> <span class="email">&lt;{{$item.email}}&gt;</span>
+                    <ui-select-match placeholder="Select groups who can access this search">
+                        <b>{{$item.name}}</b>
+                        <span ng-repeat="member in $item.Members">{{member.fullname}} | </span>
                     </ui-select-match>
-                    <ui-select-choices repeat="user in users_a | propsFilter: {fullname: $select.search, email: $select.search}">
-                      <img gravatar-src="user.email" gravatar-size="17"/>
-                      <b>{{user.fullname}}</b> <small>&lt;{{user.email}}&gt;</small>
+                    <ui-select-choices repeat="group in groups | propsFilter: {name: $select.search}">
+                        <b>{{group.name}}</b> <span class="text-muted">{{group.desc}}</span>
+                        <span ng-repeat="member in group.Members">{{member.fullname}} | </span>
                     </ui-select-choices>
                 </ui-select>
             </div>

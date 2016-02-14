@@ -29,7 +29,7 @@ angular.module('app.config', [])
             label: "Recent Study",
             url: "/dicom/#/recent",
             show: function(scope) {
-                if(~scope.dicom.indexOf('admin')) return true;
+                if(~scope.dicom.indexOf('user')) return true;
                 return false;
             }
         },
