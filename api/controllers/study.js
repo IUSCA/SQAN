@@ -66,9 +66,8 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
             if(~acl.value[iibisid].users.indexOf(req.user.sub)) iibisids.push(iibisid);
         } 
     */
-    db.Acl.getAccessibleIIBISID(req.user, function(err, iibisids) {
+    db.Acl.getCan(req.user, 'view', function(err, iibisids) {
         if(err) return next(err);
-    
         //not query all recent study for given iibisids
         var query = db.Study.find().lean();
         //TODO add filter to only load *recent* studies (maybe client sends the range already?)
@@ -99,31 +98,19 @@ router.get('/id/:study_id', jwt({secret: config.express.jwt.pub}), function(req,
         if(err) return next(err);
 
         //make sure user has access to this study
-        db.Acl.canAccessIIBISID(req.user, study.IIBISID, function(can) {
-            if(!can) return res.status(401).json({message: "you are not authorized to access this IIBISID:"+study.IIBISID});
-
-            var ret = {};
-            ret.study = study;
-            db.Research.findById(study.research_id).exec(function(err, research) {
-                if(err) return next(err);
-                ret.research = research;
-
-                //load all templates available for this research
-                db.Template.find({research_id: research._id}).exec(function(err, templates) {
+        db.Acl.can(req.user, 'view', study.IIBISID, function(can) {
+            if(!can) return res.status(401).json({message: "you are not authorized to view this IIBISID:"+study.IIBISID});
+            db.Acl.can(req.user, 'qc', study.IIBISID, function(canqc) {
+                var ret = {canqc: canqc};
+                ret.study = study;
+                db.Research.findById(study.research_id).exec(function(err, research) {
                     if(err) return next(err);
-                    ret.templates = templates;
-                    //if(study.qc) {
-                        //find template used for QC
-                        /*
-                        templates.forEach(function(template) {
-                            if(template._id.toString() == study.qc.template_id.toString()) ret.template = template;    
-                        });
-                        */
-                        //ret.template_id = study.template_id; //template specified by user (could be undefined for auto-pick)
-                        //ret.qc_template_id = study.qc.template_id; //template actually used to run the QC
-                        //db.Template.findById(study.qc.template_id).exec(function(err, template) {
-                        //    if(err) return next(err);
-                        //    ret.template = template;
+                    ret.research = research;
+
+                    //load all templates available for this research
+                    db.Template.find({research_id: research._id}).exec(function(err, templates) {
+                        if(err) return next(err);
+                        ret.templates = templates;
 
                         db.Image.find().lean()
                         .where('study_id').equals(study._id)
@@ -151,13 +138,7 @@ router.get('/id/:study_id', jwt({secret: config.express.jwt.pub}), function(req,
                             });
                             res.json(ret);
                         }); 
-                        //});
-                    /*
-                    } else {
-                        //not-QCed .. this is all I can get
-                        res.json(ret);
-                    }
-                    */
+                    });
                 });
             });
         });
@@ -183,8 +164,9 @@ router.post('/comment/:study_id', jwt({secret: config.express.jwt.pub}), functio
     db.Study.findById(req.params.study_id).exec(function(err, study) {
         if(err) return next(err);
         //make sure user has access to this study
-        db.Acl.canAccessIIBISID(req.user, study.IIBISID, function(can) {
-            if(!can) return res.status(401).json({message: "you are not authorized to access this IIBISID:"+study.IIBISID});
+        db.Acl.can(req.user, 'view', study.IIBISID, function(can) {
+        //db.Acl.canAccessIIBISID(req.user, study.IIBISID, function(can) {
+            if(!can) return res.status(401).json({message: "you are not authorized to view this IIBISID:"+study.IIBISID});
             if(!study.comments) study.comments = [];
             var comment = {
                 user_id: req.user.sub,
@@ -204,8 +186,9 @@ router.post('/qcstate/:study_id', jwt({secret: config.express.jwt.pub}), functio
     db.Study.findById(req.params.study_id).exec(function(err, study) {
         if(err) return next(err);
         //make sure user has access to this study
-        db.Acl.canAccessIIBISID(req.user, study.IIBISID, function(can) {
-            if(!can) return res.status(401).json({message: "you are not authorized to access this IIBISID:"+study.IIBISID});
+        db.Acl.can(req.user, 'qc', study.IIBISID, function(can) {
+        //db.Acl.canAccessIIBISID(req.user, study.IIBISID, function(can) {
+            if(!can) return res.status(401).json({message: "you are not authorized to QC this IIBISID:"+study.IIBISID});
             var event = {
                 user_id: req.user.sub,
                 title: "Updated QC "+req.body.level+" state to "+req.body.state,
@@ -229,8 +212,9 @@ router.post('/template/:study_id', jwt({secret: config.express.jwt.pub}), functi
     db.Study.findById(req.params.study_id).exec(function(err, study) {
         if(err) return next(err);
         //make sure user has access to this study
-        db.Acl.canAccessIIBISID(req.user, study.IIBISID, function(can) {
-            if(!can) return res.status(401).json({message: "you are not authorized to access this IIBISID:"+study.IIBISID});
+        db.Acl.can(req.user, 'qc', study.IIBISID, function(can) {
+        //db.Acl.canAccessIIBISID(req.user, study.IIBISID, function(can) {
+            if(!can) return res.status(401).json({message: "you are not authorized to QC this IIBISID:"+study.IIBISID});
             //make sure template_id belongs to this study (don't let user pick someone else's template)
             db.Template.findById(req.body.template_id).exec(function(err, template) {
                 if(err) return next(err);
@@ -256,8 +240,9 @@ router.post('/reqc/bystudyid/:study_id', jwt({secret: config.express.jwt.pub}), 
     db.Study.findById(req.params.study_id).exec(function(err, study) {
         if(err) return next(err);
         //make sure user has access to this study
-        db.Acl.canAccessIIBISID(req.user, study.IIBISID, function(can) {
-            if(!can) return res.status(401).json({message: "you are not authorized to access this IIBISID:"+study.IIBISID});
+        db.Acl.can(req.user, 'qc', study.IIBISID, function(can) {
+        //db.Acl.canAccessIIBISID(req.user, study.IIBISID, function(can) {
+            if(!can) return res.status(401).json({message: "you are not authorized to QC this IIBISID:"+study.IIBISID});
             study.qc = undefined; //invalidate study qc
             study.save(function(err) {
                 if(err) return next(err);
@@ -277,8 +262,9 @@ router.post('/reqc/byresearchid/:research_id', jwt({secret: config.express.jwt.p
     db.Research.findById(req.params.research_id).exec(function(err, research) {
         if(err) return next(err);
         //make sure user has access to this research
-        db.Acl.canAccessIIBISID(req.user, research.IIBISID, function(can) {
-            if(!can) return res.status(401).json({message: "you are not authorized to access this IIBISID:"+research.IIBISID});
+        db.Acl.can(req.user, 'qc', research.IIBISID, function(can) {
+        //db.Acl.canAccessIIBISID(req.user, research.IIBISID, function(can) {
+            if(!can) return res.status(401).json({message: "you are not authorized to QC this IIBISID:"+research.IIBISID});
             //invalidate study QC (although not exactly necessary..)
             db.Study.update({research_id: research._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected) {
                 if(err) return next(err);

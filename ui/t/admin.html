@@ -5,19 +5,40 @@
         <div class="panel-heading">Research Access</div>
         <div class="panel-body">
             <p class="help-block">Define groups who has access to specific IIBISIDs</p>
-            <div ng-repeat="iibisid in iibisids">
-                <h4>{{iibisid}}</h4>
-                <ui-select multiple ng-model="_acl[iibisid]">
-                    <ui-select-match placeholder="Select groups who can access this search">
-                        <b>{{$item.name}}</b>
-                        <span ng-repeat="member in $item.Members">{{member.fullname}} | </span>
-                    </ui-select-match>
-                    <ui-select-choices repeat="group in groups | propsFilter: {name: $select.search}">
-                        <b>{{group.name}}</b> <span class="text-muted">{{group.desc}}</span>
-                        <span ng-repeat="member in group.Members">{{member.fullname}} | </span>
-                    </ui-select-choices>
-                </ui-select>
-            </div>
+            <table class="table">
+            <thead>
+                <tr><th>IIBISID</th><th width="40%">Can View/Comment</th><th width="40%">Can QC</th></tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="iibisid in iibisids">
+                    <th>{{iibisid}}</th>
+                    <td>
+                        <ui-select multiple ng-model="_acl[iibisid].view.groups">
+                            <ui-select-match placeholder="Select groups who can access this search">
+                                <b>{{$item.name}}</b>
+                                <span ng-repeat="member in $item.Members">{{member.fullname}} | </span>
+                            </ui-select-match>
+                            <ui-select-choices repeat="group in groups | propsFilter: {name: $select.search}">
+                                <b>{{group.name}}</b> <span class="text-muted">{{group.desc}}</span>
+                                <span ng-repeat="member in group.Members">{{member.fullname}} | </span>
+                            </ui-select-choices>
+                        </ui-select>
+                    </td>
+                    <td>
+                        <ui-select multiple ng-model="_acl[iibisid].qc.groups">
+                            <ui-select-match placeholder="Select groups who can access this search">
+                                <b>{{$item.name}}</b>
+                                <span ng-repeat="member in $item.Members">{{member.fullname}} | </span>
+                            </ui-select-match>
+                            <ui-select-choices repeat="group in groups | propsFilter: {name: $select.search}">
+                                <b>{{group.name}}</b> <span class="text-muted">{{group.desc}}</span>
+                                <span ng-repeat="member in group.Members">{{member.fullname}} | </span>
+                            </ui-select-choices>
+                        </ui-select>
+                    </td>
+                </tr>
+            </tbody>
+            </table>
             <br>
         </div>
         <div class="panel-footer">

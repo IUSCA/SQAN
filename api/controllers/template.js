@@ -22,7 +22,8 @@ router.get('/head/:template_id', jwt({secret: config.express.jwt.pub}), function
             if(err) return next(err);
 
             //make sure user has access to this IIBISID
-            db.Acl.canAccessIIBISID(req.user, research.IIBISID, function(can) {
+            db.Acl.can(req.user, 'view', research.IIBISID, function(can) {
+            //db.Acl.canAccessIIBISID(req.user, research.IIBISID, function(can) {
                 if(!can) return res.status(401).json({message: "you are not authorized to access this IIBISID:"+research.IIBISID});
 
                 //finally, load the template headers
@@ -51,7 +52,8 @@ router.get('/inst/:inst_id', jwt({secret: config.express.jwt.pub}), function(req
         if(err) return next(err);
 
         //make sure user has access to this IIBISID
-        db.Acl.canAccessIIBISID(req.user, templateheaders.IIBISID, function(can) {
+        db.Acl.can(req.user, 'view', templateheaders.IIBISID, function(can) {
+        //db.Acl.canAccessIIBISID(req.user, templateheaders.IIBISID, function(can) {
             if(!can) return res.status(401).json({message: "you are not authorized to access this IIBISID:"+templateheaders.IIBISID});
             res.json(templateheaders);
         });

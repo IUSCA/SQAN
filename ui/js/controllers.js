@@ -509,15 +509,26 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, gro
             //console.dir($scope.acl);
             $scope._acl = {};
             $scope.iibisids.forEach(function(id) {
+                //deal with case where acl is not set at all..
                 if($scope.acl[id] == undefined) {
-                    $scope.acl[id] = {groups: []};
+                    $scope.acl[id] = {
+                        view: {groups: []},
+                        qc: {groups: []},
+                    }; 
                 } 
     
+                $scope._acl[id] = {
+                    view: {groups: []},
+                    qc: {groups: []},
+                };
+                
                 //convert group id to object
-                $scope._acl[id] = [];
-                if($scope.acl[id].groups) $scope.acl[id].groups.forEach(function(gid) {
-                    $scope._acl[id].push($scope.groups_o[gid]);
-                });
+                for(var action in $scope.acl[id]) {
+                    var acl = $scope.acl[id][action];
+                    if(acl.groups) acl.groups.forEach(function(gid) {
+                        $scope._acl[id][action].groups.push($scope.groups_o[gid]);
+                    });
+                }
             });
         }, function(res) {
             if(res.data && res.data.message) toaster.error(res.data.message);
@@ -525,33 +536,23 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, gro
         });
     });
 
-    /*
-    //load all groups used to populate the acl list
-    groups.then(function(_groups) {
-        $scope.groups = _groups;
-        $scope.groups_a = [];
-        for(var id in $scope.groups) {
-            $scope.groups_a.push($scope.groups[id]);
-        }
-    });
-    */
-
     $scope.update_acl = function() {
         //convert object to id
         for(var id in $scope._acl) {
-            var groups = $scope._acl[id];
-            var ids = [];
-            groups.forEach(function(group) {
-                ids.push(group.id);
-            });
-            $scope.acl[id].groups = ids;
+            $scope.acl[id] = {}; //clear other junks
+            for(var action in $scope._acl[id]) {
+                var acl = $scope._acl[id][action];
+                var ids = [];
+                acl.groups.forEach(function(group) {
+                    ids.push(group.id);
+                });
+                $scope.acl[id][action] = {groups: ids, users: []}; //TODO with users
+            }
         };
-        //console.dir($scope.acl);
 
         $http.put(appconf.api+'/acl/iibisid', $scope.acl)
         .then(function(res) {
             $scope.form.$setPristine();
-            //$location.url("/configs");
             toaster.success("Updated Successfully!");
         }, function(res) {
             if(res.data && res.data.message) toaster.error(res.data.message);

@@ -17,7 +17,8 @@ router.get('/:image_id', jwt({secret: config.express.jwt.pub}), function(req, re
 
     db.Image.findById(req.params.image_id, function(err, image) {
         //make sure user has access to this IIBISID
-        db.Acl.canAccessIIBISID(req.user, image.IIBISID, function(can) {
+        db.Acl.can(req.user, 'view', image.IIBISID, function(can) {
+        //db.Acl.canAccessIIBISID(req.user, image.IIBISID, function(can) {
             if(!can) return res.status(401).json({message: "you are not authorized to access this IIBISID:"+image.IIBISID});
             res.json(image);
         });

@@ -33,7 +33,7 @@ exports.cache = function(cb) {
     request({
         url: config.dicom.auth_api+"/profiles",
         json: true,
-        headers: { 'Authorization': 'Bearer '+config.dicom.profile_jwt }
+        headers: { 'Authorization': 'Bearer '+config.dicom.auth_jwt }
     }, function (err, res, body) {
         if(err) return cb(err);
         if (res.statusCode != 200) {

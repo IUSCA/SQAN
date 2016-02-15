@@ -225,30 +225,38 @@ var aclSchema = mongoose.Schema({
     value: mongoose.Schema.Types.Mixed, 
 });
 
-aclSchema.statics.canAccessIIBISID = function(user, iibisid, cb) {
+//return true if user can do action on iibisid
+aclSchema.statics.can = function(user, action, iibisid, cb) {
+    /*
     this.findOne({key: 'iibisid'}, function(err, acl) {
         var _acl = acl.value[iibisid];
-        if(!_acl) return cb(false); //not set
-        //return cb(~_acl.users.indexOf(user.sub));
+        if(!_acl || !_acl[action]) return cb(false);  //not set
         var inter = _acl.groups.filter(function(gid) {
             return ~user.gids.indexOf(gid);
         });
-        cb(inter.length > 0);
+        cb(~acl[action].users.indexOf(user.sub) || inter.length > 0);
+    });
+    */
+    this.getCan(user, action, function(err, iibisids) {
+        cb(~iibisids.indexOf(iibisid));
     });
 }
 
 //get all iibisids that user has access to
-aclSchema.statics.getAccessibleIIBISID = function(user, cb) {
+aclSchema.statics.getCan = function(user, action, cb) {
     this.findOne({key: 'iibisid'}, function(err, acl) {
         if(err) return cb(err);
         var iibisids = [];
         if(acl) for(var iibisid in acl.value) {
-            //if(~acl.value[iibisid].users.indexOf(req.user.sub)) iibisids.push(iibisid);
-            if(acl.value[iibisid].groups) {
-                var inter = acl.value[iibisid].groups.filter(function(gid) {
+            var _acl = acl.value[iibisid][action];
+            if(_acl) {
+                //if(acl.value[iibisid][action].groups) {
+                var inter = _acl.groups.filter(function(gid) {
                     return ~user.gids.indexOf(gid);
                 });
-                if(inter.length > 0) iibisids.push(iibisid);
+                if(~_acl.users.indexOf(user.sub) || inter.length > 0) {
+                    iibisids.push(iibisid);
+                }
             }
         } 
         cb(null, iibisids);
