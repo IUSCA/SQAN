@@ -31,7 +31,7 @@ var profiles = {};
 exports.cache = function(cb) {
     logger.debug("caching user public profiles");
     request({
-        url: config.dicom.profile_api+"/users",
+        url: config.dicom.auth_api+"/profiles",
         json: true,
         headers: { 'Authorization': 'Bearer '+config.dicom.profile_jwt }
     }, function (err, res, body) {
@@ -41,8 +41,8 @@ exports.cache = function(cb) {
         }
         //update cache (let's assume user never disappears)
         body.forEach(function(user) {
-            profiles[user.sub] = user.public;
-            profiles[user.sub].sub = user.sub; 
+            profiles[user.id] = user;
+            //profiles[user.id].sub = user.id; 
         });
         logger.debug("cached "+body.length+" profiles");
         //console.dir(profiles);
