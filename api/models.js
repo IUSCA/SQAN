@@ -244,10 +244,12 @@ aclSchema.statics.getAccessibleIIBISID = function(user, cb) {
         var iibisids = [];
         if(acl) for(var iibisid in acl.value) {
             //if(~acl.value[iibisid].users.indexOf(req.user.sub)) iibisids.push(iibisid);
-            var inter = acl.value[iibisid].groups.filter(function(gid) {
-                return ~user.gids.indexOf(gid);
-            });
-            if(inter.length > 0) iibisids.push(iibisid);
+            if(acl.value[iibisid].groups) {
+                var inter = acl.value[iibisid].groups.filter(function(gid) {
+                    return ~user.gids.indexOf(gid);
+                });
+                if(inter.length > 0) iibisids.push(iibisid);
+            }
         } 
         cb(null, iibisids);
     });
