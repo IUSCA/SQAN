@@ -1,0 +1,60 @@
+<sca-menutab menu="appconf.menu" active="'qc'" user="user"></sca-menutab>
+<div class="container-fluid research">
+    <div class="row">
+        <div class="col-sm-3">
+            <div class="list-group">
+                <a class="list-group-item" href="#/qc/1" ng-class="{active: page == 'qc1'}">Studies need QC1</a>
+                <a class="list-group-item" href="#/qc/2" ng-class="{active: page == 'qc2'}">Studies need QC2</a>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <p class="text-muted" ng-if="study_count == 0">No study needing QC!</p>
+            <div ng-repeat="(iibisid, _researches) in iibisids">
+                <h2>{{iibisid}}</h2>
+                <div ng-repeat="(research_id, serieses) in _researches" ng-init="research_detail = researches[research_id]">
+                    <h3>
+                        Modality: <b>{{research_detail.Modality}}</b> 
+                        StationName: <b>{{research_detail.StationName}}</b>
+                        <small ng-if="research_detail.Modality == 'PT'">
+                            RadioTracer: <b>{{research_detail.radio_tracer}}</b>
+                        </small>
+                    </h3>
+                    <ul class="list-group">
+                        <div ng-repeat="(series_desc, subjects) in serieses">
+                            <li class="list-group-item" style="background-color: #eee;">
+                                <span class="text-muted">Series Description:</span> {{series_desc}}
+                            </li>
+                            <li class="list-group-item list-group-item-subject">
+                                <table class="table table-condensed" style="margin-bottom: 0px;">
+                                <thead><tr><th width="30%">Subject</th><th>Studies (Series Number)</th></tr></thead>
+                                <tbody>
+                                    <tr ng-repeat="(subject, studies) in subjects">
+                                        <td>{{subject}}</td>
+                                        <td style="padding: 1px 5px;">
+                                            <div class="studies">
+                                                <!--
+                                                <div ng-if="series._excluded" class="text-muted excluded" ng-click="series._excluded = false">Excluded</div>
+                                                <div ng-if="!series._excluded" class="slide-down">
+                                                    <studynote ng-repeat="(study_id, study) in series.studies" ng-click="openstudy(study_id)" study="study">
+                                                </div>
+                                                --> 
+                                                <studynote ng-repeat="study in studies" ng-click="openstudy(study._id)" study="study">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                </table>
+                            </li>
+                        </div><!--ng-repeat in serieses-->
+                    </ul>
+                </div><!--ng-repeast in researches -->
+            </div><!--ng-repeast in iibisids-->
+            <!--
+            <pre>{{researches|json}}</pre>
+            <pre>{{iibisids|json}}</pre>
+            <pre>{{debug|json}}</pre>
+            -->
+        </div><!--col-md-8-->
+    </div><!--row-->
+</div><!--container-->
+

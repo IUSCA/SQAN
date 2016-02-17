@@ -14,19 +14,6 @@ var qc = require('../qc');
 
 function load_related_info(studies, cb) {
     //pull unique serieses and see if it's excluded or not
-    /*
-    var serieses = {};
-    studies.forEach(function(study) {
-        //check for series exclusion
-        if(serieses[study.Modality] == undefined) serieses[study.Modality] = {};
-        if(serieses[study.Modality][study.series_desc] == undefined) {
-            serieses[study.Modality][study.series_desc] = {
-                excluded: qc.series.isExcluded(study.Modality, study.series_desc) 
-            };
-        }
-    });
-    */
-
     //load all researches referenced by studies
     var rids = [];
     studies.forEach(function(study) {
@@ -47,9 +34,8 @@ function load_related_info(studies, cb) {
             if(err) return cb(err);
             cb(null, {
                 studies: studies,
-                iibisids: researches,
+                researches: researches,
                 templates: templates,
-                //serieses: serieses,
             });
         });
     });
@@ -58,20 +44,20 @@ function load_related_info(studies, cb) {
 //query against all studies
 router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     //lookup iibisids that user has access to (TODO - refactor this to aclSchema statics?)
-    /*
-    db.Acl.findOne({key: 'iibisid'}, function(err, acl) {
-        if(err) return next(err);
-        var iibisids = [];
-        if(acl) for(var iibisid in acl.value) {
-            if(~acl.value[iibisid].users.indexOf(req.user.sub)) iibisids.push(iibisid);
-        } 
-    */
     db.Acl.getCan(req.user, 'view', function(err, iibisids) {
         if(err) return next(err);
-        //not query all recent study for given iibisids
         var query = db.Study.find().lean();
-        //TODO add filter to only load *recent* studies (maybe client sends the range already?)
+
         query.where('IIBISID').in(iibisids);
+        if(req.query.where) {
+            var where = JSON.parse(req.query.where);
+            for(var field in where) {
+                //console.log(field);
+                //console.dir(where[field]);
+                query.where(field, where[field]); //TODO is it safe to pass this from UI?
+            }
+        }
+
         query.sort({StudyTimestamp: -1, SeriesNumber: 1});
         query.limit(req.query.limit || 50); 
 
@@ -88,6 +74,52 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
             load_related_info(studies, function(err, details){
                 if(err) return next(err);
                 res.json(details); 
+            });
+        });
+    });
+});
+
+//return all studies that belongs to a given research_id
+router.get('/byresearchid/:research_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    db.Research.findById(req.params.research_id).exec(function(err, research) {
+        if(err) return next(err);
+        //make sure user has access to this research/IIBISID
+        db.Acl.can(req.user, 'view', research.IIBISID, function(can) {
+            if(err) return next(err);
+            db.Study.find({research_id: research._id})
+            .sort('series_desc subject SeriesNumber') //mongoose does case-sensitive sorting - maybe I should try sorting it on ui..
+            .exec(function(err, _studies) {
+                if(err) return next(err);
+                var studies = JSON.parse(JSON.stringify(_studies)); //objectify
+                /* not used yet
+                studies.forEach(function(study) {
+                    study._excluded = qc.series.isExcluded(study.Modality, study.series_desc)
+                });
+                */
+                /*
+                load_related_info(studies, function(err, details){
+                    if(err) return next(err);
+                    res.json(details); 
+                });
+                */
+                db.Template.find({research_id: research._id})
+                .sort('series_desc SeriesNumber') //mongoose does case-sensitive sorting - maybe I should try sorting it on ui..
+                .exec(function(err, templates) {
+                    if(err) return next(err);
+                    /* not used yet
+                    var templates = JSON.parse(JSON.stringify(_studies)); //objectify
+                    studies.forEach(function(study) {
+                        study._excluded = qc.series.isExcluded(study.Modality, study.series_desc)
+                    });
+                    */
+                    res.json({studies:studies, templates: templates}); 
+                    /*
+                    load_related_info(studies, function(err, details){
+                        if(err) return next(err);
+                        res.json(details); 
+                    });
+                    */
+                });
             });
         });
     });

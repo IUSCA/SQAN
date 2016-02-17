@@ -1,7 +1,8 @@
-<sca-menutab menu="appconf.menu" active="'_study'" user="user"></sca-menutab>
+<sca-menutab menu="appconf.menu" active="'research'" user="user"></sca-menutab>
 <div class="container-fluid study" ng-class="{'study-accepted': data.study.qc1_state == 'accepted'}">
     <div class="row-fluid">
         <div class="col-md-9">
+            <p class="alert alert-warning" ng-if="!data.canqc">You don't have QC access for this IIBISID.</p>
             <h2 style="display: inline-block">IIBISID: {{data.research.IIBISID}}</h2> &nbsp;
             <h3 style="display: inline-block">
                 Modality: <b>{{data.research.Modality}}</b> 
@@ -50,7 +51,10 @@
                         <div class="col-sm-2"><span class="text-muted">Template Override</span></div>
                         <div class="col-sm-10">
                             <!--<time class="pull-right"><span class="text-muted">Study QC Date:</span> {{data.study.qc.date | date:'medium'}}</time>-->
-                            <ui-select class="template-selecter" ng-model="data.template" on-select="select_template($item, $model)">
+                            <ui-select class="template-selecter" 
+                                ng-model="data.template" 
+                                on-select="select_template($item, $model)"
+                                ng-disabled="!data.canqc">
                                 <ui-select-match placeholder="Specify template for QC or leave it blank to auto select the best matching template">
                                     <div class_dis="studynote" ng-click_dis="opentemplate($select.selected._id)">
                                         <span class="label label-primary">{{$select.selected.series_desc}}</span>

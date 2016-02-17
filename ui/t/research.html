@@ -1,0 +1,62 @@
+<sca-menutab menu="appconf.menu" active="'research'" user="user"></sca-menutab>
+<div class="container-fluid research">
+    <div class="row">
+        <div class="col-md-4">
+            <div ng-repeat="(iibisid, recs) in researches">
+                <h4>{{iibisid}}</h4>
+                <div class="list-group">
+                    <a class="list-group-item" ng-repeat="rec in recs" href="#/research/{{rec._id}}" ng-class="{active: rec._id == research_id}">
+                        <span>Modality: <b>{{rec.Modality}}</b></span>
+                        <span>StationName: <b>{{rec.StationName}}</b></span>
+                        <span ng-if="rec.radio_tracer">RadioTracer: <b>{{rec.radio_tracer}}</b></span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <!--<p class="text-muted" ng-if="!serieses">No series</p>-->
+            <p class="help-block">This page shows all studies ever received (TODO - allow user to filter by date range?)</p>
+            <p class="text-muted" ng-if="study_count == 0">No study on this IIBISID</p>
+            <ul class="list-group">
+                <div ng-repeat="(series_desc, series) in serieses">
+                    <li class="list-group-item" style="background-color: #eee;">
+                        <span class="text-muted">Series Description:</span> {{series_desc}}
+                    </li>
+                    <li class="list-group-item list-group-item-subject">
+                        <table class="table table-condensed" style="margin-bottom: 0px;">
+                        <thead><tr><th width="30%">Subject</th><th>Studies (Series Number)</th></tr></thead>
+                        <tbody>
+                            <tr ng-repeat="(subject, studies) in series.subjects">
+                                <td>{{subject}}</td>
+                                <td style="padding: 1px 5px;">
+                                    <div class="studies">
+                                        <!--
+                                        <div ng-if="series._excluded" class="text-muted excluded" ng-click="series._excluded = false">Excluded</div>
+                                        <div ng-if="!series._excluded" class="slide-down">
+                                            <studynote ng-repeat="(study_id, study) in series.studies" ng-click="openstudy(study_id)" study="study">
+                                        </div>
+                                        --> 
+                                        <studynote ng-repeat="(study_id, study) in studies" ng-click="openstudy(study_id)" study="study">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Templates</td>
+                                <td style="padding: 1px 5px;">
+                                    <ul class="templates">
+                                        <li ng-repeat="template in series.templates" ng-click="opentemplate(template._id)">
+                                            {{template.date | date:'medium'}} <span class="text-muted">(#{{template.SeriesNumber}})</span>
+                                        </li> 
+                                    </ul>
+                                    <p class="text-muted" ng-if="series.templates.length == 0">No templates</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                        </table>
+                    </li>
+                </div><!--ng-repeat in serieses-->
+            </ul>
+        </div><!--col-md-8-->
+    </div><!--row-->
+</div><!--container-->
+

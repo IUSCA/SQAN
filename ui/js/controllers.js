@@ -1,14 +1,24 @@
 'use strict';
 
-app.controller('HeaderController', ['$scope', 'appconf', '$route', 'toaster', '$http', 'jwtHelper', 'serverconf', 'menu',
-function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, menu) {
+app.controller('HeaderController', ['$scope', 'appconf', '$route', 'toaster', '$http', 'jwtHelper', 'serverconf', 'menu', '$location', '$anchorScroll',
+function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, menu, $location, $anchorScroll) {
     $scope.title = appconf.title;
     serverconf.then(function(_c) { $scope.serverconf = _c; });
     $scope.menu = menu;
+
+    $scope.openstudy = function(study_id) {
+        $location.path("/study/"+study_id);
+    }
+    $scope.opentemplate = function(id) {
+        $location.path("/template/"+id);
+    }
+    $scope.scrollto = function(id) {
+        $anchorScroll(id);
+    }
 }]);
 
-app.controller('AboutController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', 'scaMessage',
-function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, scaMessage) {
+app.controller('AboutController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', 'serverconf', 'scaMessage',
+function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage) {
     $scope.appconf = appconf;
     scaMessage.show(toaster);
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
@@ -19,8 +29,8 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, sca
     }
 }]);
 
-app.controller('RecentController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', 'scaMessage', '$anchorScroll', '$document', '$window',
-function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaMessage, $anchorScroll, $document, $window) {
+app.controller('RecentController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', 'serverconf', 'scaMessage', '$anchorScroll', '$document', '$window', '$location',
+function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $anchorScroll, $document, $window, $location) {
     $scope.appconf = appconf;
     scaMessage.show(toaster);
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
@@ -30,40 +40,39 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
 
     $http.get(appconf.api+'/study/query', {params: {
         skip: 0, 
-        limit: 600
+        limit: appconf.recent_study_limit || 200,
     }})
     .then(function(res) {
         //TODO - maybe move all these logics to api?
-        var iibisids = {};
-        res.data.iibisids.forEach(function(research) {
-            iibisids[research._id] = research;
+        var researches = {};
+        res.data.researches.forEach(function(research) {
+            researches[research._id] = research;
         });
        
         //serises catalog (organized under Modality)
         //var serieses = res.data.serieses;
-
         //organize study under iibisid / modality / subject / series / study(#series_number)
-        $scope.iibisids = {};
+        $scope.researches = {};
 
         $scope.study_count = 0;
         res.data.studies.forEach(function(study) {
             $scope.study_count++;
             
-            var research_detail = iibisids[study.research_id];
-            var research = $scope.iibisids[research_detail.IIBISID];
+            var research_detail = researches[study.research_id];
+            var research = $scope.researches[research_detail.IIBISID];
             if(research === undefined) {
                 research = {
-                    //_detail: iibisids[study.research_id], (stored under modality)
+                    //_detail: researches[study.research_id], (stored under modality)
                     modalities: {},
                 };
-                $scope.iibisids[research_detail.IIBISID] = research;
+                $scope.researches[research_detail.IIBISID] = research;
             }
 
             var modality_id = compose_modalityid(research_detail);
             var modality = research.modalities[modality_id];
             if(modality === undefined) {
                 modality = {
-                    _detail: iibisids[study.research_id],
+                    _detail: researches[study.research_id],
                     subjects: {}, 
                     template: { serieses: {} }, 
                 };
@@ -91,9 +100,9 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
         });
 
         //count number of status for each subject
-        //console.dir($scope.iibisids);
-        for(var iibisid in $scope.iibisids) {
-            var research = $scope.iibisids[iibisid];
+        //console.dir($scope.researches);
+        for(var research_id in $scope.researches) {
+            var research = $scope.researches[research_id];
             for(var modality_id in research.modalities) {
                 var modality = research.modalities[modality_id];
                 for(var subject_id in modality.subjects) {
@@ -135,8 +144,8 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
         
         //organize templates as well.
         res.data.templates.forEach(function(template) {
-            var research_detail = iibisids[template.research_id];
-            var research = $scope.iibisids[research_detail.IIBISID];
+            var research_detail = researches[template.research_id];
+            var research = $scope.researches[research_detail.IIBISID];
             var modality_id = compose_modalityid(research_detail);
             var modality = research.modalities[modality_id];
             var series = modality.template.serieses[template.series_desc];
@@ -152,20 +161,20 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
         });
         
         //create uid for subject 
-        for(var iibisid in $scope.iibisids) {
-            var research = $scope.iibisids[iibisid];
+        for(var research_id in $scope.researches) {
+            var research = $scope.researches[research_id];
             for(var modality_id in research.modalities) {
                 var modality = research.modalities[modality_id];
                 for(var subject_id in modality.subjects) {
                     var subject = modality.subjects[subject_id];
-                    subject.uid = iibisid+modality_id+subject_id;
+                    subject.uid = research_id+modality_id+subject_id;
                 }
             }
         }
 
         //find missing series 
-        for(var iibisid in $scope.iibisids) {
-            var research = $scope.iibisids[iibisid];
+        for(var research_id in $scope.researches) {
+            var research = $scope.researches[research_id];
             for(var modality_id in research.modalities) {
                 var modality = research.modalities[modality_id];
                 //for each subject
@@ -190,10 +199,9 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
                 }
             }
         }
-
-        //debug
-        //console.log("$scope.iibisids dump");
-        //console.dir($scope.iibisids);
+    }, function(res) {
+        if(res.data && res.data.message) toaster.error(res.data.message);
+        else toaster.error(res.statusText);
     });
 
     var affix = document.getElementById("affix");
@@ -243,9 +251,9 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
         return research_detail.Modality+"."+research_detail.StationName+"."+research_detail.radio_tracer;
     }
 
-    $scope.openstudy = function(study_id) {
+    /* refactored to HeaderController
+    $scope.openstudy = function(study_id) { 
         $location.path("/study/"+study_id);
-        //$window.open("#/study/"+study_id); //works but it opens separate window for same url..
     }
     $scope.opentemplate = function(id) {
         $location.path("/template/"+id);
@@ -253,6 +261,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
     $scope.scrollto = function(id) {
         $anchorScroll(id);
     }
+    */
     /* arvind reuqested to remove this for now (only add this on IIBISID view)
     $scope.reqc = function(research_id) {
         console.dir(research_id);
@@ -268,17 +277,137 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
     */
 }]);
 
+app.controller('ResearchController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', 'scaMessage', '$anchorScroll', '$document', '$window', '$routeParams',
+function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaMessage, $anchorScroll, $document, $window, $routeParams) {
+    $scope.appconf = appconf;
+    scaMessage.show(toaster);
+    serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
+    var jwt = localStorage.getItem(appconf.jwt_id);
+    if(jwt) $scope.user = jwtHelper.decodeToken(jwt);
+
+    $http.get(appconf.api+'/researches')
+    .then(function(res) {
+        //organize records into IIBISID / (Modality+StationName+Radio Tracer)
+        $scope.researches = {};
+        res.data.forEach(function(rec) {
+            if(!$scope.researches[rec.IIBISID]) $scope.researches[rec.IIBISID] = [];
+            $scope.researches[rec.IIBISID].push(rec);
+        });
+
+        if($routeParams.researchid) {
+            load_series($routeParams.researchid);
+        } else {
+            //redirect with first research selected
+            if(res.data.length > 0) $location.path("/research/"+res.data[0]._id);
+        }
+    }, function(res) {
+        if(res.data && res.data.message) toaster.error(res.data.message);
+        else toaster.error(res.statusText);
+    });     
+
+    function load_series(research_id) {
+        $scope.research_id = research_id;
+        $http.get(appconf.api+'/study/byresearchid/'+research_id)
+        .then(function(res) {
+            $scope.study_count = res.data.studies.length;
+            $scope.serieses = {};
+            //organize studies/templates into series_desc / subject / study_time+series number
+            res.data.studies.forEach(function(study) {
+                var series_desc = study.series_desc;
+                var subject = study.subject;
+                if($scope.serieses[series_desc] == undefined) $scope.serieses[series_desc] = {subjects: {}, templates: []};
+                if($scope.serieses[series_desc].subjects[subject] == undefined) $scope.serieses[series_desc].subjects[subject] = {};
+                $scope.serieses[series_desc].subjects[subject][study._id] = study;
+            });
+            res.data.templates.forEach(function(template) {
+                var series_desc = template.series_desc;
+                if($scope.serieses[series_desc] == undefined) $scope.serieses[series_desc] = {subjects: {}, templates: []};
+                $scope.serieses[series_desc].templates.push(template);
+            });
+        }, function(res) {
+            if(res.data && res.data.message) toaster.error(res.data.message);
+            else toaster.error(res.statusText);
+        });
+    }
+    /*
+    $scope.openstudy = function(study_id) {
+        $location.path("/study/"+study_id);
+    }
+    $scope.opentemplate = function(id) {
+        $location.path("/template/"+id);
+    }
+    */
+}]);
+
+app.controller('QCController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', 'scaMessage', '$anchorScroll', '$document', '$window', '$routeParams',
+function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaMessage, $anchorScroll, $document, $window, $routeParams) {
+    $scope.appconf = appconf;
+    scaMessage.show(toaster);
+    serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
+    var jwt = localStorage.getItem(appconf.jwt_id);
+    if(jwt) $scope.user = jwtHelper.decodeToken(jwt);
+    $scope.page = "qc"+$routeParams.level;
+
+    //construct query
+    switch(parseInt($routeParams.level)) {
+    case 1:
+        var where = {qc1_state: {$exists: false}};
+        break;
+    case 2:
+        var where = {qc2_state: {$exists: false}};
+        break;
+    default:
+        toaster.error("Unknown QC level "+$routeParams.level);
+    }
+    //run query
+    $http.get(appconf.api+'/study/query', {params: {
+        skip: 0, 
+        limit: appconf.qc_study_limit || 200,
+        where: where,
+    }})
+    .then(function(res) {
+        $scope.debug = res.data;
+
+        //set researches
+        $scope.researches = {};
+        res.data.researches.forEach(function(r) {
+            $scope.researches[r._id] = r;
+        });
+
+        //organize studies/templates into series_desc / subject / study_time+series number
+        $scope.iibisids = {};
+        res.data.studies.forEach(function(study) {
+            var iibisid = study.IIBISID;
+            var research_id = study.research_id;
+            var series_desc = study.series_desc;
+            var subject = study.subject;
+            if($scope.iibisids[iibisid] == undefined) $scope.iibisids[iibisid] = {};
+            if($scope.iibisids[iibisid][research_id] == undefined) $scope.iibisids[iibisid][research_id] = {};
+            if($scope.iibisids[iibisid][research_id][series_desc] == undefined) $scope.iibisids[iibisid][research_id][series_desc] = {};
+            if($scope.iibisids[iibisid][research_id][series_desc][subject] == undefined) $scope.iibisids[iibisid][research_id][series_desc][subject] = []; 
+            $scope.iibisids[iibisid][research_id][series_desc][subject].push(study);
+        });
+
+        /*
+        //TODO - maybe move all these logics to api?
+        var iibisids = {};
+        res.data.iibisids.forEach(function(research) {
+            iibisids[research._id] = research;
+        });
+        */
+    }, function(res) {
+        if(res.data && res.data.message) toaster.error(res.data.message);
+        else toaster.error(res.statusText);
+    });
+}]);
+
 app.controller('StudyController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', '$routeParams', 'scaMessage', 'users', '$timeout',
 function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $routeParams, scaMessage, users, $timeout) {
     $scope.appconf = appconf;
     scaMessage.show(toaster);
-    //menu.then(function(_menu) { $scope.menu = _menu; });
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
-
     var jwt = localStorage.getItem(appconf.jwt_id);
-    if(jwt) {
-        $scope.user = jwtHelper.decodeToken(jwt);
-    }
+    if(jwt) $scope.user = jwtHelper.decodeToken(jwt);
     
     //load userprofiles for comments..
     //TODO loading all user is stupid.. just load the users who are authors of comments

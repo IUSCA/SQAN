@@ -30,18 +30,21 @@ router.get('/config', jwt({secret: config.express.jwt.pub, credentialsRequired: 
 //used to list all iibisids, etc
 router.get('/researches', jwt({secret: config.express.jwt.pub/*, credentialsRequired: false*/}), function(req, res, next) {
     var query = db.Research.find();
+    query.sort('-IIBISID');
     query.exec(function(err, rs) {
         if(err) return next(err);
-        //should I filter by iibisid acl? 
-        //admin needs to be able to see all iibisid - so that they can update the acl for all iibisids
-
-        /*
-        var rs = JSON.parse(JSON.stringify(rs)); //mongoose object won't let me update the users array (since it's [String])
-        rs.forEach(function(r) {
-            r.users = profile.load_profiles(r.users);
-        });
-        */
-        res.json(rs);
+        if(~req.user.scopes.dicom.indexOf('admin')) {
+            //admin needs to be able to see all iibisid - so that they can update the acl for all iibisids
+            return res.json(rs);
+        }
+        db.Acl.getCan(req.user, 'view', function(err, iibisids) {
+            //only show iibisids that user has access to
+            var researches = [];
+            rs.forEach(function(r) {
+                if(~iibisids.indexOf(r.IIBISID)) researches.push(r);
+            });
+            res.json(researches);
+        }); 
     });
 });
 

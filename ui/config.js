@@ -6,6 +6,9 @@ angular.module('app.config', [])
 
     kibana_url: '/kibana/',
 
+    recent_study_limit: 600,
+    qc_study_limit: 600,
+
     //profile_api: '/api/profile',
     //profile_url: '/profile',
 
@@ -25,9 +28,27 @@ angular.module('app.config', [])
             url: "/dicom/#/about",
         },
         {
+            id: "research",
+            label: "Studies",
+            url: "/dicom/#/research",
+            show: function(scope) {
+                if(~scope.dicom.indexOf('user')) return true;
+                return false;
+            }
+        },
+        {
             id: "recent",
-            label: "Recent Study",
+            label: "Recent Studies",
             url: "/dicom/#/recent",
+            show: function(scope) {
+                if(~scope.dicom.indexOf('user')) return true;
+                return false;
+            }
+        },
+        {
+            id: "qc",
+            label: "QC",
+            url: "/dicom/#/qc",
             show: function(scope) {
                 if(~scope.dicom.indexOf('user')) return true;
                 return false;

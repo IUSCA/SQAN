@@ -35,9 +35,23 @@ app.animation('.slide-down', ['$animateCss', function($animateCss) {
 //configure route
 app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
     $routeProvider.
-    when('/study/:studyid', {
+    when('/about', {
+        templateUrl: 't/about.html',
+        controller: 'AboutController'
+    })
+    .when('/study/:studyid', {
         templateUrl: 't/study.html',
         controller: 'StudyController',
+        requiresLogin: true
+    })
+    .when('/research', {
+        templateUrl: 't/research.html',
+        controller: 'ResearchController',
+        requiresLogin: true
+    })
+    .when('/research/:researchid', {
+        templateUrl: 't/research.html',
+        controller: 'ResearchController',
         requiresLogin: true
     })
     .when('/template/:templateid', {
@@ -45,14 +59,18 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         controller: 'TemplateController',
         requiresLogin: true
     })
-    .when('/about', {
-        templateUrl: 't/about.html',
-        controller: 'AboutController'
-    })
     .when('/recent', {
         templateUrl: 't/recent.html',
         controller: 'RecentController',
         requiresLogin: true,
+    })
+    .when('/qc', {
+        redirectTo: '/qc/1',
+    })
+    .when('/qc/:level', {
+        templateUrl: 't/qc.html',
+        controller: 'QCController',
+        requiresLogin: true
     })
     .when('/admin', {
         templateUrl: 't/admin.html',
