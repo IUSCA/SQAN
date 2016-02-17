@@ -375,6 +375,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
         });
 
         //organize studies/templates into series_desc / subject / study_time+series number
+        $scope.study_count = res.data.studies.length;
         $scope.iibisids = {};
         res.data.studies.forEach(function(study) {
             var iibisid = study.IIBISID;
