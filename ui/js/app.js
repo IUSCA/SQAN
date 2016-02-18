@@ -40,8 +40,8 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         controller: 'AboutController'
     })
     .when('/study/:studyid', {
-        templateUrl: 't/study.html',
-        controller: 'StudyController',
+        templateUrl: 't/series.html',
+        controller: 'SeriesController',
         requiresLogin: true
     })
     .when('/research', {

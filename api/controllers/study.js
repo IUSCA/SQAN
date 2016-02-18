@@ -282,7 +282,7 @@ router.post('/reqc/bystudyid/:study_id', jwt({secret: config.express.jwt.pub}), 
                 db.Image.update({study_id: study._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
                     if(err) return next(err);
                     console.dir(affected);
-                    res.json({message: "Template updated. Re-running QC on "+affected.nModified+" images."});
+                    res.json({message: "Re-running QC on "+affected.nModified+" images."});
                 });
             });
         });

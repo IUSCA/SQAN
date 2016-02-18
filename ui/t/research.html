@@ -15,46 +15,64 @@
         </div>
         <div class="col-md-8">
             <!--<p class="text-muted" ng-if="!serieses">No series</p>-->
-            <p class="help-block">This page shows all studies ever received (TODO - allow user to filter by date range?)</p>
-            <p class="text-muted" ng-if="study_count == 0">No study on this IIBISID</p>
+            <p class="help-block">This page shows all studies ever received (TODO - allow user to filter by date range and add search?)</p>
+            <p class="text-muted" ng-if="study_count == 0">No exam on this IIBISID</p>
             <ul class="list-group">
-                <div ng-repeat="(series_desc, series) in serieses">
+                <div ng-repeat="(subject, study_times) in subjects">
                     <li class="list-group-item" style="background-color: #eee;">
-                        <span class="text-muted">Series Description:</span> {{series_desc}}
+                        <span class="text-muted">Subject:</span> {{subject}}
                     </li>
-                    <li class="list-group-item list-group-item-subject">
-                        <table class="table table-condensed" style="margin-bottom: 0px;">
-                        <thead><tr><th width="30%">Subject</th><th>Studies (Series Number)</th></tr></thead>
+                    <li class="list-group-item list-group-item-subject"
+                        ng-repeat="(study_time, serieses) in study_times">
+                        <div class="row">
+                            <div class="col-md-4">{{study_time|date:'medium'}}</div>
+                            <div class="col-md-8">
+                                <table class="table table-condensed" style="margin-bottom: 0px;">
+                                <thead><tr><th>Series Description</th><th>Series (Series Number)</th></tr></thead>
+                                <tbody>
+                                    <tr ng-repeat="(series_desc, studies) in serieses">
+                                        <td>{{series_desc}}</td>
+                                        <td style="padding: 1px 5px;">
+                                            <div class="studies">
+                                                <studynote ng-repeat="(study_id, study) in studies" ng-click="openstudy(study_id)" study="study">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <!--
+                                    <tr>
+                                        <td class="text-muted">Templates</td>
+                                        <td style="padding: 1px 5px;">
+                                            <ul class="templates">
+                                                <li ng-repeat="template in series.templates" ng-click="opentemplate(template._id)">
+                                                    {{template.date | date:'medium'}} <span class="text-muted">(#{{template.SeriesNumber}})</span>
+                                                </li> 
+                                            </ul>
+                                            <p class="text-muted" ng-if="series.templates.length == 0">No templates</p>
+                                        </td>
+                                    </tr>
+                                    -->
+                                </tbody>
+                                </table>
+                            </div><!--col-md-8-->
+                        </div>
+                    </li>
+                </div><!--ng-repeat in subjects -->
+                <li class="list-group-item" style="background-color: #ccc;">Templates</li>
+                <li class="list-group-item" style="background-color: #f6f6f6;">
+                    <table class="table table-condensed" style="margin-bottom: 0px;">
+                        <thead><tr><th class="text-muted">Series Description</th>
+                            <th ng-repeat="time in templates_times">{{time|date:'medium'}}</th>
+                        </tr></thead>
                         <tbody>
-                            <tr ng-repeat="(subject, studies) in series.subjects">
-                                <td>{{subject}}</td>
-                                <td style="padding: 1px 5px;">
-                                    <div class="studies">
-                                        <!--
-                                        <div ng-if="series._excluded" class="text-muted excluded" ng-click="series._excluded = false">Excluded</div>
-                                        <div ng-if="!series._excluded" class="slide-down">
-                                            <studynote ng-repeat="(study_id, study) in series.studies" ng-click="openstudy(study_id)" study="study">
-                                        </div>
-                                        --> 
-                                        <studynote ng-repeat="(study_id, study) in studies" ng-click="openstudy(study_id)" study="study">
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">Templates</td>
-                                <td style="padding: 1px 5px;">
-                                    <ul class="templates">
-                                        <li ng-repeat="template in series.templates" ng-click="opentemplate(template._id)">
-                                            {{template.date | date:'medium'}} <span class="text-muted">(#{{template.SeriesNumber}})</span>
-                                        </li> 
-                                    </ul>
-                                    <p class="text-muted" ng-if="series.templates.length == 0">No templates</p>
-                                </td>
+                            <tr ng-repeat="(desc, times) in templates">
+                                <td>{{desc}}</td>
+                                <td ng-repeat="(time, template) in times" ng-click="opentemplate(template._id)">
+                                    <span class="label label-default">#{{template.SeriesNumber}}</span>
+                                </td> 
                             </tr>
                         </tbody>
-                        </table>
-                    </li>
-                </div><!--ng-repeat in serieses-->
+                    </table>
+                </li>
             </ul>
         </div><!--col-md-8-->
     </div><!--row-->

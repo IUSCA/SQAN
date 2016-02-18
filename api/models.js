@@ -144,7 +144,8 @@ var studySchema = mongoose.Schema({
     },
     */
 
-    qc1_state: String, //(null), autopass, accept, reject
+    qc1_state: String, //(null), fail, autopass, accept, reject
+    //qc1_finalized: Boolean,
     qc2_state: String, //(null), accept, condaccept, reject
     //pipeline status (see sundar's data qc & pipeline)
 

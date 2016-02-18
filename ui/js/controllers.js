@@ -1,16 +1,18 @@
 'use strict';
 
-app.controller('HeaderController', ['$scope', 'appconf', '$route', 'toaster', '$http', 'jwtHelper', 'serverconf', 'menu', '$location', '$anchorScroll',
-function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, menu, $location, $anchorScroll) {
+app.controller('HeaderController', ['$scope', 'appconf', '$route', 'toaster', '$http', 'jwtHelper', 'serverconf', 'menu', '$window', '$anchorScroll',
+function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, menu, $window, $anchorScroll) {
     $scope.title = appconf.title;
     serverconf.then(function(_c) { $scope.serverconf = _c; });
     $scope.menu = menu;
 
-    $scope.openstudy = function(study_id) {
-        $location.path("/study/"+study_id);
+    $scope.openstudy = function(id) {
+        //$location.path("/study/"+study_id);
+        $window.open("#/study/"+id, "study:"+id);
     }
     $scope.opentemplate = function(id) {
-        $location.path("/template/"+id);
+        //$location.path("/template/"+id);
+        $window.open("#/template/"+id,  "teplate:"+id);
     }
     $scope.scrollto = function(id) {
         $anchorScroll(id);
@@ -310,20 +312,30 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
         $http.get(appconf.api+'/study/byresearchid/'+research_id)
         .then(function(res) {
             $scope.study_count = res.data.studies.length;
-            $scope.serieses = {};
+            $scope.subjects = {};
             //organize studies/templates into series_desc / subject / study_time+series number
             res.data.studies.forEach(function(study) {
-                var series_desc = study.series_desc;
                 var subject = study.subject;
-                if($scope.serieses[series_desc] == undefined) $scope.serieses[series_desc] = {subjects: {}, templates: []};
-                if($scope.serieses[series_desc].subjects[subject] == undefined) $scope.serieses[series_desc].subjects[subject] = {};
-                $scope.serieses[series_desc].subjects[subject][study._id] = study;
+                var study_time = study.StudyTimestamp;
+                var series_desc = study.series_desc;
+                if($scope.subjects[subject] == undefined) $scope.subjects[subject] = {};
+                if($scope.subjects[subject][study_time] == undefined) $scope.subjects[subject][study_time] = {};
+                if($scope.subjects[subject][study_time][series_desc] == undefined) $scope.subjects[subject][study_time][series_desc] = []; 
+                $scope.subjects[subject][study_time][series_desc].push(study);
             });
+
+            //create a matrix of template time / descs
+            $scope.templates_times = [];
+            $scope.templates = {};
             res.data.templates.forEach(function(template) {
                 var series_desc = template.series_desc;
-                if($scope.serieses[series_desc] == undefined) $scope.serieses[series_desc] = {subjects: {}, templates: []};
-                $scope.serieses[series_desc].templates.push(template);
+                var template_time = template.date;
+                if(!~$scope.templates_times.indexOf(template_time)) $scope.templates_times.push(template_time);
+                if($scope.templates[series_desc] == undefined) $scope.templates[series_desc] = {};
+                $scope.templates[series_desc][template_time] = template; 
             });
+            console.dir(res.data.templates);
+            console.dir($scope.templates);
         }, function(res) {
             if(res.data && res.data.message) toaster.error(res.data.message);
             else toaster.error(res.statusText);
@@ -351,7 +363,8 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
     //construct query
     switch(parseInt($routeParams.level)) {
     case 1:
-        var where = {qc1_state: {$exists: false}};
+        //var where = {qc1_state: {$exists: false}};
+        var where = {qc1_state: 'fail'};
         break;
     case 2:
         var where = {qc2_state: {$exists: false}};
@@ -384,10 +397,15 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
             var subject = study.subject;
             if($scope.iibisids[iibisid] == undefined) $scope.iibisids[iibisid] = {};
             if($scope.iibisids[iibisid][research_id] == undefined) $scope.iibisids[iibisid][research_id] = {};
-            if($scope.iibisids[iibisid][research_id][series_desc] == undefined) $scope.iibisids[iibisid][research_id][series_desc] = {};
-            if($scope.iibisids[iibisid][research_id][series_desc][subject] == undefined) $scope.iibisids[iibisid][research_id][series_desc][subject] = []; 
-            $scope.iibisids[iibisid][research_id][series_desc][subject].push(study);
+            if($scope.iibisids[iibisid][research_id][subject] == undefined) 
+                $scope.iibisids[iibisid][research_id][subject] = {};
+            if($scope.iibisids[iibisid][research_id][subject][study.StudyTimestamp] == undefined) 
+                $scope.iibisids[iibisid][research_id][subject][study.StudyTimestamp] = {};
+            if($scope.iibisids[iibisid][research_id][subject][study.StudyTimestamp][series_desc] == undefined) 
+                $scope.iibisids[iibisid][research_id][subject][study.StudyTimestamp][series_desc] = []; 
+            $scope.iibisids[iibisid][research_id][subject][study.StudyTimestamp][series_desc].push(study);
         });
+        //console.dir($scope.iibisids);
 
         /*
         //TODO - maybe move all these logics to api?
@@ -402,7 +420,8 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
     });
 }]);
 
-app.controller('StudyController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', '$routeParams', 'scaMessage', 'users', '$timeout',
+//used to be StudyController
+app.controller('SeriesController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', '$routeParams', 'scaMessage', 'users', '$timeout',
 function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $routeParams, scaMessage, users, $timeout) {
     $scope.appconf = appconf;
     scaMessage.show(toaster);
