@@ -312,16 +312,18 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
         $http.get(appconf.api+'/study/byresearchid/'+research_id)
         .then(function(res) {
             $scope.study_count = res.data.studies.length;
+            $scope.subjects_times = {};
             $scope.subjects = {};
             //organize studies/templates into series_desc / subject / study_time+series number
             res.data.studies.forEach(function(study) {
                 var subject = study.subject;
                 var study_time = study.StudyTimestamp;
                 var series_desc = study.series_desc;
+                if($scope.subjects_times[subject] === undefined) $scope.subjects_times[subject] = [];
+                if(!~$scope.subjects_times[subject].indexOf(study_time)) $scope.subjects_times[subject].push(study_time);
                 if($scope.subjects[subject] == undefined) $scope.subjects[subject] = {};
-                if($scope.subjects[subject][study_time] == undefined) $scope.subjects[subject][study_time] = {};
-                if($scope.subjects[subject][study_time][series_desc] == undefined) $scope.subjects[subject][study_time][series_desc] = []; 
-                $scope.subjects[subject][study_time][series_desc].push(study);
+                if($scope.subjects[subject][series_desc] == undefined) $scope.subjects[subject][series_desc] = {};
+                $scope.subjects[subject][series_desc][study_time] = study;
             });
 
             //create a matrix of template time / descs
@@ -334,8 +336,8 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
                 if($scope.templates[series_desc] == undefined) $scope.templates[series_desc] = {};
                 $scope.templates[series_desc][template_time] = template; 
             });
-            console.dir(res.data.templates);
-            console.dir($scope.templates);
+            //console.dir(res.data.templates);
+            //console.dir($scope.templates);
         }, function(res) {
             if(res.data && res.data.message) toaster.error(res.data.message);
             else toaster.error(res.statusText);
