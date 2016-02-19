@@ -15,6 +15,7 @@
         </div>
         <div class="col-md-8">
             <!--<p class="text-muted" ng-if="!serieses">No series</p>-->
+            <viewmode-toggler mode="view_mode"></viewmode-toggler>
             <p class="help-block">This page shows all studies ever received (TODO - allow user to filter by date range and add search?)</p>
             <p class="text-muted" ng-if="study_count == 0">No exam on this IIBISID</p>
             <ul class="list-group">
@@ -22,39 +23,10 @@
                     <li class="list-group-item" style="background-color: #eee;">
                         <span class="text-muted">Subject:</span> {{subject}}
                     </li>
-                    <li class="list-group-item list-group-item-subject">
-                        <table class="table table-condensed" style="margin-bottom: 0px;">
-                        <thead><tr><th class="text-muted" width="30%">Series Description</th>
-                            <th ng-repeat="time in subjects_times[subject]">{{time|date:'medium'}}</th>
-                        </tr></thead>
-                        <tbody>
-                            <tr ng-repeat="(series_desc, times) in series_descs">
-                                <td>{{series_desc}}</td>
-                                <td ng-repeat="(time, study) in times" style="padding: 0px;">
-                                    <studynote ng-click="openstudy(study._id)" study="study">
-                                </td>
-                            </tr>
-                        </tbody>
-                        </table>
-                    </li>
+                    <subject-detail mode="view_mode" serieses="series_descs" times="subjects_times[subject]"></subject-detail>
                 </div><!--ng-repeat in subjects -->
                 <li class="list-group-item" style="background-color: #ccc;">Templates</li>
-                <li class="list-group-item" style="background-color: #f6f6f6;">
-                    <p class="text-muted" ng-if="templates_times.length == 0">No templates received</p>
-                    <table class="table table-condensed" style="margin-bottom: 0px;" ng-if="templates_times.length > 0">
-                        <thead><tr><th class="text-muted" width="30%">Series Description</th>
-                            <th ng-repeat="time in templates_times">{{time|date:'medium'}}</th>
-                        </tr></thead>
-                        <tbody>
-                            <tr ng-repeat="(desc, times) in templates">
-                                <td>{{desc}}</td>
-                                <td ng-repeat="(time, template) in times" ng-click="opentemplate(template._id)">
-                                    <span class="label label-default">#{{template.SeriesNumber}}</span>
-                                </td> 
-                            </tr>
-                        </tbody>
-                    </table>
-                </li>
+                <templates mode="view_mode" templates="templates" times="templates_times"></templates>
             </ul>
         </div><!--col-md-8-->
     </div><!--row-->

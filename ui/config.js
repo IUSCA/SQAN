@@ -29,7 +29,7 @@ angular.module('app.config', [])
         },
         {
             id: "research",
-            label: "Studies",
+            label: "Exams",
             url: "/dicom/#/research",
             show: function(scope) {
                 if(~scope.dicom.indexOf('user')) return true;
@@ -38,7 +38,7 @@ angular.module('app.config', [])
         },
         {
             id: "recent",
-            label: "Recent Studies",
+            label: "Recent Exams",
             url: "/dicom/#/recent",
             show: function(scope) {
                 if(~scope.dicom.indexOf('user')) return true;

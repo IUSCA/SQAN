@@ -1,0 +1,52 @@
+<!-- folded (studytime on each column) view -->
+<li class="list-group-item list-group-item-subject" ng-if="$ctrl.mode == 'wide'">
+    <table class="table table-condensed" style="margin-bottom: 0px;">
+    <thead><tr><th style="color: #333;" width="30%">Series Description</th>
+        <th ng-repeat="time in $ctrl.times">
+            <time>{{time|date:'short'}}</time>
+            &nbsp;
+            <button class="btn btn-xs" style="padding: 1px 2px; font-size: 80%;" ng-click="reqc(subject, time)">ReQC</button>
+        </th>
+    </tr></thead>
+    <tbody>
+        <tr ng-repeat="(series_desc, times) in $ctrl.serieses">
+            <td>{{series_desc}}</td>
+            <td ng-repeat="time in $ctrl.times" ng-init="study = times[time]" style="padding: 0px;">
+                <div ng-if="study._excluded" class="text-muted excluded" ng-click="study._excluded = false">Excluded</div>
+                <div ng-if="!study._excluded" class="slide-down">
+                    <studynote ng-click="$ctrl.openstudy(study._id)" study="study">
+                </div>
+            </td>
+        </tr>
+    </tbody>
+    </table>
+</li>
+<!-- exploded view (show each study time under different list-group-item) -->
+<li class="list-group-item list-group-item-subject" ng-if="$ctrl.mode == 'tall'" ng-repeat="time in $ctrl.times">
+    <div class="row">
+        <div class="col-md-2">
+            <p><time style="position: relative; top: 5px"><b>{{time|date:'short'}}</b></time></p>
+            <button class="btn btn-xs" ng-click="reqc(subject, time)">ReQC</button>
+        </div>
+        <div class="col-md-10">
+            <table class="table table-condensed" style="margin-bottom: 0px;">
+            <thead style="color: #333;"><tr><th width="30%">Series Description</th><th>Series Number</th><th>Template Used</th></tr></thead>
+            <tbody>
+                <tr ng-repeat="(series_desc, studies) in $ctrl.serieses" ng-init="study = studies[time]">
+                    <td>{{series_desc}}</td>
+                    <td style="padding: 1px 5px;">
+                        <div class="studies">
+                            <div ng-if="study._excluded" class="text-muted excluded" ng-click="study._excluded = false">Excluded</div>
+                            <div ng-if="!study._excluded" class="slide-down">
+                                <studynote ng-click="$ctrl.openstudy(study._id)" study="study">
+                            </div>
+                        </div>
+                    </td>
+                    <td>TODO</td>
+                </tr>
+            </tbody>
+            </table>
+        </div>
+    </div>
+</li>
+

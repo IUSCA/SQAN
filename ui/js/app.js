@@ -296,6 +296,15 @@ app.filter('propsFilter', function() {
     };
 });
 
+/*
+app.filter('toArray', function() { return function(obj) {
+    if (!(obj instanceof Object)) return obj;
+    return _.map(obj, function(val, key) {
+        return Object.defineProperty(val, '$key', {__proto__: null, value: key});
+    });
+}});
+*/
+
 //http://stackoverflow.com/questions/14852802/detect-unsaved-changes-and-alert-user-using-angularjs
 app.directive('confirmOnExit', function() {
     return {
