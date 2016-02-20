@@ -67,7 +67,7 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                     _detail: researches[study.research_id],
                     subjects_times: {},
                     subjects: {}, 
-                    templates_times: [], //not grouped by subjects like subjects_times
+                    templates_times: [], //array - because not grouped by subjects like subjects_times
                     templates: {},
                 };
                 $scope.researches[research_detail.IIBISID][modality_id] = modality;
@@ -79,7 +79,8 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
             if(!~modality.subjects_times[subject].indexOf(study_time)) modality.subjects_times[subject].push(study_time);
             if(modality.subjects[study.subject] == undefined) modality.subjects[study.subject] = {
                 serieses: {},
-                missing_series: [],
+                missing_serieses: {},
+                //missing_series_descs: [],
                 
                 //counters to be set below
                 non_qced: 0,
@@ -141,26 +142,40 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                             }
                         }
                     }
-
-                    //find missing series 
-                    //find the series that starts with template_series_desc
+                    
+                    //find latest template timestamp
+                    var latest = null;
+                    modality.templates_times.forEach(function(time) {   
+                        if(latest == null || latest < time) latest = time;
+                    });
+                    //create list of teamplate_series_desc that all exam should have
+                    var template_series_descs = {};
                     for(var template_series_desc in modality.templates) {
-                        var found = false;
-                        for(var series_desc in subject.serieses) {
-                            if(series_desc.startsWith(template_series_desc)) {
-                                found = true;
-                                break;
+                        var template = modality.templates[template_series_desc][latest];
+                        if(template) template_series_descs[template_series_desc] = template;
+                    }
+                    //for each exam times (for this subject)
+                    modality.subjects_times[subject_id].forEach(function(time) {
+                        subject.missing_serieses[time] = {};
+                        for(var template_series_desc in template_series_descs) {
+                            var found = false;
+                            for(var series_desc in subject.serieses) {
+                                if(subject.serieses[series_desc][time] == undefined) continue; //wrong time
+                                if(series_desc.startsWith(template_series_desc)) {
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if(!found) {
+                                subject.missing_serieses[time][template_series_desc] = template_series_descs[template_series_desc];
+                                //if(!~subject.missing_series_descs.indexOf(template_series_desc)) subject.missing_series_descs.push(template_series_desc);
                             }
                         }
-                        if(!found) {
-                            subject.missing_series.push(modality.templates[template_series_desc]);
-                        }
-                    }
- 
+                    });
+                    //console.dir(subject.missing_serieses);
                 }
             }
         }
-        
         
         /*
         //create uid for subject 
@@ -367,10 +382,26 @@ app.component('subjectDetail', {
         this.openstudy = function(id) {
             $window.open("#/study/"+id, "study:"+id);
         }
+        this.opentemplate = function(id) {
+            $window.open("#/template/"+id);
+        }
+        //is this still used?
+        this.keys = function(obj){
+            return obj? Object.keys(obj) : [];
+        }
+        this.missing_series_descs = [];
+        for(var time in this.missing) {
+            for(var desc in this.missing[time]) {
+                if(!~this.missing_series_descs.indexOf(desc)) {
+                    this.missing_series_descs.push(desc);
+                }
+            } 
+        }
     },
     bindings: {
         mode: '=', //view mode ('wide' / 'tall')
         serieses: '<', //[series_desc][time] = study
+        missing: '<', //[time][series_desc] = template  
         times: '<', //list of timestamps to show
     },
 });
@@ -380,6 +411,9 @@ app.component('templates', {
     controller: function($window) { 
         this.opentemplate = function(id) {
             $window.open("#/template/"+id, "template:"+id);
+        }
+        this.keys = function(obj){
+            return obj? Object.keys(obj) : [];
         }
     },
     bindings: {
@@ -401,7 +435,6 @@ app.component('viewmodeToggler', {
         mode: '=', //view mode ('wide' / 'tall')
     },
 });
-
 
 app.controller('QCController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', 'scaMessage', '$anchorScroll', '$document', '$window', '$routeParams',
 function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaMessage, $anchorScroll, $document, $window, $routeParams) {

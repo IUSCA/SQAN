@@ -11,12 +11,26 @@
         <ul class="list-group">
             <li class="list-group-item" style="background-color: #eee;">
                 <div class="row">
-                    <div class="col-sm-2" style="margin-top: 5px;"><b>Template</b></div>
+                    <div class="col-sm-2" style="margin-top: 5px;"><b>Template</b><!-- <span class="text-muted">(Series Number)</span>--></div>
                     <div class="col-sm-10">
+                        <!--
                         <div class="studynote">
-                            {{data.template.date | date:'medium'}} <span class="text-muted">(#{{data.template.SeriesNumber}})</span>
+                            <span>#{{data.template.SeriesNumber}}</span>
                         </div>
+                        -->
                     </div>
+                </div>
+            </li>
+            <li class="list-group-item">
+                <div class="row">
+                    <div class="col-sm-2"><span class="text-muted">Series Number</span></div>
+                    <div class="col-sm-10">{{data.template.SeriesNumber}}</div>
+                </div>
+            </li>
+            <li class="list-group-item">
+                <div class="row">
+                    <div class="col-sm-2"><span class="text-muted">Study Timestamp</span></div>
+                    <div class="col-sm-10">{{data.template.date | date:'medium'}}</div>
                 </div>
             </li>
             <li class="list-group-item">

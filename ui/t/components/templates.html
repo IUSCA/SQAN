@@ -2,12 +2,13 @@
     <p class="text-muted" ng-if="$ctrl.times.length == 0">No templates received</p>
     <table class="table table-condensed" style="margin-bottom: 0px;" ng-if="$ctrl.times.length > 0">
         <thead><tr><th width="30%" style="color: #333;">Series Description</th>
-            <th ng-repeat="time in $ctrl.times">{{time|date:'medium'}}</th>
+            <th ng-repeat="time in $ctrl.times | orderBy:'-toString()'">{{time|date:'short'}}</th>
         </tr></thead>
         <tbody>
-            <tr ng-repeat="(desc, times) in $ctrl.templates">
+            <!--<tr ng-repeat="(desc, times) in $ctrl.templates">-->
+            <tr ng-repeat="desc in $ctrl.keys($ctrl.templates) | orderBy:'toString().toLowerCase()'" ng-init="times = $ctrl.templates[desc]">
                 <td>{{desc}}</td>
-                <td ng-repeat="time in $ctrl.times" ng-init="template = times[time]">
+                <td ng-repeat="time in $ctrl.times | orderBy:'-toString()'" ng-init="template = times[time]">
                     <span ng-if="template" class="label label-default clickable" ng-click="$ctrl.opentemplate(template._id)">#{{template.SeriesNumber}}</span>
                 </td>
             </tr>

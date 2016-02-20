@@ -12,13 +12,21 @@
             <ul class="list-group">
                 <li class="list-group-item" style="background-color: #eee;">
                     <div class="row">
-                        <div class="col-sm-2" style="margin-top: 5px;"><b>QC Status <span class="text-muted">(Series Number)</span></b></div>
+                        <div class="col-sm-2" style="margin-top: 5px;"><b>Series<!--<span class="text-muted">(Series Number)</span>--></b></div>
                         <div class="col-sm-10">
                             <studynote study="data.study" ng-if="data.study"></studynote> 
                             <button type="button" class="btn btn-xs pull-right" ng-click="reqc()" ng-disabled="!data.canqc">Rerun QC1</button>
                         </div>
                     </div>
                 </li>
+                <!--
+                <li class="list-group-item">
+                    <div class="row">
+                        <div class="col-sm-2"><span class="text-muted">Series Number</span></div>
+                        <div class="col-sm-10">{{data.study.SeriesNumber}}</div>
+                    </div>
+                </li>
+                -->
                 <li class="list-group-item">
                     <div class="row">
                         <div class="col-sm-2"><span class="text-muted">Study Timestamp</span></div>

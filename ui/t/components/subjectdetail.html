@@ -18,6 +18,16 @@
                 </div>
             </td>
         </tr>
+        <tr ng-repeat="series_desc in $ctrl.missing_series_descs">
+            <td class="text-muted">{{series_desc}}</td>
+            <td ng-repeat="time in $ctrl.times" ng-init="template = $ctrl.missing[time][series_desc]" style="padding: 0px;">
+                <div class="missing clickable" ng-click="$ctrl.opentemplate(template._id)">
+                    <span class="label label-info">Missing</span> 
+                    <span class="text-muted">(Template #{{template.SeriesNumber}})</span>
+                </div>
+            </td>
+            <td></td>
+        </tr>
     </tbody>
     </table>
 </li>
@@ -33,6 +43,7 @@
             <thead style="color: #333;"><tr><th width="30%">Series Description</th><th>Series Number</th><th>Template Used</th></tr></thead>
             <tbody>
                 <tr ng-repeat="(series_desc, studies) in $ctrl.serieses" ng-init="study = studies[time]">
+                <!--<tr ng-repeat="series_desc in $ctrl.keys($ctrl.serieses) | orderBy:'toString().toLowerCase()'" ng-init="study = $ctrl.serieses[series_desc][time]">-->
                     <td>{{series_desc}}</td>
                     <td style="padding: 1px 5px;">
                         <div class="studies">
@@ -44,9 +55,18 @@
                     </td>
                     <td>TODO</td>
                 </tr>
+                <tr ng-repeat="(series_desc, template) in $ctrl.missing[time]">
+                    <td class="text-muted">{{series_desc}}</td>
+                    <td style="padding: 1px 5px;">
+                        <div class="missing clickable" ng-click="$ctrl.opentemplate(template._id)">
+                            <span class="label label-info">Missing</span> 
+                            <span class="text-muted">(Template #{{template.SeriesNumber}})</span>
+                        </div>
+                    </td>
+                    <td></td>
+                </tr>
             </tbody>
             </table>
         </div>
     </div>
 </li>
-

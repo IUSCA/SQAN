@@ -59,9 +59,10 @@
                             <li class="list-group-item subject-body">
                                 <span class="text-muted">Subject</span> {{subject}}
                             </li>
-                            <subject-detail serieses="subject_detail.serieses" times="modality.subjects_times[subject]" mode="view_mode"></subject>
-                            what is going on
-                            {{subject_detail.serieses|json}}
+                            <subject-detail 
+                                serieses="subject_detail.serieses" 
+                                missing="subject_detail.missing_serieses" 
+                                times="modality.subjects_times[subject]" mode="view_mode"></subject-detail>
                             <!--
                             <li class="list-group-item list-group-item-subject">
                                 <table class="table table-condensed" style="margin-bottom: 0px;">
