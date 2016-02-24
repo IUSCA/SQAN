@@ -70,7 +70,7 @@
                                         {{$select.selected.date | date:'medium'}} 
                                     </div>
                                 </ui-select-match>
-                                <ui-select-choices group-by="'series_desc'" repeat="template in data.template_exams">
+                                <ui-select-choices group-by-dis="'series_desc'" repeat="template in data.template_exams">
                                     {{template.date | date:'medium'}}
                                 </ui-select-choices>
                             </ui-select>

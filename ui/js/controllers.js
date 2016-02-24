@@ -273,7 +273,6 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
         $http.get(appconf.api+'/study/byresearchid/'+research_id)
         .then(function(res) {
             $scope.study_count = res.data.studies.length;
-
             $scope.subjects_times = {};
             $scope.subjects = {};
 
@@ -472,13 +471,10 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
             if($scope.data.images) {
                 $scope.data.images.forEach(computeColor);
             }
-            //console.dir($scope.data);
             //find template object selected / used by QC
             res.data.template_exams.forEach(function(exam) {
                 if(exam._id == res.data.series.template_exam_id) res.data.template_exam = exam;
-                //if(res.data.series.qc && template._id == res.data.series.qc.template_id) res.data.qc_template = template;
             });
-            //console.log(res.data);
             //reload if qc is not yet loaded
             if(!res.data.series.qc) {
                 $timeout(load_series, 1000);
@@ -594,7 +590,7 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
         });
     }
     $scope.select_template = function(item) {
-        console.dir(item);
+        //console.dir(item);
         $scope.image_detail = null;
         $scope.active_image = null;
         $http.post(appconf.api+'/study/template/'+$routeParams.seriesid, {exam_id: item._id})
