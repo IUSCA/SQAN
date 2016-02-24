@@ -3,7 +3,7 @@
     <p ng-if="!researches"><i class="fa fa-circle-o-notch fa-spin"></i> Loading ...</p>
     <p ng-if="study_count == 0" class="text-muted">You don't have access to any IIBISIDs that has received data recently. Please contact your administrator for more info.</p>
     <div class="row">
-        <div class="col-md-4" id="affix" ng-class="{affix: content_affix, affix_bottom: content_affix_bottom}">
+        <div class="col-md-3" id="affix" ng-class="{affix: content_affix, affix_bottom: content_affix_bottom}">
             <div ng-repeat="(iibisid, research) in researches">
                 <h4>{{iibisid}}</h4>
                 <div class="list-group">
@@ -18,13 +18,21 @@
                                     ng-class="{inview: inview_id == subject.uid}"> 
                                     <!--subject_desc is not unique across all iibisid / modality..-->
                                     <a href="javascript:void(0)">
-                                        {{subject_desc}} &nbsp;
-                                        <span ng-if="subject.oks != 0" class="label label-success">{{subject.oks}} OKs</span>
-                                        <span ng-if="subject.errors != 0" class="label label-danger">{{subject.errors}} Errors</span>
-                                        <span ng-if="subject.warnings != 0" class="label label-warning">{{subject.warnings}} Warnings</span>
-                                        <span ng-if="subject.notemps != 0" class="label label-primary">{{subject.notemps}} NoTemps</span>
-                                        <span ng-if="subject.non_qced != 0" class="label label-info" ng-if="!study.qc">{{subject.non_qced}} Not Yet QCed</span>
-                                        <span ng-if="subject.missing_series.length != 0" class="label label-info">{{subject.missing_series.length}} Missing</span>
+                                        <div class="row">
+                                        <div class="col-sm-5">
+                                            {{subject_desc}} &nbsp;
+                                        </div>
+                                        <div class="col-sm-7">
+                                            <div class="progress" style="margin-bottom: 0px;"
+                                                ng-init="total = subject.non_qced+subject.oks+subject.errors+subject.warnings+subject.notemps+subject.missing">
+                                                <div class="progress-bar progress-bar-success" style="width: {{subject.oks / total*100}}%"></div>
+                                                <div class="progress-bar progress-bar-danger" style="width: {{subject.errors / total*100}}%"></div>
+                                                <div class="progress-bar progress-bar-warning" style="width: {{subject.warnings / total*100}}%"></div>
+                                                <div class="progress-bar progress-bar-primary" style="width: {{subject.notemps / total*100}}%"></div>
+                                                <div class="progress-bar progress-bar-info" style="width: {{subject.missing/ total*100}}%"></div>
+                                            </div>
+                                        </div>
+                                        </div><!--row-->
                                     </a>
                                 </li>
                                 <li ng-click="scrollto(iibisid+modality_id)"
@@ -41,7 +49,7 @@
             </div><!--ng-repeat-->
         </div> <!--col-md-3-->
 
-        <div class="col-md-8" ng-class="{'col-md-offset-4': content_affix}">
+        <div class="col-md-9" ng-class="{'col-md-offset-3': content_affix}">
             <viewmode-toggler mode="view_mode"></viewmode-toggler> 
             <div ng-repeat="(iibisid, research) in researches">
                 <h2>{{iibisid}}</h2>
@@ -53,37 +61,18 @@
                             RadioTracer: <b>{{modality._detail.radio_tracer}}</b>
                         </small>
                     </h3>
-                    
                     <ul class="list-group">
                         <div ng-repeat="(subject, subject_detail) in modality.subjects" id="{{subject_detail.uid}}" class="subject"> 
                             <li class="list-group-item subject-body">
                                 <span class="text-muted">Subject</span> {{subject}}
                             </li>
                             <subject-detail 
+                                researchid="modality._detail._id" 
+                                subject="subject"
                                 serieses="subject_detail.serieses" 
                                 missing="subject_detail.missing_serieses" 
+                                templates="templates"
                                 times="modality.subjects_times[subject]" mode="view_mode"></subject-detail>
-                            <!--
-                            <li class="list-group-item list-group-item-subject">
-                                <table class="table table-condensed" style="margin-bottom: 0px;">
-                                    <thead><tr><th width="30%">Series Description</th><th>Studies (Series Number)</th></tr></thead>
-                                    <tbody>                     
-                                        <tr ng-repeat="series in subject.missing_series">
-                                            <td>{{series.series_desc}}</td>
-                                            <td style="padding: 1px 5px;">
-                                                <ul class="templates">
-                                                    <li ng-repeat="(template_id, template) in series.templates" ng-click="opentemplate(template_id)">
-                                                        <span class="label label-info">Missing</span> 
-                                                        {{template.date | date:'medium'}} 
-                                                        <span class="text-muted">(Template #{{template.SeriesNumber}})</span>
-                                                    </li> 
-                                                </ul>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </li>
-                            -->
                         </div>
 
                         <div id="{{iibisid+modality_id}}" class="template">

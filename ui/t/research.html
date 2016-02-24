@@ -23,10 +23,16 @@
                     <li class="list-group-item" style="background-color: #eee;">
                         <span class="text-muted">Subject:</span> {{subject}}
                     </li>
-                    <subject-detail mode="view_mode" serieses="series_descs" times="subjects_times[subject]"></subject-detail>
+                    <subject-detail 
+                        researchid="research_id" 
+                        subject="subject"
+                        mode="view_mode" 
+                        serieses="series_descs"     
+                        templates="templates"
+                        times="subjects_times[subject]"></subject-detail>
                 </div><!--ng-repeat in subjects -->
                 <li class="list-group-item" style="background-color: #ccc;">Templates</li>
-                <templates templates="templates" times="templates_times"></templates>
+                <templates templates="templates_matrix" times="templates_times"></templates>
             </ul>
         </div><!--col-md-8-->
     </div><!--row-->

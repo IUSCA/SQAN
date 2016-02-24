@@ -9,7 +9,8 @@ var jwt = require('express-jwt');
 var config = require('../../config');
 
 router.use('/', require('./root'));
-router.use('/study', require('./study'));
+router.use('/research', require('./research'));
+router.use('/study', require('./series'));
 router.use('/image', require('./image'));
 router.use('/template', require('./template'));
 

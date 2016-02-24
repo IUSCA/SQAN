@@ -27,8 +27,9 @@ router.get('/config', jwt({secret: config.express.jwt.pub, credentialsRequired: 
     res.json(conf);
 });
 
+/* moved to /research
 //used to list all iibisids, etc
-router.get('/researches', jwt({secret: config.express.jwt.pub/*, credentialsRequired: false*/}), function(req, res, next) {
+router.get('/researches', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     var query = db.Research.find();
     query.sort('-IIBISID');
     query.exec(function(err, rs) {
@@ -47,7 +48,7 @@ router.get('/researches', jwt({secret: config.express.jwt.pub/*, credentialsRequ
         }); 
     });
 });
-
+*/
 router.get('/acl/:key', jwt({secret: config.express.jwt.pub/*, credentialsRequired: false*/}), function(req, res, next) {
     if(!~req.user.scopes.dicom.indexOf('admin')) return next(new Error("admin only"));
     db.Acl.findOne({key: req.params.key}, function(err, acl) {

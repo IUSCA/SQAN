@@ -16,7 +16,7 @@ db.init(function(err) {
     if(err) throw(err);
 
     logger.info("querying recent studies");
-    var query = db.Study.find().lean();
+    var query = db.Series.find().lean();
     query.sort({StudyTimestamp: -1, SeriesNumber: 1});
     query.limit(50);//limitter..
     query.exec(function(err, studies) {

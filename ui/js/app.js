@@ -39,7 +39,7 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         templateUrl: 't/about.html',
         controller: 'AboutController'
     })
-    .when('/study/:studyid', {
+    .when('/study/:seriesid', {
         templateUrl: 't/series.html',
         controller: 'SeriesController',
         requiresLogin: true
@@ -124,6 +124,7 @@ app.directive('studynote', function() {
             update();
             $scope.$watch('study', update, true);
             function update() {
+                if(!$scope.study) return; //study not loaded yet?
                 $scope.studystate = "na";
                 if($scope.study.qc) {
                     if($scope.study.qc.notemps > 0) $scope.studystate = "notemp";

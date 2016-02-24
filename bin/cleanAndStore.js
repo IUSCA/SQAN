@@ -54,9 +54,10 @@ db.init(function(err) {
 //here is the main business logic
 function incoming(h, msg_h, info, ack) {
     var research = null;
+    var exam = null;
     var series = null;
-    var study = null;
     var aq = null;
+
     async.series([
         function(next) {
             try {
@@ -77,9 +78,8 @@ function incoming(h, msg_h, info, ack) {
 
                 //construct esindex
                 var esindex = qc.instance.composeESIndex(h);
-                logger.info(h.qc_iibisid+" esindex:"+esindex+" "+h.SOPInstanceUID);
+                logger.info(h.qc_iibisid+" subject:"+h.qc_subject+" esindex:"+esindex+" "+h.SOPInstanceUID);
                 h.qc_esindex = esindex;
-
                 next();
             } catch(err) {
                 next(err);
@@ -152,18 +152,33 @@ function incoming(h, msg_h, info, ack) {
             });
         },
         
+        //make sure we know about this exam 
+        function(next) {
+            db.Exam.findOneAndUpdate({
+                research_id: research._id,
+                subject: (h.qc_istemplate?undefined:h.qc_subject),
+                date: h.qc_StudyTimestamp, 
+            }, {
+                istemplate: h.qc_istemplate,
+            }, {upsert:true, 'new': true}, function(err, _exam) {
+                if(err) return next(err);
+                exam = _exam;
+                next();
+            });
+        },
+        
         //make sure we know about this template 
         function(next) {
             if(!h.qc_istemplate) return next();  //if not template then skip
 
             db.Template.findOneAndUpdate({
                 research_id: research._id,
+                exam_id: exam._id,
                 series_desc: h.qc_series_desc,
-                date: h.qc_StudyTimestamp, 
                 SeriesNumber: h.SeriesNumber,
             }, {
-                //$inc: { count: 1 }, //increment the count
                 Modality: h.Modality,
+                date: h.qc_StudyTimestamp, 
                 //headers: h, //update with the latest headers (or mabe we should store all under an array?)
             }, {upsert:true, 'new': true}, function(err, _template) {
                 if(err) return next(err);
@@ -183,24 +198,25 @@ function incoming(h, msg_h, info, ack) {
             });
         },
         
-        //make sure we know about this study
+        //make sure we know about this series
         function(next) {
             if(h.qc_istemplate) return next();  //if it's template then skip
 
-            db.Study.findOneAndUpdate({
+            db.Series.findOneAndUpdate({
                 research_id: research._id,
+                exam_id: exam._id,
                 series_desc: h.qc_series_desc,
-                subject: h.qc_subject,
-                StudyInstanceUID: h.StudyInstanceUID,
                 SeriesNumber: h.SeriesNumber,
             }, {
                 //$inc: { count: 1 }, //increment the count
                 Modality: h.Modality,
                 StudyTimestamp: h.qc_StudyTimestamp,
                 IIBISID: h.qc_iibisid,
-            }, {upsert: true, 'new': true}, function(err, _study) {
+                subject: h.qc_subject,
+                StudyInstanceUID: h.StudyInstanceUID,
+            }, {upsert: true, 'new': true}, function(err, _series) {
                 if(err) return next(err);
-                study = _study;
+                series = _series;
                 next();
             });
         },
@@ -210,9 +226,13 @@ function incoming(h, msg_h, info, ack) {
             if(h.qc_istemplate) return next();  //if it's template then skip
 
             db.Acquisition.findOneAndUpdate({
-                study_id: study._id,
+                series_id: series._id,
                 AcquisitionNumber: h.AcquisitionNumber,
-            }, {}, {upsert:true, 'new': true}, function(err, _aq) {
+            }, {
+                research_id: research._id,
+                exam_id: exam._id,
+                series_id: series._id,
+            }, {upsert:true, 'new': true}, function(err, _aq) {
                 if(err) return next(err);
                 aq = _aq;
                 next();
@@ -228,14 +248,13 @@ function incoming(h, msg_h, info, ack) {
                 InstanceNumber: h.InstanceNumber,
             }, {
                 research_id: research._id,
+                exam_id: exam._id,
+                series_id: series._id,
                 IIBISID: h.qc_iibisid,
-                study_id: study._id,
                 headers: h,
                 $unset: {qc: 1},
-            }, {upsert: true, 'new': true}, function(err, _study) {
+            }, {upsert: true, 'new': true}, function(err, _image) {
                 if(err) return next(err);
-                study = _study;
-                
                 //send to elastic search
                 //TODO - somehow only do this when the record is first inserted.. fineOneAndUpdate seems to give me this info, 
                 //but maybe I can add a counter for each record?

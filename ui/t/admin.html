@@ -16,11 +16,13 @@
                         <ui-select multiple ng-model="_acl[iibisid].view.groups">
                             <ui-select-match placeholder="Select groups who can access this search">
                                 <b>{{$item.name}}</b>
-                                <span ng-repeat="member in $item.Members">{{member.fullname}} | </span>
+                                <!--<span ng-repeat="member in $item.Members">{{member.fullname}} | </span>-->
+                                <span class="text-muted">({{$item.Members.length}} users)</span>
                             </ui-select-match>
                             <ui-select-choices repeat="group in groups | propsFilter: {name: $select.search}">
                                 <b>{{group.name}}</b> <span class="text-muted">{{group.desc}}</span>
-                                <span ng-repeat="member in group.Members">{{member.fullname}} | </span>
+                                <!--<span ng-repeat="member in group.Members">{{member.fullname}} | </span>-->
+                                <span class="text-muted">({{group.Members.length}} users)</span>
                             </ui-select-choices>
                         </ui-select>
                     </td>
@@ -28,11 +30,13 @@
                         <ui-select multiple ng-model="_acl[iibisid].qc.groups">
                             <ui-select-match placeholder="Select groups who can access this search">
                                 <b>{{$item.name}}</b>
-                                <span ng-repeat="member in $item.Members">{{member.fullname}} | </span>
+                                <!--<span ng-repeat="member in $item.Members">{{member.fullname}} | </span>-->
+                                <span class="text-muted">({{$item.Members.length}} users)</span>
                             </ui-select-match>
                             <ui-select-choices repeat="group in groups | propsFilter: {name: $select.search}">
                                 <b>{{group.name}}</b> <span class="text-muted">{{group.desc}}</span>
-                                <span ng-repeat="member in group.Members">{{member.fullname}} | </span>
+                                <!--<span ng-repeat="member in group.Members">{{member.fullname}} | </span>-->
+                                <span class="text-muted">({{group.Members.length}} users)</span>
                             </ui-select-choices>
                         </ui-select>
                     </td>

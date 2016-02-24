@@ -3,9 +3,8 @@
     <table class="table table-condensed" style="margin-bottom: 0px;">
     <thead><tr><th style="color: #333;" width="30%">Series Description</th>
         <th ng-repeat="time in $ctrl.times">
-            <time>{{time|date:'short'}}</time>
-            &nbsp;
-            <button class="btn btn-xs" style="padding: 1px 2px; font-size: 80%;" ng-click="reqc(subject, time)">ReQC</button>
+            <time>{{time|date:'short'}}</time> &nbsp;
+            <button class="btn btn-xs" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc(time)">ReQC</button>
         </th>
     </tr></thead>
     <tbody>
@@ -36,7 +35,7 @@
     <div class="row">
         <div class="col-md-2">
             <p><time style="position: relative; top: 5px"><b>{{time|date:'short'}}</b></time></p>
-            <button class="btn btn-xs" ng-click="reqc(subject, time)">ReQC</button>
+            <button class="btn btn-xs" ng-click="$ctrl.reqc(time)">ReQC</button>
         </div>
         <div class="col-md-10">
             <table class="table table-condensed" style="margin-bottom: 0px;">
@@ -45,7 +44,7 @@
                 <tr ng-repeat="(series_desc, studies) in $ctrl.serieses" ng-init="study = studies[time]">
                 <!--<tr ng-repeat="series_desc in $ctrl.keys($ctrl.serieses) | orderBy:'toString().toLowerCase()'" ng-init="study = $ctrl.serieses[series_desc][time]">-->
                     <td>{{series_desc}}</td>
-                    <td style="padding: 1px 5px;">
+                    <td style="padding: 0px;">
                         <div class="studies">
                             <div ng-if="study._excluded" class="text-muted excluded" ng-click="study._excluded = false">Excluded</div>
                             <div ng-if="!study._excluded" class="slide-down">
@@ -53,11 +52,19 @@
                             </div>
                         </div>
                     </td>
-                    <td>TODO</td>
+                    <td style="padding: 0px;">
+                        <div ng-if="study.qc.template_id" 
+                            ng-init="template = $ctrl.templates[study.qc.template_id]"
+                            class="studynote" ng-click="$ctrl.opentemplate(template._id)">
+                            {{template.date | date:'short'}}
+                            <span class="text-muted">{{template.series_desc}}</span>
+                            <span class="text-muted">(#{{template.SeriesNumber}})</span>
+                        </div>
+                    </td>
                 </tr>
                 <tr ng-repeat="(series_desc, template) in $ctrl.missing[time]">
                     <td class="text-muted">{{series_desc}}</td>
-                    <td style="padding: 1px 5px;">
+                    <td style="padding: 0px;">
                         <div class="missing clickable" ng-click="$ctrl.opentemplate(template._id)">
                             <span class="label label-info">Missing</span> 
                             <span class="text-muted">(Template #{{template.SeriesNumber}})</span>

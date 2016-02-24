@@ -32,8 +32,8 @@ describe('models', function() {
     it('connect', function(done) {
         db.init(done);
     });
-    it('studies', function(done) {
-        db.Study
+    it('series', function(done) {
+        db.Series
         .find()
         //.where('StudyTimestamp').gt(start_time)
         .limit(3)
