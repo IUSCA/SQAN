@@ -253,11 +253,11 @@ function incoming(h, msg_h, info, ack) {
                 IIBISID: h.qc_iibisid,
                 headers: h,
                 $unset: {qc: 1},
-            }, {upsert: true, 'new': true}, function(err, _image) {
+            }, {upsert: true, 'new': false}, function(err, _image, o) {
                 if(err) return next(err);
-                //send to elastic search
-                //TODO - somehow only do this when the record is first inserted.. fineOneAndUpdate seems to give me this info, 
-                //but maybe I can add a counter for each record?
+                //I am setting new:false so that _image will be null if this is the first time
+                if(_image) return next(err); //already inserted - no need to post to es
+                logger.debug("new image - sending to es");
                 cleaned_ex.publish('', h, {}, function(err) {
                     next(err);
                 });
