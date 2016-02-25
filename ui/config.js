@@ -29,7 +29,7 @@ angular.module('app.config', [])
         },
         {
             id: "research",
-            label: "Exams",
+            label: "All Exams",
             url: "/dicom/#/research",
             show: function(scope) {
                 if(~scope.dicom.indexOf('user')) return true;

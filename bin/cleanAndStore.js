@@ -256,8 +256,10 @@ function incoming(h, msg_h, info, ack) {
             }, {upsert: true, 'new': false}, function(err, _image, o) {
                 if(err) return next(err);
                 //I am setting new:false so that _image will be null if this is the first time
-                if(_image) return next(err); //already inserted - no need to post to es
-                logger.debug("new image - sending to es");
+                if(_image) {
+                    logger.warn("image already inserted - not sending to es since it can't update");
+                    return next(err); 
+                }
                 cleaned_ex.publish('', h, {}, function(err) {
                     next(err);
                 });
