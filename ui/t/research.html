@@ -17,19 +17,19 @@
             <!--<p class="text-muted" ng-if="!serieses">No series</p>-->
             <viewmode-toggler mode="view_mode"></viewmode-toggler>
             <p class="help-block">This page shows all studies ever received (TODO - allow user to filter by date range and add search?)</p>
-            <p class="text-muted" ng-if="study_count == 0">No exam on this IIBISID</p>
+            <p class="text-muted" ng-if="study_count == 0">No exam on this research</p>
             <ul class="list-group">
-                <div ng-repeat="(subject, series_descs) in subjects">
+                <div ng-repeat="(subject, subject_detail) in subjects">
                     <li class="list-group-item" style="background-color: #eee;">
                         <span class="text-muted">Subject:</span> {{subject}}
                     </li>
-                    <subject-detail 
+                    <exams
                         researchid="research_id" 
                         subject="subject"
                         mode="view_mode" 
-                        serieses="series_descs"     
+                        serieses="subject_detail.serieses"     
                         templates="templates"
-                        times="subjects_times[subject]"></subject-detail>
+                        times="subjects_times[subject]"></exams>
                 </div><!--ng-repeat in subjects -->
                 <li class="list-group-item" style="background-color: #ccc;">Templates</li>
                 <templates templates="templates_matrix" times="templates_times"></templates>

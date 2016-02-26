@@ -159,6 +159,7 @@ function incoming(h, msg_h, info, ack) {
                 subject: (h.qc_istemplate?undefined:h.qc_subject),
                 date: h.qc_StudyTimestamp, 
             }, {
+                IIBISID: h.qc_iibisid,
                 istemplate: h.qc_istemplate,
             }, {upsert:true, 'new': true}, function(err, _exam) {
                 if(err) return next(err);
@@ -177,6 +178,7 @@ function incoming(h, msg_h, info, ack) {
                 series_desc: h.qc_series_desc,
                 SeriesNumber: h.SeriesNumber,
             }, {
+                IIBISID: h.qc_iibisid,
                 Modality: h.Modality,
                 date: h.qc_StudyTimestamp, 
                 //headers: h, //update with the latest headers (or mabe we should store all under an array?)

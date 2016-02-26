@@ -151,15 +151,19 @@ ol.subjects li.inview a {
   border-top: 0px;
   background-color: #f6f6f6;
 }
+.subject {
+  /*
+    th {
+        opacity: 0.4;
+    }
+    */
+}
 .subject .list-group-item-subject {
   border-bottom: 0px;
   padding: 3px 10px;
 }
 .subject .subject-body {
   background-color: #eee;
-}
-.subject th {
-  opacity: 0.4;
 }
 .subject.template {
   background-color: #008cba;

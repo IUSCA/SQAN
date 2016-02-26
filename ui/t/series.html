@@ -19,6 +19,12 @@
                         </div>
                     </div>
                 </li>
+                <li class="list-group-item">
+                    <div class="row">
+                        <div class="col-sm-2"><span class="text-muted">Series Description</span></div>
+                        <div class="col-sm-10">{{data.series.series_desc}} <span class="text-muted">(#{{data.series.SeriesNumber}})</span></div>
+                    </div>
+                </li>
                 <!--
                 <li class="list-group-item">
                     <div class="row">
@@ -37,12 +43,6 @@
                     <div class="row">
                         <div class="col-sm-2"><span class="text-muted">Subject</span></div>
                         <div class="col-sm-10">{{data.series.subject}}</div>
-                    </div>
-                </li>
-                <li class="list-group-item">
-                    <div class="row">
-                        <div class="col-sm-2"><span class="text-muted">Series Description</span></div>
-                        <div class="col-sm-10">{{data.series.series_desc}}</div>
                     </div>
                 </li>
                 <li class="list-group-item" ng-if="data.qc_template">
@@ -65,7 +65,7 @@
                                 ng-model="data.template_exam" 
                                 on-select="select_template($item, $model)"
                                 ng-disabled="!data.canqc">
-                                <ui-select-match placeholder="Specify a template or leave it blank to auto select the best matching template" allow-clear-dis="true">
+                                <ui-select-match placeholder="Specify a template or leave it blank to auto select the latest template" allow-clear-dis="true">
                                     <div class_dis="studynote" ng-click_dis="opentemplate($select.selected._id)">
                                         {{$select.selected.date | date:'medium'}} 
                                     </div>

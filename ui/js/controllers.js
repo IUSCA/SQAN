@@ -56,8 +56,9 @@ function organize_series(researches, serieses) {
 
         var subject = study.subject;
         var study_time = study.StudyTimestamp;
-        if(modality.subjects_times[subject] === undefined) modality.subjects_times[subject] = [];
-        if(!~modality.subjects_times[subject].indexOf(study_time)) modality.subjects_times[subject].push(study_time);
+        var exam_id = study.exam_id;
+        if(modality.subjects_times[subject] === undefined) modality.subjects_times[subject] = {};
+        modality.subjects_times[subject][exam_id] = study_time;
         if(modality.subjects[study.subject] == undefined) modality.subjects[study.subject] = {
             serieses: {},
             missing_serieses: {},
@@ -72,9 +73,8 @@ function organize_series(researches, serieses) {
             missing: 0, 
         };
         if(modality.subjects[study.subject].serieses[study.series_desc] == undefined)  modality.subjects[study.subject].serieses[study.series_desc] = {};
-        modality.subjects[study.subject].serieses[study.series_desc][study_time] = study;
+        modality.subjects[study.subject].serieses[study.series_desc][exam_id] = study;
     });
-
     return ret;
 }
 
@@ -87,7 +87,29 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
     var jwt = localStorage.getItem(appconf.jwt_id);
     if(jwt) { $scope.user = jwtHelper.decodeToken(jwt); }
 
-    $scope.view_mode = "wide";
+    $scope.view_mode = "tall";
+
+    $scope.$on("exam_invalidated", function(event, msg) {
+        console.dir(msg);
+        $http.get(appconf.api+'/study/query', {params: {
+            where: {exam_id: msg.exam_id}
+        }})
+        .then(function(res) {
+            /*
+            //process researches :: create research_id to research object mapping
+            var researches = {};
+            res.data.researches.forEach(function(research) {
+                researches[research._id] = research;
+            });
+            $scope.study_count = res.data.studies.length;
+            */
+            var n = organize_series(researches, res.data.studies);
+            console.dir(n);
+        }, function(res) {
+            if(res.data && res.data.message) toaster.error(res.data.message);
+            else toaster.error(res.statusText);
+        });
+     });
 
     $http.get(appconf.api+'/study/query', {params: {
         skip: 0, 
@@ -104,7 +126,7 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
         $scope.study_count = res.data.studies.length;
         $scope.researches = organize_series(researches, res.data.studies);
         
-        //oranize templates
+        //organize templates
         $scope.templates = {};
         res.data.templates.forEach(function(template) {
             var research_detail = researches[template.research_id];
@@ -132,15 +154,9 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                     
                     //count number of status for each subject
                     for(var series_desc in subject.serieses) {
-                        var times = subject.serieses[series_desc];
-                        for(var time in times) {
-                            var study = times[time];
-                            /*
-                            if(study._excluded) {
-                                series._excluded = true;
-                                continue;
-                            }
-                            */
+                        var exams = subject.serieses[series_desc];
+                        for(var exam_id in exams) {
+                            var study = exams[exam_id];
                             if(study.qc) {
                                 //decide the overall status(with error>warning>notemp precedence) for each study and count that.. 
                                 if(study.qc.errors && study.qc.errors.length > 0) {
@@ -168,7 +184,9 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                         if(template) template_series_descs[template_series_desc] = template;
                     }
                     //find *missing* subject for each exam times (for this subject) using the latest set of template (tmeplate_series_descs)
-                    modality.subjects_times[subject_id].forEach(function(time) {
+                    //modality.subjects_times[subject_id].forEach(function(time) {
+                    for(var exam_id in modality.subjects_times[subject_id]) {
+                        var time = modality.subjects_times[subject_id][exam_id];
                         subject.missing_serieses[time] = {};
                         for(var template_series_desc in template_series_descs) {
                             var found = false;
@@ -184,7 +202,7 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                                 subject.missing++;
                             }
                         }
-                    });
+                    };
                 }
             }
         }
@@ -281,12 +299,14 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
                 var subject = study.subject;
                 var series_desc = study.series_desc;
                 var study_time = study.StudyTimestamp;
-                if($scope.subjects_times[subject] == undefined) $scope.subjects_times[subject] = [];
-                if(!~$scope.subjects_times[subject].indexOf(study_time)) $scope.subjects_times[subject].push(study_time);
-                if($scope.subjects[subject] == undefined) $scope.subjects[subject] = {};
-                if($scope.subjects[subject][series_desc] == undefined) $scope.subjects[subject][series_desc] = {};
-                $scope.subjects[subject][series_desc][study_time] = study;
-                //if(study._excluded) $scope.subjects[subject][series_desc]._excluded = true;
+                var exam_id = study.exam_id;
+                if($scope.subjects_times[subject] == undefined) $scope.subjects_times[subject] = {};
+                $scope.subjects_times[subject][exam_id] = study_time;
+                if($scope.subjects[subject] == undefined) $scope.subjects[subject] = {
+                    serieses: {}
+                };
+                if($scope.subjects[subject].serieses[series_desc] == undefined) $scope.subjects[subject].serieses[series_desc] = {};
+                $scope.subjects[subject].serieses[series_desc][exam_id] = study;
             });
 
             //create a matrix of template time / descs
@@ -301,8 +321,6 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
                 $scope.templates_matrix[series_desc][template_time] = template; 
                 $scope.templates[template._id] = template;
             });
-            //console.dir(res.data.templates);
-            //console.dir($scope.templates);
         }, function(res) {
             if(res.data && res.data.message) toaster.error(res.data.message);
             else toaster.error(res.statusText);
@@ -310,10 +328,14 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
     }
 }]);
 
-//TODO - maybe rename to exam?
-app.component('subjectDetail', {
-    templateUrl: 't/components/subjectdetail.html',
-    controller: function(appconf, $window, $http, toaster) { 
+app.component('exams', {
+    templateUrl: 't/components/exams.html',
+    /*
+    require: {
+        tabsCtrl: '^myTabs'
+    },
+    */
+    controller: function($scope, appconf, $window, $http, toaster) { 
 
         //list of series descs that has missing series
         this.missing_series_descs = [];
@@ -336,14 +358,17 @@ app.component('subjectDetail', {
             return obj? Object.keys(obj) : [];
         }
 
-        this.reqc = function(time) {
+        this.reqc = function(exam_id) {
             $http.post(appconf.api+'/study/reqc', {
+                /*
                 research_id: this.researchid,
                 subject: this.subject,
                 StudyTimestamp: time,
+                */
+                exam_id: exam_id,
             })
             .then(function(res) {
-                //TODO - reload the subject?
+                $scope.$emit("exam_invalidated", {exam_id: exam_id});
                 toaster.success(res.data.message);
             }, function(res) {
                 if(res.data && res.data.message) toaster.error(res.data.message);

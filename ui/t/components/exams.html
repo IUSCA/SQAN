@@ -1,28 +1,29 @@
 <!-- folded (studytime on each column) view -->
 <li class="list-group-item list-group-item-subject" ng-if="$ctrl.mode == 'wide'">
     <table class="table table-condensed" style="margin-bottom: 0px;">
-    <thead><tr><th style="color: #333;" width="30%">Series Description</th>
-        <th ng-repeat="time in $ctrl.times">
+    <thead><tr><th width="30%"><span class="text-muted">Series Description</span></th>
+        <th ng-repeat="(exam_id, time) in $ctrl.times">
             <time>{{time|date:'short'}}</time> &nbsp;
-            <button class="btn btn-xs" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc(time)">ReQC</button>
+            <button class="btn btn-xs" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc(exam_id)">ReQC</button>
         </th>
     </tr></thead>
     <tbody>
-        <tr ng-repeat="(series_desc, times) in $ctrl.serieses">
+        <tr ng-repeat="(series_desc, exams) in $ctrl.serieses">
             <td>{{series_desc}}</td>
-            <td ng-repeat="time in $ctrl.times" ng-init="study = times[time]" style="padding: 0px;">
+            <td ng-repeat="(exam_id, time) in $ctrl.times" ng-init="study = exams[exam_id]" style="padding: 0px;">
                 <div ng-if="study._excluded" class="text-muted excluded" ng-click="study._excluded = false">Excluded</div>
                 <div ng-if="!study._excluded" class="slide-down">
-                    <studynote ng-click="$ctrl.openstudy(study._id)" study="study">
+                    <studynote ng-click="$ctrl.openstudy(study._id)" study="study"></studynote>
+                    <span class="text-muted">(#{{study.SeriesNumber}})</span>
                 </div>
             </td>
         </tr>
         <tr ng-repeat="series_desc in $ctrl.missing_series_descs">
             <td class="text-muted">{{series_desc}}</td>
-            <td ng-repeat="time in $ctrl.times" ng-init="template = $ctrl.missing[time][series_desc]" style="padding: 0px;">
+            <td ng-repeat="(exam_id, time) in $ctrl.times" ng-init="template = $ctrl.missing[time][series_desc]" style="padding: 0px;">
                 <div class="missing clickable" ng-click="$ctrl.opentemplate(template._id)">
                     <span class="label label-info">Missing</span> 
-                    <span class="text-muted">(Template #{{template.SeriesNumber}})</span>
+                    <span class="text-muted">(#{{template.SeriesNumber}})</span>
                 </div>
             </td>
             <td></td>
@@ -31,19 +32,19 @@
     </table>
 </li>
 <!-- exploded view (show each study time under different list-group-item) -->
-<li class="list-group-item list-group-item-subject" ng-if="$ctrl.mode == 'tall'" ng-repeat="time in $ctrl.times">
+<li class="list-group-item list-group-item-subject" ng-if="$ctrl.mode == 'tall'" ng-repeat="(exam_id, time) in $ctrl.times" ng-init="">
     <div class="row">
         <div class="col-md-2">
             <p><time style="position: relative; top: 5px"><b>{{time|date:'short'}}</b></time></p>
-            <button class="btn btn-xs" ng-click="$ctrl.reqc(time)">ReQC</button>
+            <button class="btn btn-xs" ng-click="$ctrl.reqc(exam_id)">ReQC</button>
         </div>
         <div class="col-md-10">
             <table class="table table-condensed" style="margin-bottom: 0px;">
-            <thead style="color: #333;"><tr><th width="30%">Series Description</th><th>Series Number</th><th>Template Used</th></tr></thead>
+            <thead><tr class="text-muted"><th width="30%">Series Description</th><th width="150px">Status</th><th>Template Used</th></tr></thead>
             <tbody>
-                <tr ng-repeat="(series_desc, studies) in $ctrl.serieses" ng-init="study = studies[time]">
+                <tr ng-repeat="(series_desc, exams) in $ctrl.serieses" ng-init="study = exams[exam_id]">
                 <!--<tr ng-repeat="series_desc in $ctrl.keys($ctrl.serieses) | orderBy:'toString().toLowerCase()'" ng-init="study = $ctrl.serieses[series_desc][time]">-->
-                    <td>{{series_desc}}</td>
+                    <td>{{series_desc}} <span class="text-muted">(#{{study.SeriesNumber}})</span></td>
                     <td style="padding: 0px;">
                         <div class="studies">
                             <div ng-if="study._excluded" class="text-muted excluded" ng-click="study._excluded = false">Excluded</div>
@@ -63,11 +64,11 @@
                     </td>
                 </tr>
                 <tr ng-repeat="(series_desc, template) in $ctrl.missing[time]">
-                    <td class="text-muted">{{series_desc}}</td>
+                    <td class="text-muted">{{series_desc}} (#{{template.SeriesNumber}})</td>
                     <td style="padding: 0px;">
                         <div class="missing clickable" ng-click="$ctrl.opentemplate(template._id)">
                             <span class="label label-info">Missing</span> 
-                            <span class="text-muted">(Template #{{template.SeriesNumber}})</span>
+                            <!--<span class="text-muted">(#{{template.SeriesNumber}})</span>-->
                         </div>
                     </td>
                     <td></td>

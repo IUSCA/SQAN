@@ -48,6 +48,12 @@ var examSchema = mongoose.Schema({
     //
     //
     ///////////////////////////////////////////////////////////////////////////
+    
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //foreign key to assist lookup
+    //
+    IIBISID: {type: String, index: true},//make it easier to do access control
 
     istemplate: Boolean,
 });
@@ -71,6 +77,7 @@ var templateSchema = mongoose.Schema({
     //
     //foreign key to assist lookup
     //
+    IIBISID: {type: String, index: true},//make it easier to do access control
     Modality: {type: String, index: true},  //like.. PT
     
     count: Number, //number of images in a given series
@@ -135,22 +142,8 @@ var seriesSchema = mongoose.Schema({
 
     //study level qc result 
     qc: mongoose.Schema.Types.Mixed, //has to be Mixed so that mongoose will let me set to null
-    /*
-    qc: { //mongoose.Schema.Types.Mixed,
-        notemps: Number,
-        warnings: [ mongoose.Schema.Types.Mixed ],
-        errors: [ mongoose.Schema.Types.Mixed ],
-        date: Date,
-        template_id: mongoose.Schema.Types.ObjectId,
-        clean: Number,
-        image_count: Number,
-    },
-    */
-
     qc1_state: String, //(null), fail, autopass, accept, reject
-    //qc1_finalized: Boolean,
     qc2_state: String, //(null), accept, condaccept, reject
-    //pipeline status (see sundar's data qc & pipeline)
 
     events: [ mongoose.Schema({
         service_id: String, //if event was performeed by a system, this is set

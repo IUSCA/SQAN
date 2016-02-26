@@ -66,13 +66,14 @@
                             <li class="list-group-item subject-body">
                                 <span class="text-muted">Subject</span> {{subject}}
                             </li>
-                            <subject-detail 
+                            <exams
+                                examid="subject_detail.exam_id"
                                 researchid="modality._detail._id" 
                                 subject="subject"
                                 serieses="subject_detail.serieses" 
                                 missing="subject_detail.missing_serieses" 
                                 templates="templates"
-                                times="modality.subjects_times[subject]" mode="view_mode"></subject-detail>
+                                times="modality.subjects_times[subject]" mode="view_mode"></exams>
                         </div>
 
                         <div id="{{iibisid+modality_id}}" class="template">

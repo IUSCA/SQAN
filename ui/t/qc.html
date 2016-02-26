@@ -20,51 +20,21 @@
                             RadioTracer: <b>{{modality._detail.radio_tracer}}</b>
                         </small>
                     </h3>
-                    <ul class="list-group">
+                    <ul class="list-group" style="margin-bottom: 10px;border-bottom: 1px solid #ccc">
                         <div ng-repeat="(subject, subject_detail) in modality.subjects" id="{{subject_detail.uid}}" class="subject">
                             <li class="list-group-item subject-body">
                                 <span class="text-muted">Subject:</span> {{subject}}
                             </li>
-                            <subject-detail 
+                            <exams
+                                examid="subject_detail.exam_id"
                                 researchid="modality._detail._id" 
                                 subject="subject"
                                 serieses="subject_detail.serieses" 
                                 missing="subject_detail.missing_serieses" 
                                 times="modality.subjects_times[subject]" 
                                 templates="templates"
-                                mode="view_mode"></subject-detail>
-                            <!--
-                            <li class="list-group-item list-group-item-subject" 
-                                ng-repeat="(study_timestamp, serieses) in study_times">
-                                <div class="row">
-                                    <div class="col-md-2">
-                                        <p>
-                                            <span style="position: relative; top: 5px">{{study_timestamp|date:'short'}}</span>
-                                        </p>
-                                        <p>
-                                            <button class="btn btn-xs">ReQC</button>
-                                        </p>
-                                    </div>
-                                    <div class="col-md-10">
-                                        <table class="table table-condensed" style="margin-bottom: 0px;">
-                                        <thead><tr><th width="30%">Series Description</th><th>Series Number</th><th>Template Used</th></tr></thead>
-                                        <tbody>
-                                            <tr ng-repeat="(series_desc, studies) in serieses">
-                                                <td>{{series_desc}}</td>
-                                                <td style="padding: 1px 5px;">
-                                                    <div class="studies">
-                                                        <studynote ng-repeat="study in studies" ng-click="openstudy(study._id)" study="study">
-                                                    </div>
-                                                </td>
-                                                <td>TODO</td>
-                                            </tr>
-                                        </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </li>
-                            -->
-                        </div><!--ng-repeat in serieses-->
+                                mode="view_mode"></exams>
+                        </div><!--ng-repeat in subjects -->
                     </ul>
                 </div><!--ng-repeast in researches -->
             </div><!--ng-repeast in iibisids-->

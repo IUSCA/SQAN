@@ -105,7 +105,6 @@ function get_template(series, cb) {
             if(err) return cb(err);
             if(!exam) {
                 //console.log(JSON.stringify(series, null, 4));
-                logger.info("couldn't find any template set for research_id:"+series.research_id);
                 return cb(null, null);
             }
             pick_template(series, exam._id, cb);
@@ -121,7 +120,10 @@ function find_template_headers(image, cb) {
         //then find template
         get_template(series, function(err, template) {
             if(err) return cb(err);
-            if(!template) return cb(null, null);
+            if(!template) {
+                logger.info("couldn't find any template set for research_id:"+series.research_id+" for image_id:"+image._id);
+                return cb(null, null);
+            }
             db.TemplateHeader.findOne({
                 template_id: template._id, 
                 "headers.AcquisitionNumber": image.headers.AcquisitionNumber,

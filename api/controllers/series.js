@@ -246,16 +246,16 @@ router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), funct
     });
 });
 
-//note - a very somewhat similar functionality exists under /research
+//reqc by exam_id
 router.post('/reqc', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    db.Research.findById(req.body.research_id, function(err, research) {
+    db.Exam.findById(req.body.exam_id, function(err, exam) {
         if(err) return next(err);
-        if(!research) return res.status(404).json({message: "can't find specified research"});
+        if(!exam) return res.status(404).json({message: "can't find specified exam"});
         //make sure user has access to this research
-        db.Acl.can(req.user, 'qc', research.IIBISID, function(can) {
-            if(!can) return res.status(401).json({message: "you are not authorized to QC this IIBISID:"+research.IIBISID});
+        db.Acl.can(req.user, 'qc', exam.IIBISID, function(can) {
+            if(!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:"+exam.IIBISID});
             //find all serieses user specified
-            db.Series.find(req.body).exec(function(err, serieses) {
+            db.Series.find({exam_id: req.body.exam_id}).exec(function(err, serieses) {
                 if(err) return next(err);
                 var total_modified = 0;
                 async.forEach(serieses, function(series, next_series) {
