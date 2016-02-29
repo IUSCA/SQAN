@@ -345,7 +345,7 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                             for(var template_series_desc in template_series_descs) {
                                 var found = false;
                                 for(var series_desc in subject.serieses) {
-                                    if(subject.serieses[series_desc][time] == undefined) continue; //wrong time
+                                    if(subject.serieses[series_desc][exam_id] == undefined) continue; //wrong time
                                     if(series_desc.startsWith(template_series_desc)) {
                                         found = true;
                                         break;
