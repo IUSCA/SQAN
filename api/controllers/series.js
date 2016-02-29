@@ -85,7 +85,7 @@ router.get('/byresearchid/:research_id', jwt({secret: config.express.jwt.pub}), 
     db.Research.findById(req.params.research_id).exec(function(err, research) {
         if(err) return next(err);
         //make sure user has access to this research/IIBISID
-        console.log(JSON.stringify(research, null, 4));
+        //console.log(JSON.stringify(research, null, 4));
         db.Acl.can(req.user, 'view', research.IIBISID, function(can) {
             if(err) return next(err);
             db.Series.find({research_id: research._id})
@@ -97,7 +97,7 @@ router.get('/byresearchid/:research_id', jwt({secret: config.express.jwt.pub}), 
                 .sort('series_desc SeriesNumber') //mongoose does case-sensitive sorting - maybe I should try sorting it on ui..
                 .exec(function(err, templates) {
                     if(err) return next(err);
-                    res.json({studies:serieses, templates: templates});  //TODO rename to serieses
+                    res.json({studies:serieses, templates: templates, researches: [research]});  //TODO rename to serieses
                 });
             });
         });
@@ -246,16 +246,35 @@ router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), funct
     });
 });
 
-//reqc by exam_id
-router.post('/reqc', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    db.Exam.findById(req.body.exam_id, function(err, exam) {
+router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    db.Series.findById(req.params.series_id, function(err, series) {
+        if(err) return next(err);
+        if(!series) return res.status(404).json({message: "can't find specified series"});
+        //make sure user has access to this research
+        db.Acl.can(req.user, 'qc', series.IIBISID, function(can) {
+            if(!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:"+series.IIBISID});
+            series.qc = undefined;
+            series.save(function(err) {
+                if(err) next(err);
+                //also invalidate image QC.
+                db.Image.update({series_id: series._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
+                    if(err) return next(err);
+                    res.json({message: "Re-running QC on "+affected.nModified+" images."});
+                });
+            });
+        });
+    });
+});
+
+router.post('/reqcbyexamid/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    db.Exam.findById(req.params.exam_id, function(err, exam) {
         if(err) return next(err);
         if(!exam) return res.status(404).json({message: "can't find specified exam"});
         //make sure user has access to this research
         db.Acl.can(req.user, 'qc', exam.IIBISID, function(can) {
             if(!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:"+exam.IIBISID});
             //find all serieses user specified
-            db.Series.find({exam_id: req.body.exam_id}).exec(function(err, serieses) {
+            db.Series.find({exam_id: req.params.exam_id}).exec(function(err, serieses) {
                 if(err) return next(err);
                 var total_modified = 0;
                 async.forEach(serieses, function(series, next_series) {
@@ -271,7 +290,7 @@ router.post('/reqc', jwt({secret: config.express.jwt.pub}), function(req, res, n
                         });
                     });
                 }, function(err) {
-                    res.json({message: "Template updated. Re-running QC on "+total_modified+" images."});
+                    res.json({message: "Re-running QC on "+total_modified+" images."});
                 });
             });
         });
