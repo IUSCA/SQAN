@@ -19,8 +19,8 @@ router.get('/', jwt({secret: config.express.jwt.pub}), function(req, res, next) 
     query.sort('-IIBISID');
     query.exec(function(err, rs) {
         if(err) return next(err);
-        if(~req.user.scopes.dicom.indexOf('admin')) {
-            //admin needs to be able to see all iibisid - so that they can update the acl for all iibisids
+        //if admin parameter is set and if user is admin, return all (used to list all iibisid on admin page)
+        if(req.query.admin && ~req.user.scopes.dicom.indexOf('admin')) {
             return res.json(rs);
         }
         db.Acl.getCan(req.user, 'view', function(err, iibisids) {

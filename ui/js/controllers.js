@@ -812,7 +812,7 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, gro
     var jwt = localStorage.getItem(appconf.jwt_id);
     if(jwt) { $scope.user = jwtHelper.decodeToken(jwt); }
 
-    $http.get(appconf.api+'/research')
+    $http.get(appconf.api+'/research', {params: {admin: true}})
     .then(function(res) {
         //find unique iibisids
         $scope.iibisids = [];
