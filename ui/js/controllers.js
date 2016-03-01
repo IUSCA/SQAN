@@ -67,23 +67,6 @@ function organize($scope, data) {
 
     //organize series
     data.studies.forEach(function(series) {
-        /*
-        var research_detail = researches[study.research_id];
-        if($scope.org[research_detail.IIBISID] == undefined) $scope.org[research_detail.IIBISID] = {};
-        var modality_id = compose_modalityid(research_detail);
-        var modality = $scope.org[research_detail.IIBISID][modality_id];
-        if(modality === undefined) {
-            modality = {
-                _detail: research_detail,
-                subjects_times: {},
-                subjects: {}, 
-                templates_times: [], //array - because not grouped by subjects like subjects_times
-                templates: {},
-            };
-            $scope.org[research_detail.IIBISID][modality_id] = modality;
-        }
-        */
-
         var subject = series.subject;
         var series_desc = series.series_desc;
         var exam_id = series.exam_id;
@@ -103,13 +86,6 @@ function organize($scope, data) {
     //organize templates
     $scope.templates = {}; //for quick id to template mapping
     data.templates.forEach(function(template) {
-        /*
-        var research_detail = researches[template.research_id];
-        if($scope.org[research_detail.IIBISID] == undefined) $scope.org[research_detail.IIBISID] = {};
-        var research = $scope.org[research_detail.IIBISID];
-        var modality_id = compose_modalityid(research_detail);
-        var modality = research[modality_id];
-        */
         var time = template.date;
         var series_desc = template.series_desc;
 
@@ -120,42 +96,6 @@ function organize($scope, data) {
         $scope.templates[template._id] = template;
     });
 }
-
-/*
-//organize series :: organize study under iibisid / modality / subject / series / study(#series_number)
-function organize_series(researches, serieses) {
-    var ret = {};
-    serieses.forEach(function(study) {
-        var research_detail = researches[study.research_id];
-        if(ret[research_detail.IIBISID] == undefined) ret[research_detail.IIBISID] = {};
-        var modality_id = compose_modalityid(research_detail);
-        var modality = ret[research_detail.IIBISID][modality_id];
-        if(modality === undefined) {
-            modality = {
-                _detail: research_detail,
-                subjects_times: {},
-                subjects: {}, 
-                templates_times: [], //array - because not grouped by subjects like subjects_times
-                templates: {},
-            };
-            ret[research_detail.IIBISID][modality_id] = modality;
-        }
-
-        var subject = study.subject;
-        var study_time = study.StudyTimestamp;
-        var exam_id = study.exam_id;
-        if(modality.subjects_times[subject] === undefined) modality.subjects_times[subject] = {};
-        modality.subjects_times[subject][exam_id] = study_time;
-        if(modality.subjects[study.subject] == undefined) modality.subjects[study.subject] = {
-            //subject could contain a lot of different attributes other than serieses.
-            serieses: {},
-        };
-        if(modality.subjects[study.subject].serieses[study.series_desc] == undefined)  modality.subjects[study.subject].serieses[study.series_desc] = {};
-        modality.subjects[study.subject].serieses[study.series_desc][exam_id] = study;
-    });
-    return ret;
-}
-*/
 
 app.controller('RecentController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', 'serverconf', 'scaMessage', '$anchorScroll', '$document', '$window', '$location',
 function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $anchorScroll, $document, $window, $location) {
@@ -217,38 +157,6 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
     //reload data if user invalidate data (like QC)
     $scope.$on("exam_invalidated", function(event, msg) {
         load();
-        /*
-        $http.get(appconf.api+'/study/query', {params: {
-            where: {exam_id: msg.exam_id}
-        }})
-        .then(function(res) {
-            //process researches :: create research_id to research object mapping
-            var researches = {};
-            res.data.researches.forEach(function(research) {
-                researches[research._id] = research;
-            });
-
-            var n = organize_series(researches, res.data.studies);
-            //replace the exam
-            for(var iibisid in n) {
-                for(var research_name in n[iibisid]) {
-                    for(var subject in n[iibisid][research_name].subjects) {
-                        for(var series_desc in n[iibisid][research_name].subjects[subject].serieses) {
-                            var series = n[iibisid][research_name].subjects[subject].serieses[series_desc];
-                            console.dir(series[msg.exam_id]);
-                            //TODO - now replace the $scope.researches 
-                            //TODO - I need to refactor this $http.get()
-                            //TODO - or.. maybe I should just reload the whole thing?
-                        }
-                    }
-                }
-            }
-
-        }, function(res) {
-            if(res.data && res.data.message) toaster.error(res.data.message);
-            else toaster.error(res.statusText);
-        });
-        */
     });
 
     function load() {
@@ -257,34 +165,8 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
             limit: appconf.recent_study_limit || 200,
         }})
         .then(function(res) {
-        
-            /*
-            //process researches :: create research_id to research object mapping
-            var researches = {};
-            res.data.researches.forEach(function(research) {
-                researches[research._id] = research;
-            });
-            */
-
             organize($scope, res.data);
             
-            /*
-            //organize templates
-            $scope.templates = {};
-            res.data.templates.forEach(function(template) {
-                var research_detail = researches[template.research_id];
-                var research = $scope.org[research_detail.IIBISID];
-                var modality_id = compose_modalityid(research_detail);
-                var modality = research[modality_id];
-                var time = template.date;
-                var series_desc = template.series_desc;
-                if(!~modality.templates_times.indexOf(time)) modality.templates_times.push(time);
-                if(modality.templates[series_desc] == undefined) modality.templates[series_desc] = {};
-                modality.templates[series_desc][time] = template;
-                $scope.templates[template._id] = template;
-            });
-            */
-
             //do some extra processing for each subject
             for(var research_id in $scope.org) {
                 var modalities = $scope.org[research_id];
@@ -408,43 +290,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
         $http.get(appconf.api+'/study/byresearchid/'+$scope.research_id)
         .then(function(res) {
             $scope.study_count = res.data.studies.length;
-
             organize($scope, res.data);
-
-            /*
-            $scope.subjects_times = {};
-            $scope.subjects = {};
-
-            //organize studies/templates into series_desc / subject / study_time+series number
-            res.data.studies.forEach(function(study) {
-                var subject = study.subject;
-                var series_desc = study.series_desc;
-                var study_time = study.StudyTimestamp;
-                var exam_id = study.exam_id;
-                if($scope.subjects_times[subject] == undefined) $scope.subjects_times[subject] = {};
-                $scope.subjects_times[subject][exam_id] = study_time;
-                if($scope.subjects[subject] == undefined) $scope.subjects[subject] = {
-                    serieses: {}
-                };
-                if($scope.subjects[subject].serieses[series_desc] == undefined) $scope.subjects[subject].serieses[series_desc] = {};
-                $scope.subjects[subject].serieses[series_desc][exam_id] = study;
-            });
-            */
-
-            //create a matrix of template time / descs
-            /*
-            $scope.templates_times = [];
-            $scope.templates_matrix = {}; //[series_desc][template_time] = template
-            $scope.templates = {}; //[template._id] = template;
-            res.data.templates.forEach(function(template) {
-                var series_desc = template.series_desc;
-                var template_time = template.date;
-                if(!~$scope.templates_times.indexOf(template_time)) $scope.templates_times.push(template_time);
-                if($scope.templates_matrix[series_desc] == undefined) $scope.templates_matrix[series_desc] = {};
-                $scope.templates_matrix[series_desc][template_time] = template; 
-                $scope.templates[template._id] = template;
-            });
-            */
             if($scope.qcing) setTimeout(load_series, 1000*10);
         }, function(res) {
             if(res.data && res.data.message) toaster.error(res.data.message);
@@ -455,19 +301,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
 
 app.component('exams', {
     templateUrl: 't/components/exams.html',
-    /*
-    require: {
-        tabsCtrl: '^myTabs'
-    },
-    */
     controller: function($scope, appconf, $window, $http, toaster) { 
-
-        /*
-        $scope.$watch('serieses', function(nv, old) {
-            console.log("serieses updated");
-        });
-        */
-
         //list of series descs that has missing series
         this.missing_series_descs = [];
         for(var time in this.missing) {
@@ -529,13 +363,6 @@ app.component('templates', {
 
 app.component('viewmodeToggler', {
     templateUrl: 't/components/viewmodetoggler.html',
-    /*
-    controller: function($window) { 
-        this.openstudy = function(id) {
-            $window.open("#/study/"+id, "study:"+id);
-        }
-    },
-    */
     bindings: {
         mode: '=', //view mode ('wide' / 'tall')
     },
@@ -577,25 +404,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
             where: where,
         }})
         .then(function(res) {
-            //$scope.debug = res.data;
-
             organize($scope, res.data);
-            /*
-
-            //set researches
-            var researches = {};
-            res.data.researches.forEach(function(r) {
-                researches[r._id] = r;
-            });
-
-            //organize series/templates into series_desc / subject / study_time+series number
-            $scope.study_count = res.data.studies.length;
-            $scope.org = organize_series(researches, res.data.studies);
-            $scope.templates = {};
-            res.data.templates.forEach(function(template) {
-                $scope.templates[template._id] = template;
-            });
-            */
             if($scope.qcing) setTimeout(load, 1000*10);
         }, function(res) {
             if(res.data && res.data.message) toaster.error(res.data.message);
