@@ -59,6 +59,7 @@ function organize($scope, data) {
                 subjects: {}, 
                 templates_times: [], //array - because not grouped by subjects like subjects_times
                 templates: {},
+
             };
             $scope.org[research_detail.IIBISID][modality_id] = modality;
         }
@@ -77,6 +78,10 @@ function organize($scope, data) {
         if(modality.subjects[subject] == undefined) modality.subjects[subject] = {
             //subject could contain a lot of different attributes other than serieses.
             serieses: {},
+            missing_serieses: {},
+            
+            //counter.. should I move the counting logic from recent to here?
+            missing: 0,
         };
         if(modality.subjects[subject].serieses[series_desc] == undefined)  modality.subjects[subject].serieses[series_desc] = {};
         modality.subjects[subject].serieses[series_desc][exam_id] = series;
@@ -86,15 +91,60 @@ function organize($scope, data) {
     //organize templates
     $scope.templates = {}; //for quick id to template mapping
     data.templates.forEach(function(template) {
+        $scope.templates[template._id] = template;
+
         var time = template.date;
         var series_desc = template.series_desc;
-
         var modality = get_modality(template.research_id);
         if(!~modality.templates_times.indexOf(time)) modality.templates_times.push(time);
         if(modality.templates[series_desc] == undefined) modality.templates[series_desc] = {};
-        modality.templates[series_desc][time] = template;
-        $scope.templates[template._id] = template;
+        if(modality.templates[series_desc][time] == undefined) modality.templates[series_desc][time] = [];
+        modality.templates[series_desc][time].push(template);
     });
+
+    //find missing series
+    for(var research_id in $scope.org) {
+        var modalities = $scope.org[research_id];
+        for(var modality_id in modalities) {
+            var modality = modalities[modality_id];
+            for(var subject_id in modality.subjects) {
+                var subject = modality.subjects[subject_id];
+
+                subject.uid = research_id+modality_id+subject_id;
+                
+                //find latest template timestamp
+                var latest = null;
+                modality.templates_times.forEach(function(time) {   
+                    if(latest == null || latest < time) latest = time;
+                });
+                //create list of teamplate_series_desc that all exam should have
+                var template_series_descs = {};
+                for(var template_series_desc in modality.templates) {
+                    var templates = modality.templates[template_series_desc][latest];
+                    if(templates) template_series_descs[template_series_desc] = templates;
+                }
+                //find *missing* subject for each exam times (for this subject) using the latest set of template (tmeplate_series_descs)
+                for(var exam_id in modality.subjects_times[subject_id]) {
+                    var time = modality.subjects_times[subject_id][exam_id];
+                    subject.missing_serieses[time] = {};
+                    for(var template_series_desc in template_series_descs) {
+                        var found = false;
+                        for(var series_desc in subject.serieses) {
+                            if(subject.serieses[series_desc][exam_id] == undefined) continue; //wrong time
+                            if(series_desc.startsWith(template_series_desc)) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if(!found) {
+                            subject.missing_serieses[time][template_series_desc] = template_series_descs[template_series_desc];
+                            subject.missing++;
+                        }
+                    }
+                };
+            }
+        }
+    }
 }
 
 app.controller('RecentController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', 'serverconf', 'scaMessage', '$anchorScroll', '$document', '$window', '$location',
@@ -176,7 +226,7 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                         var subject = modality.subjects[subject_id];
                         
                         //create uid for subject
-                        subject.uid = research_id+modality_id+subject_id;
+                        //subject.uid = research_id+modality_id+subject_id;
 
                         //reset counter
                         subject.non_qced = 0;
@@ -184,10 +234,9 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                         subject.errors = 0;
                         subject.warnings = 0;
                         subject.notemps = 0;
-                        subject.missing = 0;
                         
                         //used to store *missing* series
-                        subject.missing_serieses = {};
+                        //subject.missing_serieses = {};
                         
                         //count number of status for each subject
                         for(var series_desc in subject.serieses) {
@@ -209,6 +258,7 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                             }
                         }
                         
+                        /*
                         //find latest template timestamp
                         var latest = null;
                         modality.templates_times.forEach(function(time) {   
@@ -217,8 +267,8 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                         //create list of teamplate_series_desc that all exam should have
                         var template_series_descs = {};
                         for(var template_series_desc in modality.templates) {
-                            var template = modality.templates[template_series_desc][latest];
-                            if(template) template_series_descs[template_series_desc] = template;
+                            var templates = modality.templates[template_series_desc][latest];
+                            if(templates) template_series_descs[template_series_desc] = templates;
                         }
                         //find *missing* subject for each exam times (for this subject) using the latest set of template (tmeplate_series_descs)
                         for(var exam_id in modality.subjects_times[subject_id]) {
@@ -239,6 +289,7 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                                 }
                             }
                         };
+                        */
                     }
                 }
             }

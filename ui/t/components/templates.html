@@ -8,8 +8,12 @@
             <!--<tr ng-repeat="(desc, times) in $ctrl.templates">-->
             <tr ng-repeat="desc in $ctrl.keys($ctrl.templates) | orderBy:'toString().toLowerCase()'" ng-init="times = $ctrl.templates[desc]">
                 <td>{{desc}}</td>
-                <td ng-repeat="time in $ctrl.times | orderBy:'-toString()'" ng-init="template = times[time]">
-                    <span ng-if="template" class="label label-default clickable" ng-click="$ctrl.opentemplate(template._id)">#{{template.SeriesNumber}}</span>
+                <td ng-repeat="time in $ctrl.times | orderBy:'-toString()'" ng-init="templates = times[time]">
+                    <div ng-if="templates">
+                        <span class="label label-default clickable" style="margin-right: 3px;"
+                            ng-repeat="template in templates | orderBy:'-SeriesNumber'" 
+                            ng-click="$ctrl.opentemplate(template._id)">#{{template.SeriesNumber}}</span>
+                    </div>
                 </td>
             </tr>
         </tbody>
