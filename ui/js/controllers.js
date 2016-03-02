@@ -340,6 +340,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
     });
 
     function load_series() {
+        if(!$routeParams.researchid) return; //could happen if user move away from this route by still waiting for callback
         $scope.research_id = $routeParams.researchid;
         $http.get(appconf.api+'/study/byresearchid/'+$scope.research_id)
         .then(function(res) {
