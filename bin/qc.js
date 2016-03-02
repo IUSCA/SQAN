@@ -82,7 +82,9 @@ function pick_template(series, exam_id, cb) {
         var longest = null;
         templates.forEach(function(template) {
             if(~series.series_desc.indexOf(template.series_desc)) {
-                if(longest == null || longest.series_desc.length < template.series_desc.length) {
+                if(longest == null || 
+                    longest.series_desc.length < template.series_desc.length ||
+                    (longest.series_desc.length == template.series_desc.length && longest.SeriesNumber < template.SeriesNumber)) {
                     longest = template; //better match
                 }
             }
