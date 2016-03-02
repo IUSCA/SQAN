@@ -84,8 +84,8 @@ function organize($scope, data) {
             missing: 0,
         };
                 
-        if(modality.subjects[subject].serieses[series_desc] == undefined)  modality.subjects[subject].serieses[series_desc] = {};
-        modality.subjects[subject].serieses[series_desc][exam_id] = series;
+        if(modality.subjects[subject].serieses[series_desc] == undefined)  modality.subjects[subject].serieses[series_desc] = {exams: {}};
+        modality.subjects[subject].serieses[series_desc].exams[exam_id] = series;
         if(series.qc == undefined) $scope.qcing = true;
     });
 
@@ -113,14 +113,14 @@ function organize($scope, data) {
             for(var subject_id in modality.subjects) {
                 var subject = modality.subjects[subject_id];
                 for(var series_desc in modality.subjects[subject_id].serieses) {
-                    var exams = modality.subjects[subject_id].serieses[series_desc];
+                    var series_groups = modality.subjects[subject_id].serieses[series_desc];
                     var min = null;
-                    for(var exam_id in exams) {
+                    for(var exam_id in series_groups.exams) {
                         //TODO this could be a list of serieses in the near future?
-                        var series = exams[exam_id];
+                        var series = series_groups.exams[exam_id];
                         if(min == null || series.SeriesNumber < min) min = series.SeriesNumber;
                     }
-                    exams.min_SeriesNumber = min;
+                    series_groups.min_SeriesNumber = min;
                 }
             }
 
@@ -146,27 +146,32 @@ function organize($scope, data) {
             for(var subject_id in modality.subjects) {
                 var subject = modality.subjects[subject_id];
 
+                //contruct unique id to be used by anchor
                 subject.uid = research_id+modality_id+subject_id;
                 
-                //find latest template timestamp
+                ///////////////////////////////////////////////////////////////////////
+                //
+                // finding missing
+                //
+                // first.. find latest template timestamp
                 var latest = null;
                 modality.templates_times.forEach(function(time) {   
                     if(latest == null || latest < time) latest = time;
                 });
-                //create list of teamplate_series_desc that all exam should have
+                // then create list of teamplate_series_desc that all exam should have
                 var template_series_descs = {};
                 for(var template_series_desc in modality.templates) {
                     var templates = modality.templates[template_series_desc][latest];
                     if(templates) template_series_descs[template_series_desc] = templates;
                 }
-                //find *missing* subject for each exam times (for this subject) using the latest set of template (tmeplate_series_descs)
+                // finally find *missing* subject for each exam times (for this subject) using the latest set of template (tmeplate_series_descs)
                 for(var exam_id in modality.subjects_times[subject_id]) {
                     var time = modality.subjects_times[subject_id][exam_id];
                     subject.missing_serieses[time] = {};
                     for(var template_series_desc in template_series_descs) {
                         var found = false;
                         for(var series_desc in subject.serieses) {
-                            if(subject.serieses[series_desc][exam_id] == undefined) continue; //wrong time
+                            if(subject.serieses[series_desc].exams[exam_id] == undefined) continue; //wrong time
                             if(series_desc.startsWith(template_series_desc)) {
                                 found = true;
                                 break;
@@ -175,9 +180,12 @@ function organize($scope, data) {
                         if(!found) {
                             subject.missing_serieses[time][template_series_desc] = template_series_descs[template_series_desc];
                             subject.missing++;
+                            //console.log(subject.uid + " missing "+template_series_desc + " "+subject.missing);
                         }
                     }
                 };
+                //
+                ///////////////////////////////////////////////////////////////////////
             }
         }
     }
@@ -259,9 +267,6 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                     for(var subject_id in modality.subjects) {
                         var subject = modality.subjects[subject_id];
                         
-                        //create uid for subject
-                        //subject.uid = research_id+modality_id+subject_id;
-
                         //reset counter
                         subject.non_qced = 0;
                         subject.oks = 0;
@@ -269,14 +274,11 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                         subject.warnings = 0;
                         subject.notemps = 0;
                         
-                        //used to store *missing* series
-                        //subject.missing_serieses = {};
-                        
                         //count number of status for each subject
                         for(var series_desc in subject.serieses) {
-                            var exams = subject.serieses[series_desc];
-                            for(var exam_id in exams) {
-                                var study = exams[exam_id];
+                            var series_group = subject.serieses[series_desc];
+                            for(var exam_id in series_group.exams) {
+                                var study = series_group.exams[exam_id];
                                 if(study.qc) {
                                     //decide the overall status(with error>warning>notemp precedence) for each study and count that.. 
                                     if(study.qc.errors && study.qc.errors.length > 0) {
@@ -291,39 +293,6 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                                 }
                             }
                         }
-                        
-                        /*
-                        //find latest template timestamp
-                        var latest = null;
-                        modality.templates_times.forEach(function(time) {   
-                            if(latest == null || latest < time) latest = time;
-                        });
-                        //create list of teamplate_series_desc that all exam should have
-                        var template_series_descs = {};
-                        for(var template_series_desc in modality.templates) {
-                            var templates = modality.templates[template_series_desc][latest];
-                            if(templates) template_series_descs[template_series_desc] = templates;
-                        }
-                        //find *missing* subject for each exam times (for this subject) using the latest set of template (tmeplate_series_descs)
-                        for(var exam_id in modality.subjects_times[subject_id]) {
-                            var time = modality.subjects_times[subject_id][exam_id];
-                            subject.missing_serieses[time] = {};
-                            for(var template_series_desc in template_series_descs) {
-                                var found = false;
-                                for(var series_desc in subject.serieses) {
-                                    if(subject.serieses[series_desc][exam_id] == undefined) continue; //wrong time
-                                    if(series_desc.startsWith(template_series_desc)) {
-                                        found = true;
-                                        break;
-                                    }
-                                }
-                                if(!found) {
-                                    subject.missing_serieses[time][template_series_desc] = template_series_descs[template_series_desc];
-                                    subject.missing++;
-                                }
-                            }
-                        };
-                        */
                     }
                 }
             }
