@@ -5,8 +5,8 @@
             <th ng-repeat="time in $ctrl.times | orderBy:'-toString()'">{{time|date:'short'}}</th>
         </tr></thead>
         <tbody>
-            <!--<tr ng-repeat="(desc, times) in $ctrl.templates">-->
-            <tr ng-repeat="desc in $ctrl.keys($ctrl.templates) | orderBy:'toString().toLowerCase()'" ng-init="times = $ctrl.templates[desc]">
+            <tr ng-repeat="times in $ctrl.templates | toArray:true | orderBy:'min_SeriesNumber'" ng-init="desc = times.$key">
+            <!--<tr ng-repeat="desc in $ctrl.keys($ctrl.templates) | orderBy:'toString().toLowerCase()'" ng-init="times = $ctrl.templates[desc]">-->
                 <td>{{desc}}</td>
                 <td ng-repeat="time in $ctrl.times | orderBy:'-toString()'" ng-init="templates = times[time]">
                     <div ng-if="templates">

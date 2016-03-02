@@ -83,11 +83,13 @@ function organize($scope, data) {
             //counter.. should I move the counting logic from recent to here?
             missing: 0,
         };
+                
         if(modality.subjects[subject].serieses[series_desc] == undefined)  modality.subjects[subject].serieses[series_desc] = {};
         modality.subjects[subject].serieses[series_desc][exam_id] = series;
         if(series.qc == undefined) $scope.qcing = true;
     });
 
+  
     //organize templates
     $scope.templates = {}; //for quick id to template mapping
     data.templates.forEach(function(template) {
@@ -101,6 +103,40 @@ function organize($scope, data) {
         if(modality.templates[series_desc][time] == undefined) modality.templates[series_desc][time] = [];
         modality.templates[series_desc][time].push(template);
     });
+    
+    //for each exam/template, find the min SeriesNumber so that UI can sort by it
+    for(var research_id in $scope.org) {
+        var modalities = $scope.org[research_id];
+        for(var modality_id in modalities) {
+            var modality = modalities[modality_id];
+
+            for(var subject_id in modality.subjects) {
+                var subject = modality.subjects[subject_id];
+                for(var series_desc in modality.subjects[subject_id].serieses) {
+                    var exams = modality.subjects[subject_id].serieses[series_desc];
+                    var min = null;
+                    for(var exam_id in exams) {
+                        //TODO this could be a list of serieses in the near future?
+                        var series = exams[exam_id];
+                        if(min == null || series.SeriesNumber < min) min = series.SeriesNumber;
+                    }
+                    exams.min_SeriesNumber = min;
+                }
+            }
+
+            for(var series_desc in modality.templates) {
+                var times = modality.templates[series_desc];
+                var min = null;
+                for(var time in times) {
+                    //TODO this could be a list of serieses in the near future?
+                    times[time].forEach(function(template) {
+                        if(min == null || template.SeriesNumber < min) min = template.SeriesNumber;
+                    });
+                }
+                times.min_SeriesNumber = min;
+            }
+        }
+    }
 
     //find missing series
     for(var research_id in $scope.org) {
@@ -182,7 +218,6 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
             } else {
                 //affix it
                 if(!$scope.content_affix) $scope.$apply(function() {
-                    //console.log("affixing");
                     $scope.content_affix = true;
                     affix.style.top = "0px";
                 });
@@ -198,7 +233,6 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
             }
         });
         //and update inview
-        //console.log(it);
         if(it && $scope.inview_id != it.id) $scope.$apply(function() {
             $scope.inview_id = it.id;
         });
@@ -352,7 +386,9 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
 
 app.component('exams', {
     templateUrl: 't/components/exams.html',
-    controller: function($scope, appconf, $window, $http, toaster) { 
+    controller: function($scope, appconf, $window, $http, toaster, $interval) { 
+        var $ctrl = this;
+
         //list of series descs that has missing series
         this.missing_series_descs = [];
         for(var time in this.missing) {
@@ -362,18 +398,12 @@ app.component('exams', {
                 }
             } 
         }
-
         this.openstudy = function(id) {
             $window.open("#/study/"+id, "study:"+id);
         }
         this.opentemplate = function(id) {
             $window.open("#/template/"+id);
         }
-        //is this still used?
-        this.keys = function(obj){
-            return obj? Object.keys(obj) : [];
-        }
-
         this.reqc = function(exam_id) {
             $http.post(appconf.api+'/study/reqcbyexamid/'+exam_id)
             .then(function(res) {
@@ -605,7 +635,6 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
         });
     }
     $scope.select_template = function(item) {
-        //console.dir(item);
         $scope.image_detail = null;
         $scope.active_image = null;
         $http.post(appconf.api+'/study/template/'+$routeParams.seriesid, {exam_id: item._id})
@@ -697,7 +726,6 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, gro
         $http.get(appconf.api+'/acl/iibisid')
         .then(function(res) {
             $scope.acl = res.data;
-            //console.dir($scope.acl);
             $scope._acl = {};
             $scope.iibisids.forEach(function(id) {
                 //deal with case where acl is not set at all..

@@ -8,7 +8,8 @@
         </th>
     </tr></thead>
     <tbody>
-        <tr ng-repeat="(series_desc, exams) in $ctrl.serieses">
+        <tr ng-repeat="exams in $ctrl.serieses | toArray:true | orderBy:'min_SeriesNumber'" ng-init="series_desc = exams.$key">
+        <!--<tr ng-repeat="(series_desc, exams) in $ctrl.serieses">-->
             <td>{{series_desc}}</td>
             <td ng-repeat="(exam_id, time) in $ctrl.times" style="padding: 0px;">
                 <div ng-if="exams[exam_id]._excluded" class="text-muted excluded" ng-click="exams[exam_id]._excluded = false">Excluded</div>
@@ -44,7 +45,8 @@
             <table class="table table-condensed" style="margin-bottom: 0px;">
             <thead><tr class="text-muted"><th width="30%">Series Description</th><th width="150px">Status</th><th>Template Used</th></tr></thead>
             <tbody>
-                <tr ng-repeat="(series_desc, exams) in $ctrl.serieses">
+                <tr ng-repeat="exams in $ctrl.serieses | toArray:true | orderBy:'min_SeriesNumber'" ng-init="series_desc = exams.$key">
+                <!--<tr ng-repeat="exams in $ctrl.a_serieses | orderBy:'min_SeriesNumber'">-->
                     <td>{{series_desc}} <span class="text-muted">(#{{exams[exam_id].SeriesNumber}})</span></td>
                     <td style="padding: 0px;">
                         <div class="studies">

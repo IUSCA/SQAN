@@ -13,6 +13,7 @@ var app = angular.module('app', [
     'ui.select',
     'sca-shared',
     'ui.gravatar',
+    'angular.filter',
 ]);
 
 //show loading bar at the page top
