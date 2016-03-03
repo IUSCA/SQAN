@@ -134,6 +134,13 @@ var seriesSchema = mongoose.Schema({
 
     ///////////////////////////////////////////////////////////////////////////
 
+    //if set, that means there is another series with higher SeriesNumber that deprecate this series
+    //QC view only shows series where this field is not set
+    deprecated_by: mongoose.Schema.Types.ObjectId, 
+
+    //qc.series.isExcluded(h.Modality, h.qc_series_desc)
+    isexcluded: Boolean,
+
     //template to use for QC (if not set, the latest set will be used)
     template_exam_id: {type: mongoose.Schema.Types.ObjectId, index: true},
 

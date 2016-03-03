@@ -78,7 +78,7 @@ function pick_template(series, exam_id, cb) {
             return cb();
         }
 
-        //find series with longest prefix
+        //find series with longest prefix (or bigger SeriesNumber if there is duplicate template under the series_desc)
         var longest = null;
         templates.forEach(function(template) {
             if(~series.series_desc.indexOf(template.series_desc)) {

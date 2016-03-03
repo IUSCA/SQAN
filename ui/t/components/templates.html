@@ -12,7 +12,9 @@
                     <div ng-if="templates">
                         <span class="label label-default clickable" style="margin-right: 3px;"
                             ng-repeat="template in templates | orderBy:'-SeriesNumber'" 
-                            ng-click="$ctrl.opentemplate(template._id)">#{{template.SeriesNumber}}</span>
+                            ng-click="$ctrl.opentemplate(template._id)">
+                            <span ng-class="{'text-muted': $index != 0}">#{{template.SeriesNumber}}</span>
+                        </span>
                     </div>
                 </td>
             </tr>

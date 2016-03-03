@@ -19,6 +19,9 @@
                         <small ng-if="modality._detail.Modality == 'PT'">
                             RadioTracer: <b>{{modality._detail.radio_tracer}}</b>
                         </small>
+                        <small>
+                            <a href="#/research/{{modality._detail._id}}"><i class="fa fa-link"></i></a>
+                        </small>
                     </h3>
                     <ul class="list-group" style="margin-bottom: 10px;border-bottom: 1px solid #ccc">
                         <div ng-repeat="(subject, subject_detail) in modality.subjects" id="{{subject_detail.uid}}" class="subject">

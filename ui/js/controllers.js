@@ -89,6 +89,7 @@ function organize($scope, data) {
         //unshift to put the latest one on the top - since serieses are sorted by studytime/-seriesnumber
         modality.subjects[subject].serieses[series_desc].exams[exam_id].unshift(series); 
         if(series.qc == undefined) $scope.qcing = true;
+        if(series.isexcluded) modality.subjects[subject].serieses[series_desc]._isexcluded = series.isexcluded;
     });
 
   
@@ -437,13 +438,17 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
     $scope.view_mode = "tall";
 
     //construct query
+    var where = {
+        deprecated_by: {$exists: false}, //only look for the latest series inside series_desc
+        isexcluded: false, 
+    };
     switch(parseInt($routeParams.level)) {
     case 1:
         //var where = {qc1_state: {$exists: false}};
-        var where = {qc1_state: 'fail'};
+        where.qc1_state = 'fail';
         break;
     case 2:
-        var where = {qc2_state: {$exists: false}};
+        where.qc2_state = {$exists: false};
         break;
     default:
         toaster.error("Unknown QC level "+$routeParams.level);

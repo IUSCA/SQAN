@@ -14,8 +14,6 @@ var db = require('../models');
 var qc = require('../qc');
 
 function load_related_info(serieses, cb) {
-    //pull unique serieses and see if it's excluded or not
-    //load all researches referenced by serieses
     var rids = [];
     serieses.forEach(function(series) {
         rids.push(series.research_id);
@@ -68,9 +66,11 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
         query.exec(function(err, serieses) {
             if(err) return next(err);
 
+            /*
             serieses.forEach(function(series) {
                 series._excluded = qc.series.isExcluded(series.Modality, series.series_desc)
             });
+            */
 
             load_related_info(serieses, function(err, details){
                 if(err) return next(err);

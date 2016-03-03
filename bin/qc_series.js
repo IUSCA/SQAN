@@ -41,7 +41,7 @@ function qc_series(series, next) {
 
     //find all images for this series
     db.Image
-    .find({series_id: series.id})
+    .find({series_id: series.id}) //TODO pick largest SeriesNumber and add it to this query..
     .select('qc headers.AcquisitionNumber headers.InstanceNumber')
     .exec(function(err, images) {
         var qc = {

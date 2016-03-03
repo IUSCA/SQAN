@@ -216,11 +216,25 @@ function incoming(h, msg_h, info, ack) {
                 IIBISID: h.qc_iibisid,
                 subject: h.qc_subject,
                 StudyInstanceUID: h.StudyInstanceUID,
+                isexcluded: qc.series.isExcluded(h.Modality, h.qc_series_desc),
             }, {upsert: true, 'new': true}, function(err, _series) {
                 if(err) return next(err);
                 series = _series;
                 next();
             });
+        },
+
+        //deprecate older series under the same series_desc
+        function(next) {
+            if(h.qc_istemplate) return next();  //if it's template then skip
+            db.Series.update({
+                research_id: research._id,
+                exam_id: exam._id,
+                series_desc: h.qc_series_desc,
+                SeriesNumber: { $lt: h.SeriesNumber },
+            }, {
+                deprecated_by: series._id,
+            }, {multi: true}, next);
         },
 
         //make sure we know about this acquisition
