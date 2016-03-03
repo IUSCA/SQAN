@@ -84,8 +84,10 @@ function organize($scope, data) {
             missing: 0,
         };
                 
-        if(modality.subjects[subject].serieses[series_desc] == undefined)  modality.subjects[subject].serieses[series_desc] = {exams: {}};
-        modality.subjects[subject].serieses[series_desc].exams[exam_id] = series;
+        if(modality.subjects[subject].serieses[series_desc] == undefined) modality.subjects[subject].serieses[series_desc] = {exams: {}};
+        if(modality.subjects[subject].serieses[series_desc].exams[exam_id] == undefined) modality.subjects[subject].serieses[series_desc].exams[exam_id] = [];
+        //unshift to put the latest one on the top - since serieses are sorted by studytime/-seriesnumber
+        modality.subjects[subject].serieses[series_desc].exams[exam_id].unshift(series); 
         if(series.qc == undefined) $scope.qcing = true;
     });
 
@@ -116,9 +118,10 @@ function organize($scope, data) {
                     var series_groups = modality.subjects[subject_id].serieses[series_desc];
                     var min = null;
                     for(var exam_id in series_groups.exams) {
-                        //TODO this could be a list of serieses in the near future?
-                        var series = series_groups.exams[exam_id];
-                        if(min == null || series.SeriesNumber < min) min = series.SeriesNumber;
+                        var serieses = series_groups.exams[exam_id];
+                        serieses.forEach(function(series) {
+                            if(min == null || series.SeriesNumber < min) min = series.SeriesNumber;
+                        });
                     }
                     series_groups.min_SeriesNumber = min;
                 }
@@ -278,19 +281,22 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                         for(var series_desc in subject.serieses) {
                             var series_group = subject.serieses[series_desc];
                             for(var exam_id in series_group.exams) {
-                                var study = series_group.exams[exam_id];
-                                if(study.qc) {
-                                    //decide the overall status(with error>warning>notemp precedence) for each study and count that.. 
-                                    if(study.qc.errors && study.qc.errors.length > 0) {
-                                        subject.errors++; 
-                                    } else if (study.qc.warnings && study.qc.warnings.length > 0) {
-                                        subject.warnings++; 
-                                    } else if (study.qc.notemps > 0) {
-                                        subject.notemps++; 
-                                    } else subject.oks++;
-                                } else {
-                                    subject.non_qced++;
-                                }
+                                var serieses = series_group.exams[exam_id];
+                                serieses.forEach(function(series, idx) {
+                                    if(idx > 0) return; //only count the first (latest) series
+                                    if(series.qc) {
+                                        //decide the overall status(with error>warning>notemp precedence) for each series and count that.. 
+                                        if(series.qc.errors && series.qc.errors.length > 0) {
+                                            subject.errors++; 
+                                        } else if (series.qc.warnings && series.qc.warnings.length > 0) {
+                                            subject.warnings++; 
+                                        } else if (series.qc.notemps > 0) {
+                                            subject.notemps++; 
+                                        } else subject.oks++;
+                                    } else {
+                                        subject.non_qced++;
+                                    }
+                                });
                             }
                         }
                     }

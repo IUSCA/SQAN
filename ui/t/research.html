@@ -17,7 +17,7 @@
         <div class="col-md-8">
             <viewmode-toggler mode="view_mode"></viewmode-toggler>
             <p class="help-block">This page shows all studies ever received (TODO - allow user to filter by date range and add search?)</p>
-            <p class="alert alert-info" ng-if="study_count == 0">No exam on this research</p>
+            <p class="alert alert-info" ng-if="study_count == 0">No exam received (yet?)</p>
             <div ng-repeat="(iibisid, research) in org">
                 <div ng-repeat="(modality_id, modality) in research">
                     <ul class="list-group">

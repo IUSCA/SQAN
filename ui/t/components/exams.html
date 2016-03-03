@@ -11,10 +11,18 @@
         <tr ng-repeat="series_group in $ctrl.serieses | toArray:true | orderBy:'min_SeriesNumber'" ng-init="series_desc = series_group.$key">
             <td>{{series_desc}}</td>
             <td ng-repeat="(exam_id, time) in $ctrl.times" style="padding: 0px;">
-                <div ng-if="series_group.exams[exam_id]._excluded" class="text-muted excluded" ng-click="series_group.exams[exam_id]._excluded = false">Excluded</div>
-                <div ng-if="!series_group.exams[exam_id]._excluded" class="slide-down">
-                    <studynote ng-click="$ctrl.openstudy(series_group.exams[exam_id]._id)" study="series_group.exams[exam_id]"></studynote>
-                    <span class="text-muted">(#{{series_group.exams[exam_id].SeriesNumber}})</span>
+                <div style="display: inline-block;" ng-repeat="series in series_group.exams[exam_id]">
+                    <div ng-if="$index == 0">
+                        <div ng-if="series._excluded" class="text-muted excluded" ng-click="series._excluded = false">Excluded</div>
+                        <div ng-if="!series._excluded" class="slide-down">
+                            <studynote ng-click="$ctrl.openstudy(series._id)" study="series"></studynote>
+                            <!--<span class="text-muted">(#{{series.SeriesNumber}})</span>-->
+                        </div>
+                    </div>
+                    <!-- only show seriesnumber for older series-->
+                    <div ng-if="$index != 0" class="studynote" ng-click="$ctrl.openstudy(series._id)">
+                        <span class="text-muted">#{{series.SeriesNumber}}</span>
+                    </div>
                 </div>
             </td>
         </tr>
@@ -42,24 +50,31 @@
         </div>
         <div class="col-md-10">
             <table class="table table-condensed" style="margin-bottom: 0px;">
-            <thead><tr class="text-muted"><th width="30%">Series Description</th><th width="150px">Status</th><th>Template Used</th></tr></thead>
+            <thead><tr class="text-muted"><th width="30%">Series Description</th><th>Status</th><th>Template Used</th></tr></thead>
             <tbody>
                 <tr ng-repeat="series_group in $ctrl.serieses | toArray:true | orderBy:'min_SeriesNumber'" ng-init="series_desc = series_group.$key" ng-if="series_group.exams[exam_id]">
-                    <td>{{series_desc}} <span class="text-muted">(#{{series_group.exams[exam_id].SeriesNumber}})</span></td>
+                    <td>{{series_desc}} <!--<span class="text-muted">(#{{series_group.exams[exam_id].SeriesNumber}})</span>--></td>
                     <td style="padding: 0px;">
-                        <div class="studies">
-                            <div ng-if="series_group.exams[exam_id]._excluded" class="text-muted excluded" ng-click="series_group.exams[exam_id]._excluded = false">Excluded</div>
-                            <div ng-if="!series_group.exams[exam_id]._excluded" class="slide-down">
-                                <studynote ng-click="$ctrl.openstudy(series_group.exams[exam_id]._id)" study="series_group.exams[exam_id]">
+                        <div class="studies" style="display: inline-block;" ng-repeat="series in series_group.exams[exam_id]">
+                            <div ng-if="$index == 0">
+                                <div ng-if="series._excluded" class="text-muted excluded" ng-click="series._excluded = false">Excluded</div>
+                                <div ng-if="!series._excluded" class="slide-down">
+                                    <studynote ng-click="$ctrl.openstudy(series._id)" study="series">
+                                </div>
+                            </div>
+                            <div ng-if="$index != 0" class="studynote" ng-click="$ctrl.openstudy(series._id)">
+                                <span class="text-muted">#{{series.SeriesNumber}}</span>
                             </div>
                         </div>
                     </td>
                     <td style="padding: 0px;">
-                        <div ng-if="series_group.exams[exam_id].qc.template_id" 
-                            class="studynote" ng-click="$ctrl.opentemplate(series_group.exams[exam_id].qc.template_id)">
-                            {{$ctrl.templates[series_group.exams[exam_id].qc.template_id].date | date:'short'}}
-                            <span class="text-muted">{{$ctrl.templates[series_group.exams[exam_id].qc.template_id].series_desc}}</span>
-                            <span class="text-muted">(#{{$ctrl.templates[series_group.exams[exam_id].qc.template_id].SeriesNumber}})</span>
+                        <div ng-repeat="series in series_group.exams[exam_id] | limitTo:1">
+                            <div ng-if="series.qc.template_id" class="studynote" 
+                                ng-click="$ctrl.opentemplate(series.qc.template_id)">
+                                {{$ctrl.templates[series.qc.template_id].date | date:'short'}}
+                                <span class="text-muted">{{$ctrl.templates[series.qc.template_id].series_desc}}</span>
+                                <span class="text-muted">(#{{$ctrl.templates[series.qc.template_id].SeriesNumber}})</span>
+                            </div>
                         </div>
                     </td>
                 </tr>
@@ -70,7 +85,7 @@
                             ng-repeat="template in templates | orderBy:'-SeriesNumber'"
                             ng-click="$ctrl.opentemplate(template._id)">
                             <span class="label label-info">Missing</span> 
-                            <span class="text-muted">(#{{template.SeriesNumber}})</span>
+                            <span class="text-muted">#{{template.SeriesNumber}}</span>
                         </div>
                     </td>
                     <td></td>
