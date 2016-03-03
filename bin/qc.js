@@ -128,7 +128,7 @@ function find_template_headers(image, cb) {
             }
             db.TemplateHeader.findOne({
                 template_id: template._id, 
-                "headers.AcquisitionNumber": image.headers.AcquisitionNumber,
+                //"headers.AcquisitionNumber": image.headers.AcquisitionNumber, //AcquisitionNumber never matters when selecting a template
                 "headers.InstanceNumber": image.headers.InstanceNumber,
             }, cb);
         });

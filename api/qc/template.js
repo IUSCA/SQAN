@@ -1,12 +1,62 @@
 
 var _ = require('underscore');
 
+//custom QC logics to be applied to all modality (unless overridden)
+var common_customs = {
+    "AcquisitionNumber": skip, //not yet OK-ed by all of us..
+    "AcquisitionDate": skip,
+    "AcquisitionTime": skip,
+    "AcquisitionDateTime": skip, //from CT..
+
+    "FrameOfReferenceUID": skip,
+
+    "ContentDate": skip,
+    "ContentTime": skip,
+
+    "DateOfLastCalibration": skip,
+    "DeidentificationMethod": skip,
+    "DeidentificationMethodCodeSequence": skip,
+
+    "ImagePositionPatient": skip,
+
+    "SeriesDate": skip,
+    "SeriesInstanceUID": skip,
+    "SeriesNumber": skip,
+    "SeriesTime": skip,
+
+    "StudyDate": skip,
+    "StudyID": skip,
+    "StudyInstanceUID": skip,
+    "StudyTime": skip,
+
+    "SOPInstanceUID": skip,
+    "SOPClassUID": skip,
+
+    "PatientAge": skip,
+    "PatientBirthDate": skip,
+    "PatientComments": skip,
+    "PatientID": skip,
+    "PatientName": skip,
+    "PatientSex": skip,
+    "PatientSize": skip,
+    "PatientWeight": skip,
+    "PatientIdentityRemoved": skip,
+
+    "PixelData": skip,
+    "PaletteColorLookupTableUID": skip,
+    "RelatedSeriesSequence": skip, //we are receiving unhashed SOPInstanceUID inside this field. Sundar told me to skip this for now
+    "SliceLocation": skip,
+    "TableHeight": skip,
+    "TimeOfLastCalibration": skip,
+    "ReferringPhysicianName": skip,
+
+    "Unknown Tag & Data": skip,
+}
+
+//custom QC logics specific to each modality
 var customs = {
-    "MR": {
+    "MR": _.extend({
         "AccessionNumber": skip,
-        "AcquisitionDate": skip,
-        "AcquisitionNumber": skip,
-        "AcquisitionTime": skip,
 
         "BluePaletteColorLookupTableData": skip,
         "BluePaletteColorLookupTableDescriptor": skip,
@@ -15,17 +65,13 @@ var customs = {
         "CodingSchemeDesignator": skip,
         "CodingSchemeVersion": skip,
         "CommentsOnThePerformedProcedureStep": skip,
-        "ContentDate": skip,
-        "ContentTime": skip,
 
         "ContinuityOfContent": skip,
-        "DateOfLastCalibration": skip,
         "dBdt": skip,
         "GenericGroupLength": skip,
         "GreenPaletteColorLookupTableData": skip,
         "GreenPaletteColorLookupTableDescriptor": skip,
         "ImageComments": skip,
-        "ImagePositionPatient": skip,
         "ImagingFrequency": skip,
         "ImplementationVersionName": skip,
         "InstanceCreationDate": skip,
@@ -34,14 +80,6 @@ var customs = {
         "MappingResource": skip,
         "NumericValue": skip,
         "OperatorsName": skip,
-        "PatientAge": skip,
-        "PatientBirthDate": skip,
-        "PatientComments": skip,
-        "PatientID": skip,
-        "PatientName": skip,
-        "PatientSex": skip,
-        "PatientSize": skip,
-        "PatientWeight": skip,
         "PerformedProcedureStepDescription": skip,
         "PerformedProcedureStepID": skip,
         "PerformedProcedureStepStartDate": skip,
@@ -53,14 +91,9 @@ var customs = {
         "PrivateGroupLength": skip,
         "RedPaletteColorLookupTableData": skip,
         "RedPaletteColorLookupTableDescriptor": skip,
-        "ReferringPhysicianName": skip,
         "RelationshipType": skip,
         "SequenceName": skip,
         "SequenceVariant": skip,
-        "SeriesDate": skip,
-        "SeriesNumber": skip,
-        "SeriesTime": skip,
-        "SliceLocation": skip,
         "SmallestImagePixelValue": skip,
         "SpecificCharacterSet": skip,
         "StudyDate": skip,
@@ -68,85 +101,30 @@ var customs = {
         "StudyID": skip,
         "StudyTime": skip,
         "TextValue": skip,
-        "TimeOfLastCalibration": skip,
         "ValueType": skip,
         "VerificationFlag": skip,
         "WindowCenter": skip,
         "WindowCenterWidthExplanation": skip,
         "WindowWidth": skip,
     
-        "StudyInstanceUID": skip,
-        "SeriesInstanceUID": skip,
-        "SOPInstanceUID": skip,
-        "SOPClassUID": skip,
         "SAR": skip,
-        "PixelData": skip,
-        "PatientIdentityRemoved": skip,
-        "FrameOfReferenceUID": skip,
-        "DeidentificationMethodCodeSequence": skip,
-        "DeidentificationMethod": skip,
         
-        "PatientName": skip,
-        "ImagePositionPatient": skip,
-        "TableHeight": skip,
-        "RelatedSeriesSequence": skip,
-        "Unknown Tag & Data": skip,
-    },
-    "CT": {
-        "AcquisitionDate": skip,
-        "AcquisitionDateTime": skip,
-        "AcquisitionTime": skip,
-        "ContentDate": skip,
-        "ContentTime": skip,
+    }, common_customs),
+
+    "CT": _.extend({
         "CTDIPhantomTypeCodeSequence": skip,
         "CTDIvol": skip,
         "DataCollectionCenterPatient": skip,
-        "DateOfLastCalibration": skip,
-        "DeidentificationMethod": skip,
-        "DeidentificationMethodCodeSequence": skip,
         "EstimatedDoseSaving": skip,
         "Exposure": skip,
         "ExposureTime": skip,
-        "FrameOfReferenceUID": skip,
-        "ImagePositionPatient": skip,
         "IrradiationEventUID": skip,
-        "PatientAge": skip,
-        "PatientBirthDate": skip,
-        "PatientIdentityRemoved": skip,
-        "PatientName": skip,
-        "PatientSex": skip,
-        "PatientSize": skip,
-        "PatientWeight": skip,
-        "PixelData": skip,
         "ReconstructionTargetCenterPatient": skip,
-        "ReferringPhysicianName": skip,
-        "SeriesDate": skip,
-        "SeriesInstanceUID": skip,
-        "SeriesNumber": skip,
-        "SeriesTime": skip,
-        "SliceLocation": skip,
-        "SOPClassUID": skip,
-        "SOPInstanceUID": skip,
-        "StudyDate": skip,
-        "StudyID": skip,
-        "StudyInstanceUID": skip,
-        "StudyTime": skip,
-        "TimeOfLastCalibration": skip,
-        "Unknown Tag & Data": skip,
-        "TableHeight": skip,
-        "RelatedSeriesSequence": skip,
-    },
-    "PT": {
-        "AcquisitionDate": skip,
-        "AcquisitionTime": skip,
+    }, common_customs),
+
+    "PT": _.extend({
         "ActualFrameDuration": skip,
-        "ContentDate": skip,
-        "ContentTime": skip,
-        "DateOfLastCalibration": skip,
-        "DeidentificationMethod": skip,
-        "DeidentificationMethodCodeSequence": skip,
         "DoseCalibrationFactor": skip,
-        "FrameOfReferenceUID": skip,
         "FrameReferenceTime": skip,
         "ImagePositionPatient": skip,
         "LargestImagePixelValue": skip,
@@ -154,15 +132,6 @@ var customs = {
             if(v === undefined) return; //ok if it doesn't exist This tag appears in dynamic PET scans only.
             check_equal(k, v, tv, qc);
         },
-        "PaletteColorLookupTableUID": skip,
-        "PatientAge": skip,
-        "PatientBirthDate": skip,
-        "PatientIdentityRemoved": skip,
-        "PatientName": skip,
-        "PatientSex": skip,
-        "PatientSize": skip,
-        "PatientWeight": skip,
-        "PixelData": skip,
 
         "RadiopharmaceuticalInformationSequence": function(k, v, tv, qc) {
             if(!check_set(k, v, tv, qc)) return;
@@ -177,10 +146,7 @@ var customs = {
             }
             check_equal(k, v, tv, qc);
         },
-        "ReferringPhysicianName": skip,
 
-        //we are receiving unhashed SOPInstanceUID inside this field. Sundar told me to skip this for now
-        "RelatedSeriesSequence": skip,
         /*
         "RelatedSeriesSequence": function(k, v, tv, qc) {
             if(!check_set(k, v, tv, qc)) return;
@@ -195,27 +161,14 @@ var customs = {
         "RescaleIntercept": skip,
         "RescaleSlope": skip,
         "ScatterFractionFactor": skip,
-        "SeriesDate": skip,
-        "SeriesInstanceUID": skip,
-        "SeriesNumber": skip,
-        "SeriesTime": skip,
-        "SliceLocation": skip,
         "SmallestImagePixelValue": skip,
-        "SOPClassUID": skip,
-        "SOPInstanceUID": skip,
-        "StudyDate": skip,
-        "StudyID": skip,
-        "StudyInstanceUID": skip,
-        "StudyTime": skip,
-        "TimeOfLastCalibration": skip,
-        "Unknown Tag & Data": skip,
         "WindowCenter": skip,
         "WindowWidth": skip,
 
         //"InstanceNumber": skip,
-        "TableHeight": skip,
-    }
+    }, common_customs)
 };
+
 
 function skip(k, v, tv, qc) {
     return;
