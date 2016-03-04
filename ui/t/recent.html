@@ -1,16 +1,15 @@
 <sca-menutab menu="appconf.menu" active="'recent'" user="user"></sca-menutab>
 <div class="container-fluid recent">
-    <p ng-if="!org"><i class="fa fa-circle-o-notch fa-spin"></i> Loading ...</p>
     <p ng-if="study_count == 0" class="text-muted">You don't have access to any IIBISIDs that has received data recently. Please contact your administrator for more info.</p>
     <div class="row">
         <div class="col-md-3" id="affix" ng-class="{affix: content_affix, affix_bottom: content_affix_bottom}">
             <div ng-repeat="(iibisid, research) in org">
-                <h5>{{iibisid}}</h5>
+                <h4>{{iibisid}}</h4>
                 <div class="list-group">
                     <div class="list-group-item" ng-repeat="(modality_id, modality) in research">
-                        <h4 class="list-group-item-heading">
+                        <h5 class="text-muted">
                             {{modality._detail.Modality}} / {{modality._detail.StationName}} <small ng-if="modality._detail.Modality == 'PT'"> / {{modality._detail.radio_tracer}} </small>
-                        </h4>
+                        </h5>
                         <p class="list-group-item-text">
                             <ol class="subjects">
                                 <li ng-repeat="(subject_desc, subject) in modality.subjects" 
@@ -50,6 +49,7 @@
         </div> <!--col-md-3-->
 
         <div class="col-md-9" ng-class="{'col-md-offset-3': content_affix}">
+            <p ng-if="!org"><i class="fa fa-circle-o-notch fa-spin"></i> Loading ...</p>
             <viewmode-toggler mode="view_mode"></viewmode-toggler> 
             <div ng-repeat="(iibisid, research) in org">
                 <h2>{{iibisid}}</h2>

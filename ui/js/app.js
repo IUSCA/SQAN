@@ -46,14 +46,16 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         requiresLogin: true
     })
     .when('/research', {
-        templateUrl: 't/research.html',
-        controller: 'ResearchController',
+        //templateUrl: 't/research.html',
+        template: " ", //don't need a view
+        controller: 'ResearchRedirectController',
         requiresLogin: true
     })
     .when('/research/:researchid', {
         templateUrl: 't/research.html',
         controller: 'ResearchController',
-        requiresLogin: true
+        requiresLogin: true,
+        //reloadOnSearch: false, 
     })
     .when('/template/:templateid', {
         templateUrl: 't/template.html',
@@ -262,6 +264,45 @@ app.factory('groups', ['appconf', '$http', 'jwtHelper', 'toaster', function(appc
         else toaster.error(res.statusText);
     });
 }]);
+
+app.factory('researches', ['appconf', '$http', 'toaster', function(appconf, $http, toaster) {
+    /*
+    return $http.get(appconf.auth_api+'/groups')
+    .then(function(res) {
+        return res.data;
+    }, function(res) {
+        if(res.data && res.data.message) toaster.error(res.data.message);
+        else toaster.error(res.statusText);
+    });
+    */
+
+    var promise = $http.get(appconf.api+'/research');
+    return {
+        getAll: function() { 
+            return promise.then(function(res) {
+                //organize records into IIBISID / (Modality+StationName+Radio Tracer)
+                var researches = {};
+                res.data.forEach(function(rec) {
+                    if(!researches[rec.IIBISID]) researches[rec.IIBISID] = [];
+                    researches[rec.IIBISID].push(rec);
+                });
+                return researches;
+            }, function(res) {
+                if(res.data && res.data.message) toaster.error(res.data.message);
+                else toaster.error(res.statusText);
+            });
+        },
+        getFirst: function() {
+            return promise.then(function(res) {
+                return res.data[0];
+            }, function(res) {
+                if(res.data && res.data.message) toaster.error(res.data.message);
+                else toaster.error(res.statusText);
+            });
+        }
+    }
+}]);
+
 
 //http://plnkr.co/edit/juqoNOt1z1Gb349XabQ2?p=preview
 /**

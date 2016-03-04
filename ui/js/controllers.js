@@ -195,6 +195,48 @@ function organize($scope, data) {
     }
 }
 
+function setup_affix($scope, affix) {
+    //eneble affix
+    var top_offset = 100;
+    var bottom_offset = 176;
+    if(window.scrollY < top_offset) {
+        //at the top - no need for affix
+        affix.style.top = 0; //keep it out of following if - incase user scroll bottom to top in a single click (could happen)
+        if($scope.content_affix) $scope.$apply(function() {
+            $scope.content_affix = false;
+        });
+    } else {
+        if(window.scrollY > document.body.clientHeight - window.innerHeight - bottom_offset) {
+            //un affix and move to bottom if user scroll to the bottom
+            if($scope.content_affix) $scope.$apply(function() {
+                $scope.content_affix = false;
+                affix.style.top = parseInt(document.body.clientHeight - affix.scrollHeight - bottom_offset - top_offset)+"px";
+                affix.scrollTop = 0; //cheat so that I don't have to fix scroll pos when user scroll back to top
+            });
+        } else {
+            //affix it
+            if(!$scope.content_affix) $scope.$apply(function() {
+                $scope.content_affix = true;
+                affix.style.top = "0px";
+            });
+        }
+    }
+    
+    //TODO - this is recent page specific..
+    //find first subject displayed
+    var it = null;
+    $(".subject, .template").each(function(id, subject) {
+        if(it) return; //already found
+        if($(subject).offset().top >= window.scrollY) {
+            it = subject;
+        }
+    });
+    //and update inview
+    if(it && $scope.inview_id != it.id) $scope.$apply(function() {
+        $scope.inview_id = it.id;
+    });
+}
+
 app.controller('RecentController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', 'serverconf', 'scaMessage', '$anchorScroll', '$document', '$window', '$location',
 function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $anchorScroll, $document, $window, $location) {
     $scope.appconf = appconf;
@@ -208,46 +250,9 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
 
     load();
 
-    //eneble affix
     var affix = document.getElementById("affix");
     if(affix) $document.on('scroll', function() {
-        var top_offset = 100;
-        var bottom_offset = 176;
-        if(window.scrollY < top_offset) {
-            //at the top - no need for affix
-            affix.style.top = 0; //keep it out of following if - incase user scroll bottom to top in a single click (could happen)
-            if($scope.content_affix) $scope.$apply(function() {
-                $scope.content_affix = false;
-            });
-        } else {
-            if(window.scrollY > document.body.clientHeight - window.innerHeight - bottom_offset) {
-                //un affix and move to bottom if user scroll to the bottom
-                if($scope.content_affix) $scope.$apply(function() {
-                    $scope.content_affix = false;
-                    affix.style.top = parseInt(document.body.clientHeight - affix.scrollHeight - bottom_offset - top_offset)+"px";
-                    affix.scrollTop = 0; //cheat so that I don't have to fix scroll pos when user scroll back to top
-                });
-            } else {
-                //affix it
-                if(!$scope.content_affix) $scope.$apply(function() {
-                    $scope.content_affix = true;
-                    affix.style.top = "0px";
-                });
-            }
-        }
-        
-        //find first subject displayed
-        var it = null;
-        $(".subject, .template").each(function(id, subject) {
-            if(it) return; //already found
-            if($(subject).offset().top >= window.scrollY) {
-                it = subject;
-            }
-        });
-        //and update inview
-        if(it && $scope.inview_id != it.id) $scope.$apply(function() {
-            $scope.inview_id = it.id;
-        });
+        setup_affix($scope, affix);
     });
 
     //reload data if user invalidate data (like QC)
@@ -310,11 +315,22 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
             else toaster.error(res.statusText);
         });
     }
-
 }]);
 
-app.controller('ResearchController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', 'scaMessage', '$anchorScroll', '$document', '$window', '$routeParams',
-function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaMessage, $anchorScroll, $document, $window, $routeParams) {
+app.controller('ResearchRedirectController', ['$scope', 'appconf', 'toaster', 'researches', '$location',
+function($scope, appconf, toaster, researches, $location) {
+    researches.getFirst().then(function(first) {
+        if(first) {
+            $location.path("/research/"+first._id);
+        } else {
+            toaster.error("You don't have access to any IIBISID");
+            $location.path("/");
+        }
+    });
+}]);
+
+app.controller('ResearchController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', 'scaMessage', '$anchorScroll', '$document', '$window', '$routeParams', 'researches', '$route',
+function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaMessage, $anchorScroll, $document, $window, $routeParams, researches, $route) {
     $scope.appconf = appconf;
     scaMessage.show(toaster);
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
@@ -324,29 +340,28 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
     //unlike all other views, all exam can contain a lot of exams.. so it makes sense to display it wide mode
     $scope.view_mode = "wide";
 
-    $http.get(appconf.api+'/research')
-    .then(function(res) {
-        //organize records into IIBISID / (Modality+StationName+Radio Tracer)
-        $scope.researches = {};
-        res.data.forEach(function(rec) {
-            if(!$scope.researches[rec.IIBISID]) $scope.researches[rec.IIBISID] = [];
-            $scope.researches[rec.IIBISID].push(rec);
-        });
-
-        if($routeParams.researchid) {
+    var lastRoute = $route.current;
+    $scope.$on('$locationChangeSuccess', function(event) {
+        $routeParams = $route.current.params;
+        if($route.current.$$route.controller === 'ResearchController') {
+            $route.current = lastRoute;
             load_series();
-        } else {
-            //redirect with first research selected
-            if(res.data.length > 0) $location.path("/research/"+res.data[0]._id);
         }
-        $scope.researches_filtered = $scope.researches;
+    });
 
-    }, function(res) {
-        if(res.data && res.data.message) toaster.error(res.data.message);
-        else toaster.error(res.statusText);
-    });     
+    researches.getAll().then(function(researches) {
+        $scope.researches = researches;
+        $scope.researches_filtered = $scope.researches;
+        load_series();
+    });
+
     $scope.$on("exam_invalidated", function(event, msg) {
         load_series();
+    });
+
+    var affix = document.getElementById("affix");
+    if(affix) $document.on('scroll', function() {
+        setup_affix($scope, affix);
     });
 
     function load_series() {
