@@ -359,10 +359,12 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
         load_series();
     });
 
+    /* broken..
     var affix = document.getElementById("affix");
     if(affix) $document.on('scroll', function() {
         setup_affix($scope, affix);
     });
+    */
 
     function load_series() {
         if(!$routeParams.researchid) return; //could happen if user move away from this route by still waiting for callback
