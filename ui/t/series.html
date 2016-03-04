@@ -182,32 +182,38 @@
             <div>
                 <h4 class="text-muted">QC1</h4>
                 <p class="help-block">Protocol Level QC</p>
+                <button type="button" class="btn btn-xs pull-right" 
+                    ng-if="data.series.qc1_state && (data.series.qc1_state == 'accept' || data.series.qc1_state == 'reject')"
+                    ng-click="changestate(1, null, $event)"><i class="fa fa-undo"></i> Reset</button>
                 <button type="button" class="btn btn-xs" ng-class="{'btn-success':data.series.qc1_state == 'autopass'}" disabled
                     ng-if="data.series.qc1_state == 'autopass'"
-                    ng-model="data.series.qc1_state" ng-click="changestate(1, 'autopass')" btn-radio="'autopass'">AutoPassed</button>
+                    ng-model="data.series.qc1_state" ng-click="changestate(1, 'autopass', $event)">AutoPassed</button>
 
                 <button type="button" class="btn btn-xs" ng-class="{'btn-warning':data.series.qc1_state == 'accept'}" 
                     ng-disabled="data.series.qc1_state == 'autopass' || !data.canqc"
-                    ng-model="data.series.qc1_state" ng-click="changestate(1, 'accept')" btn-radio="'accept'">Accepted</button>
+                    ng-model="data.series.qc1_state" ng-click="changestate(1, 'accept', $event)">Accepted</button>
 
                 <button type="button" class="btn btn-xs" ng-class="{'btn-danger':data.series.qc1_state == 'reject'}"
                     ng-disabled="data.series.qc1_state == 'autopass' || !data.canqc"
-                    ng-model="data.series.qc1_state" ng-click="changestate(1, 'reject')" btn-radio="'reject'">Rejected</button>
+                    ng-model="data.series.qc1_state" ng-click="changestate(1, 'reject', $event)">Rejected</button>
             </div>
             <br>
             <div ng-if="data.series.qc1_state && data.series.qc1_state != 'reject'">
                 <h4 class="text-muted">QC2</h4>
                 <p class="help-block">Image Level QC</p>
+                <button type="button" class="btn btn-xs pull-right" 
+                    ng-if="data.series.qc2_state"
+                    ng-click="changestate(2, null, $event)"><i class="fa fa-undo"></i> Reset</button>
                 <button type="button" class="btn btn-xs" ng-class="{'btn-success':data.series.qc2_state == 'accept'}" 
                     ng-disabled="!data.canqc" 
-                    ng-model="data.series.qc2_state" ng-click="changestate(2, 'accept')" btn-radio="'accept'">Accepted</button>
+                    ng-model="data.series.qc2_state" ng-click="changestate(2, 'accept', $event)">Accepted</button>
                 <button type="button" class="btn btn-xs" ng-class="{'btn-warning':data.series.qc2_state == 'condaccept'}" 
                     ng-disabled="!data.canqc" 
-                    ng-model="data.series.qc2_state" ng-click="changestate(2, 'condaccept')" btn-radio="'condaccept'"
+                    ng-model="data.series.qc2_state" ng-click="changestate(2, 'condaccept', $event)"
                     tooltip-dis="Conditionally accept this series despite the stage 2 QC issues">Cond. Accepted</button>
                 <button type="button" class="btn btn-xs" ng-class="{'btn-danger':data.series.qc2_state == 'reject'}" 
                     ng-disabled="!data.canqc" 
-                    ng-model="data.series.qc2_state" ng-click="changestate(2, 'reject')" btn-radio="'reject'">Rejected</button>
+                    ng-model="data.series.qc2_state" ng-click="changestate(2, 'reject', $event)">Rejected</button>
                 <hr>
             </div>
             <h4 class="text-muted">Events</h4>

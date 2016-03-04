@@ -648,15 +648,23 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
             else toaster.error(res.statusText);
         });
     }
-    $scope.changestate = function(level, state) {
+    $scope.changestate = function(level, state, $event) {
         var comment = null;
         //TODO - user can disable prompt via browser.. also, canceling doesn't prevent user from switching the ui-button state
         //I should implement a bit more form like interface for state change
-        if(state != "accept") comment = prompt("Please enter comment for this state change");
+        if(state && state != "accept") {
+            comment = prompt("Please enter comment for this state change");
+            if(!comment) {
+                $event.preventDefault();
+                //$event.stopPropagation();
+                return;
+            }
+        }
 
-        $scope.data.series.qc1state = state;
         $http.post(appconf.api+'/study/qcstate/'+$routeParams.seriesid, {level: level, state: state, comment: comment})
         .then(function(res) {
+            if(level == 1) $scope.data.series.qc1_state = state;
+            if(level == 2) $scope.data.series.qc2_state = state;
             $scope.data.series.events.push(res.data.event);
             toaster.success(res.data.message);
         }, function(res) {
