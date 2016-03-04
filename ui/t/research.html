@@ -2,7 +2,6 @@
 <div class="container-fluid research">
     <div class="row">
         <div class="col-md-3" id="affix" ng-class="{affix: content_affix, affix_bottom: content_affix_bottom}">
-            <br>
             <input type="text" class="form-control" ng-model="research_filter" placeholder="Filter Research"></input>
             <div ng-repeat="(iibisid, recs) in researches_filtered">
                 <h5>{{iibisid}}</h5>

@@ -128,8 +128,8 @@ ol.subjects li:hover {
 ol.subjects li {
   /*background-color: #eee;
         border: 1px solid #ddd; */
-  padding: 2px;
-  margin: 2px 0px;
+  /*padding: 2px;*/
+  /*margin: 2px 0px;*/
 }
 ol.subjects li a {
   text-decoration: none;

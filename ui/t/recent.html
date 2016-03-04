@@ -6,43 +6,41 @@
             <div ng-repeat="(iibisid, research) in org">
                 <h4>{{iibisid}}</h4>
                 <div class="list-group">
-                    <div class="list-group-item" ng-repeat="(modality_id, modality) in research">
-                        <h5 class="text-muted">
+                    <div class="list-group-item" ng-repeat="(modality_id, modality) in research" style="padding: 7px 10px;">
+                        <h5 class="text-muted" style="margin-top: 0px;">
                             {{modality._detail.Modality}} / {{modality._detail.StationName}} <small ng-if="modality._detail.Modality == 'PT'"> / {{modality._detail.radio_tracer}} </small>
                         </h5>
-                        <p class="list-group-item-text">
-                            <ol class="subjects">
-                                <li ng-repeat="(subject_desc, subject) in modality.subjects" 
-                                    ng-click="scrollto(subject.uid)"
-                                    ng-class="{inview: inview_id == subject.uid}"> 
-                                    <!--subject_desc is not unique across all iibisid / modality..-->
-                                    <a href="javascript:void(0)">
-                                        <div class="row">
-                                        <div class="col-sm-5">
-                                            {{subject_desc}} &nbsp;
+                        <ol class="subjects">
+                            <li ng-repeat="(subject_desc, subject) in modality.subjects" 
+                                ng-click="scrollto(subject.uid)"
+                                ng-class="{inview: inview_id == subject.uid}"> 
+                                <!--subject_desc is not unique across all iibisid / modality..-->
+                                <a href="javascript:void(0)">
+                                    <div class="row">
+                                    <div class="col-sm-5">
+                                        {{subject_desc}} &nbsp;
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <div class="progress" style="margin-bottom: 0px;"
+                                            ng-init="total = subject.non_qced+subject.oks+subject.errors+subject.warnings+subject.notemps+subject.missing">
+                                            <div class="progress-bar progress-bar-success" style="width: {{subject.oks / total*100}}%"></div>
+                                            <div class="progress-bar progress-bar-danger" style="width: {{subject.errors / total*100}}%"></div>
+                                            <div class="progress-bar progress-bar-warning" style="width: {{subject.warnings / total*100}}%"></div>
+                                            <div class="progress-bar progress-bar-primary" style="width: {{subject.notemps / total*100}}%"></div>
+                                            <div class="progress-bar progress-bar-info" style="width: {{subject.missing/ total*100}}%"></div>
                                         </div>
-                                        <div class="col-sm-7">
-                                            <div class="progress" style="margin-bottom: 0px;"
-                                                ng-init="total = subject.non_qced+subject.oks+subject.errors+subject.warnings+subject.notemps+subject.missing">
-                                                <div class="progress-bar progress-bar-success" style="width: {{subject.oks / total*100}}%"></div>
-                                                <div class="progress-bar progress-bar-danger" style="width: {{subject.errors / total*100}}%"></div>
-                                                <div class="progress-bar progress-bar-warning" style="width: {{subject.warnings / total*100}}%"></div>
-                                                <div class="progress-bar progress-bar-primary" style="width: {{subject.notemps / total*100}}%"></div>
-                                                <div class="progress-bar progress-bar-info" style="width: {{subject.missing/ total*100}}%"></div>
-                                            </div>
-                                        </div>
-                                        </div><!--row-->
-                                    </a>
-                                </li>
-                                <li ng-click="scrollto(iibisid+modality_id)"
-                                    ng-class="{inview: inview_id == iibisid+modality_id}" class="template-link"> 
-                                    <a href="javascript:void(0)">
-                                        <!--<span class="label label-default">OK</span>-->
-                                        Templates
-                                    </a>
-                                </li>
-                            </ol>
-                        </p>
+                                    </div>
+                                    </div><!--row-->
+                                </a>
+                            </li>
+                            <li ng-click="scrollto(iibisid+modality_id)"
+                                ng-class="{inview: inview_id == iibisid+modality_id}" class="template-link"> 
+                                <a href="javascript:void(0)">
+                                    <!--<span class="label label-default">OK</span>-->
+                                    Templates
+                                </a>
+                            </li>
+                        </ol>
                     </div>
                 </div>
             </div><!--ng-repeat-->
