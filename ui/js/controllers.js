@@ -321,7 +321,8 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
     var jwt = localStorage.getItem(appconf.jwt_id);
     if(jwt) $scope.user = jwtHelper.decodeToken(jwt);
 
-    $scope.view_mode = "tall";
+    //unlike all other views, all exam can contain a lot of exams.. so it makes sense to display it wide mode
+    $scope.view_mode = "wide";
 
     $http.get(appconf.api+'/research')
     .then(function(res) {
@@ -338,6 +339,8 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
             //redirect with first research selected
             if(res.data.length > 0) $location.path("/research/"+res.data[0]._id);
         }
+        $scope.researches_filtered = $scope.researches;
+
     }, function(res) {
         if(res.data && res.data.message) toaster.error(res.data.message);
         else toaster.error(res.statusText);
@@ -359,6 +362,37 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
             else toaster.error(res.statusText);
         });
     }
+
+    $scope.$watch("research_filter", function(filter) {
+        if(!filter) {
+            $scope.researches_filtered = $scope.researches;
+            return;
+        }
+        filter = filter.toLowerCase();
+        var result = {};
+        for(var id in $scope.researches) {
+            var value = $scope.researches[id];
+            if(~id.toLowerCase().indexOf(filter)) {
+                result[id] = value;
+                continue;
+            }
+
+            //filter sub recoeds
+            var sub_result = [];
+            value.forEach(function(sub) {
+                if(~sub.Modality.toLowerCase().indexOf(filter) || 
+                    ~sub.StationName.toLowerCase().indexOf(filter) ||
+                    (sub.radio_tracer && ~sub.radio_tracer.toLowerCase().indexOf(filter))
+                ) {
+                    sub_result.push(sub);
+                }           
+            });
+            if(sub_result.length) {
+                result[id] = sub_result;
+            }
+        }
+        $scope.researches_filtered = result;
+    });
 }]);
 
 app.component('exams', {

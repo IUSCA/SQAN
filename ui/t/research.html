@@ -2,24 +2,37 @@
 <div class="container-fluid research">
     <p ng-if="!org"><i class="fa fa-circle-o-notch fa-spin"></i> Loading ...</p>
     <div class="row">
-        <div class="col-md-4">
-            <div ng-repeat="(iibisid, recs) in researches">
-                <h4>{{iibisid}}</h4>
+        <div class="col-md-3">
+            <input type="text" class="form-control" ng-model="research_filter" placeholder="Filter Research"></input>
+            <div ng-repeat="(iibisid, recs) in researches_filtered">
+                <h5>{{iibisid}}</h5>
                 <div class="list-group">
-                    <a class="list-group-item" ng-repeat="rec in recs" href="#/research/{{rec._id}}" ng-class="{active: rec._id == research_id}">
+                    <a class="list-group-item" style="padding: 7px 10px" 
+                        ng-repeat="rec in recs" href="#/research/{{rec._id}}" ng-class="{active: rec._id == research_id}">
+                        <!--
                         <span>Modality: <b>{{rec.Modality}}</b></span>
                         <span>StationName: <b>{{rec.StationName}}</b></span>
                         <span ng-if="rec.radio_tracer">RadioTracer: <b>{{rec.radio_tracer}}</b></span>
+                        -->
+                        {{rec.Modality}} / {{rec.StationName}}<span ng-if="rec.radio_tracer"> / {{rec.radio_tracer}}</span>
                     </a>
                 </div>
             </div>
         </div>
-        <div class="col-md-8">
+        <div class="col-md-9">
             <viewmode-toggler mode="view_mode"></viewmode-toggler>
-            <p class="help-block">This page shows all studies ever received (TODO - allow user to filter by date range and add search?)</p>
-            <p class="alert alert-info" ng-if="study_count == 0">No exam received (yet?)</p>
+            <!--<p class="help-block">This page shows all studies ever received (TODO - allow user to filter by date range and add search?)</p>-->
             <div ng-repeat="(iibisid, research) in org">
+                <h2>{{iibisid}}</h2>
                 <div ng-repeat="(modality_id, modality) in research">
+                    <h3>
+                        Modality: <b>{{modality._detail.Modality}}</b> 
+                        StationName: <b>{{modality._detail.StationName}}</b>
+                        <small ng-if="modality._detail.Modality == 'PT'">
+                            RadioTracer: <b>{{modality._detail.radio_tracer}}</b>
+                        </small>
+                    </h3>
+                    <p class="alert alert-info" ng-if="study_count == 0">No exam received (yet?)</p>
                     <ul class="list-group">
                         <div ng-repeat="(subject, subject_detail) in modality.subjects">
                             <li class="list-group-item" style="background-color: #eee;">
