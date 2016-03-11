@@ -271,11 +271,15 @@ function incoming(h, msg_h, info, ack) {
                 $unset: {qc: 1},
             }, {upsert: true, 'new': false}, function(err, _image, o) {
                 if(err) return next(err);
+                /* 
                 //I am setting new:false so that _image will be null if this is the first time
                 if(_image) {
                     logger.warn("image already inserted - not sending to es since it can't update");
                     return next(err); 
                 }
+                */
+                //I am now setting document_id on logstash. Elasticsearch can update the document as long as document_id matches and index name
+                //stays the same!
                 cleaned_ex.publish('', h, {}, function(err) {
                     next(err);
                 });

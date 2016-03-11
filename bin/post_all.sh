@@ -7,7 +7,7 @@
 
 #mr
 #find /usr/local/dicom-raw/2014-00006 -name *.json | node post.js
-find /usr/local/dicom-raw/0000-00001 -name *.json | node post.js
+#find /usr/local/dicom-raw/0000-00001 -name *.json | node post.js
 #pt/ct
 #find /usr/local/dicom-raw/2014-00006 -name *.json | node post.js
 
@@ -19,3 +19,5 @@ find /usr/local/dicom-raw/0000-00001 -name *.json | node post.js
 
 #mr (>100k?)
 #find /usr/local/dicom-raw/0000-00001 -name *.json | node post.js
+
+echo /usr/local/dicom-raw/2013-00131/CSN009/1.2.840.113654.2.70.1.118773634537836566383844156645401151862/FBP_FAL_dynamic_90min_200/1.2.840.113654.2.70.1.66128441808582892090193881277589860568.json | node post.js
