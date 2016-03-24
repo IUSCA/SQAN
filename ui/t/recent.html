@@ -3,6 +3,15 @@
     <p ng-if="series_count == 0" class="text-muted">You don't have access to any IIBISIDs that has received data recently. Please contact your administrator for more info.</p>
     <div class="row">
         <div class="col-md-3" id="affix" ng-class="{affix: content_affix, affix_bottom: content_affix_bottom}">
+            <!--<input type="text" class="form-control" ng-model="research_filter" placeholder="Filter Research"></input>-->
+            <div style="font-size: 80%">
+                <!--<span class="label label-default"></span>-->
+                <span class="label label-success">OK</span>
+                <span class="label label-danger">Error</span>
+                <span class="label label-warning">Warning</span>
+                <span class="label label-primary">No Template</span>
+                <span class="label label-info">Missing</span>
+            </div>
             <div ng-repeat="(iibisid, research) in org">
                 <h4>{{iibisid}}</h4>
                 <div class="list-group">
@@ -21,6 +30,7 @@
                                         {{subject_desc}} &nbsp;
                                     </div>
                                     <div class="col-sm-7">
+                                        <!--data-toggle="popover" title-dis="whaterver" data-content="OKs:{{subject.oks}} Errors:{{subject.errors}} Warnings:{{subject.warnings}} NoTemps:{{subject.notemps}} Missing:{{subject.missing}}" data-placement="bottom" data-trigger="hover"-->
                                         <div class="progress" style="margin-bottom: 0px;"
                                             ng-init="total = subject.non_qced+subject.oks+subject.errors+subject.warnings+subject.notemps+subject.missing">
                                             <div class="progress-bar progress-bar-success" style="width: {{subject.oks / total*100}}%"></div>
@@ -41,9 +51,11 @@
                                 </a>
                             </li>
                         </ol>
-                    </div>
-                </div>
+                    </div><!--list-group-item-->
+                </div><!--list-group-->
             </div><!--ng-repeat-->
+
+        
         </div> <!--col-md-3-->
 
         <div class="col-md-9" ng-class="{'col-md-offset-3': content_affix}">
@@ -87,4 +99,3 @@
 
     </div><!--row-->
 </div>
-

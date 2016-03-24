@@ -316,6 +316,11 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                     }
                 }
             }
+            /*
+            setTimeout(function() {
+                $('[data-toggle="popover"]').popover();
+            }, 100);
+            */
     
             if($scope.qcing) setTimeout(load, 1000*10);
         }, function(res) {
