@@ -296,11 +296,11 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                             for(var exam_id in series_group.exams) {
                                 var serieses = series_group.exams[exam_id];
                                 serieses.forEach(function(series, idx) {
+                                    if(idx > 0) return; //only count the first (latest) series
                                     if(series.deprecated_by) {
-                                        if(idx == 0) console.dir(serieses);
-                                        return; //only count the first (latest) series
+                                        console.log("0 idx but deprecated..");
+                                        console.dir(serieses);
                                     }
-                                    //if(idx > 0) return; //only count the first (latest) series
                                     if(series.qc) {
                                         //decide the overall status(with error>warning>notemp precedence) for each series and count that.. 
                                         if(series.qc.errors && series.qc.errors.length > 0) {
