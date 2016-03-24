@@ -282,7 +282,6 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                     var modality = modalities[modality_id];
                     for(var subject_id in modality.subjects) {
                         var subject = modality.subjects[subject_id];
-                        if(subject_id == "037_S_4410") console.dir(subject);
                         
                         //reset counter
                         subject.non_qced = 0;
