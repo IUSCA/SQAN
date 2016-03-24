@@ -121,28 +121,21 @@ ol.subjects {
   padding: 0px;
   margin: 0px;
 }
+ol.subjects .subject-name {
+  padding: 3px;
+}
+ol.subjects .template-link {
+  color: #666;
+}
 ol.subjects li:hover {
-  background-color: #ddd;
   cursor: pointer;
 }
-ol.subjects li {
-  /*background-color: #eee;
-        border: 1px solid #ddd; */
-  /*padding: 2px;*/
-  /*margin: 2px 0px;*/
+ol.subjects li:hover .subject-name {
+  background-color: #ddd;
 }
-ol.subjects li a {
-  text-decoration: none;
-  color: black;
-}
-ol.subjects li.template-link {
-  background-color: #ccc;
-}
-ol.subjects li.inview {
-  background-color: #008cba;
-}
-ol.subjects li.inview a {
+ol.subjects li.inview .subject-name {
   color: white;
+  background-color: #008cba;
 }
 .template-head {
   background-color: #ccc;
@@ -150,13 +143,6 @@ ol.subjects li.inview a {
 .template-body {
   border-top: 0px;
   background-color: #f6f6f6;
-}
-.subject {
-  /*
-    th {
-        opacity: 0.4;
-    }
-    */
 }
 .subject .list-group-item-subject {
   border-bottom: 0px;
@@ -168,26 +154,6 @@ ol.subjects li.inview a {
 .subject.template {
   background-color: #008cba;
 }
-/*
-ul.templates {
-    list-style: none;
-    padding: 0px;
-    margin: 0px;
-
-    li {
-        padding: 3px;
-        margin: 2px;
-        background-color: #eee;
-        border: 1px solid #ddd;
-        display: inline-block;
-
-        &:hover {
-            cursor: pointer;
-            background-color: #ddd;
-        }
-    }
-}
-*/
 .missing {
   padding: 3px;
   margin: 2px;
@@ -213,22 +179,6 @@ ul.templates {
   cursor: pointer;
   background-color: #ddd;
 }
-/*
-td.missing {
-    background-color: #008cba;
-    color: white;
-    padding: 1px 5px;
-}
-ul.templates {
-    li {
-        border: 1px solid white;
-        color: #aaa;
-        &:first-child {
-            color: black;
-        }
-    }
-}
-*/
 h3 {
   margin-top: 0px;
 }
@@ -333,6 +283,16 @@ h3 {
 .activity p {
   margin-bottom: 0px;
 }
+/* affix seems to interfare 
+.legend 
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+    margin: 20px;
+    background-color: white;
+    height: 20px;
+}
+*/
 
 /*-----------------------------------------------
 

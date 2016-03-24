@@ -4,7 +4,7 @@
     <div class="row">
         <div class="col-md-3" id="affix" ng-class="{affix: content_affix, affix_bottom: content_affix_bottom}">
             <!--<input type="text" class="form-control" ng-model="research_filter" placeholder="Filter Research"></input>-->
-            <div style="font-size: 80%">
+            <div class="legend">
                 <!--<span class="label label-default"></span>-->
                 <span class="label label-success">OK</span>
                 <span class="label label-danger">Error</span>
@@ -24,31 +24,26 @@
                                 ng-click="scrollto(subject.uid)"
                                 ng-class="{inview: inview_id == subject.uid}"> 
                                 <!--subject_desc is not unique across all iibisid / modality..-->
-                                <a href="javascript:void(0)">
-                                    <div class="row">
-                                    <div class="col-sm-5">
-                                        {{subject_desc}} &nbsp;
+                                <div class="row">
+                                <div class="col-sm-5">
+                                    <span class="subject-name">{{subject_desc}}</span>
+                                </div>
+                                <div class="col-sm-7">
+                                    <!--data-toggle="popover" title-dis="whaterver" data-content="OKs:{{subject.oks}} Errors:{{subject.errors}} Warnings:{{subject.warnings}} NoTemps:{{subject.notemps}} Missing:{{subject.missing}}" data-placement="bottom" data-trigger="hover"-->
+                                    <div class="progress" style="margin-bottom: 0px;"
+                                        ng-init="total = subject.non_qced+subject.oks+subject.errors+subject.warnings+subject.notemps+subject.missing">
+                                        <div class="progress-bar progress-bar-success" style="width: {{subject.oks / total*100}}%"></div>
+                                        <div class="progress-bar progress-bar-danger" style="width: {{subject.errors / total*100}}%"></div>
+                                        <div class="progress-bar progress-bar-warning" style="width: {{subject.warnings / total*100}}%"></div>
+                                        <div class="progress-bar progress-bar-primary" style="width: {{subject.notemps / total*100}}%"></div>
+                                        <div class="progress-bar progress-bar-info" style="width: {{subject.missing/ total*100}}%"></div>
                                     </div>
-                                    <div class="col-sm-7">
-                                        <!--data-toggle="popover" title-dis="whaterver" data-content="OKs:{{subject.oks}} Errors:{{subject.errors}} Warnings:{{subject.warnings}} NoTemps:{{subject.notemps}} Missing:{{subject.missing}}" data-placement="bottom" data-trigger="hover"-->
-                                        <div class="progress" style="margin-bottom: 0px;"
-                                            ng-init="total = subject.non_qced+subject.oks+subject.errors+subject.warnings+subject.notemps+subject.missing">
-                                            <div class="progress-bar progress-bar-success" style="width: {{subject.oks / total*100}}%"></div>
-                                            <div class="progress-bar progress-bar-danger" style="width: {{subject.errors / total*100}}%"></div>
-                                            <div class="progress-bar progress-bar-warning" style="width: {{subject.warnings / total*100}}%"></div>
-                                            <div class="progress-bar progress-bar-primary" style="width: {{subject.notemps / total*100}}%"></div>
-                                            <div class="progress-bar progress-bar-info" style="width: {{subject.missing/ total*100}}%"></div>
-                                        </div>
-                                    </div>
-                                    </div><!--row-->
-                                </a>
+                                </div>
+                                </div><!--row-->
                             </li>
                             <li ng-click="scrollto(iibisid+modality_id)"
-                                ng-class="{inview: inview_id == iibisid+modality_id}" class="template-link"> 
-                                <a href="javascript:void(0)">
-                                    <!--<span class="label label-default">OK</span>-->
-                                    Templates
-                                </a>
+                                ng-class="{inview: inview_id == iibisid+modality_id}">
+                                <span class="subject-name template-link">Templates</span>
                             </li>
                         </ol>
                     </div><!--list-group-item-->

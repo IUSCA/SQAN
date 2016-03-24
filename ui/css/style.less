@@ -24,7 +24,7 @@ height: 14px;
 cursor: pointer;
 }
 div.instance:hover {
-opacity: 0.6;
+    opacity: 0.6;
 }
 div.instance_warning {
 background-color: orange;
@@ -133,24 +133,22 @@ ol.subjects {
     list-style: none;
     padding: 0px;
     margin: 0px;
-    li:hover {
-        background-color: #ddd;
-        cursor: pointer;
+    .subject-name {
+        padding: 3px;
     }
-    li {
-        /*background-color: #eee;
-        border: 1px solid #ddd; */
-        /*padding: 2px;*/
-        /*margin: 2px 0px;*/
-        a {
-            text-decoration: none;
-            color: black;
+    .template-link {
+        color: #666;
+    }
+    li:hover {
+        cursor: pointer;
+
+        .subject-name {
+            background-color: #ddd;
         }
-        &.template-link {
-            background-color: #ccc;
-        }
-        &.inview {
-            a { color: white }
+    }
+    li.inview {
+        .subject-name {
+            color: white;
             background-color: #008cba;
         }
     }
@@ -171,36 +169,11 @@ ol.subjects {
     .subject-body {
         background-color: #eee;
     }
-    /*
-    th {
-        opacity: 0.4;
-    }
-    */
     &.template {
         background-color: #008cba;
     }
 }
 
-/*
-ul.templates {
-    list-style: none;
-    padding: 0px;
-    margin: 0px;
-
-    li {
-        padding: 3px;
-        margin: 2px;
-        background-color: #eee;
-        border: 1px solid #ddd;
-        display: inline-block;
-
-        &:hover {
-            cursor: pointer;
-            background-color: #ddd;
-        }
-    }
-}
-*/
 .missing {
     padding: 3px;
     margin: 2px;
@@ -227,22 +200,6 @@ ul.templates {
         background-color: #ddd;
     }
 }
-/*
-td.missing {
-    background-color: #008cba;
-    color: white;
-    padding: 1px 5px;
-}
-ul.templates {
-    li {
-        border: 1px solid white;
-        color: #aaa;
-        &:first-child {
-            color: black;
-        }
-    }
-}
-*/
 
 h3 {
 margin-top: 0px;
@@ -359,3 +316,13 @@ margin-top: 0px;
     }
 }
 
+/* affix seems to interfare 
+.legend 
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+    margin: 20px;
+    background-color: white;
+    height: 20px;
+}
+*/
