@@ -246,6 +246,7 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
     var jwt = localStorage.getItem(appconf.jwt_id);
     if(jwt) { $scope.user = jwtHelper.decodeToken(jwt); }
 
+    $scope.query_limit = appconf.recent_study_limit || 200;
     $scope.view_mode = "tall";
 
     load();
@@ -260,10 +261,16 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
         load();
     });
 
+
     function load() {
         $http.get(appconf.api+'/study/query', {params: {
             skip: 0, 
-            limit: appconf.recent_study_limit || 200,
+            limit: $scope.query_limit,
+            where: {
+                //show all for recent page
+                //deprecated_by: {$exists: false}, //only look for the latest series inside series_desc
+                //isexcluded: false, 
+            },
         }})
         .then(function(res) {
             organize($scope, res.data);
@@ -289,7 +296,11 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                             for(var exam_id in series_group.exams) {
                                 var serieses = series_group.exams[exam_id];
                                 serieses.forEach(function(series, idx) {
-                                    if(idx > 0) return; //only count the first (latest) series
+                                    if(series.deprecated_by) {
+                                        console.dir(idx);
+                                        return; //only count the first (latest) series
+                                    }
+                                    //if(idx > 0) return; //only count the first (latest) series
                                     if(series.qc) {
                                         //decide the overall status(with error>warning>notemp precedence) for each series and count that.. 
                                         if(series.qc.errors && series.qc.errors.length > 0) {
