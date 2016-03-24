@@ -282,6 +282,7 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                     var modality = modalities[modality_id];
                     for(var subject_id in modality.subjects) {
                         var subject = modality.subjects[subject_id];
+                        if(subject_id == "037_S_4410") console.dir(subject);
                         
                         //reset counter
                         subject.non_qced = 0;
@@ -298,7 +299,6 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                                 serieses.forEach(function(series, idx) {
                                     //if(idx > 0) return; //only count the first (latest) series
                                     if(series.deprecated_by) return; //only count non-deprecated series
-                                    if(series.subject == "037_S_4410") console.dir(series);
                                     /*
                                     if(series.deprecated_by) {
                                         console.log("0 idx but deprecated..");
