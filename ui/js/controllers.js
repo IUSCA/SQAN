@@ -297,21 +297,15 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                             for(var exam_id in series_group.exams) {
                                 var serieses = series_group.exams[exam_id];
                                 serieses.forEach(function(series, idx) {
-                                    //if(idx > 0) return; //only count the first (latest) series
                                     if(series.deprecated_by) return; //only count non-deprecated series
-                                    /*
-                                    if(series.deprecated_by) {
-                                        console.log("0 idx but deprecated..");
-                                        console.dir(serieses);
-                                    }
-                                    */
+                                    //if(idx > 0) return; //only count the first (latest) series
                                     if(series.qc) {
                                         //decide the overall status(with error>warning>notemp precedence) for each series and count that.. 
                                         if(series.qc.errors && series.qc.errors.length > 0) {
                                             subject.errors++; 
-                                        } else if (series.qc.warnings && series.qc.warnings.length > 0) {
+                                        } else if(series.qc.warnings && series.qc.warnings.length > 0) {
                                             subject.warnings++; 
-                                        } else if (series.qc.notemps > 0) {
+                                        } else if(series.qc.notemps > 0) {
                                             subject.notemps++; 
                                         } else subject.oks++;
                                     } else {
