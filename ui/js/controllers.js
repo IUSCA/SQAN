@@ -297,7 +297,7 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                                 var serieses = series_group.exams[exam_id];
                                 serieses.forEach(function(series, idx) {
                                     if(series.deprecated_by) {
-                                        console.dir(idx);
+                                        if(idx == 0) console.dir(serieses);
                                         return; //only count the first (latest) series
                                     }
                                     //if(idx > 0) return; //only count the first (latest) series
