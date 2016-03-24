@@ -1,6 +1,6 @@
 <sca-menutab menu="appconf.menu" active="'qc'" user="user"></sca-menutab>
 <div class="container-fluid research">
-    <p class="text-muted" ng-if="study_count == 0">No series needing QC!</p>
+    <p class="text-muted" ng-if="series_count == 0">No series needing QC!</p>
     <div class="row">
         <div class="col-md-3">
             <div class="list-group">
@@ -41,6 +41,7 @@
                     </ul>
                 </div><!--ng-repeast in researches -->
             </div><!--ng-repeast in iibisids-->
+            <p class="alert alert-warning" ng-if="series_count == query_limit">Too many results. Only displaying the most recent {{query_limit}} series</p>
         </div><!--col-md-8-->
     </div><!--row-->
 </div><!--container-->

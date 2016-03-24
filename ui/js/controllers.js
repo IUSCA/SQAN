@@ -40,7 +40,7 @@ function organize($scope, data) {
     $scope.qcing = false; //will be reset to true if there is any series with no qc
 
     //just a quick count used commonly in UI
-    $scope.study_count = data.studies.length;
+    $scope.series_count = data.studies.length;
     
     //for easy research detail lookup
     var researches = {}; 
@@ -371,7 +371,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
         $scope.research_id = $routeParams.researchid;
         $http.get(appconf.api+'/study/byresearchid/'+$scope.research_id)
         .then(function(res) {
-            $scope.study_count = res.data.studies.length;
+            $scope.series_count = res.data.studies.length;
             organize($scope, res.data);
             if($scope.qcing) setTimeout(load_series, 1000*10);
         }, function(res) {
@@ -484,8 +484,9 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
     var jwt = localStorage.getItem(appconf.jwt_id);
     if(jwt) $scope.user = jwtHelper.decodeToken(jwt);
-    $scope.page = "qc"+$routeParams.level;
 
+    $scope.page = "qc"+$routeParams.level;
+    $scope.query_limit = appconf.qc_study_limit || 200;
     $scope.view_mode = "tall";
 
     //construct query
@@ -513,7 +514,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
     function load() {
         $http.get(appconf.api+'/study/query', {params: {
             skip: 0, 
-            limit: appconf.qc_study_limit || 200,
+            limit: $scope.query_limit,
             where: where,
         }})
         .then(function(res) {

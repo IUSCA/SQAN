@@ -7,7 +7,7 @@ angular.module('app.config', [])
     kibana_url: '/kibana/',
 
     recent_study_limit: 600,
-    qc_study_limit: 600,
+    qc_study_limit: 100,
 
     //profile_api: '/api/profile',
     //profile_url: '/profile',
