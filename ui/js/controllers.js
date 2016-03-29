@@ -6,6 +6,7 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, menu, $
     serverconf.then(function(_c) { $scope.serverconf = _c; });
     $scope.menu = menu;
 
+    //TODO - it doesn't make sense that these exist here..
     $scope.openstudy = function(id) {
         //$location.path("/study/"+study_id);
         $window.open("#/study/"+id, "study:"+id);
@@ -261,7 +262,6 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
         load();
     });
 
-
     function load() {
         $http.get(appconf.api+'/study/query', {params: {
             skip: 0, 
@@ -510,7 +510,11 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
     switch(parseInt($routeParams.level)) {
     case 1:
         //var where = {qc1_state: {$exists: false}};
-        where.qc1_state = 'fail';
+        //where.qc1_state = 'fail';
+        where.$and  = [
+            {qc1_state:{$ne:"autopass"}},
+            {qc1_state:{$ne:"accept"}}
+        ];
         break;
     case 2:
         where.qc2_state = {$exists: false};
@@ -668,14 +672,14 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
         var comment = null;
         //TODO - user can disable prompt via browser.. also, canceling doesn't prevent user from switching the ui-button state
         //I should implement a bit more form like interface for state change
-        if(state && state != "accept") {
-            comment = prompt("Please enter comment for this state change");
-            if(!comment) {
-                $event.preventDefault();
-                //$event.stopPropagation();
-                return;
-            }
+        //if(state && state != "accept") {
+        comment = prompt("Please enter comment for this state change");
+        if(!comment) {
+            $event.preventDefault();
+            //$event.stopPropagation();
+            return;
         }
+        //}
 
         $http.post(appconf.api+'/study/qcstate/'+$routeParams.seriesid, {level: level, state: state, comment: comment})
         .then(function(res) {
