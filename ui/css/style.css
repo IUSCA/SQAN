@@ -283,16 +283,17 @@ h3 {
 .activity p {
   margin-bottom: 0px;
 }
-/* affix seems to interfare 
-.legend 
+.legend {
+  font-size: 85%;
+  /* affix seems to interfare 
     position: fixed;
     bottom: 0px;
     left: 0px;
     margin: 20px;
     background-color: white;
     height: 20px;
-}
 */
+}
 
 /*-----------------------------------------------
 

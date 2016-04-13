@@ -56,7 +56,7 @@ angular.module('app.config', [])
         },
         {
             id: "admin",
-            label: "Administration",
+            label: "Management",
             url: "/dicom/#/admin",
             show: function(scope) {
                 if(~scope.dicom.indexOf('admin')) return true;

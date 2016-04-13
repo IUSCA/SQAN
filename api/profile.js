@@ -29,7 +29,7 @@ var profiles = {};
 */
 
 exports.cache = function(cb) {
-    logger.debug("caching user public profiles");
+    logger.debug("caching user public profiles from auth service");
     request({
         url: config.dicom.auth_api+"/profiles",
         json: true,
@@ -37,7 +37,7 @@ exports.cache = function(cb) {
     }, function (err, res, body) {
         if(err) return cb(err);
         if (res.statusCode != 200) {
-            return cb({message: "couldn't load user profiles from profile service:"+res.body, code: res.statusCode});
+            return cb({message: "couldn't load user profiles from auth service:"+res.body, code: res.statusCode});
         }
         //update cache (let's assume user never disappears)
         body.forEach(function(user) {
