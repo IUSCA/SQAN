@@ -30,7 +30,9 @@ function run(cb) {
         async.forEach(images, qc, function(err) {
             if(err) return cb(err);
             logger.info("batch complete. sleeping before next batch");
-            setTimeout(run, 1000*5);
+            setTimeout(function() {
+                run(cb);
+            }, 1000*3);
         });
     });
 }

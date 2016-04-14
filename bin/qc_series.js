@@ -30,7 +30,9 @@ function run(cb) {
         async.each(studies, qc_series, function(err) {
             if(err) return cb(err);
             logger.info("batch complete. sleeping before the next try");
-            setTimeout(run, 1000*5);
+            setTimeout(function() {
+                run(cb);
+            }, 1000*3);
         });
     });
 }
