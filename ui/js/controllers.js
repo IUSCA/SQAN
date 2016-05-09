@@ -329,6 +329,7 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
             else toaster.error(res.statusText);
         });
     }
+    /*
     function getWatchers(root) {
         root = angular.element(root || document.documentElement);
         var watcherCount = 0;
@@ -356,6 +357,7 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
     setInterval(function() {
         console.log(getWatchers().length);
     }, 1000);
+    */
 }]);
 
 app.controller('ResearchRedirectController', ['$scope', 'appconf', 'toaster', 'researches', '$location',

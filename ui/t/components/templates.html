@@ -2,18 +2,17 @@
     <p class="text-muted" ng-if="$ctrl.times.length == 0">No templates received</p>
     <table class="table table-condensed" style="margin-bottom: 0px;" ng-if="$ctrl.times.length > 0">
         <thead><tr><th width="30%" style="color: #333;">Series Description</th>
-            <th ng-repeat="time in $ctrl.times | orderBy:'-toString()'">{{time|date:'short'}}</th>
+            <th ng-repeat="time in ::$ctrl.times | orderBy:'-toString()'">{{::time|date:'short'}}</th>
         </tr></thead>
         <tbody>
-            <tr ng-repeat="times in $ctrl.templates | toArray:true | orderBy:'min_SeriesNumber'" ng-init="desc = times.$key">
-            <!--<tr ng-repeat="desc in $ctrl.keys($ctrl.templates) | orderBy:'toString().toLowerCase()'" ng-init="times = $ctrl.templates[desc]">-->
-                <td>{{desc}}</td>
-                <td ng-repeat="time in $ctrl.times | orderBy:'-toString()'" ng-init="templates = times[time]">
+            <tr ng-repeat="times in ::$ctrl.templates | toArray:true | orderBy:'min_SeriesNumber'" ng-init="desc = times.$key">
+                <td>{{::desc}}</td>
+                <td ng-repeat="time in ::$ctrl.times | orderBy:'-toString()'" ng-init="templates = times[time]">
                     <div ng-if="templates">
                         <span class="label label-default clickable" style="margin-right: 3px;"
-                            ng-repeat="template in templates | orderBy:'-SeriesNumber'" 
+                            ng-repeat="template in ::templates | orderBy:'-SeriesNumber'" 
                             ng-click="$ctrl.opentemplate(template._id)">
-                            <span ng-class="{'text-muted': $index != 0}">#{{template.SeriesNumber}}</span>
+                            <span ng-class="{'text-muted': $index != 0}">#{{::template.SeriesNumber}}</span>
                         </span>
                     </div>
                 </td>
