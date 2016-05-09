@@ -1,4 +1,4 @@
-<sca-menutab menu="appconf.menu" active="'recent'" user="user"></sca-menutab>
+<sca-menutab fluid="true" menu="appconf.menu" active="'recent'" user="user"></sca-menutab>
 <div class="container-fluid recent">
     <p ng-if="series_count == 0" class="text-muted">You don't have access to any IIBISIDs that has received data recently. Please contact your administrator for more info.</p>
     <div class="row">
@@ -12,12 +12,12 @@
                 <span class="label label-primary">No Templ</span>
                 <span class="label label-info">Missing</span>
             </div>
-            <div ng-repeat="(iibisid, research) in org">
-                <h4>{{iibisid}}</h4>
+            <div ng-repeat="(iibisid, research) in org track by iibisid">
+                <h4>{{::iibisid}}</h4>
                 <div class="list-group">
-                    <div class="list-group-item" ng-repeat="(modality_id, modality) in research" style="padding: 7px 10px;">
+                    <div class="list-group-item" ng-repeat="(modality_id, modality) in research track by modality_id" style="padding: 7px 10px;">
                         <h5 class="text-muted" style="margin-top: 0px;">
-                            {{modality._detail.Modality}} / {{modality._detail.StationName}} <small ng-if="modality._detail.Modality == 'PT'"> / {{modality._detail.radio_tracer}} </small>
+                            {{::modality._detail.Modality}} / {{::modality._detail.StationName}} <small ng-if="modality._detail.Modality == 'PT'"> / {{::modality._detail.radio_tracer}} </small>
                         </h5>
                         <ol class="subjects">
                             <li ng-repeat="(subject_desc, subject) in modality.subjects" 
@@ -26,10 +26,9 @@
                                 <!--subject_desc is not unique across all iibisid / modality..-->
                                 <div class="row">
                                 <div class="col-sm-5">
-                                    <span class="subject-name">{{subject_desc}}</span>
+                                    <span class="subject-name">{{::subject_desc}}</span>
                                 </div>
                                 <div class="col-sm-7">
-                                    <!--data-toggle="popover" title-dis="whaterver" data-content="OKs:{{subject.oks}} Errors:{{subject.errors}} Warnings:{{subject.warnings}} NoTemps:{{subject.notemps}} Missing:{{subject.missing}}" data-placement="bottom" data-trigger="hover"-->
                                     <div class="progress" style="margin-bottom: 0px;"
                                         ng-init="total = subject.non_qced+subject.oks+subject.errors+subject.warnings+subject.notemps+subject.missing">
                                         <div class="progress-bar progress-bar-success" style="width: {{subject.oks / total*100}}%"></div>
@@ -57,19 +56,19 @@
             <p ng-if="!org"><i class="fa fa-circle-o-notch fa-spin"></i> Loading ...</p>
             <viewmode-toggler mode="view_mode"></viewmode-toggler> 
             <div ng-repeat="(iibisid, research) in org">
-                <h2>{{iibisid}}</h2>
+                <h2>{{::iibisid}}</h2>
                 <div ng-repeat="(modality_id, modality) in research">
                     <h3>
-                        Modality: <b>{{modality._detail.Modality}}</b> 
-                        StationName: <b>{{modality._detail.StationName}}</b>
+                        Modality: <b>{{::modality._detail.Modality}}</b> 
+                        StationName: <b>{{::modality._detail.StationName}}</b>
                         <small ng-if="modality._detail.Modality == 'PT'">
-                            RadioTracer: <b>{{modality._detail.radio_tracer}}</b>
+                            RadioTracer: <b>{{::modality._detail.radio_tracer}}</b>
                         </small>
                     </h3>
                     <ul class="list-group">
                         <div ng-repeat="(subject, subject_detail) in modality.subjects" id="{{subject_detail.uid}}" class="subject"> 
                             <li class="list-group-item subject-body">
-                                <span class="text-muted">Subject</span> {{subject}}
+                                <span class="text-muted">Subject</span> {{::subject}}
                             </li>
                             <exams
                                 examid="subject_detail.exam_id"
@@ -82,7 +81,7 @@
                                 times="modality.subjects_times[subject]"></exams>
                         </div>
 
-                        <div id="{{iibisid+modality_id}}" class="template">
+                        <div id="{{::iibisid+modality_id}}" class="template">
                             <li class="list-group-item template-head">Templates</li>
                             <templates templates="modality.templates" times="modality.templates_times"></templates>
                         </div> 

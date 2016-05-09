@@ -274,6 +274,7 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
         }})
         .then(function(res) {
             organize($scope, res.data);
+            console.log("organized");
             
             //do some extra processing for each subject
             for(var research_id in $scope.org) {
@@ -328,6 +329,33 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
             else toaster.error(res.statusText);
         });
     }
+    function getWatchers(root) {
+        root = angular.element(root || document.documentElement);
+        var watcherCount = 0;
+
+        function getElemWatchers(element) {
+        var isolateWatchers = getWatchersFromScope(element.data().$isolateScope);
+        var scopeWatchers = getWatchersFromScope(element.data().$scope);
+        var watchers = scopeWatchers.concat(isolateWatchers);
+        angular.forEach(element.children(), function (childElement) {
+          watchers = watchers.concat(getElemWatchers(angular.element(childElement)));
+        });
+        return watchers;
+        }
+
+        function getWatchersFromScope(scope) {
+        if (scope) {
+          return scope.$$watchers || [];
+        } else {
+          return [];
+        }
+        }
+
+        return getElemWatchers(root);
+    }
+    setInterval(function() {
+        console.log(getWatchers().length);
+    }, 1000);
 }]);
 
 app.controller('ResearchRedirectController', ['$scope', 'appconf', 'toaster', 'researches', '$location',
@@ -423,6 +451,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
         }
         $scope.researches_filtered = result;
     });
+
 }]);
 
 app.component('exams', {

@@ -2,14 +2,14 @@
 <li class="list-group-item list-group-item-subject" ng-if="$ctrl.mode == 'wide'">
     <table class="table table-condensed" style="margin-bottom: 0px;">
     <thead><tr><th width="30%"><span class="text-muted">Series Description</span></th>
-        <th ng-repeat="(exam_id, time) in $ctrl.times">
-            <time>{{time|date:'short'}}</time> &nbsp;
+        <th ng-repeat="(exam_id, time) in ::$ctrl.times">
+            <time>{{::time|date:'short'}}</time> &nbsp;
             <button class="btn btn-xs" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc(exam_id)">ReQC</button>
         </th>
     </tr></thead>
     <tbody>
         <tr ng-repeat="series_group in $ctrl.serieses | toArray:true | orderBy:'min_SeriesNumber'" ng-init="series_desc = series_group.$key">
-            <td>{{series_desc}}</td>
+            <td>{{::series_desc}}</td>
             <td ng-repeat="(exam_id, time) in $ctrl.times" style="padding: 0px;">
                 <div class="text-muted excluded" 
                     ng-if="series_group._isexcluded" 
@@ -22,20 +22,20 @@
                         </div>
                         <div ng-if="series.deprecated_by" class="studynote" ng-click="$ctrl.openstudy(series._id)">
                             <!-- only show seriesnumber for older series-->
-                            <span class="text-muted">#{{series.SeriesNumber}}</span>
+                            <span class="text-muted">#{{::series.SeriesNumber}}</span>
                         </div>
                     </div>
                 </div>
             </td>
         </tr>
-        <tr ng-repeat="series_desc in $ctrl.missing_series_descs">
-            <td class="text-muted">{{series_desc}}</td>
-            <td ng-repeat="(exam_id, time) in $ctrl.times" style="padding: 0px;">
+        <tr ng-repeat="series_desc in ::$ctrl.missing_series_descs">
+            <td class="text-muted">{{::series_desc}}</td>
+            <td ng-repeat="(exam_id, time) in ::$ctrl.times" style="padding: 0px;">
                 <div class="missing clickable"
-                    ng-repeat="template in $ctrl.missing[time][series_desc] | orderBy:'-SeriesNumber'" 
+                    ng-repeat="template in ::$ctrl.missing[time][series_desc] | orderBy:'-SeriesNumber'" 
                     ng-click="$ctrl.opentemplate(template._id)">
                     <span class="label label-info">Missing</span> 
-                    <span class="text-muted">(#{{template.SeriesNumber}})</span>
+                    <span class="text-muted">(#{{::template.SeriesNumber}})</span>
                 </div>
             </td>
             <td></td>
@@ -47,7 +47,7 @@
 <li class="list-group-item list-group-item-subject" ng-if="$ctrl.mode == 'tall'" ng-repeat="(exam_id, time) in $ctrl.times">
     <div class="row">
         <div class="col-md-2">
-            <p><time style="position: relative; top: 5px"><b>{{time|date:'short'}}</b></time></p>
+            <p><time style="position: relative; top: 5px"><b>{{::time|date:'short'}}</b></time></p>
             <button class="btn btn-xs" ng-click="$ctrl.reqc(exam_id)">ReQC</button>
         </div>
         <div class="col-md-10">
@@ -55,7 +55,7 @@
             <thead><tr class="text-muted"><th width="30%">Series Description</th><th>Status</th><th>Template Used</th></tr></thead>
             <tbody>
                 <tr ng-repeat="series_group in $ctrl.serieses | toArray:true | orderBy:'min_SeriesNumber'" ng-init="series_desc = series_group.$key" ng-if="series_group.exams[exam_id]">
-                    <td>{{series_desc}} <!--<span class="text-muted">(#{{series_group.exams[exam_id].SeriesNumber}})</span>--></td>
+                    <td>{{::series_desc}} <!--<span class="text-muted">(#{{series_group.exams[exam_id].SeriesNumber}})</span>--></td>
                     <td style="padding: 0px;">
                         <div class="text-muted excluded" 
                             ng-if="series_group._isexcluded" 
@@ -73,30 +73,30 @@
                                     <studynote ng-click="$ctrl.openstudy(series._id)" study="series">
                                 </div>
                                 <div ng-if="series.deprecated_by" class="studynote" ng-click="$ctrl.openstudy(series._id)">
-                                    <span class="text-muted">#{{series.SeriesNumber}}</span>
+                                    <span class="text-muted">#{{::series.SeriesNumber}}</span>
                                 </div>
                             </div>
                         </div>
                     </td>
                     <td style="padding: 0px;">
-                        <div ng-repeat="series in series_group.exams[exam_id] | limitTo:1">
+                        <div ng-repeat="series in ::series_group.exams[exam_id] | limitTo:1">
                             <div ng-if="series.qc.template_id" class="studynote" 
                                 ng-click="$ctrl.opentemplate(series.qc.template_id)">
-                                {{$ctrl.templates[series.qc.template_id].date | date:'short'}}
-                                <span class="text-muted">{{$ctrl.templates[series.qc.template_id].series_desc}}</span>
-                                <span class="text-muted">(#{{$ctrl.templates[series.qc.template_id].SeriesNumber}})</span>
+                                {{::$ctrl.templates[series.qc.template_id].date | date:'short'}}
+                                <span class="text-muted">{{::$ctrl.templates[series.qc.template_id].series_desc}}</span>
+                                <span class="text-muted">(#{{::$ctrl.templates[series.qc.template_id].SeriesNumber}})</span>
                             </div>
                         </div>
                     </td>
                 </tr>
                 <tr ng-repeat="(series_desc, templates) in $ctrl.missing[time]">
-                    <td class="text-muted">{{series_desc}}<!-- (#{{template.SeriesNumber}})--></td>
+                    <td class="text-muted">{{::series_desc}}<!-- (#{{template.SeriesNumber}})--></td>
                     <td style="padding: 0px;">
                         <div class="missing clickable" 
                             ng-repeat="template in templates | orderBy:'-SeriesNumber'"
                             ng-click="$ctrl.opentemplate(template._id)">
                             <span class="label label-info">Missing</span> 
-                            <span class="text-muted">#{{template.SeriesNumber}}</span>
+                            <span class="text-muted">#{{::template.SeriesNumber}}</span>
                         </div>
                     </td>
                     <td></td>
