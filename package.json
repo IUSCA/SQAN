@@ -16,7 +16,7 @@
     "express-validator": "^2.13.0",
     "express-winston": "~0.4.1",
     "mkdirp": "~0.5.1",
-    "mongoose": "^4.4.2",
+    "mongoose": "^4.4.17",
     "morgan": "^1.6.1",
     "mv": "^2.1.1",
     "path": "^0.11.14",

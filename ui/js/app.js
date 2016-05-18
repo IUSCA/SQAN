@@ -81,7 +81,7 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         requiresLogin: true,
     })
     .otherwise({
-        redirectTo: '/about'
+        redirectTo: '/recent'
     });
 }]).run(['$rootScope', '$location', 'toaster', 'jwtHelper', 'appconf', 'scaMessage',
 function($rootScope, $location, toaster, jwtHelper, appconf, scaMessage) {

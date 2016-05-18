@@ -23,11 +23,6 @@ angular.module('app.config', [])
     jwt_id: 'jwt',
     menu: [
         {
-            id: "about",
-            label: "About",
-            url: "/dicom/#/about",
-        },
-        {
             id: "research",
             label: "All Exams",
             url: "/dicom/#/research",
@@ -46,9 +41,18 @@ angular.module('app.config', [])
             }
         },
         {
-            id: "qc",
-            label: "QC",
-            url: "/dicom/#/qc",
+            id: "qc1",
+            label: "QC1 Pending",
+            url: "/dicom/#/qc/1",
+            show: function(scope) {
+                if(~scope.dicom.indexOf('user')) return true;
+                return false;
+            }
+        },
+        {
+            id: "qc2",
+            label: "QC2 Pending",
+            url: "/dicom/#/qc/2",
             show: function(scope) {
                 if(~scope.dicom.indexOf('user')) return true;
                 return false;
@@ -62,6 +66,11 @@ angular.module('app.config', [])
                 if(~scope.dicom.indexOf('admin')) return true;
                 return false;
             }
+        },
+        {
+            id: "about",
+            label: "About",
+            url: "/dicom/#/about",
         },
     ]    
 });
