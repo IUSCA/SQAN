@@ -4,7 +4,7 @@
         <div class="col-md-3" id="affix" ng-class="{affix: content_affix, affix_bottom: content_affix_bottom}">
             <input type="text" class="form-control" ng-model="research_filter" placeholder="Filter Research"></input>
             <div ng-repeat="(iibisid, recs) in researches_filtered">
-                <h5>{{::iibisid}}</h5>
+                <h5><b class="text-muted">{{::iibisid}}</b></h5>
                 <div class="list-group">
                     <a class="list-group-item clickable" style="padding: 7px 10px" 
                         ng-repeat="rec in recs" href="#/research/{{rec._id}}" ng-class="{active: rec._id == research_id}">

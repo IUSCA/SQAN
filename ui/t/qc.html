@@ -5,7 +5,7 @@
         <div class="col-md-3">
             <input type="text" class="form-control" ng-model="research_filter" placeholder="Filter"></input>
             <div ng-repeat="(iibisid, research) in org" ng-if="show_iibis(iibisid, research)">
-                <h5>{{::iibisid}}</h5>
+                <h5><b class="text-muted">{{::iibisid}}</b></h5>
                 <div class="list-group">
                     <div class="list-group-item clickable" 
                         style="padding: 7px 10px;" 

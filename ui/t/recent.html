@@ -5,7 +5,7 @@
         <div class="col-md-3" id="affix" ng-class="{affix: content_affix, affix_bottom: content_affix_bottom}">
             <input type="text" class="form-control" ng-model="research_filter" placeholder="Filter"></input>
             <div ng-repeat="(iibisid, research) in org" ng-if="show_iibis(iibisid, research)">
-                <h5>{{::iibisid}}</h5>
+                <h5><b class="text-muted">{{::iibisid}}</b></h5>
                 <div class="list-group">
                     <div class="list-group-item" ng-repeat="(modality_id, modality) in research" style="padding: 7px 10px;" ng-if="show_modality(iibisid, modality_id, modality)">
                         <h5 class="text-muted" style="margin-top: 0px;">
