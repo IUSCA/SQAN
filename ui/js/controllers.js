@@ -16,6 +16,7 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, menu, $
         $window.open("#/template/"+id,  "tepmlate:"+id);
     }
     $scope.scrollto = function(id) {
+        console.log("to "+id);
         $anchorScroll(id);
     }
 }]);
@@ -274,7 +275,6 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
         }})
         .then(function(res) {
             organize($scope, res.data);
-            console.log("organized");
             
             //do some extra processing for each subject
             for(var research_id in $scope.org) {
@@ -317,47 +317,34 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
                     }
                 }
             }
-            /*
-            setTimeout(function() {
-                $('[data-toggle="popover"]').popover();
-            }, 100);
-            */
-    
             if($scope.qcing) setTimeout(load, 1000*10);
         }, function(res) {
             if(res.data && res.data.message) toaster.error(res.data.message);
             else toaster.error(res.statusText);
         });
     }
-    /*
-    function getWatchers(root) {
-        root = angular.element(root || document.documentElement);
-        var watcherCount = 0;
 
-        function getElemWatchers(element) {
-        var isolateWatchers = getWatchersFromScope(element.data().$isolateScope);
-        var scopeWatchers = getWatchersFromScope(element.data().$scope);
-        var watchers = scopeWatchers.concat(isolateWatchers);
-        angular.forEach(element.children(), function (childElement) {
-          watchers = watchers.concat(getElemWatchers(angular.element(childElement)));
-        });
-        return watchers;
+    //used to apply filtering capability
+    $scope.show_iibis = function(iibisid, research) {
+        for(var modality_id in research) {
+            if($scope.show_modality(iibisid, modality_id, research[modality_id])) return true;
         }
-
-        function getWatchersFromScope(scope) {
-        if (scope) {
-          return scope.$$watchers || [];
-        } else {
-          return [];
-        }
-        }
-
-        return getElemWatchers(root);
+        return false;
     }
-    setInterval(function() {
-        console.log(getWatchers().length);
-    }, 1000);
-    */
+    $scope.show_modality = function(iibisid, modality_id, modality) {
+        for(var subject_desc in modality.subjects) {
+            if($scope.show_subject(iibisid, modality_id, subject_desc)) return true;
+        }
+        return false;
+    }
+    $scope.show_subject = function(iibisid, modality_id, subject_desc) {
+        if(!$scope.research_filter) return true;
+        if(~iibisid.toLowerCase().indexOf($scope.research_filter)) return true;
+        if(~modality_id.toLowerCase().indexOf($scope.research_filter)) return true;
+        if(~subject_desc.toLowerCase().indexOf($scope.research_filter)) return true;
+        return false;
+    }
+
 }]);
 
 app.controller('ResearchRedirectController', ['$scope', 'appconf', 'toaster', 'researches', '$location',
@@ -401,13 +388,6 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
     $scope.$on("exam_invalidated", function(event, msg) {
         load_series();
     });
-
-    /* broken..
-    var affix = document.getElementById("affix");
-    if(affix) $document.on('scroll', function() {
-        setup_affix($scope, affix);
-    });
-    */
 
     function load_series() {
         if(!$routeParams.researchid) return; //could happen if user move away from this route by still waiting for callback
@@ -572,6 +552,27 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
             if(res.data && res.data.message) toaster.error(res.data.message);
             else toaster.error(res.statusText);
         });
+    }
+    
+    //used to apply filtering capability
+    $scope.show_iibis = function(iibisid, research) {
+        for(var modality_id in research) {
+            if($scope.show_modality(iibisid, modality_id, research[modality_id])) return true;
+        }
+        return false;
+    }
+    $scope.show_modality = function(iibisid, modality_id, modality) {
+        for(var subject_desc in modality.subjects) {
+            if($scope.show_subject(iibisid, modality_id, subject_desc)) return true;
+        }
+        return false;
+    }
+    $scope.show_subject = function(iibisid, modality_id, subject_desc) {
+        if(!$scope.research_filter) return true;
+        if(~iibisid.toLowerCase().indexOf($scope.research_filter)) return true;
+        if(~modality_id.toLowerCase().indexOf($scope.research_filter)) return true;
+        if(~subject_desc.toLowerCase().indexOf($scope.research_filter)) return true;
+        return false;
     }
 }]);
 

@@ -163,7 +163,8 @@ ol.subjects li.inview .subject-name {
 }
 .clickable:hover {
   cursor: pointer;
-  background-color: #ddd;
+  background-color: #ddd !important;
+  /*fight with list-group.less*/
   color: black;
 }
 .excluded,
