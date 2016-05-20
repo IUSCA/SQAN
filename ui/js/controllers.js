@@ -178,7 +178,11 @@ function organize($scope, data) {
                         var found = false;
                         for(var series_desc in subject.serieses) {
                             if(subject.serieses[series_desc].exams[exam_id] == undefined) continue; //wrong time
-                            if(series_desc.startsWith(template_series_desc)) {
+
+                            //truncate number at the end of template name
+                            var tdesc = template_series_desc.replace(/\d+$/, '');
+
+                            if(series_desc.startsWith(tdesc)) {
                                 found = true;
                                 break;
                             }

@@ -232,6 +232,13 @@ router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), funct
                 if(!exam.research_id.equals(series.research_id)) return next("invalid template_id");
                 series.template_exam_id = exam._id;
                 series.qc = undefined; //invalidate series qc
+                var event = {
+                    user_id: req.user.sub,
+                    title: "Template override",
+                    date: new Date(), //should be set by default, but UI needs this right away
+                    detail: "Re-QCing with template: "+exam.date.toString(),
+                };
+                series.events.push(event);
                 series.save(function(err) {
                     if(err) return(err);
                     //invalidate image QC.

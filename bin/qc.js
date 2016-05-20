@@ -83,10 +83,19 @@ function pick_template(series, exam_id, cb) {
         //find series with longest prefix (or bigger SeriesNumber if there is duplicate template under the series_desc)
         var longest = null;
         templates.forEach(function(template) {
-            if(~series.series_desc.indexOf(template.series_desc)) {
+            var tdesc = template.series_desc;
+            
+            //remove trailing numbers from tdesk
+            //so that template:abc123 will match series:abc456
+            //(warning - until I store 'missing series' as part of exam qc status (there is no such thing right now)
+            //UI dynamically generates list of missing series. This truncation needs to happen in ui as well
+            //(see ui/js/controllers.js@organize)
+            tdesc = tdesc.replace(/\d+$/, '');
+
+            if(~series.series_desc.indexOf(tdesc)) {
                 if(longest == null || 
-                    longest.series_desc.length < template.series_desc.length ||
-                    (longest.series_desc.length == template.series_desc.length && longest.SeriesNumber < template.SeriesNumber)) {
+                    longest.series_desc.length < tdesc.length ||
+                    (longest.series_desc.length == tdesc.length && longest.SeriesNumber < template.SeriesNumber)) {
                     longest = template; //better match
                 }
             }
