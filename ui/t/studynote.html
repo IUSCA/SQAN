@@ -6,8 +6,8 @@
         <span class="label label-warning" ng-switch-when="warning">Warnings: {{::study.qc.warnings.length}}</span>
         <span class="label label-success" ng-switch-when="ok">OK</span>
     </div>
-    <span class="label label-{{::qc1}}" ng-if="qc1">QC1</span>
-    <span class="label label-{{::qc2}}" ng-if="qc2">QC2</span>
+    <span class="label label-{{qc1}}" ng-if="qc1">QC1</span>
+    <span class="label label-{{qc2}}" ng-if="qc2">QC2</span>
 
     #{{::study.SeriesNumber}}
 

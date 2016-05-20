@@ -135,6 +135,18 @@ app.directive('studynote', function() {
                     else if($scope.study.qc.warnings.length > 0) $scope.studystate = "warning";
                     else $scope.studystate = "ok";
                 }
+                $scope.qc1 = null;
+                if($scope.study.qc1_state) {
+                    switch($scope.study.qc1_state) {
+                    case "accept":
+                        $scope.qc1 = "warning"; break;
+                    case "autopass":
+                        $scope.qc1 = "success"; break;
+                    case "reject":
+                        $scope.qc1 = "danger"; break;
+                    }
+                }
+                $scope.qc2 = null;
                 if($scope.study.qc2_state)  {
                     switch($scope.study.qc2_state) {
                     case "accept": 
@@ -146,16 +158,6 @@ app.directive('studynote', function() {
                     case "reject":
                         //$scope.label = "QC2";
                         $scope.qc2 = "danger"; break;
-                    }
-                }
-                if($scope.study.qc1_state) {
-                    switch($scope.study.qc1_state) {
-                    case "accept":
-                        $scope.qc1 = "warning"; break;
-                    case "autopass":
-                        $scope.qc1 = "success"; break;
-                    case "reject":
-                        $scope.qc1 = "danger"; break;
                     }
                 }
             }
