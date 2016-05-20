@@ -8,6 +8,26 @@
         </th>
     </tr></thead>
     <tbody>
+        <tr>
+            <td class="text-muted">Comments</td>
+            <td>
+                <!--------------TODO------------------->
+                <div class="activity" ng-repeat="comment in data.series.comments" ng-init="user = users[comment.user_id]">
+                    <div class="row">
+                        <div class="col-md-1"><img gravatar-src="user.email" gravatar-size="32"></img></div>
+                        <div class="col-md-11">
+                            <time class="pull-right text-muted">{{comment.date|date:'short'}}</time>
+                            <b>{{user.fullname}}</b>
+                            <p>{{comment.comment}}</p>
+                        </div>
+                    </div>
+                </div>
+                <textarea class="form-control" placeholder="New Comment" ng-model="newcomment" rows="{{comment_active||1}}" ng-focus="comment_active = 3"></textarea>
+                <button type="button" class="btn btn-xs" ng-click="addcomment()" ng-if="newcomment"><i class="fa fa-check"></i></button>
+
+
+            </td>
+        </tr>
         <tr ng-repeat="series_group in $ctrl.serieses | toArray:true | orderBy:'min_SeriesNumber'" ng-init="series_desc = series_group.$key">
             <td>{{::series_desc}}</td>
             <td ng-repeat="(exam_id, time) in $ctrl.times" style="padding: 0px;">
@@ -46,11 +66,30 @@
 <!-- exploded view (show each study time under different list-group-item) -->
 <li class="list-group-item list-group-item-subject" ng-if="$ctrl.mode == 'tall'" ng-repeat="(exam_id, time) in $ctrl.times">
     <div class="row">
-        <div class="col-md-2">
-            <p><time style="position: relative; top: 5px"><b>{{::time|date:'short'}}</b></time></p>
-            <button class="btn btn-xs" ng-click="$ctrl.reqc(exam_id)">ReQC</button>
+        <div class="col-md-3">
+            <p>
+                <time style="position: relative; top: 5px"><b>{{::time|date:'short'}}</b></time> &nbsp;
+                <button class="btn btn-xs" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc(exam_id)">ReQC</button>
+            </p>
+
+            <!--------------TODO------------------->
+            <div class="activity" ng-repeat="comment in data.series.comments" ng-init="user = users[comment.user_id]">
+                <div class="row">
+                    <div class="col-md-1"><img gravatar-src="user.email" gravatar-size="32"></img></div>
+                    <div class="col-md-11">
+                        <time class="pull-right text-muted">{{comment.date|date:'short'}}</time>
+                        <b>{{user.fullname}}</b>
+                        <p>{{comment.comment}}</p>
+                    </div>
+                </div>
+            </div>
+            <textarea class="form-control" placeholder="New Comment" ng-model="newcomment" rows="{{comment_active||1}}" ng-focus="comment_active = 3"></textarea>
+            <button type="button" class="btn btn-xs" ng-click="addcomment()" ng-if="newcomment"><i class="fa fa-check"></i></button>
+            <br>
+
+
         </div>
-        <div class="col-md-10">
+        <div class="col-md-9">
             <table class="table table-condensed" style="margin-bottom: 0px;">
             <thead><tr class="text-muted"><th width="30%">Series Description</th><th>Status</th><th>Template Used</th></tr></thead>
             <tbody>

@@ -35,9 +35,13 @@ exports.cache = function(cb) {
         json: true,
         headers: { 'Authorization': 'Bearer '+config.dicom.auth_jwt }
     }, function (err, res, body) {
-        if(err) return cb(err);
+        if(err) {
+            if(cb) cb(err);
+            return;
+        }
         if (res.statusCode != 200) {
-            return cb({message: "couldn't load user profiles from auth service:"+res.body, code: res.statusCode});
+            if(cb) cb({message: "couldn't load user profiles from auth service:"+res.body, code: res.statusCode});
+            return;
         }
         //update cache (let's assume user never disappears)
         body.forEach(function(user) {

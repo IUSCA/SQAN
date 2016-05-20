@@ -163,8 +163,8 @@ ol.subjects li.inview .subject-name {
 }
 .clickable:hover {
   cursor: pointer;
-  background-color: #ddd !important;
-  /*fight with list-group.less*/
+  background-color: #ddd;
+  /*fights with list-group.less*/
   color: black;
 }
 .excluded,
@@ -286,6 +286,8 @@ h3 {
 }
 .legend {
   font-size: 85%;
+  border: 1px solid #ddd;
+  padding: 10px;
   /* affix seems to interfare 
     position: fixed;
     bottom: 0px;
