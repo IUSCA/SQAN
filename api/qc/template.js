@@ -24,6 +24,9 @@ var common_customs = {
     "SeriesNumber": skip,
     "SeriesTime": skip,
 
+    //SeriesDescription is used to find a template, so there is no point of QC-ing this
+    "SeriesDescription": skip,
+
     "StudyDate": skip,
     "StudyID": skip,
     "StudyInstanceUID": skip,
@@ -170,9 +173,7 @@ var customs = {
 };
 
 
-function skip(k, v, tv, qc) {
-    return;
-}
+function skip(k, v, tv, qc) {}
 
 function check_set(k, v, tv, qc) {
     //raise error if the field is missing
