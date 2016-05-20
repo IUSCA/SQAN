@@ -21,6 +21,25 @@
                 </li>
                 <li class="list-group-item">
                     <div class="row">
+                        <div class="col-sm-2"><span class="text-muted">Comments</span></div>
+                        <div class="col-sm-10">
+                            <div class="activity" ng-repeat="comment in data.series.comments" ng-init="user = users[comment.user_id]">
+                                <div class="row">
+                                    <div class="col-md-1"><img gravatar-src="user.email" gravatar-size="32"></img></div>
+                                    <div class="col-md-11">
+                                        <time class="pull-right text-muted">{{comment.date|date:'short'}}</time>
+                                        <b>{{user.fullname}}</b>
+                                        <p>{{comment.comment}}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <textarea class="form-control" placeholder="New Comment" ng-model="newcomment" rows="{{comment_active||1}}" ng-focus="comment_active = 3"></textarea>
+                            <button type="button" class="btn btn-xs" ng-click="addcomment()" ng-if="newcomment"><i class="fa fa-check"></i></button>
+                        </div>
+                    </div>
+                </li>
+                <li class="list-group-item">
+                    <div class="row">
                         <div class="col-sm-2"><span class="text-muted">Series Description</span></div>
                         <div class="col-sm-10">{{data.series.series_desc}} <!--<span class="text-muted">(#{{data.series.SeriesNumber}})</span>--></div>
                     </div>
@@ -255,8 +274,9 @@
                     </div>
                 </div>
             </div>
+            <!--
             <hr>
-            <h4 class="text-muted">Comments<!--<i class="fa fa-comment"></i>--></h4>
+            <h4 class="text-muted">Comments</h4>
             <div class="activity" ng-repeat="comment in data.series.comments" ng-init="user = users[comment.user_id]">
                 <div class="row">
                     <div class="col-md-2"><img gravatar-src="user.email" gravatar-size="32"></img></div>
@@ -269,6 +289,7 @@
             </div>
             <textarea class="form-control" placeholder="Add a comment" ng-model="newcomment"></textarea>
             <button type="button" class="btn btn-xs" ng-click="addcomment()" ng-if="newcomment"><i class="fa fa-check"></i></button>
+            -->
         </div>
     </div><!--row-->
 </div>

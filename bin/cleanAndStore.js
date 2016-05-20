@@ -134,7 +134,7 @@ function incoming(h, msg_h, info, ack) {
         //make sure we know about this research
         function(next) {
             //TODO radio_tracer should always be set for CT.. right? Should I validate?
-            var radio_tracer = undefined;
+            var radio_tracer = null;
             if(h.RadiopharmaceuticalInformationSequence && h.RadiopharmaceuticalInformationSequence.length > 0) {
                 //TODO - what should I do if there are more than 1? - for now just pick the first one
                 radio_tracer = h.RadiopharmaceuticalInformationSequence[0].Radiopharmaceutical;
@@ -156,7 +156,7 @@ function incoming(h, msg_h, info, ack) {
         function(next) {
             db.Exam.findOneAndUpdate({
                 research_id: research._id,
-                subject: (h.qc_istemplate?undefined:h.qc_subject),
+                subject: (h.qc_istemplate?null:h.qc_subject),
                 date: h.qc_StudyTimestamp, 
             }, {
                 IIBISID: h.qc_iibisid,
