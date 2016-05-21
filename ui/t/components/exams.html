@@ -1,18 +1,21 @@
 <!-- folded (studytime on each column) view -->
 <li class="list-group-item list-group-item-subject" ng-if="$ctrl.mode == 'wide'">
     <table class="table table-condensed" style="margin-bottom: 0px;">
-    <thead><tr><th width="30%"><span class="text-muted">Series Description</span></th>
-        <th ng-repeat="(exam_id, time) in ::$ctrl.times">
-            <time>{{::time|date:'short'}}</time> &nbsp;
-            <button class="btn btn-xs" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc(exam_id)">ReQC</button>
-        </th>
-    </tr></thead>
+    <thead>
+        </tr>
+        <tr><th width="30%"><span class="text-muted">Series Description</span></th>
+            <th ng-repeat="(exam_id, exam) in ::$ctrl.exams">
+                <time>{{::exam.date|date:'short'}}</time> &nbsp;
+                <button class="btn btn-xs" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc(exam_id)">ReQC</button>
+            </th>
+        </tr>
+    </thead>
     <tbody>
         <tr>
             <td class="text-muted">Comments</td>
             <td>
                 <!--------------TODO------------------->
-                <div class="activity" ng-repeat="comment in data.series.comments" ng-init="user = users[comment.user_id]">
+                <div class="activity" ng-repeat="comment in time.comments" ng-init="user = users[comment.user_id]">
                     <div class="row">
                         <div class="col-md-1"><img gravatar-src="user.email" gravatar-size="32"></img></div>
                         <div class="col-md-11">
@@ -30,7 +33,7 @@
         </tr>
         <tr ng-repeat="series_group in $ctrl.serieses | toArray:true | orderBy:'min_SeriesNumber'" ng-init="series_desc = series_group.$key">
             <td>{{::series_desc}}</td>
-            <td ng-repeat="(exam_id, time) in $ctrl.times" style="padding: 0px;">
+            <td ng-repeat="(exam_id, exam) in $ctrl.exams" style="padding: 0px;">
                 <div class="text-muted excluded" 
                     ng-if="series_group._isexcluded" 
                     ng-click="series_group._isexcluded = false">Excluded</div>
@@ -50,9 +53,9 @@
         </tr>
         <tr ng-repeat="series_desc in ::$ctrl.missing_series_descs">
             <td class="text-muted">{{::series_desc}}</td>
-            <td ng-repeat="(exam_id, time) in ::$ctrl.times" style="padding: 0px;">
+            <td ng-repeat="(exam_id, exam) in ::$ctrl.exams" style="padding: 0px;">
                 <div class="missing clickable"
-                    ng-repeat="template in ::$ctrl.missing[time][series_desc] | orderBy:'-SeriesNumber'" 
+                    ng-repeat="template in ::$ctrl.missing[exam.date][series_desc] | orderBy:'-SeriesNumber'" 
                     ng-click="$ctrl.opentemplate(template._id)">
                     <span class="label label-info">Missing</span> 
                     <span class="text-muted">(#{{::template.SeriesNumber}})</span>
@@ -64,11 +67,11 @@
     </table>
 </li>
 <!-- exploded view (show each study time under different list-group-item) -->
-<li class="list-group-item list-group-item-subject" ng-if="$ctrl.mode == 'tall'" ng-repeat="(exam_id, time) in $ctrl.times">
+<li class="list-group-item list-group-item-subject" ng-if="$ctrl.mode == 'tall'" ng-repeat="(exam_id, exam) in $ctrl.exams">
     <div class="row">
         <div class="col-md-3">
             <p>
-                <time style="position: relative; top: 5px"><b>{{::time|date:'short'}}</b></time> &nbsp;
+                <time style="position: relative; top: 5px"><b>{{::exam.date|date:'short'}}</b></time> &nbsp;
                 <button class="btn btn-xs" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc(exam_id)">ReQC</button>
             </p>
 
@@ -93,8 +96,9 @@
             <table class="table table-condensed" style="margin-bottom: 0px;">
             <thead><tr class="text-muted"><th width="30%">Series Description</th><th>Status</th><th>Template Used</th></tr></thead>
             <tbody>
-                <tr ng-repeat="series_group in $ctrl.serieses | toArray:true | orderBy:'min_SeriesNumber'" ng-init="series_desc = series_group.$key" ng-if="series_group.exams[exam_id]">
-                    <td>{{::series_desc}} <!--<span class="text-muted">(#{{series_group.exams[exam_id].SeriesNumber}})</span>--></td>
+                <tr ng-repeat="series_group in $ctrl.serieses | toArray:true | orderBy:'min_SeriesNumber'" 
+                    ng-init="series_desc = series_group.$key" ng-if="series_group.exams[exam_id]">
+                    <td>{{::series_desc}}</td>
                     <td style="padding: 0px;">
                         <div class="text-muted excluded" 
                             ng-if="series_group._isexcluded" 

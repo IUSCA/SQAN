@@ -14,9 +14,13 @@ var db = require('../models');
 var qc = require('../qc');
 
 function load_related_info(serieses, cb) {
+
+    //load all resaerchs referenced
     var rids = [];
+    var eids = [];
     serieses.forEach(function(series) {
         rids.push(series.research_id);
+        eids.push(series.exam_id);
     });
     db.Research.find().lean()
     .where('_id')
@@ -24,17 +28,26 @@ function load_related_info(serieses, cb) {
     .exec(function(err, researches) {
         if(err) return cb(err);
 
-        //load all templates referenced also
-        db.Template.find().lean()
-        .where('research_id')
-        .sort({date: -1})
-        .in(rids)
-        .exec(function(err, templates) {
+        //load all exams referenced
+        db.Exam.find().lean()
+        .where('_id')
+        .in(eids)
+        .exec(function(err, exams) {
             if(err) return cb(err);
-            cb(null, {
-                studies: serieses, //TODO rename to serises
-                researches: researches,
-                templates: templates,
+
+            //load all templates referenced also
+            db.Template.find().lean()
+            .where('research_id')
+            .sort({date: -1})
+            .in(rids)
+            .exec(function(err, templates) {
+                if(err) return cb(err);
+                cb(null, {
+                    serieses: serieses, 
+                    researches: researches,
+                    templates: templates,
+                    exams: exams,
+                });
             });
         });
     });
@@ -51,8 +64,6 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
         if(req.query.where) {
             var where = JSON.parse(req.query.where);
             for(var field in where) {
-                //console.log(field);
-                //console.dir(where[field]);
                 query.where(field, where[field]); //TODO is it safe to pass this from UI?
             }
         }
@@ -65,13 +76,6 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
         }
         query.exec(function(err, serieses) {
             if(err) return next(err);
-
-            /*
-            serieses.forEach(function(series) {
-                series._excluded = qc.series.isExcluded(series.Modality, series.series_desc)
-            });
-            */
-
             load_related_info(serieses, function(err, details){
                 if(err) return next(err);
                 res.json(details); 
@@ -93,11 +97,27 @@ router.get('/byresearchid/:research_id', jwt({secret: config.express.jwt.pub}), 
             .exec(function(err, _serieses) {
                 if(err) return next(err);
                 var serieses = JSON.parse(JSON.stringify(_serieses)); //objectify
-                db.Template.find({research_id: research._id})
-                .sort('series_desc SeriesNumber') //mongoose does case-sensitive sorting - maybe I should try sorting it on ui..
-                .exec(function(err, templates) {
-                    if(err) return next(err);
-                    res.json({studies:serieses, templates: templates, researches: [research]});  //TODO rename to serieses
+
+                //find all exams
+                var eids = [];
+                _serieses.forEach(function(series) { eids.push(series.exam_id); });
+                //then load all exams referenced
+                db.Exam.find().lean()
+                .where('_id')
+                .in(eids)
+                .exec(function(err, exams) {
+                    if(err) return cb(err);
+
+                    db.Template.find({research_id: research._id})
+                    .sort('series_desc SeriesNumber') //mongoose does case-sensitive sorting - maybe I should try sorting it on ui..
+                    .exec(function(err, templates) {
+                        if(err) return next(err);
+                        res.json({
+                            exams: exams, 
+                            serieses: serieses, 
+                            templates: templates, 
+                            researches: [research]});  //TODO rename to serieses
+                    });
                 });
             });
         });
