@@ -12,11 +12,16 @@ var config = require('../../config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
 var qc = require('../qc');
+var profile = require('../profile');
 
 function load_related_info(serieses, cb) {
+
+    //load all resaerchs referenced
     var rids = [];
+    var eids = [];
     serieses.forEach(function(series) {
         rids.push(series.research_id);
+        eids.push(series.exam_id);
     });
     db.Research.find().lean()
     .where('_id')
@@ -24,17 +29,42 @@ function load_related_info(serieses, cb) {
     .exec(function(err, researches) {
         if(err) return cb(err);
 
-        //load all templates referenced also
-        db.Template.find().lean()
-        .where('research_id')
-        .sort({date: -1})
-        .in(rids)
-        .exec(function(err, templates) {
+        //load all exams referenced
+        db.Exam.find().lean()
+        .where('_id')
+        .in(eids)
+        .exec(function(err, exams) {
             if(err) return cb(err);
-            cb(null, {
-                studies: serieses, //TODO rename to serises
-                researches: researches,
-                templates: templates,
+
+            //load comment profile
+            var subs = [];
+            exams.forEach(function(exam) {
+                //if(exam.comments) exam.comments.map(subs.push);
+                if(exam.comments) exam.comments.forEach(function(comment) {
+                    subs.push(comment.user_id);
+                });
+            });
+            var ps = profile.load_profiles(subs);
+            //add profile infor for each comment
+            exams.forEach(function(exam) {
+                if(exam.comments) exam.comments.forEach(function(comment) {
+                    comment._profile = ps[comment.user_id];
+                });
+            });
+
+            //load all templates referenced also
+            db.Template.find().lean()
+            .where('research_id')
+            .sort({date: -1})
+            .in(rids)
+            .exec(function(err, templates) {
+                if(err) return cb(err);
+                cb(null, {
+                    serieses: serieses, 
+                    researches: researches,
+                    templates: templates,
+                    exams: exams,
+                });
             });
         });
     });
@@ -51,8 +81,6 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
         if(req.query.where) {
             var where = JSON.parse(req.query.where);
             for(var field in where) {
-                //console.log(field);
-                //console.dir(where[field]);
                 query.where(field, where[field]); //TODO is it safe to pass this from UI?
             }
         }
@@ -65,13 +93,6 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
         }
         query.exec(function(err, serieses) {
             if(err) return next(err);
-
-            /*
-            serieses.forEach(function(series) {
-                series._excluded = qc.series.isExcluded(series.Modality, series.series_desc)
-            });
-            */
-
             load_related_info(serieses, function(err, details){
                 if(err) return next(err);
                 res.json(details); 
@@ -93,11 +114,27 @@ router.get('/byresearchid/:research_id', jwt({secret: config.express.jwt.pub}), 
             .exec(function(err, _serieses) {
                 if(err) return next(err);
                 var serieses = JSON.parse(JSON.stringify(_serieses)); //objectify
-                db.Template.find({research_id: research._id})
-                .sort('series_desc SeriesNumber') //mongoose does case-sensitive sorting - maybe I should try sorting it on ui..
-                .exec(function(err, templates) {
-                    if(err) return next(err);
-                    res.json({studies:serieses, templates: templates, researches: [research]});  //TODO rename to serieses
+
+                //find all exams
+                var eids = [];
+                _serieses.forEach(function(series) { eids.push(series.exam_id); });
+                //then load all exams referenced
+                db.Exam.find().lean()
+                .where('_id')
+                .in(eids)
+                .exec(function(err, exams) {
+                    if(err) return cb(err);
+
+                    db.Template.find({research_id: research._id})
+                    .sort('series_desc SeriesNumber') //mongoose does case-sensitive sorting - maybe I should try sorting it on ui..
+                    .exec(function(err, templates) {
+                        if(err) return next(err);
+                        res.json({
+                            exams: exams, 
+                            serieses: serieses, 
+                            templates: templates, 
+                            researches: [research]});  //TODO rename to serieses
+                    });
                 });
             });
         });
@@ -174,6 +211,7 @@ router.get('/id/:series_id', jwt({secret: config.express.jwt.pub}), function(req
 router.post('/comment/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     db.Series.findById(req.params.series_id).exec(function(err, series) {
         if(err) return next(err);
+        if(!series) return res.status(404).json({message: "can't find specified series"});
         //make sure user has access to this series
         db.Acl.can(req.user, 'view', series.IIBISID, function(can) {
         //db.Acl.canAccessIIBISID(req.user, series.IIBISID, function(can) {
@@ -196,6 +234,7 @@ router.post('/comment/:series_id', jwt({secret: config.express.jwt.pub}), functi
 router.post('/qcstate/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     db.Series.findById(req.params.series_id).exec(function(err, series) {
         if(err) return next(err);
+        if(!series) return res.status(404).json({message: "can't find specified series"});
         //make sure user has access to this series
         db.Acl.can(req.user, 'qc', series.IIBISID, function(can) {
         //db.Acl.canAccessIIBISID(req.user, series.IIBISID, function(can) {
@@ -222,6 +261,7 @@ router.post('/qcstate/:series_id', jwt({secret: config.express.jwt.pub}), functi
 router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     db.Series.findById(req.params.series_id).exec(function(err, series) {
         if(err) return next(err);
+        if(!series) return res.status(404).json({message: "can't find specified series"});
         //make sure user has access to this series
         db.Acl.can(req.user, 'qc', series.IIBISID, function(can) {
         //db.Acl.canAccessIIBISID(req.user, series.IIBISID, function(can) {

@@ -1,8 +1,13 @@
 {
   "name": "dicom-qc",
   "version": "1.0.0",
-  "description": "Dicom QC UI",
+  "description": "Dicom QC API/UI",
   "main": "index.js",
+  "scripts": {
+    "test": "mocha --reporter spec",
+    "apidoc": "apidoc -i api -o ui/apidoc",
+    "cover": "node_modules/istanbul/lib/cli.js cover node_modules/mocha/bin/_mocha -- -R spec test/*.js"
+  },
   "dependencies": {
     "amqp": "^0.2.4",
     "async": "^1.5.2",
@@ -33,9 +38,6 @@
     "grunt-contrib-less": "^1.0.1",
     "grunt-contrib-watch": "^0.6.1",
     "grunt": "^0.4.5"
-  },
-  "scripts": {
-    "test": "mocha"
   },
   "repository": {
     "type": "git",

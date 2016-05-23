@@ -56,6 +56,12 @@ var examSchema = mongoose.Schema({
     IIBISID: {type: String, index: true},//make it easier to do access control
 
     istemplate: Boolean,
+
+    comments: [ mongoose.Schema({
+        user_id: String, //req.user.sub
+        comment: String,
+        date: {type: Date, default: Date.now},
+    }) ],
 });
 examSchema.index({research_id: 1, subject: 1, date: 1});
 exports.Exam = mongoose.model('Exam', examSchema);

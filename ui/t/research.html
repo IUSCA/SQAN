@@ -39,14 +39,14 @@
                                 <span class="text-muted">Subject:</span> {{subject}}
                             </li>
                             <exams
-                                examid="subject_detail.exam_id"
                                 researchid="modality._detail._id" 
                                 subject="subject"
                                 mode="view_mode" 
                                 serieses="subject_detail.serieses"     
                                 missing="subject_detail.missing_serieses" 
                                 templates="templates"
-                                times="modality.subjects_times[subject]"></exams>
+                                exams="modality.exams[subject]">
+                            </exams>
                         </div><!--ng-repeat in subjects -->
                         <li class="list-group-item template-head">Templates</li>
                         <templates templates="modality.templates" times="modality.templates_times"></templates>

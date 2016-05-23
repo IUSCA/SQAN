@@ -8,15 +8,12 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, menu, $
 
     //TODO - it doesn't make sense that these exist here..
     $scope.openstudy = function(id) {
-        //$location.path("/study/"+study_id);
-        $window.open("#/study/"+id, "study:"+id);
+        $window.open("#/series/"+id, "study:"+id);
     }
     $scope.opentemplate = function(id) {
-        //$location.path("/template/"+id);
         $window.open("#/template/"+id,  "tepmlate:"+id);
     }
     $scope.scrollto = function(id) {
-        console.log("to "+id);
         $anchorScroll(id);
     }
 }]);
@@ -37,18 +34,58 @@ function compose_modalityid(research_detail) {
     return research_detail.Modality+"."+research_detail.StationName+"."+research_detail.radio_tracer;
 }
 
+//TODO - I think I should merge exams and subjects... but that will involve a lot of changes..
+//organize flat data received from server into hierarchical data structure
+//  $scope.org = {
+//      "<IIBISID>": {
+//          "<modality_id>": {
+//              _detail: <ressearch_detail>,
+//              exams: { //exams for subjects only..
+//                  "<subject>": {
+//                      <exam_id>: <exam>
+//                  }
+//              }
+//              subjects: {
+//                  "<subject>": {
+//                      serieses: {
+//                          <series_desc>: { //here is the sticky part... I am organizing exams under each series_desc!
+//                              exams: {
+//                                  <exam_id>: [ <series> ]
+//                              }
+//                          }
+//                      },
+//                      missing_serieses: {},
+//                      missing: 0, //counter.. should I move the counting logic from recent to here?
+//                  }
+//              },
+//              templates_times: [template_date1, template_date2, template_date3 ],
+//              templates: {
+//                  <series_desc>: {
+//                      <time>: [ template1, template2 ]
+//                  }
+//              }
+//          }
+//      }        
+//  }
 function organize($scope, data) {
     $scope.org = {};
     $scope.qcing = false; //will be reset to true if there is any series with no qc
 
     //just a quick count used commonly in UI
-    $scope.series_count = data.studies.length;
-    
+    $scope.series_count = data.serieses.length;
+
     //for easy research detail lookup
     var researches = {}; 
     data.researches.forEach(function(research) {
         researches[research._id] = research;
     });
+    
+    //for easy exam lookup
+    var exams = {};
+    data.exams.forEach(function(exam) {
+        exams[exam._id] = exam;  
+    });
+    
     function get_modality(research_id) {
         var research_detail = researches[research_id];
         if($scope.org[research_detail.IIBISID] == undefined) $scope.org[research_detail.IIBISID] = {};
@@ -57,26 +94,33 @@ function organize($scope, data) {
         if(modality === undefined) {
             modality = {
                 _detail: research_detail,
-                subjects_times: {},
+                exams: {},
+                //subjects_times: {},
                 subjects: {}, 
                 templates_times: [], //array - because not grouped by subjects like subjects_times
                 templates: {},
-
             };
             $scope.org[research_detail.IIBISID][modality_id] = modality;
         }
         return modality;
     }
 
+    //organize exams
+    data.exams.forEach(function(exam) {
+        var modality = get_modality(exam.research_id);
+        if(modality.exams[exam.subject] === undefined) modality.exams[exam.subject] = {};
+        modality.exams[exam.subject][exam._id] = exam; 
+    });
+
     //organize series
-    data.studies.forEach(function(series) {
+    data.serieses.forEach(function(series) {
         var subject = series.subject;
         var series_desc = series.series_desc;
         var exam_id = series.exam_id;
 
         var modality = get_modality(series.research_id);
-        if(modality.subjects_times[subject] === undefined) modality.subjects_times[subject] = {};
-        modality.subjects_times[subject][exam_id] = series.StudyTimestamp;
+        //if(modality.subjects_times[subject] === undefined) modality.subjects_times[subject] = {};
+        //modality.subjects_times[subject][exam_id] = series.StudyTimestamp;
         if(modality.subjects[subject] == undefined) modality.subjects[subject] = {
             //subject could contain a lot of different attributes other than serieses.
             serieses: {},
@@ -94,7 +138,6 @@ function organize($scope, data) {
         if(series.isexcluded) modality.subjects[subject].serieses[series_desc]._isexcluded = series.isexcluded;
     });
 
-  
     //organize templates
     $scope.templates = {}; //for quick id to template mapping
     data.templates.forEach(function(template) {
@@ -171,8 +214,8 @@ function organize($scope, data) {
                     if(templates) template_series_descs[template_series_desc] = templates;
                 }
                 // finally find *missing* subject for each exam times (for this subject) using the latest set of template (tmeplate_series_descs)
-                for(var exam_id in modality.subjects_times[subject_id]) {
-                    var time = modality.subjects_times[subject_id][exam_id];
+                for(var exam_id in modality.exams[subject_id]) {
+                    var time = modality.exams[subject_id][exam_id].date;
                     subject.missing_serieses[time] = {};
                     for(var template_series_desc in template_series_descs) {
                         var found = false;
@@ -199,6 +242,8 @@ function organize($scope, data) {
             }
         }
     }
+
+    //console.dir($scope.org);    
 }
 
 function setup_affix($scope, affix) {
@@ -268,7 +313,7 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
     });
 
     function load() {
-        $http.get(appconf.api+'/study/query', {params: {
+        $http.get(appconf.api+'/series/query', {params: {
             skip: 0, 
             limit: $scope.query_limit,
             where: {
@@ -396,9 +441,10 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
     function load_series() {
         if(!$routeParams.researchid) return; //could happen if user move away from this route by still waiting for callback
         $scope.research_id = $routeParams.researchid;
-        $http.get(appconf.api+'/study/byresearchid/'+$scope.research_id)
+        $http.get(appconf.api+'/series/byresearchid/'+$scope.research_id)
         .then(function(res) {
-            $scope.series_count = res.data.studies.length;
+            //console.dir(res);
+            $scope.series_count = res.data.serieses.length;
             organize($scope, res.data);
             if($scope.qcing) setTimeout(load_series, 1000*10);
         }, function(res) {
@@ -455,13 +501,13 @@ app.component('exams', {
             } 
         }
         this.openstudy = function(id) {
-            $window.open("#/study/"+id, "study:"+id);
+            $window.open("#/series/"+id, "study:"+id);
         }
         this.opentemplate = function(id) {
             $window.open("#/template/"+id);
         }
         this.reqc = function(exam_id) {
-            $http.post(appconf.api+'/study/reqcbyexamid/'+exam_id)
+            $http.post(appconf.api+'/series/reqcbyexamid/'+exam_id)
             .then(function(res) {
                 $scope.$emit("exam_invalidated", {exam_id: exam_id});
                 toaster.success(res.data.message);
@@ -470,14 +516,25 @@ app.component('exams', {
                 else toaster.error(res.statusText);
             });
         }
+        this.addcomment = function(exam_id) {
+            $http.post(appconf.api+'/exam/comment/'+exam_id, {comment: $ctrl.newcomment})
+            .then(function(res) {
+                if(!$ctrl.exams[exam_id].comments) $ctrl.exams[exam_id].comments = [];
+                $ctrl.exams[exam_id].comments.push(res.data);
+                $ctrl.newcomment = "";
+            }, function(res) {
+                if(res.data && res.data.message) toaster.error(res.data.message);
+                else toaster.error(res.statusText);
+            });
+        }
     },
     bindings: {
+        exams: '<', //list of exams to show
         researchid: '<',
         subject: '<',
         mode: '=', //view mode ('wide' / 'tall')
         serieses: '<', //[series_desc][time] = study
         missing: '<', //[time][series_desc] = template  
-        times: '<', //list of timestamps to show
         templates: '<', //list of templates referenced in series.qc
     },
 });
@@ -544,7 +601,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
     });
 
     function load() {
-        $http.get(appconf.api+'/study/query', {params: {
+        $http.get(appconf.api+'/series/query', {params: {
             skip: 0, 
             limit: $scope.query_limit,
             where: where,
@@ -596,7 +653,7 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
 
     function load_series() {
         if(!$routeParams.seriesid) return; //probably the route changed since last time
-        $http.get(appconf.api+'/study/id/'+$routeParams.seriesid)
+        $http.get(appconf.api+'/series/id/'+$routeParams.seriesid)
         .then(function(res) {
             $scope.data = res.data;
             if($scope.data.images) {
@@ -695,7 +752,7 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
     }
 
     $scope.addcomment = function() {
-        $http.post(appconf.api+'/study/comment/'+$routeParams.seriesid, {comment: $scope.newcomment})
+        $http.post(appconf.api+'/series/comment/'+$routeParams.seriesid, {comment: $scope.newcomment})
         .then(function(res) {
             $scope.data.series.comments.push(res.data);
             $scope.newcomment = "";
@@ -717,7 +774,7 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
         }
         //}
 
-        $http.post(appconf.api+'/study/qcstate/'+$routeParams.seriesid, {level: level, state: state, comment: comment})
+        $http.post(appconf.api+'/series/qcstate/'+$routeParams.seriesid, {level: level, state: state, comment: comment})
         .then(function(res) {
             if(level == 1) $scope.data.series.qc1_state = state;
             if(level == 2) $scope.data.series.qc2_state = state;
@@ -731,7 +788,7 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
     $scope.select_template = function(item) {
         $scope.image_detail = null;
         $scope.active_image = null;
-        $http.post(appconf.api+'/study/template/'+$routeParams.seriesid, {exam_id: item._id})
+        $http.post(appconf.api+'/series/template/'+$routeParams.seriesid, {exam_id: item._id})
         .then(function(res) {
             load_series();
             toaster.success(res.data.message);
@@ -743,7 +800,7 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
     $scope.reqc = function() {
         $scope.image_detail = null;
         $scope.active_image = null;
-        $http.post(appconf.api+'/study/reqc/'+$routeParams.seriesid)
+        $http.post(appconf.api+'/series/reqc/'+$routeParams.seriesid)
         .then(function(res) {
             load_series();
             toaster.success(res.data.message);
