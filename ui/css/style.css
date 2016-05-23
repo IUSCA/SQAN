@@ -297,6 +297,16 @@ h3 {
     height: 20px;
 */
 }
+.comments .comment {
+  margin-bottom: 3px;
+}
+.comments .comment p {
+  margin-bottom: 0px;
+}
+.comments textarea {
+  font-size: 90%;
+  padding: 3px 8px;
+}
 
 /*-----------------------------------------------
 

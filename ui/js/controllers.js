@@ -34,52 +34,33 @@ function compose_modalityid(research_detail) {
     return research_detail.Modality+"."+research_detail.StationName+"."+research_detail.radio_tracer;
 }
 
-//(old) organize flat data received from server into hierarchical data structure
-//  $scope.org = {
-//      "<IIBISID>": {
-//          "<modality_id>": {
-//              _detail: <ressearch_detail>,
-//              subjects_times: {
-//                  "<subject>": {
-//                      <exam_id>: series_study_timestamp,
-//                  }
-//              }, 
-//              subjects: {
-//                  "<subject>": {
-//                      serieses: {},
-//                      missing_serieses: {},
-//                      missing: 0, //counter.. should I move the counting logic from recent to here?
-//                  }
-//              },
-//              "templates_times": [template_date1, template_date2, template_date3 ],
-//              "templates": {
-//                  "<series_desc>": {
-//                      <time>: [ template1, template2 ]
-//                  }
-//              }
-//          }
-//      }        
-//  }
+//TODO - I think I should merge exams and subjects... but that will involve a lot of changes..
 //organize flat data received from server into hierarchical data structure
 //  $scope.org = {
 //      "<IIBISID>": {
 //          "<modality_id>": {
 //              _detail: <ressearch_detail>,
-//              exams: {
+//              exams: { //exams for subjects only..
 //                  "<subject>": {
 //                      <exam_id>: <exam>
 //                  }
 //              }
 //              subjects: {
 //                  "<subject>": {
-//                      serieses: {},
+//                      serieses: {
+//                          <series_desc>: { //here is the sticky part... I am organizing exams under each series_desc!
+//                              exams: {
+//                                  <exam_id>: [ <series> ]
+//                              }
+//                          }
+//                      },
 //                      missing_serieses: {},
 //                      missing: 0, //counter.. should I move the counting logic from recent to here?
 //                  }
 //              },
-//              "templates_times": [template_date1, template_date2, template_date3 ],
-//              "templates": {
-//                  "<series_desc>": {
+//              templates_times: [template_date1, template_date2, template_date3 ],
+//              templates: {
+//                  <series_desc>: {
 //                      <time>: [ template1, template2 ]
 //                  }
 //              }
@@ -235,8 +216,6 @@ function organize($scope, data) {
                 // finally find *missing* subject for each exam times (for this subject) using the latest set of template (tmeplate_series_descs)
                 for(var exam_id in modality.exams[subject_id]) {
                     var time = modality.exams[subject_id][exam_id].date;
-                //for(var exam_id in modality.subjects_times[subject_id]) {
-                //    var time = modality.subjects_times[subject_id][exam_id];
                     subject.missing_serieses[time] = {};
                     for(var template_series_desc in template_series_descs) {
                         var found = false;
@@ -264,7 +243,7 @@ function organize($scope, data) {
         }
     }
 
-    console.dir($scope.org);    
+    //console.dir($scope.org);    
 }
 
 function setup_affix($scope, affix) {
@@ -464,7 +443,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
         $scope.research_id = $routeParams.researchid;
         $http.get(appconf.api+'/series/byresearchid/'+$scope.research_id)
         .then(function(res) {
-            console.dir(res);
+            //console.dir(res);
             $scope.series_count = res.data.serieses.length;
             organize($scope, res.data);
             if($scope.qcing) setTimeout(load_series, 1000*10);
@@ -532,6 +511,17 @@ app.component('exams', {
             .then(function(res) {
                 $scope.$emit("exam_invalidated", {exam_id: exam_id});
                 toaster.success(res.data.message);
+            }, function(res) {
+                if(res.data && res.data.message) toaster.error(res.data.message);
+                else toaster.error(res.statusText);
+            });
+        }
+        this.addcomment = function(exam_id) {
+            $http.post(appconf.api+'/exam/comment/'+exam_id, {comment: $ctrl.newcomment})
+            .then(function(res) {
+                if(!$ctrl.exams[exam_id].comments) $ctrl.exams[exam_id].comments = [];
+                $ctrl.exams[exam_id].comments.push(res.data);
+                $ctrl.newcomment = "";
             }, function(res) {
                 if(res.data && res.data.message) toaster.error(res.data.message);
                 else toaster.error(res.statusText);

@@ -36,6 +36,7 @@ exports.cache = function(cb) {
         headers: { 'Authorization': 'Bearer '+config.dicom.auth_jwt }
     }, function (err, res, body) {
         if(err) {
+            logger.error("failed to get profile from auth service");
             if(cb) cb(err);
             return;
         }
@@ -43,19 +44,17 @@ exports.cache = function(cb) {
             if(cb) cb({message: "couldn't load user profiles from auth service:"+res.body, code: res.statusCode});
             return;
         }
-        //update cache (let's assume user never disappears)
         body.forEach(function(user) {
             profiles[user.id] = user;
-            //profiles[user.id].sub = user.id; 
         });
         logger.debug("cached "+body.length+" profiles");
-        //console.dir(profiles);
         if(cb) cb(null);
     });
 }
 
 exports.getall = function() { return profiles };
 
+//TODO - rename this to get_profiles
 //synchronous.. because it loads from the cache
 exports.load_profiles = function(subs) {
     var ps = [];
@@ -67,6 +66,10 @@ exports.load_profiles = function(subs) {
         } 
     });
     return ps;
+}
+
+exports.get = function(sub) {
+    return profiles[sub];
 }
 
 /*

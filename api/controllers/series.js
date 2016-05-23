@@ -12,6 +12,7 @@ var config = require('../../config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
 var qc = require('../qc');
+var profile = require('../profile');
 
 function load_related_info(serieses, cb) {
 
@@ -34,6 +35,22 @@ function load_related_info(serieses, cb) {
         .in(eids)
         .exec(function(err, exams) {
             if(err) return cb(err);
+
+            //load comment profile
+            var subs = [];
+            exams.forEach(function(exam) {
+                //if(exam.comments) exam.comments.map(subs.push);
+                if(exam.comments) exam.comments.forEach(function(comment) {
+                    subs.push(comment.user_id);
+                });
+            });
+            var ps = profile.load_profiles(subs);
+            //add profile infor for each comment
+            exams.forEach(function(exam) {
+                if(exam.comments) exam.comments.forEach(function(comment) {
+                    comment._profile = ps[comment.user_id];
+                });
+            });
 
             //load all templates referenced also
             db.Template.find().lean()
@@ -194,6 +211,7 @@ router.get('/id/:series_id', jwt({secret: config.express.jwt.pub}), function(req
 router.post('/comment/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     db.Series.findById(req.params.series_id).exec(function(err, series) {
         if(err) return next(err);
+        if(!series) return res.status(404).json({message: "can't find specified series"});
         //make sure user has access to this series
         db.Acl.can(req.user, 'view', series.IIBISID, function(can) {
         //db.Acl.canAccessIIBISID(req.user, series.IIBISID, function(can) {
@@ -216,6 +234,7 @@ router.post('/comment/:series_id', jwt({secret: config.express.jwt.pub}), functi
 router.post('/qcstate/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     db.Series.findById(req.params.series_id).exec(function(err, series) {
         if(err) return next(err);
+        if(!series) return res.status(404).json({message: "can't find specified series"});
         //make sure user has access to this series
         db.Acl.can(req.user, 'qc', series.IIBISID, function(can) {
         //db.Acl.canAccessIIBISID(req.user, series.IIBISID, function(can) {
@@ -242,6 +261,7 @@ router.post('/qcstate/:series_id', jwt({secret: config.express.jwt.pub}), functi
 router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     db.Series.findById(req.params.series_id).exec(function(err, series) {
         if(err) return next(err);
+        if(!series) return res.status(404).json({message: "can't find specified series"});
         //make sure user has access to this series
         db.Acl.can(req.user, 'qc', series.IIBISID, function(can) {
         //db.Acl.canAccessIIBISID(req.user, series.IIBISID, function(can) {

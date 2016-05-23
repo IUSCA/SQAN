@@ -13,22 +13,21 @@
     <tbody>
         <tr>
             <td class="text-muted">Comments</td>
-            <td>
-                <!--------------TODO------------------->
-                <div class="activity" ng-repeat="comment in time.comments" ng-init="user = users[comment.user_id]">
+            <td class="comments" ng-repeat="(exam_id, exam) in $ctrl.exams">
+
+                <!--comments-->
+                <div class="comment" ng-repeat="comment in exam.comments">
                     <div class="row">
-                        <div class="col-md-1"><img gravatar-src="user.email" gravatar-size="32"></img></div>
+                        <div class="col-md-1"><img gravatar-src="comment._profile.email" gravatar-size="30"></img></div>
                         <div class="col-md-11">
                             <time class="pull-right text-muted">{{comment.date|date:'short'}}</time>
-                            <b>{{user.fullname}}</b>
+                            <b class="text-muted">{{comment._profile.fullname}}</b>
                             <p>{{comment.comment}}</p>
                         </div>
                     </div>
                 </div>
-                <textarea class="form-control" placeholder="New Comment" ng-model="newcomment" rows="{{comment_active||1}}" ng-focus="comment_active = 3"></textarea>
-                <button type="button" class="btn btn-xs" ng-click="addcomment()" ng-if="newcomment"><i class="fa fa-check"></i></button>
-
-
+                <textarea class="form-control" placeholder="New Comment" ng-model="$ctrl.newcomment" rows="{{comment_active||1}}" ng-focus="comment_active = 2"></textarea>
+                <button type="button" class="btn btn-xs" ng-click="$ctrl.addcomment(exam_id)" ng-if="$ctrl.newcomment"><i class="fa fa-check"></i></button>
             </td>
         </tr>
         <tr ng-repeat="series_group in $ctrl.serieses | toArray:true | orderBy:'min_SeriesNumber'" ng-init="series_desc = series_group.$key">
@@ -75,21 +74,23 @@
                 <button class="btn btn-xs" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc(exam_id)">ReQC</button>
             </p>
 
-            <!--------------TODO------------------->
-            <div class="activity" ng-repeat="comment in data.series.comments" ng-init="user = users[comment.user_id]">
-                <div class="row">
-                    <div class="col-md-1"><img gravatar-src="user.email" gravatar-size="32"></img></div>
-                    <div class="col-md-11">
-                        <time class="pull-right text-muted">{{comment.date|date:'short'}}</time>
-                        <b>{{user.fullname}}</b>
-                        <p>{{comment.comment}}</p>
-                    </div>
+            <!--comments-->
+            <div class="comments">
+                <div class="comment" ng-repeat="comment in exam.comments">
+                    <img gravatar-src="comment._profile.email" gravatar-size="30" align="left" style="padding-right: 3px;"></img>
+                    <p class="text-muted">
+                        <b>{{comment._profile.fullname}}</b>
+                        <br>
+                        <time>{{comment.date|date:'short'}}</time>
+                    </p>
+                    <p>
+                        {{comment.comment}}
+                    </p>
+                    <br style="clear:both;">
                 </div>
+                <textarea class="form-control" placeholder="New Comment" ng-model="$ctrl.newcomment" rows="{{comment_active||1}}" ng-focus="comment_active = 3"></textarea>
+                <button type="button" class="btn btn-xs" ng-click="$ctrl.addcomment(exam_id)" ng-if="$ctrl.newcomment"><i class="fa fa-check"></i></button>
             </div>
-            <textarea class="form-control" placeholder="New Comment" ng-model="newcomment" rows="{{comment_active||1}}" ng-focus="comment_active = 3"></textarea>
-            <button type="button" class="btn btn-xs" ng-click="addcomment()" ng-if="newcomment"><i class="fa fa-check"></i></button>
-            <br>
-
 
         </div>
         <div class="col-md-9">

@@ -10,12 +10,12 @@ var config = require('../../config');
 
 router.use('/', require('./root'));
 router.use('/research', require('./research'));
+router.use('/exam', require('./exam'));
 router.use('/series', require('./series'));
 router.use('/image', require('./image'));
 router.use('/template', require('./template'));
 
-//deprecated .. use /series
-router.use('/study', require('./series'));
+//router.use('/study', require('./series')); //deprecated .. use /series
 
 module.exports = router;
 
