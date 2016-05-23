@@ -128,42 +128,42 @@ function splitFields(h) {
 }
 
 function mergeFields(h) {
-    var timestamp = toTimestamp(h.AcquisitionDate, h.AcquisitionTime);
+    var timestamp = toTimestamp(h.AcquisitionDate, h.AcquisitionTime, h.Timezone);
     if(timestamp) {
         h.qc_AcquisitionTimestamp = timestamp;
         //delete h.AcquisitionDate;
         //delete h.AcquisitionTime;
     }
 
-    timestamp = toTimestamp(h.StudyDate, h.StudyTime);
+    timestamp = toTimestamp(h.StudyDate, h.StudyTime, h.Timezone);
     if(timestamp) {
         h.qc_StudyTimestamp = timestamp;
         //delete h.StudyDate;
         //delete h.StudyTime;
     }
 
-    timestamp = toTimestamp(h.SeriesDate, h.SeriesTime);
+    timestamp = toTimestamp(h.SeriesDate, h.SeriesTime, h.Timezone);
     if(timestamp) {
         h.qc_SeriesTimestamp = timestamp;
         //delete h.SeriesDate;
         //delete h.SeriesTime;
     }
 
-    timestamp = toTimestamp(h.ContentDate, h.ContentTime);
+    timestamp = toTimestamp(h.ContentDate, h.ContentTime, h.Timezone);
     if(timestamp) {
         h.qc_ContentTimestamp = timestamp;
         //delete h.ContentDate;
         //delete h.ContentTime;
     }
 
-    timestamp = toTimestamp(h.InstanceCreationDate, h.InstanceCreationTime);
+    timestamp = toTimestamp(h.InstanceCreationDate, h.InstanceCreationTime, h.Timezone);
     if(timestamp) {
         h.qc_InstanceCreationTimestamp = timestamp;
         //delete h.InstanceCreationDate;
         //delete h.InstanceCreationTime;
     }
 
-    timestamp = toTimestamp(h.PerformedProcedureStepStartDate, h.PerformedProcedureStepStartTime);
+    timestamp = toTimestamp(h.PerformedProcedureStepStartDate, h.PerformedProcedureStepStartTime, h.Timezone);
     if(timestamp) {
         h.qc_PerformedProcedureStepStartTimestamp = timestamp;
         //delete h.PerformedProcedureStepStartDate;
@@ -197,20 +197,28 @@ function parseFields(h) {
 }
 
 //convert dicom date / time format to Date()
-function toTimestamp(date, time) {
+function toTimestamp(date, time, offset) {
     if(date === undefined || time === undefined) return undefined;
     if(date === null || time === null) return null;
+
+    if(offset === undefined) {
+        offset = "+0400";
+    }
 
     var year = date.substring(0,4);   
     var mon = date.substring(4,6);   
     var day = date.substring(6,8);   
     var h = time.substring(0,2);
     var m = time.substring(2,4);
-    var s = time.substring(4,6);
+    var s = time.substring(4,10);
+    /*
     var ms = time.substring(7,13)/1000;
-    //console.log(year, mon-1, day, h, m, s, ms);
     var d = new Date(year, mon-1, day, h, m, s, ms);
     return d.toISOString();
+    */
+    var iso = year+"-"+mon+"-"+day+"T"+h+":"+m+":"+s+offset.substring(0,3)+":"+offset.substring(3,5);
+    //console.dir([date, time, offset, iso]);
+    return iso;
 }
 
 function convertToInt(v, f) {
