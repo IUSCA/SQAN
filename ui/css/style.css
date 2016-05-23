@@ -303,6 +303,10 @@ h3 {
 .comments .comment p {
   margin-bottom: 0px;
 }
+.comments .comment img {
+  padding-right: 4px;
+  padding-bottom: 2px;
+}
 .comments textarea {
   font-size: 90%;
   padding: 3px 8px;
