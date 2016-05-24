@@ -26,8 +26,8 @@
                         </div>
                     </div>
                 </div>
-                <textarea class="form-control" placeholder="New Comment" ng-model="$ctrl.newcomment" rows="{{comment_active||1}}" ng-focus="comment_active = 2"></textarea>
-                <button type="button" class="btn btn-xs" ng-click="$ctrl.addcomment(exam_id)" ng-if="$ctrl.newcomment"><i class="fa fa-check"></i></button>
+                <textarea class="form-control" placeholder="New Comment" ng-model="exam.newcomment" ng-class="{'comment-active':comment_active}" ng-focus="comment_active = true"></textarea>
+                <button type="button" class="btn btn-xs" ng-click="$ctrl.addcomment(exam_id)" ng-if="exam.newcomment"><i class="fa fa-check"></i></button>
             </td>
         </tr>
         <tr ng-repeat="series_group in $ctrl.serieses | toArray:true | orderBy:'min_SeriesNumber'" ng-init="series_desc = series_group.$key">
@@ -77,7 +77,7 @@
             <!--comments-->
             <div class="comments">
                 <div class="comment" ng-repeat="comment in exam.comments">
-                    <img gravatar-src="comment._profile.email" gravatar-size="30" align="left"></img>
+                    <img gravatar-src="comment._profile.email" gravatar-size="30" align="left" style="clear: left;"></img>
                     <p class="text-muted">
                         <b>{{comment._profile.fullname}}</b>
                         <br>
@@ -86,10 +86,9 @@
                     <p>
                         {{comment.comment}}
                     </p>
-                    <br style="clear:both;">
                 </div>
-                <textarea class="form-control" placeholder="New Comment" ng-model="$ctrl.newcomment" rows="{{comment_active||1}}" ng-focus="comment_active = 3"></textarea>
-                <button type="button" class="btn btn-xs" ng-click="$ctrl.addcomment(exam_id)" ng-if="$ctrl.newcomment"><i class="fa fa-check"></i></button>
+                <textarea class="form-control" placeholder="New Comment" ng-model="exam.newcomment" ng-class="{'comment-active':comment_active}" ng-focus="comment_active = true"></textarea>
+                <button type="button" class="btn btn-xs" ng-click="$ctrl.addcomment(exam_id)" ng-if="exam.newcomment"><i class="fa fa-check"></i></button>
             </div>
 
         </div>

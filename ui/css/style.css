@@ -309,7 +309,13 @@ h3 {
 }
 .comments textarea {
   font-size: 90%;
-  padding: 3px 8px;
+  padding: 1px 8px;
+  height: 20px;
+}
+.comments textarea.comment-active {
+  height: 100px;
+  font-size: 100%;
+  padding: 5px;
 }
 
 /*-----------------------------------------------
