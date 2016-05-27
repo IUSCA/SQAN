@@ -16,7 +16,8 @@
 #find /usr/local/dicom-raw/2014-00169 -name *.json | node post.js
 #find /usr/local/dicom-raw/2008-00050 -name *.json | node post.js
 #find /usr/local/dicom-raw/2013-00131 -name *.json | node post.js
-find /usr/local/dicom-raw/2013-00107 -name *.json | node post.js
+#find /usr/local/dicom-raw/2013-00107 -name *.json | node post.js
+find /usr/local/dicom-raw/2015-00239 -name *.json | node ../bin/post.js
 
 #mr (>100k?)
 #find /usr/local/dicom-raw/0000-00001 -name *.json | node post.js
