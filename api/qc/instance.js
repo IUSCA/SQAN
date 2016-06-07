@@ -1,7 +1,9 @@
+'use strict';
 
 //hide some fields, or problematic values on some fields
 function maskFields(h) {
 
+    /* This masking is now done at the CTP level
     //IRB requirement to make older patient (less number of them) to be more difficult to identify.
     if(h.qc_PatientAge && h.qc_PatientAge > 89) {
         h.qc_PatientAgeMasked = true;
@@ -9,6 +11,7 @@ function maskFields(h) {
         h.qc_PatientAge = 89; 
         h.PatientAge = "089Y"; 
     }
+    */
     
     //soichi's arbitrary decision to remove some large fields containing relationship to other images 
     //TODO - maybe store this relationship in the DB?
