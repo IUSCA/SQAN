@@ -13,14 +13,16 @@
                         ng-click="scrollto(modality_id)"
                         ng-class="{inview: inview_id == modality_id}"
                         ng-if="show_modality(iibisid, modality_id, modality)">
-                        <h5 style="margin-top: 0px;">
+                        <h5 style="margin: 0;">
                             {{::modality._detail.Modality}} / {{::modality._detail.StationName}} 
                             <small ng-if="modality._detail.Modality == 'PT'"> / {{::modality._detail.radio_tracer}} </small>
                         </h5>
+                        <!-- hiding subjects list which clatters IIBISID list 
                         <span class="text-muted" ng-repeat="(subject_desc, subject) in modality.subjects" 
                             ng-if="show_subject(iibisid, modality_id, subject_desc)"> 
                             {{::subject_desc}}
                         </span>
+                        -->
                     </div><!--list-group-item-->
                 </div><!--list-group-->
             </div><!--ng-repeat-->
