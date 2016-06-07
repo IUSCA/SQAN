@@ -33,8 +33,8 @@
                                     </div>
                                 </div>
                             </div>
-                            <textarea class="form-control" placeholder="New Comment" ng-model="newcomment" rows="{{comment_active||1}}" ng-focus="comment_active = 3"></textarea>
-                            <button type="button" class="btn btn-xs" ng-click="addcomment()" ng-if="newcomment"><i class="fa fa-check"></i></button>
+                            <textarea class="form-control" placeholder="New Comment" ng-model="newcomment" ng-class="{'comment-active':comment_active}" ng-focus="comment_active = true"></textarea>
+                            <button type="button" class="btn btn-xs" ng-click="addcomment()" ng-disabled="!newcomment"><i class="fa fa-check"></i></button>
                         </div>
                     </div>
                 </li>
