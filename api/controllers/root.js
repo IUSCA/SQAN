@@ -14,6 +14,13 @@ var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
 var profile = require('../profile');
 
+/**
+ * @api {get} /health Get current service status
+ * @apiName Health
+ * @apiGroup System
+ *
+ * @apiSuccess {String} status 'ok' or 'failed'
+ */
 router.get('/health', function(req, res, next) {
     res.json({status: 'ok'});
 });

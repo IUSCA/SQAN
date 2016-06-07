@@ -32,20 +32,39 @@
       }
     },
     "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"user_id\": 1,\n  \"comment\": \"test omment\",\n  \"date\": \"2016-05-23T15:53:51.093Z\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "api/controllers/exam.js",
+    "groupTitle": "Exam"
+  },
+  {
+    "type": "get",
+    "url": "/health",
+    "title": "Get current service status",
+    "name": "Health",
+    "group": "System",
+    "success": {
       "fields": {
         "Success 200": [
           {
             "group": "Success 200",
-            "type": "Object",
+            "type": "String",
             "optional": false,
-            "field": "comment",
-            "description": "<p>Comment Object added</p>"
+            "field": "status",
+            "description": "<p>'ok' or 'failed'</p>"
           }
         ]
       }
     },
     "version": "0.0.0",
-    "filename": "api/controllers/exam.js",
-    "groupTitle": "Exam"
+    "filename": "api/controllers/root.js",
+    "groupTitle": "System"
   }
 ]
