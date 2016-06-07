@@ -132,7 +132,7 @@
                         </div>
                     </td>
                 </tr>
-                <tr ng-repeat="(series_desc, templates) in $ctrl.missing[time]">
+                <tr ng-repeat="(series_desc, templates) in $ctrl.missing[exam.date]">
                     <td class="text-muted">{{::series_desc}}<!-- (#{{template.SeriesNumber}})--></td>
                     <td style="padding: 0px;">
                         <div class="missing clickable" 
