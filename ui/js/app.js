@@ -11,7 +11,9 @@ var app = angular.module('app', [
     'ui.bootstrap',
     'ui.bootstrap.tabs',
     'ui.select',
-    'sca-shared',
+//    'sca-shared',
+    'sca-ng-wf',
+    'sca-product-raw',
     'ui.gravatar',
     'angular.filter',
 ]);
@@ -83,29 +85,26 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
     .otherwise({
         redirectTo: '/recent'
     });
-}]).run(['$rootScope', '$location', 'toaster', 'jwtHelper', 'appconf', 'scaMessage',
-function($rootScope, $location, toaster, jwtHelper, appconf, scaMessage) {
+}]).run(function($rootScope, $location, toaster, jwtHelper, appconf) {
     $rootScope.$on("$routeChangeStart", function(event, next, current) {
         //redirect to /login if user hasn't authenticated yet
         if(next.requiresLogin) {
             var jwt = localStorage.getItem(appconf.jwt_id);
             if(jwt == null || jwtHelper.isTokenExpired(jwt)) {
                 sessionStorage.setItem('auth_redirect', document.location.toString());
-                scaMessage.info("Please signin first!");
+                toaster.error("Please signin first!");
                 document.location = appconf.auth_url;
                 event.preventDefault();
             }
         }
     });
-}]);
+});
 
 //configure httpProvider to send jwt unless skipAuthorization is set in config (not tested yet..)
 app.config(['appconf', '$httpProvider', 'jwtInterceptorProvider', 
 function(appconf, $httpProvider, jwtInterceptorProvider) {
-    jwtInterceptorProvider.tokenGetter = function(jwtHelper, config, $http, toaster) {
-        //don't send jwt for template requests
-        //(I don't think angular will ever load css/js - browsers do)
-        if (config.url.substr(config.url.length - 5) == '.html') { return null; }
+    jwtInterceptorProvider.tokenGetter = function(jwtHelper, $http, toaster) {
+        //if (config.url.substr(config.url.length - 5) == '.html') { return null; }
         return localStorage.getItem(appconf.jwt_id);
     }
     $httpProvider.interceptors.push('jwtInterceptor');
@@ -179,8 +178,9 @@ app.directive('qcwarning', function() {
     } 
 });
 
-app.factory('menu', ['appconf', '$http', 'jwtHelper', '$sce', 'scaMessage', 'scaMenu', 'toaster',
-function(appconf, $http, jwtHelper, $sce, scaMessage, scaMenu, toaster) {
+/*
+app.factory('menu', ['appconf', '$http', 'jwtHelper', '$sce', 'toaster',
+function(appconf, $http, jwtHelper, $sce, toaster) {
     var jwt = localStorage.getItem(appconf.jwt_id);
     var menu = {
         header: {
@@ -188,7 +188,7 @@ function(appconf, $http, jwtHelper, $sce, scaMessage, scaMenu, toaster) {
             //icon: $sce.trustAsHtml("<img src=\""+appconf.icon_url+"\">"),
             //url: "#/",
         },
-        top: scaMenu,
+        //top: scaMenu,
         user: null, //to-be-loaded
         //_profile: null, //to-be-loaded
     };
@@ -201,7 +201,7 @@ function(appconf, $http, jwtHelper, $sce, scaMessage, scaMenu, toaster) {
             toaster.error("Your login session has expired. Please re-sign in");
             localStorage.removeItem(appconf.jwt_id);
         } else {
-            menu.user = jwtHelper.decodeToken(jwt);
+            //menu.user = jwtHelper.decodeToken(jwt);
             if(ttl < 3600*1000) {
                 //jwt expring in less than an hour! refresh!
                 console.log("jwt expiring in an hour.. refreshing first");
@@ -213,35 +213,14 @@ function(appconf, $http, jwtHelper, $sce, scaMessage, scaMenu, toaster) {
                 }).then(function(response) {
                     var jwt = response.data.jwt;
                     localStorage.setItem(appconf.jwt_id, jwt);
-                    menu.user = jwtHelper.decodeToken(jwt);
+                    //menu.user = jwtHelper.decodeToken(jwt);
                 });
             }
         }
     }
-    /*
-    if(menu.user) {
-        $http.get(appconf.profile_api+'/public/'+menu.user.sub).then(function(res) {
-            menu._profile = res.data;
-            if(res.data) {
-                //logged in, but does user has email?
-                if(res.data.email) {
-                    return menu; //TODO - return return to what?
-                } else {
-                    //force user to update profile
-                    //TODO - do I really need to?
-                    scaMessage.info("Please update your profile before using application.");
-                    sessionStorage.setItem('profile_settings_redirect', window.location.toString());
-                    document.location = appconf.profile_url;
-                }
-            } else {
-                //not logged in.
-                return menu; //TODO return to what?
-            }
-        });
-    }
-    */
     return menu;
 }]);
+*/
 
 app.factory('users', ['appconf', '$http', 'jwtHelper', 'toaster', function(appconf, $http, jwtHelper, toaster) {
     return $http.get(appconf.auth_api+'/profiles')
@@ -371,4 +350,32 @@ app.directive('confirmOnExit', function() {
     };
 });
 
+app.filter('uniqueSeriesDesc', function() {
+    return function(items, props) {
+        var descs = [];
+        for(var date in items) {
+            for(var desc in items[date]) {
+                if(!~descs.indexOf(desc)) descs.push(desc);
+            }
+        }
+        return descs;
+    };
+});
+
+app.filter('findTemplate', function() {
+    return function(items, props) {
+        //console.dir(props);
+        //console.dir(items);
+        var templates = [];
+        for(var desc in items) {
+            for(var date in items[desc]) {
+                if(date[0] == "$") continue; //ignore $key and $$hashKey
+                items[desc][date].forEach(function(template) {
+                    if(template._id == props) templates.push(template);
+                });
+            }
+        }
+        return templates;
+    };
+});
 

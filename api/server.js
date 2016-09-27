@@ -49,7 +49,6 @@ exports.app = app;
 exports.start = function(cb) {
     var port = process.env.PORT || config.express.port || '8080';
     var host = process.env.HOST || config.express.host || 'localhost';
-    //controllers.init(function() {
     db.init(function(err) {
         if(err) return cb(err);
         var server = app.listen(port, host, function() {
@@ -59,18 +58,6 @@ exports.start = function(cb) {
             setInterval(profile.cache, 1000*300); //5 minutes?
             profile.cache(cb);
         });
-
-        /*
-        //init socket.io
-        var io = require('socket.io').listen(server);
-        io.on('connection', function (socket) {
-            socket.on('subscribe', function (key) {
-                console.log("socket joining "+key);
-                socket.join(key);
-            });
-        });
-        controllers.set_socketio(io);
-        */
     });
 };
 

@@ -1,95 +1,116 @@
-<sca-menutab fluid="true" menu="appconf.menu" active="'recent'" user="user"></sca-menutab>
-<div class="container-fluid recent">
-    <p ng-if="series_count == 0" class="text-muted">You don't have access to any IIBISIDs that has received data recently. Please contact your administrator for more info.</p>
-    <div class="row">
-        <div class="col-md-3" id="affix" ng-class="{affix: content_affix, affix_bottom: content_affix_bottom}">
-            <input type="text" class="form-control" ng-model="research_filter" placeholder="Filter"></input>
-            <div ng-repeat="(iibisid, research) in org" ng-if="show_iibis(iibisid, research)">
-                <h5><b class="text-muted">{{::iibisid}}</b></h5>
-                <div class="list-group">
-                    <div class="list-group-item" ng-repeat="(modality_id, modality) in research" style="padding: 7px 10px;" ng-if="show_modality(iibisid, modality_id, modality)">
-                        <h5 class="text-muted" style="margin-top: 0px;">
-                            {{::modality._detail.Modality}} / {{::modality._detail.StationName}} <small ng-if="modality._detail.Modality == 'PT'"> / {{::modality._detail.radio_tracer}} </small>
-                        </h5>
-                        <ol class="subjects">
-                            <li ng-repeat="(subject_desc, subject) in modality.subjects" 
-                                ng-click="scrollto(subject.uid)"
-                                ng-class="{inview: inview_id == subject.uid}"
-                                ng-if="show_subject(iibisid, modality_id, subject_desc)"> 
-                                <!--subject_desc is not unique across all iibisid / modality..-->
-                                <div class="row">
-                                <div class="col-sm-5">
-                                    <span class="subject-name">{{::subject_desc}}</span>
-                                </div>
-                                <div class="col-sm-7">
-                                    <div class="progress" style="margin-bottom: 0px;"
-                                        ng-init="total = subject.non_qced+subject.oks+subject.errors+subject.warnings+subject.notemps+subject.missing">
-                                        <div class="progress-bar progress-bar-success" style="width: {{subject.oks / total*100}}%"></div>
-                                        <div class="progress-bar progress-bar-danger" style="width: {{subject.errors / total*100}}%"></div>
-                                        <div class="progress-bar progress-bar-warning" style="width: {{subject.warnings / total*100}}%"></div>
-                                        <div class="progress-bar progress-bar-primary" style="width: {{subject.notemps / total*100}}%"></div>
-                                        <div class="progress-bar progress-bar-info" style="width: {{subject.missing/ total*100}}%"></div>
-                                    </div>
-                                </div>
-                                </div><!--row-->
-                            </li>
-                            <li ng-click="scrollto(iibisid+modality_id)"
-                                ng-class="{inview: inview_id == iibisid+modality_id}">
-                                <span class="subject-name template-link">Templates</span>
-                            </li>
-                        </ol>
-                    </div><!--list-group-item-->
-                </div><!--list-group-->
-            </div><!--ng-repeat-->
-            <p class="legend">
-                <!--<span class="label label-default"></span>-->
-                <span class="label label-success">OK</span>
-                <span class="label label-danger">Error</span>
-                <span class="label label-warning">Warning</span>
-                <span class="label label-primary">No Templ</span>
-                <span class="label label-info">Missing</span>
-            </p>
+<!--<sca-menutab fluid="true" menu="appconf.menu" active="'recent'" user="user"></sca-menutab>-->
+<div class="subbar">
+    <div style="padding: 0px 15px; margin-bottom: 10px">
+        <h2>Recent Exams</h2>
+        <p class="help-block">Recently captured images</p>
+        <input type="text" class="form-control" ng-model="research_filter" placeholder="Filter"></input>
+        <br>
+        <div class="btn-group pull-right" style="left: 0px;top: -5px;">
+            <button class="btn btn-xs btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Options <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+            <li><a href>Project ABC</a></li>
+            <li><a href>Project DEF</a></li>
+            <li><a href>Project AAA</a></li>
+            <li role="separator" class="divider"></li>
+            <li><a href>Separated link</a></li>
+            </ul>
+        </div>
+        <span class="text-muted">{{apps.length}} exams </span>
+    </div>
+    <hr style="margin: 0px;">
 
-        </div> <!--col-md-3-->
+    <div class="subbar-list" style="margin-top: 65px; bottom: 34px">
+        <div ng-repeat="(iibisid, research) in org" ng-show="show_iibis(iibisid, research)">
+            <div class="subbar-list-header">{{iibisid}}</div>
+            <div class="subbar-list-item" 
+                ng-repeat="(modality_id, modality) in research" 
+                ng-class="{'active': modality == selected}"
+                ng-click="select(modality)"
+                ng-show="show_modality(iibisid, modality_id, modality)">
 
-        <div class="col-md-9" ng-class="{'col-md-offset-3': content_affix}">
-            <p ng-if="!org"><i class="fa fa-circle-o-notch fa-spin"></i> Loading ...</p>
-            <viewmode-toggler mode="view_mode"></viewmode-toggler> 
-            <div ng-repeat="(iibisid, research) in org" ng-if="show_iibis(iibisid, research)">
-                <h2>{{::iibisid}}</h2>
-                <div ng-repeat="(modality_id, modality) in research" ng-if="show_modality(iibisid, modality_id, modality)">
-                    <h3>
-                        Modality: <b>{{::modality._detail.Modality}}</b> 
-                        StationName: <b>{{::modality._detail.StationName}}</b>
-                        <small ng-if="modality._detail.Modality == 'PT'">
-                            RadioTracer: <b>{{::modality._detail.radio_tracer}}</b>
-                        </small>
-                    </h3>
-                    <ul class="list-group">
-                        <div ng-repeat="(subject, subject_detail) in modality.subjects" id="{{subject_detail.uid}}" class="subject"
-                            ng-if="show_subject(iibisid, modality_id, subject)"> 
-                            <li class="list-group-item subject-body">
-                                <span class="text-muted">Subject</span> {{::subject}}
-                            </li>
-                            <exams
-                                researchid="modality._detail._id" 
-                                subject="subject"
-                                mode="view_mode"
-                                serieses="subject_detail.serieses" 
-                                missing="subject_detail.missing_serieses" 
-                                templates="templates"
-                                exams="modality.exams[subject]"></exams>
-                        </div>
-
-                        <div id="{{::iibisid+modality_id}}" class="template">
-                            <li class="list-group-item template-head">Templates</li>
-                            <templates templates="modality.templates" times="modality.templates_times"></templates>
-                        </div> 
-                    </ul>
-                    
-                </div><!--modality-->
-            </div><!--research-iibisid-->
-        </div><!--col-md-9-->
-
-    </div><!--row-->
+                <!--modality detail-->
+                <div class="subbar-list-item-header">
+                    {{modality._detail.Modality}} / {{modality._detail.StationName}} 
+                    <small ng-show="modality._detail.Modality == 'PT'"> / {{modality._detail.radio_tracer}} </small>
+                </div>
+                <div ng-repeat="(subject_desc, subject) in modality.subjects" 
+                    ng-click-dis="scrollto(subject.uid)"
+                    class="subject-label"
+                    style="line-height: 100%; display: inline-block;"
+                    ng-show="show_subject(iibisid, modality_id, subject_desc)"> 
+                    <!--subject_desc is not unique across all iibisid / modality..-->
+                    <small style="position: absolute;">{{subject_desc}}</small>
+                    <div class="progress exam-state pull-right"
+                        ng-init="total = subject.non_qced+subject.oks+subject.errors+subject.warnings+subject.notemps+subject.missing">
+                        <div class="progress-bar progress-bar-success" style="width: {{subject.oks / total*100}}%"></div>
+                        <div class="progress-bar progress-bar-danger" style="width: {{subject.errors / total*100}}%"></div>
+                        <div class="progress-bar progress-bar-warning" style="width: {{subject.warnings / total*100}}%"></div>
+                        <div class="progress-bar progress-bar-primary" style="width: {{subject.notemps / total*100}}%"></div>
+                        <div class="progress-bar progress-bar-info" style="width: {{subject.missing/ total*100}}%"></div>
+                    </div>
+                </div><!--ng-repeat/subjects-->
+            </div><!--subbar-list-item-->
+        </div><!--ng-repeat-->
+    </div>
+    <p class="legend" style="position: fixed; bottom: 0px; width: 350px;">
+        <!--<span class="label label-default"></span>-->
+        <span class="label label-success">OK</span>
+        <span class="label label-danger">Error</span>
+        <span class="label label-warning">Warning</span>
+        <span class="label label-primary">No Templ</span>
+        <span class="label label-info">Missing</span>
+    </p>
 </div>
+
+<div class="subbar-content">
+    <!--<p ng-if="series_count == 0" class="text-muted">You don't have access to any IIBISIDs that has received data recently. Please contact your administrator for more info.</p>-->
+    <h3 ng-show="!org"><i class="fa fa-circle-o-notch fa-spin"></i> Loading ...</h3>
+    <h3 ng-show="!selected" class="help-block">Please select an exam to display</h3>
+    <!--
+    <div ng-repeat="(iibisid, research) in org" ng-if="show_iibis(iibisid, research)">
+        <h2>{{iibisid}}</h2>
+        <div ng-repeat="(modality_id, modality) in research" ng-if="show_modality(iibisid, modality_id, modality)">
+    -->
+    <div ng-show="selected">
+        <div class="fixed-top" style="margin-left: 430px;">
+            <h2 class="pull-right" style="position: relative; left: -15px;">
+                <viewmode-toggler mode="view_mode"></viewmode-toggler> 
+            </h2>
+            <h2>
+                <b>{{selected._detail.IIBISID}}</b>
+            </h2>
+            <h3>
+                Modality: <b>{{selected._detail.Modality}}</b> 
+                StationName: <b>{{selected._detail.StationName}}</b>
+                <small ng-show="selected._detail.Modality == 'PT'">
+                    RadioTracer: <b>{{selected._detail.radio_tracer}}</b>
+                </small>
+            </h3>
+        </div>
+        <div style="margin-top: 70px;">
+            <div ng-repeat="(subject, subject_detail) in selected.subjects" class="subject">
+                <h4>
+                    <b>{{subject}}</b>
+                    <!-- <span class="text-muted">Subject</span> -->
+                </h4>
+                <exams subject="subject" modality="selected" mode="view_mode"></exams>
+            </div>
+            <div class="template">
+                <h4>
+                    <b>Templates</b>
+                </h4>
+                <templates templates="selected.templates" times="selected.templates_times"></templates>
+            </div> 
+        </div>
+    </div>
+
+    <!--
+    <pre style="font-size: 80%;">
+        {{selected|json}}
+    </pre>
+    -->
+
+</div><!--subbar-content-->
+
