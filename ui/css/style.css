@@ -56,6 +56,9 @@ div.instance.instance_active {
   border-left: 4px solid #ccc;
   padding-left: 10px;
 }
+h2 {
+  margin-top: 15px;
+}
 /* when showing the picture */
 .instance-detail.ng-hide-remove {
   animation: 0.5s flipInX ease;
@@ -147,6 +150,7 @@ ol.subjects {
 .subject .subject-body {
   border-bottom: 0px;
   padding: 5px 15px;
+  margin-bottom: 10px;
 }
 .subject .subject-body .subject-tall:not(:last-child) {
   border-bottom: 1px solid #ccc;
@@ -334,7 +338,7 @@ h3 {
   background-color: #eee;
 }
 .subbar-list .subbar-list-item.active {
-  border: 3px solid #ddd;
+  border: 3px solid #008cba;
 }
 .subbar-list .subbar-list-item .subbar-list-item-header {
   font-size: 15px;
@@ -359,14 +363,16 @@ h3 {
   font-size: 21px;
 }
 .subbar-content h3 {
-  padding-left: 15px;
+  padding: 0px 15px;
   font-size: 18px;
 }
 .subbar-content h4 {
   margin: 0px;
-  padding: 10px 15px;
+  padding: 5px 15px;
   background-color: #ccc;
   color: white;
+  font-size: 16px;
+  line-height: 100%;
 }
 .subbar-content .fixed-top {
   position: fixed;

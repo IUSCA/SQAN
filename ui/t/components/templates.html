@@ -1,6 +1,6 @@
 <div class="template-body">
     <p class="text-muted" ng-if="$ctrl.times.length == 0">No templates received</p>
-    <table class="table table-condensed" style="margin-bottom: 0px;" ng-if="$ctrl.times.length > 0">
+    <table class="table table-condensed" ng-if="$ctrl.times.length > 0">
         <thead><tr><th width="30%" style="color: #333;">Series Description</th>
             <th ng-repeat="time in $ctrl.times | orderBy:'-toString()'">{{time|date:'short'}}</th>
         </tr></thead>

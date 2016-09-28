@@ -6,3 +6,4 @@ ui/config.js
 bin/barn
 debug
 **/*.log
+barn

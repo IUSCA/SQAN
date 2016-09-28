@@ -9,6 +9,7 @@ var logger = new winston.Logger(config.logger.winston);
 
 //var sequelize = new Sequelize('database', 'username', 'password', config.sequelize);
 exports.init = function(cb) {
+    if(config.debug) mongoose.set('debug', true);
     mongoose.connect(config.mongodb, {}, function(err) {
         if(err) return cb(err);
         console.log("connected to mongo");

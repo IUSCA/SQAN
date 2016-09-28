@@ -159,7 +159,7 @@ function reorg(data) {
         modality.templates[series_desc][time].push(template);
     });
     
-    /*
+    /*TODO - I should do this on UI (also, injecting min_SeriesNumber as part of series_group / times is bad)
     //for each exam/template, find the min SeriesNumber so that UI can sort by it
     for(var research_id in org) {
         var modalities = org[research_id];
@@ -252,10 +252,8 @@ function reorg(data) {
             }
         }
     }
-
     return org;
 }
-
 
 //query against all serieses
 router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
@@ -349,6 +347,7 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
     });
 });
 
+/*
 //return all serieses that belongs to a given research_id
 //TODO deprecate this in favor of /series/query?
 router.get('/byresearchid/:research_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
@@ -389,6 +388,7 @@ router.get('/byresearchid/:research_id', jwt({secret: config.express.jwt.pub}), 
         });
     });
 });
+*/
 
 router.get('/id/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     //first load the series
