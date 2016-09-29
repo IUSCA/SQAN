@@ -1,18 +1,19 @@
 'use strict';
 
 //contrib
-var express = require('express');
-var router = express.Router();
-var winston = require('winston');
-var jwt = require('express-jwt');
-var async = require('async');
+const express = require('express');
+const router = express.Router();
+const winston = require('winston');
+const jwt = require('express-jwt');
+const async = require('async');
 
 //mine
-var config = require('../../config');
-var logger = new winston.Logger(config.logger.winston);
-var db = require('../models');
-var qc = require('../qc');
-var profile = require('../profile');
+const config = require('../../config');
+const logger = new winston.Logger(config.logger.winston);
+const db = require('../models');
+const qc = require('../qc');
+const profile = require('../profile');
+const events = require('../events');
 
 //should I store this somewhere common?
 function compose_modalityid(research_detail) {
@@ -497,6 +498,7 @@ router.post('/qcstate/:series_id', jwt({secret: config.express.jwt.pub}), functi
             series.events.push(event);
             if(req.body.level == "1") series.qc1_state = req.body.state; 
             if(req.body.level == "2") series.qc2_state = req.body.state; 
+            events.series(series);
             series.save(function(err) {
                 if(err) return(err);
                 res.json({message: "State updated to "+req.body.state, event: event});
@@ -528,6 +530,7 @@ router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), funct
                     detail: "Re-QCing with template: "+exam.date.toString(),
                 };
                 series.events.push(event);
+                events.series(series);
                 series.save(function(err) {
                     if(err) return(err);
                     //invalidate image QC.
@@ -550,6 +553,7 @@ router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub}), function(
         db.Acl.can(req.user, 'qc', series.IIBISID, function(can) {
             if(!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:"+series.IIBISID});
             series.qc = undefined;
+            events.series(series);
             series.save(function(err) {
                 if(err) next(err);
                 //also invalidate image QC.
@@ -576,6 +580,7 @@ router.post('/reqcbyexamid/:exam_id', jwt({secret: config.express.jwt.pub}), fun
                 async.forEach(serieses, function(series, next_series) {
                     //do unset
                     series.qc = undefined;
+                    events.series(series);
                     series.save(function(err) {
                         if(err) next(err);
                         //also invalidate image QC.

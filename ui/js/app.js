@@ -47,12 +47,7 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         controller: 'SeriesController',
         requiresLogin: true
     })
-    .when('/research', {
-        templateUrl: 't/research.html',
-        controller: 'ResearchController',
-        requiresLogin: true
-    })
-    .when('/research/:researchid', {
+    .when('/research/:researchid?', {
         templateUrl: 't/research.html',
         controller: 'ResearchController',
         requiresLogin: true,
@@ -61,9 +56,6 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         templateUrl: 't/template.html',
         controller: 'TemplateController',
         requiresLogin: true
-    })
-    .when('/qc', {
-        redirectTo: '/qc/1',
     })
     .when('/qc/:level', {
         templateUrl: 't/qc.html',
@@ -76,7 +68,7 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         requiresLogin: true,
     })
     .otherwise({
-        redirectTo: '/recent'
+        redirectTo: '/qc/recent'
     });
 }]).run(function($rootScope, $location, toaster, jwtHelper, appconf) {
     $rootScope.$on("$routeChangeStart", function(event, next, current) {

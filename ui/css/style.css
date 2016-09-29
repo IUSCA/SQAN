@@ -368,9 +368,9 @@ h3 {
 }
 .subbar-content h4 {
   margin: 0px;
-  padding: 5px 15px;
-  background-color: #ccc;
-  color: white;
+  padding: 8px 15px;
+  background-color: #eee;
+  color: gray;
   font-size: 16px;
   line-height: 100%;
 }

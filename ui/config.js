@@ -21,6 +21,9 @@ angular.module('app.config', [])
     auth_url: '/auth',
 
     jwt_id: 'jwt',
+
+    event_api: '/api/event', 
+    /*
     menu: [
         {
             id: "research",
@@ -73,5 +76,6 @@ angular.module('app.config', [])
             url: "/dicom/#/about",
         },
     ]    
+    */
 });
 

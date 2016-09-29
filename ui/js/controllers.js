@@ -6,6 +6,9 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
     $scope.active_menu = "unknown";
     serverconf.then(function(_c) { $scope.serverconf = _c; });
 
+    var jwt = localStorage.getItem(appconf.jwt_id);
+    if(jwt) { $scope.user = jwtHelper.decodeToken(jwt); }
+
     //TODO - it doesn't make sense that these exist here..
     $scope.openstudy = function(id) {
         $window.open("#/series/"+id, "study:"+id);
@@ -13,11 +16,6 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
     $scope.opentemplate = function(id) {
         $window.open("#/template/"+id,  "tepmlate:"+id);
     }
-    /*
-    $scope.scrollto = function(id) {
-        $anchorScroll(id);
-    }
-    */
     
     //open another page inside the app.
     $scope.openpage = function(page) {
@@ -29,19 +27,94 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
     $scope.relocate = function(url) {
         document.location = url;
     }
+
+    if($scope.user) {
+        $scope.serieses = {}; //make it easier to lookup series that needs to be updated
+        
+        //list of all event binds that user has requested so far
+        $scope.event_binds = [];
+        
+        //start event streaming
+        $scope.event = new ReconnectingWebSocket("wss:"+window.location.hostname+appconf.event_api+"/subscribe?jwt="+jwt);
+        $scope.event.onopen = function(e) {
+            console.log("eventws connection opened - binding:"+$scope.event_binds.length);
+            $scope.event_binds.forEach(function(bind) {
+                $scope.event.send(JSON.stringify({bind: bind}));
+            });
+        }
+        $scope.event.onmessage = function(evt) {
+            var data = JSON.parse(evt.data);
+            //parse routing key
+            var key = data.dinfo.routingKey;
+            var keytokens = key.split(".");
+            var research_id = keytokens[0];
+            var exam_id = keytokens[1];
+            var series_id = keytokens[2];
+
+            //update the series 
+            var series = $scope.serieses[series_id];
+            if(!series) return; //RECENT UI doesn't load all series
+            $scope.$apply(function() {
+                series.qc = null; //could be missing
+                for(var key in data.msg) series[key] = data.msg[key]; //update the rest
+                //console.log("update for "+key);
+                //console.log(JSON.stringify(series));
+                count($scope.org);  //TODO recount the entire thing is too expensive? maybe use $timeout?
+            });
+            
+            /*
+            //assume it's series.. look for research that this information belongs to
+            for(var iibisid in $scope.org) {
+                for(var modality_id in $scope.org[iibisid]) {
+                    var modality = $scope.org[iibisid][modality_id];
+                    if(modality._detail._id == research_id) {
+                        //found modality that update belongs to.. now find the series.
+                        for(var 
+                        //console.log("belongs to this");
+                        //console.dir(modality);
+                    }
+                } 
+            } 
+            */
+        }
+        /*
+        $scope.event.onmessage = function(json) {
+            var e = JSON.parse(json.data);
+            console.dir(e);
+            if(e.msg) {
+                var task = e.msg;
+                $scope.$broadcast("task_updated", task);
+            } else {
+                console.log("unknown message from eventws");
+                console.dir(e);
+            }
+        }
+        */
+        /*
+        $scope.event.onclose = function(e) {
+            console.log("eventws connection closed - should auto reconnect");
+        }
+        */
+
+        $scope.event_bind = function(bind) {
+            if(!$scope.event) return; //not initialized
+            console.log("binding to "+bind.ex+"/"+bind.key);
+            $scope.event_binds.push(bind); //to rebind on reconnect
+            //if not connected yet, onopen should take care of it
+            if($scope.event.readyState == 1) {
+                $scope.event.send(JSON.stringify({bind: bind}));
+            }
+        }
+    } 
+
 });
 
 app.controller('AboutController', 
-function($scope, appconf, toaster, $http, jwtHelper, serverconf) {
+function($scope, appconf, toaster, $http, serverconf) {
     $scope.appconf = appconf;
     $scope.$parent.active_menu = "about";
     //scaMessage.show(toaster);
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
-
-    var jwt = localStorage.getItem(appconf.jwt_id);
-    if(jwt) {
-        $scope.user = jwtHelper.decodeToken(jwt);
-    }
 });
 
 /*
@@ -219,12 +292,10 @@ function($scope, appconf, toaster, researches, $location) {
 */
 
 app.controller('ResearchController', 
-function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, $anchorScroll, $document, $window, $routeParams, $route) {
+function($scope, appconf, toaster, $http, $location, serverconf, $anchorScroll, $document, $window, $routeParams, $route) {
     $scope.appconf = appconf;
     $scope.$parent.active_menu = "research";
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
-    var jwt = localStorage.getItem(appconf.jwt_id);
-    if(jwt) $scope.user = jwtHelper.decodeToken(jwt);
 
     $scope.selected = null;
 
@@ -259,19 +330,34 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, $anc
         }})
         .then(function(res) {
             $scope.loading = false;
-            //console.dir(res.data);
+
+            //find modality that user wants to see
             for(var research_id in res.data) {
                 var modalities = res.data[research_id];
                 for(var modality_id in modalities) {
                     var modality = modalities[modality_id];
                     if(modality._detail._id == research._id) $scope.modality = modality;
-                    //for(var subject_id in modality.subjects) {
-                    //    var subject = modality.subjects[subject_id];
+                    
+                    //while at it, create a catalog of all serieses
+                    for(var subject in modality.subjects) {
+                        for(var series_desc in modality.subjects[subject].serieses) {
+                            var exams = modality.subjects[subject].serieses[series_desc].exams; 
+                            for(var exam_id in exams) {
+                                exams[exam_id].forEach(function(series) {
+                                    $scope.serieses[series._id] = series;
+                                }); 
+                            }
+                        }
+                    }
                 }
             }
-            //console.log("loaded modality");
-            //console.dir($scope.modality);
             window.scrollTo(0,0); 
+
+            //now bind to this modality
+            $scope.event_bind({
+                ex: "dicom.series",
+                key: modality._detail._id+".#"
+            });
         }, function(res) {
             $scope.loading = false;
             if(res.data && res.data.message) toaster.error(res.data.message);
@@ -435,11 +521,9 @@ app.component('viewmodeToggler', {
 });
 
 app.controller('QCController', 
-function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, $anchorScroll, $document, $window, $routeParams) {
+function($scope, appconf, toaster, $http, $location, serverconf, $anchorScroll, $document, $window, $routeParams) {
     $scope.appconf = appconf;
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
-    var jwt = localStorage.getItem(appconf.jwt_id);
-    if(jwt) $scope.user = jwtHelper.decodeToken(jwt);
 
     $scope.selected = null;
     $scope.$parent.active_menu = "qc"+$routeParams.level;
@@ -450,7 +534,13 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, $anc
         //console.log(modality);
         $scope.selected = modality;
         window.scrollTo(0,0); 
+
+        $scope.event_bind({
+            ex: "dicom.series",
+            key: modality._detail._id+".#"
+        });
     }
+
 
     //construct query
     var where = {};
@@ -487,6 +577,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, $anc
     });
     */
 
+
     function load() {
         $http.get(appconf.api+'/series/query', {params: {
             skip: 0, 
@@ -496,13 +587,29 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, $anc
         .then(function(res) {
             $scope.org = res.data;
             count($scope.org);
+
+            console.log("org");
+            console.dir($scope.org);
         
             //select first modality
             for(var research_id in $scope.org) {
                 var modalities = $scope.org[research_id];
                 for(var modality_id in modalities) {
                     var modality = modalities[modality_id];
-                    if(!$scope.selected) $scope.selected = modality;
+                    if(!$scope.selected) $scope.select(modality);
+                    
+                    //while at it, create a catalog of all serieses
+                    for(var subject in modality.subjects) {
+                        for(var series_desc in modality.subjects[subject].serieses) {
+                            var exams = modality.subjects[subject].serieses[series_desc].exams; 
+                            for(var exam_id in exams) {
+                                exams[exam_id].forEach(function(series) {
+                                    $scope.serieses[series._id] = series;
+                                }); 
+                            }
+                        }
+                    }
+                    $scope.serieses_count = Object.keys($scope.serieses).length;
                 }
             }
             //if($scope.qcing) setTimeout(load, 1000*10);
@@ -512,10 +619,7 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, $anc
         });
     }
 
-
     function count(org) {
-        $scope.serieses_count = 0;
-        
         //do some extra processing for each subject
         for(var research_id in org) {
             var modalities = org[research_id];
@@ -552,7 +656,6 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, $anc
                                     subject.non_qced++;
                                 }
                             });
-                            $scope.serieses_count += serieses.length;
                         }
                     }
                 }
@@ -585,12 +688,10 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, $anc
 
 //used to be StudyController
 app.controller('SeriesController', 
-function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $routeParams, users, $timeout) {
+function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, users, $timeout) {
     $scope.appconf = appconf;
     //scaMessage.show(toaster);
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
-    var jwt = localStorage.getItem(appconf.jwt_id);
-    if(jwt) $scope.user = jwtHelper.decodeToken(jwt);
     
     //load userprofiles for comments..
     //TODO loading all user is stupid.. just load the users who are authors of comments
@@ -758,15 +859,10 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
 });
 
 app.controller('TemplateController',
-function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, $routeParams) {
+function($scope, appconf, toaster, $http, $location, serverconf, $routeParams) {
     $scope.appconf = appconf;
     //scaMessage.show(toaster);
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
-
-    var jwt = localStorage.getItem(appconf.jwt_id);
-    if(jwt) {
-        $scope.user = jwtHelper.decodeToken(jwt);
-    }
 
     $http.get(appconf.api+'/template/head/'+$routeParams.templateid)
     .then(function(res) {
@@ -789,13 +885,10 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, $rou
 });
 
 app.controller('AdminController', 
-function($scope, appconf, toaster, $http, jwtHelper, serverconf, groups) {
+function($scope, appconf, toaster, $http, serverconf, groups) {
     $scope.appconf = appconf;
     $scope.$parent.active_menu = "admin";
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
-
-    var jwt = localStorage.getItem(appconf.jwt_id);
-    if(jwt) { $scope.user = jwtHelper.decodeToken(jwt); }
 
     $http.get(appconf.api+'/research', {params: {admin: true}})
     .then(function(res) {

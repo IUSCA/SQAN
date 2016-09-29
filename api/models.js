@@ -1,11 +1,13 @@
+'use strict';
 
 //contrib
-var mongoose = require('mongoose');
-var winston = require('winston');
+const mongoose = require('mongoose');
+const winston = require('winston');
 
 //mine
-var config = require('../config');
-var logger = new winston.Logger(config.logger.winston);
+const config = require('../config');
+const logger = new winston.Logger(config.logger.winston);
+//const events = require('./events');
 
 //var sequelize = new Sequelize('database', 'username', 'password', config.sequelize);
 exports.init = function(cb) {
@@ -173,6 +175,13 @@ var seriesSchema = mongoose.Schema({
         date: {type: Date, default: Date.now},
     }) ],
 });
+//these hooks are too unreliable / non-useful (I will do the event posting from controller..)
+//seriesSchema.post('save', events.series);
+//seriesSchema.post('findOneAndUpdate', events.series);
+//seriesSchema.post('update', events.series); //'update' doesn't pass object
+//seriesSchema.post('findOneAndRemove', events.series);
+//seriesSchema.post('remove', events.series);
+
 seriesSchema.index({research_id: 1, exam_id: 1, series_desc: 1, SeriesNumber: 1});
 exports.Series = mongoose.model('Series', seriesSchema);
 
