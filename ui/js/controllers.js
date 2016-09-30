@@ -1,10 +1,13 @@
 'use strict';
 
-app.controller('HeaderController', ['$scope', 'appconf', '$route', 'toaster', '$http', 'jwtHelper', 'serverconf', 'menu', '$window', '$anchorScroll',
-function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, menu, $window, $anchorScroll) {
+app.controller('HeaderController', 
+function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window, $anchorScroll, $location) {
     $scope.title = appconf.title;
+    $scope.active_menu = "unknown";
     serverconf.then(function(_c) { $scope.serverconf = _c; });
-    $scope.menu = menu;
+
+    var jwt = localStorage.getItem(appconf.jwt_id);
+    if(jwt) { $scope.user = jwtHelper.decodeToken(jwt); }
 
     //TODO - it doesn't make sense that these exist here..
     $scope.openstudy = function(id) {
@@ -13,239 +16,115 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, menu, $
     $scope.opentemplate = function(id) {
         $window.open("#/template/"+id,  "tepmlate:"+id);
     }
-    $scope.scrollto = function(id) {
-        $anchorScroll(id);
+    
+    //open another page inside the app.
+    $scope.openpage = function(page) {
+        console.log("path to "+page);
+        $location.path(page);
     }
-}]);
 
-app.controller('AboutController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', 'serverconf', 'scaMessage',
-function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage) {
+    //relocate out of the app..
+    $scope.relocate = function(url) {
+        document.location = url;
+    }
+
+    if($scope.user) {
+        $scope.serieses = {}; //make it easier to lookup series that needs to be updated
+        
+        //list of all event binds that user has requested so far
+        $scope.event_binds = [];
+        
+        //start event streaming
+        $scope.event = new ReconnectingWebSocket("wss:"+window.location.hostname+appconf.event_api+"/subscribe?jwt="+jwt);
+        $scope.event.onopen = function(e) {
+            console.log("eventws connection opened - binding:"+$scope.event_binds.length);
+            $scope.event_binds.forEach(function(bind) {
+                $scope.event.send(JSON.stringify({bind: bind}));
+            });
+        }
+        $scope.event.onmessage = function(evt) {
+            var data = JSON.parse(evt.data);
+            //parse routing key
+            var key = data.dinfo.routingKey;
+            var keytokens = key.split(".");
+            var research_id = keytokens[0];
+            var exam_id = keytokens[1];
+            var series_id = keytokens[2];
+
+            //update the series 
+            var series = $scope.serieses[series_id];
+            if(!series) return; //RECENT UI doesn't load all series
+            $scope.$apply(function() {
+                series.qc = null; //could be missing
+                for(var key in data.msg) series[key] = data.msg[key]; //update the rest
+                //console.log("update for "+key);
+                //console.log(JSON.stringify(series));
+                count($scope.org);  //TODO recount the entire thing is too expensive? maybe use $timeout?
+            });
+            
+            /*
+            //assume it's series.. look for research that this information belongs to
+            for(var iibisid in $scope.org) {
+                for(var modality_id in $scope.org[iibisid]) {
+                    var modality = $scope.org[iibisid][modality_id];
+                    if(modality._detail._id == research_id) {
+                        //found modality that update belongs to.. now find the series.
+                        for(var 
+                        //console.log("belongs to this");
+                        //console.dir(modality);
+                    }
+                } 
+            } 
+            */
+        }
+        /*
+        $scope.event.onmessage = function(json) {
+            var e = JSON.parse(json.data);
+            console.dir(e);
+            if(e.msg) {
+                var task = e.msg;
+                $scope.$broadcast("task_updated", task);
+            } else {
+                console.log("unknown message from eventws");
+                console.dir(e);
+            }
+        }
+        */
+        /*
+        $scope.event.onclose = function(e) {
+            console.log("eventws connection closed - should auto reconnect");
+        }
+        */
+
+        $scope.event_bind = function(bind) {
+            if(!$scope.event) return; //not initialized
+            console.log("binding to "+bind.ex+"/"+bind.key);
+            $scope.event_binds.push(bind); //to rebind on reconnect
+            //if not connected yet, onopen should take care of it
+            if($scope.event.readyState == 1) {
+                $scope.event.send(JSON.stringify({bind: bind}));
+            }
+        }
+    } 
+
+});
+
+app.controller('AboutController', 
+function($scope, appconf, toaster, $http, serverconf) {
     $scope.appconf = appconf;
-    scaMessage.show(toaster);
+    $scope.$parent.active_menu = "about";
+    //scaMessage.show(toaster);
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
+});
 
-    var jwt = localStorage.getItem(appconf.jwt_id);
-    if(jwt) {
-        $scope.user = jwtHelper.decodeToken(jwt);
-    }
-}]);
-
+/*
 function compose_modalityid(research_detail) {
     return research_detail.Modality+"."+research_detail.StationName+"."+research_detail.radio_tracer;
 }
+*/
 
-//TODO - I think I should merge exams and subjects... but that will involve a lot of changes..
-//organize flat data received from server into hierarchical data structure
-//  $scope.org = {
-//      "<IIBISID>": {
-//          "<modality_id>": {
-//              _detail: <ressearch_detail>,
-//              exams: { //exams for subjects only..
-//                  "<subject>": {
-//                      <exam_id>: <exam>
-//                  }
-//              }
-//              subjects: {
-//                  "<subject>": {
-//                      serieses: {
-//                          <series_desc>: { //here is the sticky part... I am organizing exams under each series_desc!
-//                              exams: {
-//                                  <exam_id>: [ <series> ]
-//                              }
-//                          }
-//                      },
-//                      missing_serieses: {},
-//                      missing: 0, //counter.. should I move the counting logic from recent to here?
-//                  }
-//              },
-//              templates_times: [template_date1, template_date2, template_date3 ],
-//              templates: {
-//                  <series_desc>: {
-//                      <time>: [ template1, template2 ]
-//                  }
-//              }
-//          }
-//      }        
-//  }
-function organize($scope, data) {
-    $scope.org = {};
-    $scope.qcing = false; //will be reset to true if there is any series with no qc
 
-    //just a quick count used commonly in UI
-    $scope.series_count = data.serieses.length;
-
-    //for easy research detail lookup
-    var researches = {}; 
-    data.researches.forEach(function(research) {
-        researches[research._id] = research;
-    });
-    
-    //for easy exam lookup
-    var exams = {};
-    data.exams.forEach(function(exam) {
-        exams[exam._id] = exam;  
-    });
-    
-    function get_modality(research_id) {
-        var research_detail = researches[research_id];
-        if($scope.org[research_detail.IIBISID] == undefined) $scope.org[research_detail.IIBISID] = {};
-        var modality_id = compose_modalityid(research_detail);
-        var modality = $scope.org[research_detail.IIBISID][modality_id];
-        if(modality === undefined) {
-            modality = {
-                _detail: research_detail,
-                exams: {},
-                //subjects_times: {},
-                subjects: {}, 
-                templates_times: [], //array - because not grouped by subjects like subjects_times
-                templates: {},
-            };
-            $scope.org[research_detail.IIBISID][modality_id] = modality;
-        }
-        return modality;
-    }
-
-    //organize exams
-    data.exams.forEach(function(exam) {
-        var modality = get_modality(exam.research_id);
-        if(modality.exams[exam.subject] === undefined) modality.exams[exam.subject] = {};
-        modality.exams[exam.subject][exam._id] = exam; 
-    });
-
-    //organize series
-    data.serieses.forEach(function(series) {
-        var subject = series.subject;
-        var series_desc = series.series_desc;
-        var exam_id = series.exam_id;
-
-        var modality = get_modality(series.research_id);
-        //if(modality.subjects_times[subject] === undefined) modality.subjects_times[subject] = {};
-        //modality.subjects_times[subject][exam_id] = series.StudyTimestamp;
-        if(modality.subjects[subject] == undefined) modality.subjects[subject] = {
-            //subject could contain a lot of different attributes other than serieses.
-            serieses: {},
-            missing_serieses: {},
-            
-            //counter.. should I move the counting logic from recent to here?
-            missing: 0,
-        };
-                
-        if(modality.subjects[subject].serieses[series_desc] == undefined) modality.subjects[subject].serieses[series_desc] = {exams: {}};
-        if(modality.subjects[subject].serieses[series_desc].exams[exam_id] == undefined) modality.subjects[subject].serieses[series_desc].exams[exam_id] = [];
-        //unshift to put the latest one on the top - since serieses are sorted by studytime/-seriesnumber
-        modality.subjects[subject].serieses[series_desc].exams[exam_id].unshift(series); 
-        if(series.qc == undefined) $scope.qcing = true;
-        if(series.isexcluded) modality.subjects[subject].serieses[series_desc]._isexcluded = series.isexcluded;
-    });
-
-    //organize templates
-    $scope.templates = {}; //for quick id to template mapping
-    data.templates.forEach(function(template) {
-        $scope.templates[template._id] = template;
-
-        var time = template.date;
-        var series_desc = template.series_desc;
-        var modality = get_modality(template.research_id);
-        if(!~modality.templates_times.indexOf(time)) modality.templates_times.push(time);
-        if(modality.templates[series_desc] == undefined) modality.templates[series_desc] = {};
-        if(modality.templates[series_desc][time] == undefined) modality.templates[series_desc][time] = [];
-        modality.templates[series_desc][time].push(template);
-    });
-    
-    //for each exam/template, find the min SeriesNumber so that UI can sort by it
-    for(var research_id in $scope.org) {
-        var modalities = $scope.org[research_id];
-        for(var modality_id in modalities) {
-            var modality = modalities[modality_id];
-
-            for(var subject_id in modality.subjects) {
-                var subject = modality.subjects[subject_id];
-                for(var series_desc in modality.subjects[subject_id].serieses) {
-                    var series_groups = modality.subjects[subject_id].serieses[series_desc];
-                    var min = null;
-                    for(var exam_id in series_groups.exams) {
-                        var serieses = series_groups.exams[exam_id];
-                        serieses.forEach(function(series) {
-                            if(min == null || series.SeriesNumber < min) min = series.SeriesNumber;
-                        });
-                    }
-                    series_groups.min_SeriesNumber = min;
-                }
-            }
-
-            for(var series_desc in modality.templates) {
-                var times = modality.templates[series_desc];
-                var min = null;
-                for(var time in times) {
-                    //TODO this could be a list of serieses in the near future?
-                    times[time].forEach(function(template) {
-                        if(min == null || template.SeriesNumber < min) min = template.SeriesNumber;
-                    });
-                }
-                times.min_SeriesNumber = min;
-            }
-        }
-    }
-
-    //find missing series
-    for(var research_id in $scope.org) {
-        var modalities = $scope.org[research_id];
-        for(var modality_id in modalities) {
-            var modality = modalities[modality_id];
-            for(var subject_id in modality.subjects) {
-                var subject = modality.subjects[subject_id];
-
-                //contruct unique id to be used by anchor
-                subject.uid = research_id+modality_id+subject_id;
-                
-                ///////////////////////////////////////////////////////////////////////
-                //
-                // finding missing
-                //
-                // first.. find latest template timestamp
-                var latest = null;
-                modality.templates_times.forEach(function(time) {   
-                    if(latest == null || latest < time) latest = time;
-                });
-                // then create list of teamplate_series_desc that all exam should have
-                var template_series_descs = {};
-                for(var template_series_desc in modality.templates) {
-                    var templates = modality.templates[template_series_desc][latest];
-                    if(templates) template_series_descs[template_series_desc] = templates;
-                }
-                // finally find *missing* subject for each exam times (for this subject) using the latest set of template (tmeplate_series_descs)
-                for(var exam_id in modality.exams[subject_id]) {
-                    var time = modality.exams[subject_id][exam_id].date;
-                    subject.missing_serieses[time] = {};
-                    for(var template_series_desc in template_series_descs) {
-                        var found = false;
-                        for(var series_desc in subject.serieses) {
-                            if(subject.serieses[series_desc].exams[exam_id] == undefined) continue; //wrong time
-
-                            //truncate number at the end of template name
-                            var tdesc = template_series_desc.replace(/\d+$/, '');
-
-                            if(series_desc.startsWith(tdesc)) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        if(!found) {
-                            subject.missing_serieses[time][template_series_desc] = template_series_descs[template_series_desc];
-                            subject.missing++;
-                            //console.log(subject.uid + " missing "+template_series_desc + " "+subject.missing);
-                        }
-                    }
-                };
-                //
-                ///////////////////////////////////////////////////////////////////////
-            }
-        }
-    }
-
-    //console.dir($scope.org);    
-}
-
+/*
 function setup_affix($scope, affix) {
     //eneble affix
     var top_offset = 100;
@@ -287,12 +166,15 @@ function setup_affix($scope, affix) {
         $scope.inview_id = it.id;
     });
 }
+*/
 
-app.controller('RecentController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', 'serverconf', 'scaMessage', '$anchorScroll', '$document', '$window', '$location',
-function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $anchorScroll, $document, $window, $location) {
+/*
+app.controller('RecentController',
+function($scope, appconf, toaster, $http, jwtHelper, serverconf, $anchorScroll, $document, $window, $location) {
     $scope.appconf = appconf;
-    scaMessage.show(toaster);
+    $scope.$parent.active_menu = "recent";
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
+    $scope.selected = null;
 
     var jwt = localStorage.getItem(appconf.jwt_id);
     if(jwt) { $scope.user = jwtHelper.decodeToken(jwt); }
@@ -300,80 +182,78 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
     $scope.query_limit = appconf.recent_study_limit || 200;
     $scope.view_mode = "tall";
 
-    load();
+    $scope.select = function(modality) {
+        //console.log(modality);
+        $scope.selected = modality;
+        window.scrollTo(0,0); 
+    }
 
-    var affix = document.getElementById("affix");
-    if(affix) $document.on('scroll', function() {
-        setup_affix($scope, affix);
-    });
+    //load all recent series
+    $http.get(appconf.api+'/series/query', {params: {
+        skip: 0, 
+        limit: $scope.query_limit,
+        where: {
+            //show all for recent page
+            //deprecated_by: {$exists: false}, //only look for the latest series inside series_desc
+            //isexcluded: false, 
+        },
+    }})
+    .then(function(res) {
+        //organize($scope, res.data);
+        $scope.org = res.data;
+        $scope.serieses_count = 0;
+        
+        //do some extra processing for each subject
+        for(var research_id in $scope.org) {
+            var modalities = $scope.org[research_id];
+            for(var modality_id in modalities) {
+                var modality = modalities[modality_id];
+                if(!$scope.selected) $scope.selected = modality; //select first modality
+                for(var subject_id in modality.subjects) {
+                    var subject = modality.subjects[subject_id];
 
-    //reload data if user invalidate data (like QC)
-    $scope.$on("exam_invalidated", function(event, msg) {
-        load();
-    });
-
-    function load() {
-        $http.get(appconf.api+'/series/query', {params: {
-            skip: 0, 
-            limit: $scope.query_limit,
-            where: {
-                //show all for recent page
-                //deprecated_by: {$exists: false}, //only look for the latest series inside series_desc
-                //isexcluded: false, 
-            },
-        }})
-        .then(function(res) {
-            organize($scope, res.data);
-            
-            //do some extra processing for each subject
-            for(var research_id in $scope.org) {
-                var modalities = $scope.org[research_id];
-                for(var modality_id in modalities) {
-                    var modality = modalities[modality_id];
-                    for(var subject_id in modality.subjects) {
-                        var subject = modality.subjects[subject_id];
-                        
-                        //reset counter
-                        subject.non_qced = 0;
-                        subject.oks = 0;
-                        subject.errors = 0;
-                        subject.warnings = 0;
-                        subject.notemps = 0;
-                        
-                        //count number of status for each subject
-                        for(var series_desc in subject.serieses) {
-                            var series_group = subject.serieses[series_desc];
-                            for(var exam_id in series_group.exams) {
-                                var serieses = series_group.exams[exam_id];
-                                serieses.forEach(function(series, idx) {
-                                    if(series.deprecated_by) return; //only count non-deprecated series
-                                    //if(idx > 0) return; //only count the first (latest) series
-                                    if(series.qc) {
-                                        //decide the overall status(with error>warning>notemp precedence) for each series and count that.. 
-                                        if(series.qc.errors && series.qc.errors.length > 0) {
-                                            subject.errors++; 
-                                        } else if(series.qc.warnings && series.qc.warnings.length > 0) {
-                                            subject.warnings++; 
-                                        } else if(series.qc.notemps > 0) {
-                                            subject.notemps++; 
-                                        } else subject.oks++;
-                                    } else {
-                                        subject.non_qced++;
-                                    }
-                                });
-                            }
+                    
+                    //reset counter
+                    subject.non_qced = 0;
+                    subject.oks = 0;
+                    subject.errors = 0;
+                    subject.warnings = 0;
+                    subject.notemps = 0;
+                    
+                    //count number of status for each subject
+                    for(var series_desc in subject.serieses) {
+                        var series_group = subject.serieses[series_desc];
+                        for(var exam_id in series_group.exams) {
+                            var serieses = series_group.exams[exam_id];
+                            serieses.forEach(function(series, idx) {
+                                if(series.deprecated_by) return; //only count non-deprecated series
+                                //if(idx > 0) return; //only count the first (latest) series
+                                if(series.qc) {
+                                    //decide the overall status(with error>warning>notemp precedence) for each series and count that.. 
+                                    if(series.qc.errors && series.qc.errors.length > 0) {
+                                        subject.errors++; 
+                                    } else if(series.qc.warnings && series.qc.warnings.length > 0) {
+                                        subject.warnings++; 
+                                    } else if(series.qc.notemps > 0) {
+                                        subject.notemps++; 
+                                    } else subject.oks++;
+                                } else {
+                                    subject.non_qced++;
+                                }
+                            });
+                            $scope.serieses_count += serieses.length;
                         }
                     }
                 }
             }
-            if($scope.qcing) setTimeout(load, 1000*10);
-        }, function(res) {
-            if(res.data && res.data.message) toaster.error(res.data.message);
-            else toaster.error(res.statusText);
-        });
-    }
-
-    //used to apply filtering capability
+        }
+        //if($scope.qcing) setTimeout(load, 1000*10);
+    }, function(res) {
+        if(res.data && res.data.message) toaster.error(res.data.message);
+        else toaster.error(res.statusText);
+    });
+    
+    //used to apply filtering capability (don't move these to $parent or filter change won't be applied)
     $scope.show_iibis = function(iibisid, research) {
         for(var modality_id in research) {
             if($scope.show_modality(iibisid, modality_id, research[modality_id])) return true;
@@ -394,9 +274,11 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, $an
         return false;
     }
 
-}]);
+});
+*/
 
-app.controller('ResearchRedirectController', ['$scope', 'appconf', 'toaster', 'researches', '$location',
+/*
+app.controller('ResearchRedirectController', 
 function($scope, appconf, toaster, researches, $location) {
     researches.getFirst().then(function(first) {
         if(first) {
@@ -406,53 +288,138 @@ function($scope, appconf, toaster, researches, $location) {
             $location.path("/");
         }
     });
-}]);
+});
+*/
 
-app.controller('ResearchController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', 'scaMessage', '$anchorScroll', '$document', '$window', '$routeParams', 'researches', '$route',
-function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaMessage, $anchorScroll, $document, $window, $routeParams, researches, $route) {
+app.controller('ResearchController', 
+function($scope, appconf, toaster, $http, $location, serverconf, $anchorScroll, $document, $window, $routeParams, $route) {
     $scope.appconf = appconf;
-    scaMessage.show(toaster);
+    $scope.$parent.active_menu = "research";
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
-    var jwt = localStorage.getItem(appconf.jwt_id);
-    if(jwt) $scope.user = jwtHelper.decodeToken(jwt);
+
+    $scope.selected = null;
 
     //unlike all other views, all exam can contain a lot of exams.. so it makes sense to display it wide mode
     $scope.view_mode = "wide";
 
+    /*
     var lastRoute = $route.current;
     $scope.$on('$locationChangeSuccess', function(event) {
         $routeParams = $route.current.params;
         if($route.current.$$route.controller === 'ResearchController') {
             $route.current = lastRoute;
-            load_series();
         }
     });
+    */
 
-    researches.getAll().then(function(researches) {
-        $scope.researches = researches;
-        $scope.researches_filtered = $scope.researches;
-        load_series();
-    });
-
-    $scope.$on("exam_invalidated", function(event, msg) {
-        load_series();
-    });
-
-    function load_series() {
-        if(!$routeParams.researchid) return; //could happen if user move away from this route by still waiting for callback
-        $scope.research_id = $routeParams.researchid;
-        $http.get(appconf.api+'/series/byresearchid/'+$scope.research_id)
+    $scope.select = function(research) {
+        $scope.selected = research;
+        
+        //load research detail
+        console.log("loading series with research_id:"+research._id);
+        $scope.modality = null;
+        $scope.loading = true;
+        $http.get(appconf.api+'/series/query', {params: {
+            //limit: $scope.query_limit,
+            where: {
+                research_id: research._id
+                //show all for recent page
+                //deprecated_by: {$exists: false}, //only look for the latest series inside series_desc
+                //isexcluded: false, 
+            },
+        }})
         .then(function(res) {
-            //console.dir(res);
-            $scope.series_count = res.data.serieses.length;
-            organize($scope, res.data);
-            if($scope.qcing) setTimeout(load_series, 1000*10);
+            $scope.loading = false;
+
+            //find modality that user wants to see
+            for(var research_id in res.data) {
+                var modalities = res.data[research_id];
+                for(var modality_id in modalities) {
+                    var modality = modalities[modality_id];
+                    if(modality._detail._id == research._id) $scope.modality = modality;
+                    
+                    //while at it, create a catalog of all serieses
+                    for(var subject in modality.subjects) {
+                        for(var series_desc in modality.subjects[subject].serieses) {
+                            var exams = modality.subjects[subject].serieses[series_desc].exams; 
+                            for(var exam_id in exams) {
+                                exams[exam_id].forEach(function(series) {
+                                    $scope.serieses[series._id] = series;
+                                }); 
+                            }
+                        }
+                    }
+                }
+            }
+            window.scrollTo(0,0); 
+
+            //now bind to this modality
+            $scope.event_bind({
+                ex: "dicom.series",
+                key: modality._detail._id+".#"
+            });
         }, function(res) {
+            $scope.loading = false;
             if(res.data && res.data.message) toaster.error(res.data.message);
             else toaster.error(res.statusText);
         });
     }
 
+    //load all research entries
+    $http.get(appconf.api+'/research')
+    .then(function(res) {
+        //organize records into IIBISID / (Modality+StationName+Radio Tracer)
+        $scope.research_count = res.data.length;
+        $scope.iibisids = {};
+        res.data.forEach(function(rec) {
+            if(!$scope.iibisids[rec.IIBISID]) $scope.iibisids[rec.IIBISID] = [];
+            $scope.iibisids[rec.IIBISID].push(rec);
+
+            //select user specified research or first one if not specified
+            if($routeParams.researchid) {
+                if(rec._id == $routeParams.researchid) $scope.select(rec); 
+            } else {
+                if(!$scope.selected) $scope.select(rec);
+            }
+        });
+    }, function(res) {
+        if(res.data && res.data.message) toaster.error(res.data.message);
+        else toaster.error(res.statusText);
+    })
+
+    /*
+    //load all researches that user has access to
+    researches.getAll().then(function(researches) {
+        $scope.researches = researches;
+        //load_series();
+    });
+    */
+
+    /* TODO I should use websocket feed through event service
+    $scope.$on("exam_invalidated", function(event, msg) {
+        load_series();
+    });
+    */
+
+    
+    //used to apply filter for /research
+    $scope.show_researches = function(iibisid, researches) {
+        for(var i in researches) {
+            var research = researches[i]; 
+            if($scope.show_research(iibisid, research)) return true;
+        }
+        return false;
+    }
+    $scope.show_research = function(iibisid, research) {
+        if(!$scope.research_filter) return true; 
+        if(~iibisid.toLowerCase().indexOf($scope.research_filter)) return true;
+        if(~research.StationName.toLowerCase().indexOf($scope.research_filter)) return true;
+        if(~research.Modality.toLowerCase().indexOf($scope.research_filter)) return true;
+        if(research.radio_tracer && ~research.radio_tracer.toLowerCase().indexOf($scope.research_filter)) return true;
+        return false;
+    }
+
+    /*
     $scope.$watch("research_filter", function(filter) {
         if(!filter) {
             $scope.researches_filtered = $scope.researches;
@@ -483,23 +450,19 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
         }
         $scope.researches_filtered = result;
     });
-
-}]);
+    */
+});
 
 app.component('exams', {
     templateUrl: 't/components/exams.html',
-    controller: function($scope, appconf, $window, $http, toaster, $interval) { 
+    bindings: {
+        modality: '<',
+        mode: '<', //view mode ('wide' / 'tall')
+        subject: '<', //subject to show
+    },
+    controller: function(appconf, $window, $http, toaster, $interval) { 
         var $ctrl = this;
 
-        //list of series descs that has missing series
-        this.missing_series_descs = [];
-        for(var time in this.missing) {
-            for(var desc in this.missing[time]) {
-                if(!~this.missing_series_descs.indexOf(desc)) {
-                    this.missing_series_descs.push(desc);
-                }
-            } 
-        }
         this.openstudy = function(id) {
             $window.open("#/series/"+id, "study:"+id);
         }
@@ -509,13 +472,14 @@ app.component('exams', {
         this.reqc = function(exam_id) {
             $http.post(appconf.api+'/series/reqcbyexamid/'+exam_id)
             .then(function(res) {
-                $scope.$emit("exam_invalidated", {exam_id: exam_id});
+                //$scope.$emit("exam_invalidated", {exam_id: exam_id});
                 toaster.success(res.data.message);
             }, function(res) {
                 if(res.data && res.data.message) toaster.error(res.data.message);
                 else toaster.error(res.statusText);
             });
         }
+        /*
         this.addcomment = function(exam_id) {
             var exam = $ctrl.exams[exam_id];
             $http.post(appconf.api+'/exam/comment/'+exam_id, {comment: exam.newcomment})
@@ -528,21 +492,14 @@ app.component('exams', {
                 else toaster.error(res.statusText);
             });
         }
-    },
-    bindings: {
-        exams: '<', //list of exams to show
-        researchid: '<',
-        subject: '<',
-        mode: '=', //view mode ('wide' / 'tall')
-        serieses: '<', //[series_desc][time] = study
-        missing: '<', //[time][series_desc] = template  
-        templates: '<', //list of templates referenced in series.qc
+        */
     },
 });
 
 app.component('templates', {
     templateUrl: 't/components/templates.html',
     controller: function($window) { 
+        console.log("init templates");
         this.opentemplate = function(id) {
             $window.open("#/template/"+id, "template:"+id);
         }
@@ -563,33 +520,50 @@ app.component('viewmodeToggler', {
     },
 });
 
-app.controller('QCController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', 'scaMessage', '$anchorScroll', '$document', '$window', '$routeParams',
-function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaMessage, $anchorScroll, $document, $window, $routeParams) {
+app.controller('QCController', 
+function($scope, appconf, toaster, $http, $location, serverconf, $anchorScroll, $document, $window, $routeParams) {
     $scope.appconf = appconf;
-    scaMessage.show(toaster);
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
-    var jwt = localStorage.getItem(appconf.jwt_id);
-    if(jwt) $scope.user = jwtHelper.decodeToken(jwt);
 
-    $scope.page = "qc"+$routeParams.level;
-    $scope.query_limit = appconf.qc_study_limit || 200;
+    $scope.selected = null;
+    $scope.$parent.active_menu = "qc"+$routeParams.level;
     $scope.view_mode = "tall";
+    var query_limit = 200; //will be overridden
+
+    $scope.select = function(modality) {
+        //console.log(modality);
+        $scope.selected = modality;
+        window.scrollTo(0,0); 
+
+        $scope.event_bind({
+            ex: "dicom.series",
+            key: modality._detail._id+".#"
+        });
+    }
+
 
     //construct query
-    var where = {
-        deprecated_by: {$exists: false}, //only look for the latest series inside series_desc
-        isexcluded: false, 
-    };
-    switch(parseInt($routeParams.level)) {
-    case 1:
+    var where = {};
+    switch($routeParams.level) {
+    case "recent":
+        //just load all recent..
+        if(appconf.recent_study_limit) query_limit = appconf.recent_study_limit;
+        break;
+    case "1":
         //var where = {qc1_state: {$exists: false}};
         //where.qc1_state = 'fail';
+        if(appconf.qc_study_limit) query_limit = appconf.qc_study_limit;
+        where.deprecated_by = {$exists: false};
+        where.isexcluded = false;
         where.$and  = [
             {qc1_state:{$ne:"autopass"}},
             {qc1_state:{$ne:"accept"}}
         ];
         break;
-    case 2:
+    case "2":
+        if(appconf.qc_study_limit) query_limit = appconf.qc_study_limit;
+        where.deprecated_by = {$exists: false};
+        where.isexcluded = false;
         where.qc2_state = {$exists: false};
         break;
     default:
@@ -597,25 +571,99 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
     }
     load();
 
+    /* TODO I should use websocket feed through event service
     $scope.$on("exam_invalidated", function(event, msg) {
         load();
     });
+    */
+
 
     function load() {
         $http.get(appconf.api+'/series/query', {params: {
             skip: 0, 
-            limit: $scope.query_limit,
+            limit: query_limit,
             where: where,
         }})
         .then(function(res) {
-            organize($scope, res.data);
-            if($scope.qcing) setTimeout(load, 1000*10);
+            $scope.org = res.data;
+            count($scope.org);
+
+            console.log("org");
+            console.dir($scope.org);
+        
+            //select first modality
+            for(var research_id in $scope.org) {
+                var modalities = $scope.org[research_id];
+                for(var modality_id in modalities) {
+                    var modality = modalities[modality_id];
+                    if(!$scope.selected) $scope.select(modality);
+                    
+                    //while at it, create a catalog of all serieses
+                    for(var subject in modality.subjects) {
+                        for(var series_desc in modality.subjects[subject].serieses) {
+                            var exams = modality.subjects[subject].serieses[series_desc].exams; 
+                            for(var exam_id in exams) {
+                                exams[exam_id].forEach(function(series) {
+                                    $scope.serieses[series._id] = series;
+                                }); 
+                            }
+                        }
+                    }
+                    $scope.serieses_count = Object.keys($scope.serieses).length;
+                }
+            }
+            //if($scope.qcing) setTimeout(load, 1000*10);
         }, function(res) {
             if(res.data && res.data.message) toaster.error(res.data.message);
             else toaster.error(res.statusText);
         });
     }
-    
+
+    function count(org) {
+        //do some extra processing for each subject
+        for(var research_id in org) {
+            var modalities = org[research_id];
+            for(var modality_id in modalities) {
+                var modality = modalities[modality_id];
+                for(var subject_id in modality.subjects) {
+                    var subject = modality.subjects[subject_id];
+                    
+                    //reset counter
+                    subject.non_qced = 0;
+                    subject.oks = 0;
+                    subject.errors = 0;
+                    subject.warnings = 0;
+                    subject.notemps = 0;
+                    
+                    //count number of status for each subject
+                    for(var series_desc in subject.serieses) {
+                        var series_group = subject.serieses[series_desc];
+                        for(var exam_id in series_group.exams) {
+                            var serieses = series_group.exams[exam_id];
+                            serieses.forEach(function(series, idx) {
+                                if(series.deprecated_by) return; //only count non-deprecated series
+                                //if(idx > 0) return; //only count the first (latest) series
+                                if(series.qc) {
+                                    //decide the overall status(with error>warning>notemp precedence) for each series and count that.. 
+                                    if(series.qc.errors && series.qc.errors.length > 0) {
+                                        subject.errors++; 
+                                    } else if(series.qc.warnings && series.qc.warnings.length > 0) {
+                                        subject.warnings++; 
+                                    } else if(series.qc.notemps > 0) {
+                                        subject.notemps++; 
+                                    } else subject.oks++;
+                                } else {
+                                    subject.non_qced++;
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+ 
+    //these are duplicate of show_XXX for RecentController, but putting this on PageController somehow disables filtering
     //used to apply filtering capability
     $scope.show_iibis = function(iibisid, research) {
         for(var modality_id in research) {
@@ -636,16 +684,14 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, scaM
         if(~subject_desc.toLowerCase().indexOf($scope.research_filter)) return true;
         return false;
     }
-}]);
+});
 
 //used to be StudyController
-app.controller('SeriesController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', '$routeParams', 'scaMessage', 'users', '$timeout',
-function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $routeParams, scaMessage, users, $timeout) {
+app.controller('SeriesController', 
+function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, users, $timeout) {
     $scope.appconf = appconf;
-    scaMessage.show(toaster);
+    //scaMessage.show(toaster);
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
-    var jwt = localStorage.getItem(appconf.jwt_id);
-    if(jwt) $scope.user = jwtHelper.decodeToken(jwt);
     
     //load userprofiles for comments..
     //TODO loading all user is stupid.. just load the users who are authors of comments
@@ -810,19 +856,13 @@ function($scope, appconf, toaster, $http, jwtHelper,  $location, serverconf, $ro
             else toaster.error(res.statusText);
         });
     }
-}]);
+});
 
-app.controller('TemplateController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', '$location', 'serverconf', '$routeParams', 'scaMessage',
-function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, $routeParams, scaMessage) {
+app.controller('TemplateController',
+function($scope, appconf, toaster, $http, $location, serverconf, $routeParams) {
     $scope.appconf = appconf;
-    scaMessage.show(toaster);
-    //menu.then(function(_menu) { $scope.menu = _menu; });
+    //scaMessage.show(toaster);
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
-
-    var jwt = localStorage.getItem(appconf.jwt_id);
-    if(jwt) {
-        $scope.user = jwtHelper.decodeToken(jwt);
-    }
 
     $http.get(appconf.api+'/template/head/'+$routeParams.templateid)
     .then(function(res) {
@@ -842,16 +882,13 @@ function($scope, appconf, toaster, $http, jwtHelper, $location, serverconf, $rou
             else toaster.error(res.statusText);
         });
     }
-}]);
+});
 
-app.controller('AdminController', ['$scope', 'appconf', 'toaster', '$http', 'jwtHelper', 'serverconf', 'scaMessage', 'groups',
-function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, groups) {
+app.controller('AdminController', 
+function($scope, appconf, toaster, $http, serverconf, groups) {
     $scope.appconf = appconf;
-    scaMessage.show(toaster);
+    $scope.$parent.active_menu = "admin";
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
-
-    var jwt = localStorage.getItem(appconf.jwt_id);
-    if(jwt) { $scope.user = jwtHelper.decodeToken(jwt); }
 
     $http.get(appconf.api+'/research', {params: {admin: true}})
     .then(function(res) {
@@ -930,6 +967,6 @@ function($scope, appconf, toaster, $http, jwtHelper, serverconf, scaMessage, gro
             else toaster.error(res.statusText);
         });
     }
-}]);
+});
 
 

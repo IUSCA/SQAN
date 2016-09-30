@@ -1,0 +1,38 @@
+<div class="sca-sidebar">
+    <h2 class="text-muted"><i class="fa fa-check-square-o" aria-hidden="true"></i></h2>
+    <br>
+    <br>
+
+    <div class="menu" ng-class="{'active':  active_menu == 'research'}" ng-click="openpage('/research');">
+        <h3><i class="fa fa-list-alt" aria-hidden="true"></i></h3> All Exam
+    </div>
+    <div class="menu" ng-class="{'active':  active_menu == 'qcrecent'}" ng-click="openpage('/qc/recent')">
+        <h3><i class="fa fa-newspaper-o" aria-hidden="true"></i></h3> Recent Exams
+    </div>
+    <div class="menu" ng-class="{'active':  active_menu == 'qc1'}" ng-click="openpage('/qc/1')">
+        <h3><i class="fa fa-check-square" aria-hidden="true"></i></h3> QC1 Pending
+    </div>
+    <div class="menu" ng-class="{'active':  active_menu == 'qc2'}" ng-click="openpage('/qc/2')">
+        <h3><i class="fa fa-check-square" aria-hidden="true"></i></h3> QC2 Pending
+    </div>
+
+    <div class="bottom">
+        <div class="menu" ng-class="{'active':  active_menu == 'admin'}" ng-click="openpage('/admin')">
+            <h3><i class="fa fa-users" aria-hidden="true"></i></h3> Management
+        </div>
+        <div class="menu" ng-click="relocate('/profile')">
+            <h3><i class="fa fa-cog" aria-hidden="true"></i></h3> Settings
+        </div>
+        <hr>
+        <div class="menu" ng-class="{'active':  active_menu == 'about'}" ng-click="openpage('/about')">
+            <h3><i class="fa fa-question" aria-hidden="true"></i></h3> About
+        </div>
+    </div>
+
+    <!--
+    <div id="settings-menu" ng-if="show_settings">
+        <a href="/profile" class="menu">Profile</a>
+    </div>
+    -->
+</div>
+

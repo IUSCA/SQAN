@@ -1,9 +1,14 @@
+<!--
 <sca-menutab fluid="true" menu="appconf.menu" active="'about'" user="user"></sca-menutab>
-<div class="container-fluid">
-    <h2>RADY - Quality Control</h2>
-    <p>Welcome to the RADY-QC portal! You can review pre-computed protocol QC status, and also document image QC status.</p>
-    <p>In the future, the portal is expected to allow execution of pipelines on datasets that have be approved for protocol and imaging QC.</p>
-    <p>You need to sign in, and be authorized by an administrator for access to data and functionality within the portal.</p>
+-->
+<div class="container">
+    <h2>RADY Quality Control Portal</h2>
+    <br>
+    <br>
+    <p>Welcome to the RADY-QC portal!</p>
+    <p>You can review the status of automated protocol QC(QC1), and perform image QC(QC2) on this portal. </p>
+    <p>In the future, this portal is expected to allow execution of pipelines on datasets that have be approved for protocol and imaging QC.</p>
+    <p>You will need to sign in, and be authorized by an administrator to access data and perform various actions on this portal.</p>
 
     <h3>Process Flow</h3>
     <p>
@@ -13,5 +18,6 @@
     <p>
         <img style="max-width: 600px" src="images/datastructure.png" class="img-thumbnail">
     </p>
+    <ng-include src="'t/footer.html'"></ng-include>
 </div>
 

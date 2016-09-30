@@ -2,18 +2,18 @@
 'use strict';
 
 //node
-var fs = require('fs');
-//var assert = require('assert');
+const fs = require('fs');
 
 //contrib
-var winston = require('winston');
-var async = require('async');
-var _ = require('underscore'); 
+const winston = require('winston');
+const async = require('async');
+const _ = require('underscore'); 
 
 //mine
-var config = require('../config');
-var logger = new winston.Logger(config.logger.winston);
-var db = require('../api/models');
+const config = require('../config');
+const logger = new winston.Logger(config.logger.winston);
+const db = require('../api/models');
+const events = require('../api/events');
 
 //connect to db and start processing batch indefinitely
 db.init(function(err) {
@@ -144,12 +144,14 @@ function qc_series(series, next) {
                 }
                 series.qc1_state = (qc.errors.length > 0 ? "fail" : "autopass");
                 series.qc = qc;
+                events.series(series);
                 series.save(next);
             });
         } else {
             //none of the images has template id..
             series.qc1_state = "fail"; //TODO - or should I leave it null?
             series.qc = qc;
+            events.series(series);
             series.save(next);
         }
     });

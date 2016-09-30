@@ -30,6 +30,7 @@ conn.on('ready', function () {
         ex = _ex;
         conn.queue(config.incoming.q, {autoDelete: false, durable: true}, function (q) {
             q.bind(config.incoming.ex, '#', function() {
+                logger.info("amqp ready"); 
                 //var lastseq = parseInt(data);
                 //var now = new Date();
                 process(0);
@@ -39,7 +40,7 @@ conn.on('ready', function () {
 });
 
 function process(since) {
-    logger.info("processing "+'/changes?since='+since+'&limit=1000');
+    logger.info("processing "+config.orthanc.url+'/changes?since='+since+'&limit=1000');
     request({ url: config.orthanc.url+'/changes?since='+since+'&limit=300', json: true }, function(error, response, json) {
         if (!error && response.statusCode === 200) {
             if(json.Changes) {

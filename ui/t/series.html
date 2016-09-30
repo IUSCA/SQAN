@@ -1,4 +1,4 @@
-<sca-menutab fluid="true" menu="appconf.menu" active="'research'" user="user"></sca-menutab>
+<!--<sca-menutab fluid="true" menu="appconf.menu" active="'research'" user="user"></sca-menutab>-->
 <div class="container-fluid study" ng-class="{'study-accepted': data.series.qc1_state == 'accepted'}">
     <div class="row-fluid">
         <div class="col-md-9">
@@ -21,7 +21,7 @@
                 </li>
                 <li class="list-group-item">
                     <div class="row">
-                        <div class="col-sm-2"><span class="text-muted">Comments</span></div>
+                        <div class="col-sm-2">Comments</div>
                         <div class="col-sm-10 comments">
                             <div class="comment" ng-repeat="comment in data.series.comments" ng-init="user = users[comment.user_id]">
                                 <div class="row">
@@ -40,7 +40,7 @@
                 </li>
                 <li class="list-group-item">
                     <div class="row">
-                        <div class="col-sm-2"><span class="text-muted">Series Description</span></div>
+                        <div class="col-sm-2">Series Description</div>
                         <div class="col-sm-10">{{data.series.series_desc}} <!--<span class="text-muted">(#{{data.series.SeriesNumber}})</span>--></div>
                     </div>
                 </li>
@@ -54,19 +54,19 @@
                 -->
                 <li class="list-group-item">
                     <div class="row">
-                        <div class="col-sm-2"><span class="text-muted">Study Timestamp</span></div>
+                        <div class="col-sm-2">Study Timestamp</div>
                         <div class="col-sm-10">{{data.series.StudyTimestamp|date:'medium'}}</div>
                     </div>
                 </li>
                 <li class="list-group-item">
                     <div class="row">
-                        <div class="col-sm-2"><span class="text-muted">Subject</span></div>
+                        <div class="col-sm-2">Subject</div>
                         <div class="col-sm-10">{{data.series.subject}}</div>
                     </div>
                 </li>
                 <li class="list-group-item" ng-if="data.qc_template">
                     <div class="row">
-                        <div class="col-sm-2"><span class="text-muted">Template Used</span></div>
+                        <div class="col-sm-2">Template Used</div>
                         <div class="col-sm-10">
                             <div class="studynote" ng-click="opentemplate(data.qc_template._id)">
                                 <b>{{data.qc_template.series_desc}}</b> 
@@ -78,7 +78,7 @@
                 </li>
                 <li class="list-group-item">
                     <div class="row">
-                        <div class="col-sm-2"><span class="text-muted">Template Override</span></div>
+                        <div class="col-sm-2">Template Override</div>
                         <div class="col-sm-10">
                             <ui-select class="template-selecter" 
                                 ng-model="data.template_exam" 
@@ -100,7 +100,7 @@
                         data.series.qc.errors.length > 0 || data.series.qc.warnings.length > 0 || data.series.qc.notemps > 0
                     )">
                     <div class="row">
-                        <div class="col-sm-2"><span class="text-muted">QC Issues</span></div>
+                        <div class="col-sm-2">QC Issues</div>
                         <div class="col-sm-10">
                             <!-- qc errors / warnings -->
                             <!--
@@ -119,8 +119,7 @@
                 <li class="list-group-item">
                     <div class="row">
                         <div class="col-sm-2">
-                            <span class="text-muted">Images</span> 
-                            <span class="label label-default">{{data.series.qc.image_count}}</span>
+                            Images <span class="label label-default">{{data.series.qc.image_count}}</span>
                         </div>
                         <div class="col-sm-10">
                             <div class="panel panel-default">
