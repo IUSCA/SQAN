@@ -2,15 +2,12 @@ angular.module('app.config', [])
 .constant('appconf', {
     title: 'Dicom QC',
 
-    api: '/api/dicom',
+    api: '/api/qc',
 
     kibana_url: '/kibana/',
 
-    recent_study_limit: 600,
-    qc_study_limit: 100,
-
-    //profile_api: '/api/profile',
-    //profile_url: '/profile',
+    recent_study_limit: 500, //default 200
+    //qc_study_limit: 200, //default 200
 
     //shared servive api and ui urls (for menus and stuff)
     shared_api: '/api/shared',
@@ -72,6 +69,7 @@ angular.module('app.config', [])
             label: "About",
             url: "/dicom/#/about",
         },
-    ]    
+    ]
+
 });
 
