@@ -528,6 +528,7 @@ function($scope, appconf, toaster, $http, $location, serverconf, $anchorScroll, 
     $scope.selected = null;
     $scope.$parent.active_menu = "qc"+$routeParams.level;
     $scope.view_mode = "tall";
+    $scope.serieses_count = 0;
     var query_limit = 200; //will be overridden
 
     $scope.select = function(modality) {
@@ -609,9 +610,9 @@ function($scope, appconf, toaster, $http, $location, serverconf, $anchorScroll, 
                             }
                         }
                     }
-                    $scope.serieses_count = Object.keys($scope.serieses).length;
                 }
             }
+            $scope.serieses_count = Object.keys($scope.serieses).length;
             //if($scope.qcing) setTimeout(load, 1000*10);
         }, function(res) {
             if(res.data && res.data.message) toaster.error(res.data.message);
