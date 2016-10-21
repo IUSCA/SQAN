@@ -26,6 +26,7 @@ logger.info("orthanc2incomingQ starting");
 var ex = null;
 var conn = amqp.createConnection(config.incoming.amqp);
 conn.on('ready', function () {
+    logger.info("amqp ready");
     conn.exchange(config.incoming.ex, {confirm: true, autoDelete: false, durable: true, type: 'topic'}, function(_ex) {
         ex = _ex;
         conn.queue(config.incoming.q, {autoDelete: false, durable: true}, function (q) {

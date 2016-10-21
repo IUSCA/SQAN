@@ -157,7 +157,7 @@
                                                     <div class="row"> 
                                                         <div class="col-md-6">
                                                             Image Value
-                                                            <pre>{{v|json}}</pre>
+                                                            <pre ng-if="v !== undefined">{{v|json}}</pre>
                                                         </div>
                                                         <div class="col-md-6" style="opacity: 0.7;">
                                                             Template Value
@@ -170,7 +170,7 @@
                                                     <div class="row"> 
                                                         <div class="col-md-6">
                                                             Image Value
-                                                            <pre>{{v|json}}</pre>
+                                                            <pre ng-if="v !== undefined">{{v|json}}</pre>
                                                         </div>
                                                         <div class="col-md-6" style="opacity: 0.7;">
                                                             Template Value

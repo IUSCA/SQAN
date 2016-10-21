@@ -313,6 +313,7 @@ h3 {
   width: 350px;
   height: 100%;
   border-right: 1px solid #ddd;
+  background-color: white;
 }
 .subbar h2 {
   color: #878787;

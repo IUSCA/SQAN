@@ -6,7 +6,7 @@ angular.module('app.config', [])
 
     kibana_url: '/kibana/',
 
-    recent_study_limit: 500, //default 200
+    recent_study_days: 365*2, //default 60 days
     //qc_study_limit: 200, //default 200
 
     //shared servive api and ui urls (for menus and stuff)
