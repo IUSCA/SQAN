@@ -15,18 +15,19 @@
     "angular-cookies": "^1.5.8",
     "angular-filter": "^0.5.11",
     "angular-gravatar": "^0.4.2",
-    "angular-jwt": "^0.1.3",
+    "angular-jwt": "^0.1.7",
     "angular-loading-bar": "^0.9.0",
+    "angular-location-update": "0.0.2",
     "angular-route": "^1.5.8",
     "angularjs-toaster": "^2.0.0",
     "bootstrap": "^3.3.7",
     "bootswatch": "^3.3.7",
-    "font-awesome": "^4.6.3",
+    "font-awesome": "^4.7.0",
     "jquery": "^3.1.1",
-    "ng-file-upload": "^12.2.11",
+    "ng-file-upload": "^12.2.12",
     "reconnectingwebsocket": "^1.0.0",
     "sca-ng-wf": "^1.0.5",
     "sca-product-raw": "^1.0.3",
-    "ui-select": "^0.19.4"
+    "ui-select": "^0.19.6"
   }
 }

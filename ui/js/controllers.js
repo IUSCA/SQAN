@@ -1,5 +1,3 @@
-'use strict';
-
 app.controller('HeaderController', 
 function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window, $anchorScroll, $location) {
     $scope.title = appconf.title;
@@ -322,73 +320,6 @@ function($scope, appconf, toaster, $http, $location, serverconf, $anchorScroll, 
         $scope.researches_filtered = result;
     });
     */
-});
-
-app.component('exams', {
-    templateUrl: 't/components/exams.html',
-    bindings: {
-        modality: '<',
-        mode: '<', //view mode ('wide' / 'tall')
-        subject: '<', //subject to show
-    },
-    controller: function(appconf, $window, $http, toaster, $interval) { 
-        var $ctrl = this;
-
-        this.openstudy = function(id) {
-            $window.open("#/series/"+id, "study:"+id);
-        }
-        this.opentemplate = function(id) {
-            $window.open("#/template/"+id);
-        }
-        this.reqc = function(exam_id) {
-            $http.post(appconf.api+'/series/reqcbyexamid/'+exam_id)
-            .then(function(res) {
-                //$scope.$emit("exam_invalidated", {exam_id: exam_id});
-                toaster.success(res.data.message);
-            }, function(res) {
-                if(res.data && res.data.message) toaster.error(res.data.message);
-                else toaster.error(res.statusText);
-            });
-        }
-        /*
-        this.addcomment = function(exam_id) {
-            var exam = $ctrl.exams[exam_id];
-            $http.post(appconf.api+'/exam/comment/'+exam_id, {comment: exam.newcomment})
-            .then(function(res) {
-                if(!$ctrl.exams[exam_id].comments) $ctrl.exams[exam_id].comments = [];
-                $ctrl.exams[exam_id].comments.push(res.data);
-                exam.newcomment = "";
-            }, function(res) {
-                if(res.data && res.data.message) toaster.error(res.data.message);
-                else toaster.error(res.statusText);
-            });
-        }
-        */
-    },
-});
-
-app.component('templates', {
-    templateUrl: 't/components/templates.html',
-    controller: function($window) { 
-        console.log("init templates");
-        this.opentemplate = function(id) {
-            $window.open("#/template/"+id, "template:"+id);
-        }
-        this.keys = function(obj){
-            return obj? Object.keys(obj) : [];
-        }
-    },
-    bindings: {
-        templates: '<', //[time] = template
-        times: '<', //list of timestamps to show
-    },
-});
-
-app.component('viewmodeToggler', {
-    templateUrl: 't/components/viewmodetoggler.html',
-    bindings: {
-        mode: '=', //view mode ('wide' / 'tall')
-    },
 });
 
 app.controller('QCController', 

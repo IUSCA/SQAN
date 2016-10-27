@@ -5,13 +5,13 @@ var app = angular.module('app', [
     'ngRoute',
     'ngCookies',
     'ngAnimate',
+    'ngLocationUpdate',
     'toaster',
     'angular-loading-bar',
     'angular-jwt',
     'ui.bootstrap',
     'ui.bootstrap.tabs',
     'ui.select',
-//    'sca-shared',
     'sca-ng-wf',
     'sca-product-raw',
     'ui.gravatar',
@@ -103,110 +103,6 @@ app.factory('serverconf', ['appconf', '$http', 'jwtHelper', function(appconf, $h
     });
 }]);
 
-app.directive('studynote', function() {
-    return {
-        scope: { study: '=', },
-        templateUrl: 't/studynote.html',
-        link: function($scope, elem, attrs) {
-            update();
-            $scope.$watch('study', update, true);
-            function update() {
-                if(!$scope.study) return; //study not loaded yet?
-                $scope.studystate = "na";
-                if($scope.study.qc) {
-                    if($scope.study.qc.errors.length > 0) $scope.studystate = "error";
-                    else if($scope.study.qc.notemps > 0) $scope.studystate = "notemp";
-                    else if($scope.study.qc.warnings.length > 0) $scope.studystate = "warning";
-                    else $scope.studystate = "ok";
-                }
-                $scope.qc1 = null;
-                if($scope.study.qc1_state) {
-                    switch($scope.study.qc1_state) {
-                    case "accept":
-                        $scope.qc1 = "warning"; break;
-                    case "autopass":
-                        $scope.qc1 = "success"; break;
-                    case "reject":
-                        $scope.qc1 = "danger"; break;
-                    }
-                }
-                $scope.qc2 = null;
-                if($scope.study.qc2_state)  {
-                    switch($scope.study.qc2_state) {
-                    case "accept": 
-                        //$scope.label = "QC2";
-                        $scope.qc2 = "success"; break;
-                    case "condaccept": 
-                        //$scope.label = "QC2";
-                        $scope.qc2 = "warning"; break;
-                    case "reject":
-                        //$scope.label = "QC2";
-                        $scope.qc2 = "danger"; break;
-                    }
-                }
-            }
-        }
-    } 
-});
-
-app.directive('qcerror', function() {
-    return {
-        scope: { error: '=', },
-        templateUrl: 't/qcerror.html',
-    } 
-});
-
-app.directive('qcwarning', function() {
-    return {
-        scope: { warning: '=', },
-        templateUrl: 't/qcwarning.html',
-    } 
-});
-
-/*
-app.factory('menu', ['appconf', '$http', 'jwtHelper', '$sce', 'toaster',
-function(appconf, $http, jwtHelper, $sce, toaster) {
-    var jwt = localStorage.getItem(appconf.jwt_id);
-    var menu = {
-        header: {
-            //label: appconf.title,
-            //icon: $sce.trustAsHtml("<img src=\""+appconf.icon_url+"\">"),
-            //url: "#/",
-        },
-        //top: scaMenu,
-        user: null, //to-be-loaded
-        //_profile: null, //to-be-loaded
-    };
-
-    var jwt = localStorage.getItem(appconf.jwt_id);
-    if(jwt) {
-        var expdate = jwtHelper.getTokenExpirationDate(jwt);
-        var ttl = expdate - Date.now();
-        if(ttl < 0) {
-            toaster.error("Your login session has expired. Please re-sign in");
-            localStorage.removeItem(appconf.jwt_id);
-        } else {
-            //menu.user = jwtHelper.decodeToken(jwt);
-            if(ttl < 3600*1000) {
-                //jwt expring in less than an hour! refresh!
-                console.log("jwt expiring in an hour.. refreshing first");
-                $http({
-                    url: appconf.auth_api+'/refresh',
-                    //skipAuthorization: true,  //prevent infinite recursion
-                    //headers: {'Authorization': 'Bearer '+jwt},
-                    method: 'POST'
-                }).then(function(response) {
-                    var jwt = response.data.jwt;
-                    localStorage.setItem(appconf.jwt_id, jwt);
-                    //menu.user = jwtHelper.decodeToken(jwt);
-                });
-            }
-        }
-    }
-    return menu;
-}]);
-*/
-
 app.factory('users', ['appconf', '$http', 'jwtHelper', 'toaster', function(appconf, $http, jwtHelper, toaster) {
     return $http.get(appconf.auth_api+'/profiles')
     .then(function(res) {
@@ -230,37 +126,6 @@ app.factory('groups', ['appconf', '$http', 'jwtHelper', 'toaster', function(appc
         else toaster.error(res.statusText);
     });
 }]);
-
-/*
-app.factory('researches', ['appconf', '$http', 'toaster', function(appconf, $http, toaster) {
-
-    var promise = $http.get(appconf.api+'/research');
-    return {
-        getAll: function() { 
-            return promise.then(function(res) {
-                //organize records into IIBISID / (Modality+StationName+Radio Tracer)
-                var researches = {};
-                res.data.forEach(function(rec) {
-                    if(!researches[rec.IIBISID]) researches[rec.IIBISID] = [];
-                    researches[rec.IIBISID].push(rec);
-                });
-                return researches;
-            }, function(res) {
-                if(res.data && res.data.message) toaster.error(res.data.message);
-                else toaster.error(res.statusText);
-            });
-        },
-        getFirst: function() {
-            return promise.then(function(res) {
-                return res.data[0];
-            }, function(res) {
-                if(res.data && res.data.message) toaster.error(res.data.message);
-                else toaster.error(res.statusText);
-            });
-        }
-    }
-}]);
-*/
 
 //http://plnkr.co/edit/juqoNOt1z1Gb349XabQ2?p=preview
 /**
@@ -305,27 +170,6 @@ app.filter('toArray', function() { return function(obj) {
     });
 }});
 */
-
-//http://stackoverflow.com/questions/14852802/detect-unsaved-changes-and-alert-user-using-angularjs
-app.directive('confirmOnExit', function() {
-    return {
-        //scope: { form: '=', },
-        link: function($scope, elem, attrs) {
-            window.onbeforeunload = function(){
-                if ($scope.form.$dirty) {
-                    return "You have unsaved changes.";
-                }
-            }
-            $scope.$on('$locationChangeStart', function(event, next, current) {
-                if ($scope.form.$dirty) {
-                    if(!confirm("Do you want to abondon unsaved changes?")) {
-                        event.preventDefault();
-                    }
-                }
-            });
-        }
-    };
-});
 
 app.filter('uniqueSeriesDesc', function() {
     return function(items, props) {
