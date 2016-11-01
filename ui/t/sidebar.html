@@ -17,7 +17,7 @@
     </div>
 
     <div class="bottom">
-        <div class="menu" ng-class="{'active':  active_menu == 'admin'}" ng-click="openpage('/admin')">
+        <div class="menu" ng-if="user.isadmin" ng-class="{'active':  active_menu == 'admin'}" ng-click="openpage('/admin')">
             <h3><i class="fa fa-users" aria-hidden="true"></i></h3> Management
         </div>
         <div class="menu" ng-click="relocate('/profile')">

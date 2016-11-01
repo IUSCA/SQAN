@@ -1,11 +1,30 @@
 app.controller('HeaderController', 
-function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window, $location) {
+function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window, $location, $timeout) {
     $scope.title = appconf.title;
     $scope.active_menu = "unknown";
     serverconf.then(function(_c) { $scope.serverconf = _c; });
 
+
+    function update_jwt(jwt) {
+        if(!jwt) return;
+        $scope.user = jwtHelper.decodeToken(jwt); 
+        $scope.user.isadmin = ($scope.user.scopes.dicom.indexOf('admin') !== -1)
+    }
+
+    //pull old jwt..
     var jwt = localStorage.getItem(appconf.jwt_id);
-    if(jwt) { $scope.user = jwtHelper.decodeToken(jwt); }
+    update_jwt(jwt);
+    //but refresh it immediately
+    refresh_jwt();
+    function refresh_jwt() {
+        console.log("refreshing token");
+        $http.post(appconf.auth_api+'/refresh').then(function(res) {
+            var jwt = res.data.jwt;
+            localStorage.setItem(appconf.jwt_id, jwt);
+            update_jwt(jwt);
+            //$timeout(refresh_jwt, 60*1000);
+        }, $scope.toast_error);
+    }
 
     //TODO - it doesn't make sense that these exist here..
     $scope.openstudy = function(id) {
@@ -149,6 +168,10 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
         }
     }
 
+    $scope.toast_error = function(res) {
+        if(res.data && res.data.message) toaster.error(res.data.message);
+        else toaster.error(res.statusText);
+    }
 });
 
 app.controller('AboutController', 
@@ -234,8 +257,7 @@ function($scope, appconf, toaster, $http, $location, serverconf, $document, $win
             }
         }, function(res) {
             $scope.loading = false;
-            if(res.data && res.data.message) toaster.error(res.data.message);
-            else toaster.error(res.statusText);
+            $scope.toast_error(res);
         });
     }
 
@@ -259,10 +281,7 @@ function($scope, appconf, toaster, $http, $location, serverconf, $document, $win
                 if(!$scope.selected) $scope.select(rec);
             }
         });
-    }, function(res) {
-        if(res.data && res.data.message) toaster.error(res.data.message);
-        else toaster.error(res.statusText);
-    })
+    }, $scope.toast_error);
 
     /*
     //load all researches that user has access to
@@ -437,10 +456,7 @@ function($scope, appconf, toaster, $http, $location, serverconf, $document, $win
             }
             $scope.serieses_count = Object.keys($scope.serieses).length;
             $scope.loading_series = false;
-        }, function(res) {
-            if(res.data && res.data.message) toaster.error(res.data.message);
-            else toaster.error(res.statusText);
-        });
+        }, $scope.toast_error);
     }
  
     //these are duplicate of show_XXX for RecentController, but putting this on PageController somehow disables filtering
@@ -503,10 +519,7 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
             if(!res.data.series.qc) {
                 $timeout(load_series, 1000);
             }
-        }, function(res) {
-            if(res.data && res.data.message) toaster.error(res.data.message);
-            else toaster.error(res.statusText);
-        });
+        }, $scope.toast_error);
     }
     
     //TODO this needs some overhawling
@@ -581,10 +594,7 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
                     $scope.show_all_headers = false;
                 }
             }
-        }, function(res) {
-            if(res.data && res.data.message) toaster.error(res.data.message);
-            else toaster.error(res.statusText);
-        });
+        }, $scope.toast_error);
     }
     $scope.showallheaders = function() {
         $scope.show_all_headers = true;
@@ -598,10 +608,7 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
         .then(function(res) {
             $scope.data.series.comments.push(res.data);
             $scope.newcomment = "";
-        }, function(res) {
-            if(res.data && res.data.message) toaster.error(res.data.message);
-            else toaster.error(res.statusText);
-        });
+        }, $scope.toast_error);
     }
     $scope.changestate = function(level, state, $event) {
         var comment = null;
@@ -622,10 +629,7 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
             if(level == 2) $scope.data.series.qc2_state = state;
             $scope.data.series.events.push(res.data.event);
             toaster.success(res.data.message);
-        }, function(res) {
-            if(res.data && res.data.message) toaster.error(res.data.message);
-            else toaster.error(res.statusText);
-        });
+        }, $scope.toast_error);
     }
     $scope.select_template = function(item) {
         $scope.image_detail = null;
@@ -634,10 +638,7 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
         .then(function(res) {
             load_series();
             toaster.success(res.data.message);
-        }, function(res) {
-            if(res.data && res.data.message) toaster.error(res.data.message);
-            else toaster.error(res.statusText);
-        });
+        }, $scope.toast_error);
     }
     $scope.reqc = function() {
         $scope.image_detail = null;
@@ -646,10 +647,7 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
         .then(function(res) {
             load_series();
             toaster.success(res.data.message);
-        }, function(res) {
-            if(res.data && res.data.message) toaster.error(res.data.message);
-            else toaster.error(res.statusText);
-        });
+        }, $scope.toast_error);
     }
 });
 
@@ -662,20 +660,14 @@ function($scope, appconf, toaster, $http, $location, serverconf, $routeParams) {
     $http.get(appconf.api+'/template/head/'+$routeParams.templateid)
     .then(function(res) {
         $scope.data = res.data;
-    }, function(res) {
-        if(res.data && res.data.message) toaster.error(res.data.message);
-        else toaster.error(res.statusText);
-    });
+    }, $scope.toast_error);
 
     $scope.load_template = function(template) {
         $scope.active_template = template;
         $http.get(appconf.api+'/template/inst/'+template._id)
         .then(function(res) {
             $scope.image_detail = res.data;
-        }, function(res) {
-            if(res.data && res.data.message) toaster.error(res.data.message);
-            else toaster.error(res.statusText);
-        });
+        }, $scope.toast_error);
     }
 });
 
@@ -692,11 +684,7 @@ function($scope, appconf, toaster, $http, serverconf, groups) {
         res.data.forEach(function(research) {
             if(!~$scope.iibisids.indexOf(research.IIBISID)) $scope.iibisids.push(research.IIBISID);
         });
-    }, function(res) {
-        if(res.data && res.data.message) toaster.error(res.data.message);
-        else toaster.error(res.statusText);
-    })
-    .then(function(res) {
+
         groups.then(function(_groups) {
             $scope.groups = _groups;
             //conver to easy to lookup object
@@ -705,8 +693,7 @@ function($scope, appconf, toaster, $http, serverconf, groups) {
                 $scope.groups_o[group.id] = group;
             });
         });
-    })
-    .then(function(res) {
+
         $http.get(appconf.api+'/acl/iibisid')
         .then(function(res) {
             $scope.acl = res.data;
@@ -733,11 +720,8 @@ function($scope, appconf, toaster, $http, serverconf, groups) {
                     });
                 }
             });
-        }, function(res) {
-            if(res.data && res.data.message) toaster.error(res.data.message);
-            else toaster.error(res.statusText);
-        });
-    });
+        }, $scope.toast_error);
+    }, $scope.toast_error);
 
     $scope.update_acl = function() {
         //convert object to id
@@ -757,10 +741,7 @@ function($scope, appconf, toaster, $http, serverconf, groups) {
         .then(function(res) {
             $scope.form.$setPristine();
             toaster.success("Updated Successfully!");
-        }, function(res) {
-            if(res.data && res.data.message) toaster.error(res.data.message);
-            else toaster.error(res.statusText);
-        });
+        }, $scope.toast_error);
     }
 });
 
