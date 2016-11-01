@@ -13,25 +13,6 @@
             </tr>
         </thead>
         <tbody>
-            <!--
-            <tr>
-                <td class="text-muted">Comments</td>
-                <td class="comments" ng-repeat="(exam_id, exam) in $ctrl.exams">
-                    <div class="comment" ng-repeat="comment in exam.comments">
-                        <div class="row">
-                            <div class="col-md-1"><img gravatar-src="comment._profile.email" gravatar-size="30"></img></div>
-                            <div class="col-md-11">
-                                <time class="pull-right text-muted">{{comment.date|date:'short'}}</time>
-                                <b class="text-muted">{{comment._profile.fullname}}</b>
-                                <p>{{comment.comment}}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <textarea class="form-control" placeholder="New Comment" ng-model="exam.newcomment" ng-class="{'comment-active':comment_active}" ng-focus="comment_active = true"></textarea>
-                    <button type="button" class="btn btn-xs" ng-click="$ctrl.addcomment(exam_id)" ng-if="exam.newcomment"><i class="fa fa-check"></i></button>
-                </td>
-            </tr>
-            -->
             <tr ng-repeat="series_group in $ctrl.modality.subjects[$ctrl.subject].serieses | toArray:true | orderBy:'min_SeriesNumber'" ng-init="series_desc = series_group.$key">
                 <td>{{series_desc}}</td>
                 <td ng-repeat="(exam_id, exam) in $ctrl.modality.exams[$ctrl.subject]" style="padding: 0px;">

@@ -22,14 +22,14 @@
     <hr style="margin: 0px;">
 
     <div class="subbar-list" style="margin-top: 59px;">
-        <div ng-repeat="(iibisid, researches) in iibisids" ng-show="show_researches(iibisid, researches)">
+        <div ng-repeat="(iibisid, researches) in iibisids" ng-show="show_researches(researches)">
             <div class="subbar-list-header">{{iibisid}}</div>
 
             <div class="subbar-list-item" 
                 ng-repeat="research in researches" 
                 ng-class="{'active': research == selected}"
                 ng-click="select(research)"
-                ng-show="show_research(iibisid, research)">
+                ng-show="show_research(research)">
 
                 <!--modality detail-->
                 <div class="subbar-list-item-header">
@@ -53,7 +53,7 @@
 <div class="subbar-content">
     <h3 ng-show="!selected" class="help-block">Please select a research to display</h3>
     <h3 ng-if="selected && loading"><i class="fa fa-circle-o-notch fa-spin"></i> Loading ...</h3>
-    <h3 ng-if="selected && !loading && !modality"><p class="alert alert-warning"></i> No subjects under this research</p></h3>
+    <h3 ng-if="selected && !loading && !modality"><p class="alert bg-warning"></i> No subjects under this research</p></h3>
     <div ng-show="selected && modality">
         <div class="fixed-top" style="margin-left: 430px">
             <h2 class="pull-right" style="position: relative; left: -15px;">

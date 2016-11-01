@@ -389,16 +389,23 @@ h3 {
   display: inline-block;
   border: none;
   margin: 0px;
-  margin-right: 5px;
   padding: 0px;
   height: 18px;
   width: 150px;
+}
+.subject-label {
+  line-height: 100%;
+  display: inline-block;
+  margin-right: 5px;
 }
 .subject-label small {
   line-height: 175%;
   margin-left: 3px;
   color: white;
   font-size: 70%;
+}
+.subject-label:hover {
+  box-shadow: 0px 0px 5px #666;
 }
 
 /*-----------------------------------------------

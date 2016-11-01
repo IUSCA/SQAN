@@ -110,6 +110,7 @@ function reorg(data) {
                 templates_times: [], //array - because not grouped by subjects like subjects_times
                 templates: {},
             };
+            modality._detail.modality_id = modality_id; //to help UI
             org[research_detail.IIBISID][modality_id] = modality;
         }
         return modality;

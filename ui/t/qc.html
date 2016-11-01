@@ -45,9 +45,8 @@
                     <small ng-show="modality._detail.Modality == 'PT'"> / {{modality._detail.radio_tracer}} </small>
                 </div>
                 <div ng-repeat="(subject_desc, subject) in modality.subjects" 
-                    ng-click-dis="scrollto(subject.uid)"
-                    class="subject-label"
-                    style="line-height: 100%; display: inline-block;"
+                    ng-click="select(modality, subject.uid);$event.stopPropagation()"
+                    class="subject-label" 
                     ng-show="show_subject(iibisid, modality_id, subject_desc)"> 
                     <!--subject_desc is not unique across all iibisid / modality..-->
                     <small style="position: absolute;">{{subject_desc}}</small>
@@ -73,7 +72,8 @@
     </p>
 </div>
 <div class="subbar-content">
-   <div ng-show="selected">
+    <h3 ng-show="!selected" class="help-block">Please select a research to display</h3>
+    <div ng-show="selected">
         <div class="fixed-top" style="margin-left: 430px;">
             <h2 class="pull-right" style="position: relative; left: -15px;">
                 <viewmode-toggler mode="view_mode"></viewmode-toggler> 
@@ -88,7 +88,7 @@
             </h3>
         </div>
         <div style="margin-top: 65px;">
-            <div ng-repeat="(subject, subject_detail) in selected.subjects" class="subject">
+            <div ng-repeat="(subject, subject_detail) in selected.subjects" class="subject" id="{{subject_detail.uid}}">
                 <h4>
                     <b>{{subject}}</b>
                     <!-- <span class="text-muted">Subject</span> -->

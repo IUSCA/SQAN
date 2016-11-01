@@ -128,20 +128,6 @@ app.component('exams', {
                 else toaster.error(res.statusText);
             });
         }
-        /*
-        this.addcomment = function(exam_id) {
-            var exam = $ctrl.exams[exam_id];
-            $http.post(appconf.api+'/exam/comment/'+exam_id, {comment: exam.newcomment})
-            .then(function(res) {
-                if(!$ctrl.exams[exam_id].comments) $ctrl.exams[exam_id].comments = [];
-                $ctrl.exams[exam_id].comments.push(res.data);
-                exam.newcomment = "";
-            }, function(res) {
-                if(res.data && res.data.message) toaster.error(res.data.message);
-                else toaster.error(res.statusText);
-            });
-        }
-        */
     },
 });
 

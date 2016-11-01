@@ -1,5 +1,5 @@
 app.controller('HeaderController', 
-function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window, $anchorScroll, $location) {
+function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window, $location) {
     $scope.title = appconf.title;
     $scope.active_menu = "unknown";
     serverconf.then(function(_c) { $scope.serverconf = _c; });
@@ -17,7 +17,7 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
     
     //open another page inside the app.
     $scope.openpage = function(page) {
-        console.log("path to "+page);
+        //console.log("path to "+page);
         $location.path(page);
     }
 
@@ -55,8 +55,8 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
             $scope.$apply(function() {
                 series.qc = null; //could be missing
                 for(var key in data.msg) series[key] = data.msg[key]; //update the rest
-                console.log("update for "+key);
-                console.log(JSON.stringify(series));
+                //console.log("update for "+key);
+                //console.log(JSON.stringify(series));
                 $scope.count($scope.org);  //TODO recount the entire thing is too expensive? maybe use $timeout?
             });
             
@@ -160,7 +160,7 @@ function($scope, appconf, toaster, $http, serverconf) {
 });
 
 app.controller('ResearchController', 
-function($scope, appconf, toaster, $http, $location, serverconf, $anchorScroll, $document, $window, $routeParams, $route) {
+function($scope, appconf, toaster, $http, $location, serverconf, $document, $window, $routeParams, $route) {
     $scope.appconf = appconf;
     $scope.$parent.active_menu = "research";
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
@@ -182,6 +182,7 @@ function($scope, appconf, toaster, $http, $location, serverconf, $anchorScroll, 
 
     $scope.select = function(research) {
         $scope.selected = research;
+        $location.update_path("/research/"+research._id); 
         
         //load research detail
         console.log("loading series with research_id:"+research._id);
@@ -222,11 +223,15 @@ function($scope, appconf, toaster, $http, $location, serverconf, $anchorScroll, 
             }
             window.scrollTo(0,0); 
 
-            //now bind to this modality
-            $scope.event_bind({
-                ex: "dicom.series",
-                key: modality._detail._id+".#"
-            });
+            if(modality) {
+                //now bind to this modality
+                $scope.event_bind({
+                    ex: "dicom.series",
+                    key: modality._detail._id+".#"
+                });
+            } else {
+                //probably empty modality
+            }
         }, function(res) {
             $scope.loading = false;
             if(res.data && res.data.message) toaster.error(res.data.message);
@@ -270,26 +275,30 @@ function($scope, appconf, toaster, $http, $location, serverconf, $anchorScroll, 
     });
     */
 
-    
     //used to apply filter for /research
-    $scope.show_researches = function(iibisid, researches) {
+    $scope.show_researches = function(researches) {
         for(var i in researches) {
             var research = researches[i]; 
-            if($scope.show_research(iibisid, research)) return true;
+            return $scope.show_research(research);
         }
         return false;
     }
-    $scope.show_research = function(iibisid, research) {
+    $scope.show_research = function(research) {
         if(!$scope.research_filter) return true; 
-        if(~iibisid.toLowerCase().indexOf($scope.research_filter)) return true;
+        if(~research.IIBISID.toLowerCase().indexOf($scope.research_filter)) return true;
         if(~research.StationName.toLowerCase().indexOf($scope.research_filter)) return true;
         if(~research.Modality.toLowerCase().indexOf($scope.research_filter)) return true;
         if(research.radio_tracer && ~research.radio_tracer.toLowerCase().indexOf($scope.research_filter)) return true;
         return false;
     }
 
-    /*
     $scope.$watch("research_filter", function(filter) {
+        //hide selection if the selected research gets filtered out
+        if(!$scope.selected) return;
+        if(!$scope.show_research($scope.selected)) {
+            $scope.selected = null;
+        }
+        /*
         if(!filter) {
             $scope.researches_filtered = $scope.researches;
             return;
@@ -318,12 +327,12 @@ function($scope, appconf, toaster, $http, $location, serverconf, $anchorScroll, 
             }
         }
         $scope.researches_filtered = result;
+        */
     });
-    */
 });
 
 app.controller('QCController', 
-function($scope, appconf, toaster, $http, $location, serverconf, $anchorScroll, $document, $window, $routeParams) {
+function($scope, appconf, toaster, $http, $location, serverconf, $document, $window, $routeParams, $timeout) {
     $scope.appconf = appconf;
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
 
@@ -332,15 +341,32 @@ function($scope, appconf, toaster, $http, $location, serverconf, $anchorScroll, 
     $scope.view_mode = "tall";
     $scope.serieses_count = 0;
 
-    $scope.select = function(modality) {
-        //console.log(modality);
+    $scope.select = function(modality, subjectuid) {
         $scope.selected = modality;
         window.scrollTo(0,0); 
+
+        var url = "/qc/"+$routeParams.level+"/"+modality._detail._id;
+        if(subjectuid) url += "/"+subjectuid;
+        $location.update_path(url);
+
+        handle_scroll();
+        function handle_scroll() {
+            if(!subjectuid) return;
+            console.log("handling scroll "+subjectuid);
+            var pos = $('#'+subjectuid.replace(/\./g, '\\.')).position();
+            if(pos) {
+                window.scrollTo(0,pos.top-85); 
+            } else {
+                //item not loaded yet.. wait
+                $timeout(handle_scroll, 1000, false);
+            }
+        }
 
         $scope.event_bind({
             ex: "dicom.series",
             key: modality._detail._id+".#"
         });
+
     }
 
 
@@ -370,13 +396,6 @@ function($scope, appconf, toaster, $http, $location, serverconf, $anchorScroll, 
     }
     load();
 
-    /* TODO I should use websocket feed through event service
-    $scope.$on("exam_invalidated", function(event, msg) {
-        load();
-    });
-    */
-
-
     function load() {
         $http.get(appconf.api+'/series/query', {params: {
             skip: 0, 
@@ -387,17 +406,24 @@ function($scope, appconf, toaster, $http, $location, serverconf, $anchorScroll, 
             $scope.org = res.data;
             $scope.count($scope.org);
 
-            console.log("org");
-            console.dir($scope.org);
-        
-            //select first modality
-            for(var research_id in $scope.org) {
-                var modalities = $scope.org[research_id];
+            //console.log("org");
+            //console.dir($scope.org);
+
+            //select first modality or selected by user
+            for(var iibisid in $scope.org) {
+                var modalities = $scope.org[iibisid];
                 for(var modality_id in modalities) {
                     var modality = modalities[modality_id];
-                    if(!$scope.selected) $scope.select(modality);
-                    
-                    //while at it, create a catalog of all serieses
+                    if($routeParams.researchid) {
+                        if(modality._detail._id == $routeParams.researchid) {
+                            //selecte first modality under research user specified
+                            if(!$scope.selected) $scope.select(modality, $routeParams.subjectid);
+                        }
+                    } else {
+                        if(!$scope.selected) $scope.select(modality);
+                    }
+
+                    //while at it, create serieses catalog
                     for(var subject in modality.subjects) {
                         for(var series_desc in modality.subjects[subject].serieses) {
                             var exams = modality.subjects[subject].serieses[series_desc].exams; 
@@ -411,13 +437,11 @@ function($scope, appconf, toaster, $http, $location, serverconf, $anchorScroll, 
                 }
             }
             $scope.serieses_count = Object.keys($scope.serieses).length;
-            //if($scope.qcing) setTimeout(load, 1000*10);
         }, function(res) {
             if(res.data && res.data.message) toaster.error(res.data.message);
             else toaster.error(res.statusText);
         });
     }
-
  
     //these are duplicate of show_XXX for RecentController, but putting this on PageController somehow disables filtering
     //used to apply filtering capability
@@ -440,6 +464,15 @@ function($scope, appconf, toaster, $http, $location, serverconf, $anchorScroll, 
         if(~subject_desc.toLowerCase().indexOf($scope.research_filter)) return true;
         return false;
     }
+
+    $scope.$watch("research_filter", function(filter) {
+        //hide selection if the selected research gets filtered out
+        if(!$scope.selected) return;
+        var _detail = $scope.selected._detail;
+        if(!$scope.show_modality(_detail.IIBISID, _detail.modality_id, $scope.selected)) {
+            $scope.selected = null;
+        }
+    });
 });
 
 //used to be StudyController
