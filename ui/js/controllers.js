@@ -240,8 +240,11 @@ function($scope, appconf, toaster, $http, $location, serverconf, $document, $win
     }
 
     //load all research entries
+    $scope.loading_research = true;
     $http.get(appconf.api+'/research')
     .then(function(res) {
+        $scope.loading_research = false;
+        
         //organize records into IIBISID / (Modality+StationName+Radio Tracer)
         $scope.research_count = res.data.length;
         $scope.iibisids = {};
@@ -366,9 +369,7 @@ function($scope, appconf, toaster, $http, $location, serverconf, $document, $win
             ex: "dicom.series",
             key: modality._detail._id+".#"
         });
-
     }
-
 
     //construct query
     var where = {};
@@ -394,9 +395,10 @@ function($scope, appconf, toaster, $http, $location, serverconf, $document, $win
     default:
         toaster.error("Unknown QC level "+$routeParams.level);
     }
-    load();
 
+    load();
     function load() {
+        $scope.loading_series = true;
         $http.get(appconf.api+'/series/query', {params: {
             skip: 0, 
             limit: 5000000,
@@ -405,9 +407,6 @@ function($scope, appconf, toaster, $http, $location, serverconf, $document, $win
         .then(function(res) {
             $scope.org = res.data;
             $scope.count($scope.org);
-
-            //console.log("org");
-            //console.dir($scope.org);
 
             //select first modality or selected by user
             for(var iibisid in $scope.org) {
@@ -437,6 +436,7 @@ function($scope, appconf, toaster, $http, $location, serverconf, $document, $win
                 }
             }
             $scope.serieses_count = Object.keys($scope.serieses).length;
+            $scope.loading_series = false;
         }, function(res) {
             if(res.data && res.data.message) toaster.error(res.data.message);
             else toaster.error(res.statusText);

@@ -27,7 +27,8 @@
             <li><a href>Separated link</a></li>
             </ul>
         </div>
-        <span class="text-muted">{{serieses_count}} series</span>
+        <span ng-if="loading_series" class="text-muted"><i class="fa fa-circle-o-notch fa-spin"></i> Loading ...</span>
+        <span ng-if="!loading_series" class="text-muted">{{serieses_count}} series</span>
     </div>
     <hr style="margin: 0px;">
     <div class="subbar-list" style="margin-top: 59px; bottom: 34px">
