@@ -63,6 +63,7 @@ function qc(image, next) {
         image.qc = qc;
         //console.log(JSON.stringify(image.qc, null, 4));
         image.save(function(err) {
+            console.log(err);
             if(err) return next(err);
             //invalidate series qc
             db.Series.update({_id: image.series_id}, {$unset: {qc: 1}}, {multi: true}, next);
@@ -141,6 +142,7 @@ function find_template_headers(image, cb) {
                 template_id: template._id, 
                 //"headers.AcquisitionNumber": image.headers.AcquisitionNumber, //AcquisitionNumber never matters when selecting a template
                 "headers.InstanceNumber": image.headers.InstanceNumber,
+                "headers.EchoNumbers": image.headers.EchoNumbers !== undefined ? image.headers.EchoNumbers : null,
             }, cb);
         });
     });

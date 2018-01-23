@@ -161,14 +161,17 @@ app.directive('confirmOnExit', function() {
     return {
         //scope: { form: '=', },
         link: function($scope, elem, attrs) {
+
             window.onbeforeunload = function(){
-                if ($scope.form.$dirty) {
+
+                if ($scope[attrs["name"]].$dirty) {
                     return "You have unsaved changes.";
                 }
             }
             $scope.$on('$locationChangeStart', function(event, next, current) {
-                if ($scope.form.$dirty) {
-                    if(!confirm("Do you want to abondon unsaved changes?")) {
+                console.log(elem);
+                if ($scope[attrs["name"]].$dirty) {
+                    if(!confirm("Do you want to abandon unsaved changes?")) {
                         event.preventDefault();
                     }
                 }

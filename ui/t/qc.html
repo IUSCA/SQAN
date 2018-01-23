@@ -13,7 +13,7 @@
             <p class="help-block">Showing exams pending image QC</p>
         </div>
 
-        <input type="text" class="form-control" ng-model="research_filter" placeholder="Filter"></input>
+        <input type="text" class="form-control" ng-model="research_filter" placeholder="Filter">
         <br>
         <div class="btn-group pull-right" style="left: 0px;top: -5px;">
             <button class="btn btn-xs btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -28,12 +28,12 @@
             </ul>
         </div>
         <span ng-if="loading_series" class="text-muted"><i class="fa fa-circle-o-notch fa-spin"></i> Loading ...</span>
-        <span ng-if="!loading_series" class="text-muted">{{serieses_count}} series</span>
+        <span ng-if="!loading_series" class="text-muted">{{scan_count}} {{ecount}} scans in {{org | objLength}} IIBISIDs</span>
     </div>
     <hr style="margin: 0px;">
     <div class="subbar-list" style="margin-top: 59px; bottom: 34px">
         <div ng-repeat="(iibisid, research) in org" ng-show="show_iibis(iibisid, research)">
-            <div class="subbar-list-header">{{iibisid}}</div>
+            <div class="subbar-list-header">{{$index + 1}}. {{iibisid}} - {{research | objLength}}</div>
             <div class="subbar-list-item" 
                 ng-repeat="(modality_id, modality) in research" 
                 ng-class="{'active': modality == selected}"
@@ -48,7 +48,8 @@
                 <div ng-repeat="(subject_desc, subject) in modality.subjects" 
                     ng-click="select(modality, subject.uid);$event.stopPropagation()"
                     class="subject-label" 
-                    ng-show="show_subject(iibisid, modality_id, subject_desc)"> 
+                    ng-show="show_subject(iibisid, modality_id, subject_desc)"
+                    ng-init="moreOne('ecount')" >
                     <!--subject_desc is not unique across all iibisid / modality..-->
                     <small style="position: absolute;">{{subject_desc}}</small>
                     <div class="progress exam-state pull-right"

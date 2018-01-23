@@ -12,7 +12,9 @@ const logger = new winston.Logger(config.logger.winston);
 //var sequelize = new Sequelize('database', 'username', 'password', config.sequelize);
 exports.init = function(cb) {
     if(config.debug) mongoose.set('debug', true);
-    mongoose.connect(config.mongodb, {}, function(err) {
+    mongoose.connect(config.mongodb, {
+        useMongoClient: true
+    }, function(err) {
         if(err) return cb(err);
         console.log("connected to mongo");
         cb();
@@ -105,6 +107,7 @@ var templateHeaderSchema = mongoose.Schema({
     template_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     AcquisitionNumber: {type: Number, index: true},
     InstanceNumber: {type: Number, index: true},
+    EchoNumbers: {type: Number, index: true},
     //
     ///////////////////////////////////////////////////////////////////////////
 
@@ -114,6 +117,27 @@ var templateHeaderSchema = mongoose.Schema({
 });
 templateHeaderSchema.index({template_id: 1, AcquisitionNumber: 1, InstanceNumber: 1});
 exports.TemplateHeader = mongoose.model('TemplateHeader', templateHeaderSchema);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+var handlerSchema = mongoose.Schema({
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // keys
+    //
+    handler_id: {type: mongoose.Schema.Types.ObjectId, index: true},
+    scope: {type: String, index: true},
+    modality: {type: String, index: true},
+    series: {type: String, index: true},
+    //
+    ///////////////////////////////////////////////////////////////////////////
+
+    handlers: mongoose.Schema.Types.Mixed,
+    notes: mongoose.Schema.Types.Mixed,
+    lastEdit: {type: Date, default: Date.now}
+});
+handlerSchema.index({handler_id: 1, scope: 1, modality: 1, series: 1});
+exports.Handler = mongoose.model('Handler', handlerSchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -219,6 +243,7 @@ var imageSchema = mongoose.Schema({
     //SOPInstanceUID: String,
     acquisition_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     InstanceNumber: {type: Number, index: true},
+    EchoNumbers: {type: Number, index: true},
     //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 

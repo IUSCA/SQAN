@@ -186,10 +186,12 @@ function incoming(h, msg_h, info, ack) {
                 if(err) return next(err);
 
                 //store template header
+
                 db.TemplateHeader.findOneAndUpdate({
                     template_id: _template._id,
                     AcquisitionNumber: h.AcquisitionNumber,
                     InstanceNumber: h.InstanceNumber,
+                    EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null //use echonumber as part of uniqueID if it exists
                 }, {
                     headers: h,
                     IIBISID: h.qc_iibisid,
@@ -262,6 +264,7 @@ function incoming(h, msg_h, info, ack) {
             db.Image.findOneAndUpdate({
                 acquisition_id: aq._id,
                 InstanceNumber: h.InstanceNumber,
+                EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null //use echonumber as part of uniqueID if it exists
             }, {
                 research_id: research._id,
                 exam_id: exam._id,

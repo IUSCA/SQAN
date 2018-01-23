@@ -134,18 +134,43 @@ function reorg(data) {
         //initialize datastructure to fill
         if(modality.subjects[subject] == undefined) modality.subjects[subject] = {
             serieses: {},
+            all_serieses: {},
             missing_serieses: {},
             missing: 0,
         };
-        if(modality.subjects[subject].serieses[series_desc] == undefined) 
+        if(modality.subjects[subject].serieses[series_desc] == undefined)
             modality.subjects[subject].serieses[series_desc] = {exams: {}};
-        if(modality.subjects[subject].serieses[series_desc].exams[exam_id] == undefined) 
+        if(modality.subjects[subject].serieses[series_desc].exams[exam_id] == undefined)
             modality.subjects[subject].serieses[series_desc].exams[exam_id] = [];
-        
+
         //unshift to put the latest one on the top - since serieses are sorted by studytime/-seriesnumber
-        modality.subjects[subject].serieses[series_desc].exams[exam_id].unshift(series); 
+        modality.subjects[subject].serieses[series_desc].exams[exam_id].unshift(series);
         //if(series.qc == undefined) $scope.qcing = true;
         if(series.isexcluded) modality.subjects[subject].serieses[series_desc]._isexcluded = series.isexcluded;
+    });
+
+    data.all_serieses.forEach(function(series) {
+        var subject = series.subject;
+        var series_desc = series.series_desc;
+        var exam_id = series.exam_id;
+
+        var modality = get_modality(series.research_id);
+        if(modality.subjects[subject] == undefined) modality.subjects[subject] = {
+            serieses: {},
+            all_serieses: {},
+            missing_serieses: {},
+            missing: 0,
+        };
+
+        if(modality.subjects[subject].all_serieses[series_desc] == undefined)
+            modality.subjects[subject].all_serieses[series_desc] = {exams: {}};
+        if(modality.subjects[subject].all_serieses[series_desc].exams[exam_id] == undefined)
+            modality.subjects[subject].all_serieses[series_desc].exams[exam_id] = [];
+
+        //unshift to put the latest one on the top - since serieses are sorted by studytime/-seriesnumber
+        modality.subjects[subject].all_serieses[series_desc].exams[exam_id].unshift(series);
+        //if(series.qc == undefined) $scope.qcing = true;
+        if(series.isexcluded) modality.subjects[subject].all_serieses[series_desc]._isexcluded = series.isexcluded;
     });
 
     //organize templates
@@ -231,8 +256,8 @@ function reorg(data) {
                     subject.missing_serieses[time] = {};
                     for(var template_series_desc in template_series_descs) {
                         var found = false;
-                        for(var series_desc in subject.serieses) {
-                            if(subject.serieses[series_desc].exams[exam_id] == undefined) continue; //wrong time
+                        for(var series_desc in subject.all_serieses) {
+                            if(subject.all_serieses[series_desc].exams[exam_id] == undefined) continue; //wrong time
 
                             //truncate number at the end of template name
                             var tdesc = template_series_desc.replace(/\d+$/, '');
@@ -265,6 +290,7 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
 
         //load various raw records
         var serieses = null;
+        var all_serieses = null;
         var researches = null;
         var exams = null;
         var templates = null;
@@ -281,10 +307,10 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
                     }
                 }
                 query.sort({StudyTimestamp: -1, SeriesNumber: 1});
-                query.limit(req.query.limit || 50); 
-                if(req.query.skip) {
-                    query.skip(req.query.skip);
-                }
+                //query.limit(parseInt(req.query.limit || 50)); 
+                //if(req.query.skip) {
+                //    query.skip(parseInt(req.query.skip));
+                //}
                 query.exec(function(err, _serieses) {
                     serieses = _serieses;
                     next(err);
@@ -302,6 +328,21 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
                 .in(rids)
                 .exec(function(err, _researches) {
                     researches = _researches;
+                    next(err);
+                });
+            },
+
+
+            function(next) {
+                var rids = [];
+                serieses.forEach(function(series) {
+                    rids.push(series.research_id);
+                });
+                db.Series.find().lean() //get all series referenced by rids (to fix 'missing' problem in view')
+                .where('research_id')
+                .in(rids)
+                .exec(function(err, _series) {
+                    all_serieses = _series;
                     next(err);
                 });
             },
@@ -339,7 +380,8 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
         ], function(err) {
             if(err) return next(err);
             res.json(reorg({
-                serieses: serieses, 
+                serieses: serieses,
+                all_serieses: all_serieses,
                 researches: researches,
                 templates: templates,
                 exams: exams,

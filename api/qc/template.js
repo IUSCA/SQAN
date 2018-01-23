@@ -12,12 +12,16 @@ var common_customs = {
 
     "ContentDate": skip,
     "ContentTime": skip,
+    "CSAImageHeaderVersion": skip,
+    "CSASeriesHeaderVersion": skip,
 
     "DateOfLastCalibration": skip,
     "DeidentificationMethod": skip,
     "DeidentificationMethodCodeSequence": skip,
 
     "ImagePositionPatient": skip,
+
+    "MedComHistoryInformation": skip,
 
     "SeriesDate": skip,
     "SeriesInstanceUID": skip,
@@ -239,3 +243,5 @@ exports.match = function(image, template, qc) {
     }; 
 }
 
+exports.cc = common_customs;
+exports.c = customs;

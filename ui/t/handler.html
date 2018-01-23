@@ -1,0 +1,198 @@
+<style>
+    .compact {
+        height: auto !important;
+        padding: 1px 1px 1px 1px !important;
+    }
+
+    td.values {
+        width: 80px !important;
+    }
+
+    td.types {
+        width: 150px !important;
+    }
+
+    td.keyname {
+        width: 240px !important;
+    }
+
+    td.flags {
+        min-width: 30px !important;
+    }
+
+    .subbar {
+        width: 250px;
+    }
+
+    .subbar-content {
+        margin-left: 250px;
+    }
+
+    .subbar-list {
+        width: 250px;
+        margin-top: 10px !important;
+    }
+
+    .search-box {
+        min-width: 100px !important;
+        max-width: 200px !important;
+    }
+
+
+</style>
+
+<!--<sca-menutab fluid="true" menu="appconf.menu" active="'research'" user="user"></sca-menutab>-->
+<div class="subbar">
+    <div style="padding: 0px 15px; margin-bottom: 10px">
+        <h2>All Handlers</h2>
+        <p class="help-block">Showing all handler sets</p>
+        <a class="btn btn-info btn-xs"><i class="fa fa-fw fa-plus"></i> New Handler</a>
+        <br>
+    </div>
+    <hr style="margin: 0px;">
+
+    <div class="subbar-list" style="margin-top: 59px;">
+        <div ng-repeat="h in handlers">
+            <div class="subbar-list-item" ng-click="select(h)">{{h.scope}} <span ng-if="h.modality !== null">| {{h.modality}}</span></div>
+        </div><!--ng-repeat-->
+    </div>
+</div>
+
+<div class="subbar-content">
+    <h3 ng-show="!selected" class="help-block">Please select a handler set to display</h3>
+    <h3 ng-if="selected && loading"><i class="fa fa-circle-o-notch fa-spin"></i> Loading ...</h3>
+
+    <table ng-show="selected" class="table table-condensed" ng-form style="margin-bottom: 0px;" name="myform" confirm-on-exit>
+        <thead>
+        <tr>
+            <th></th>
+            <th colspan="5"><h3>{{selected.scope}} <span ng-if="selected.modality !== null">| {{selected.modality}}</span> <small>Last Updated: {{selected.lastEdit | date:'medium'}}</small></h3>
+                <a class="btn btn-info btn-xs" ng-click="newrow(selected.handlers); myform.$setDirty();"><i class="fa fa-fw fa-plus"></i> New Entry</a>
+                <a class="btn btn-info btn-xs" ng-disabled="myform.$pristine" ng-click="save(selected); myform.$setPristine();"><i class="fa fa-fw fa-save"></i> Save Changes</a>
+                <a class="btn btn-info btn-xs" ng-disabled="myform.$pristine" ng-click="revert(selected); myform.$setPristine();"><i class="fa fa-fw fa-undo"></i> Revert Changes</a>
+            </th>
+            <th>
+                <div class="form-group">
+                    <div class="input-group">
+                        <span class="input-group-addon compact"><i class="fa fa-fw fa-search"></i></span>
+                        <input type="text" class="form-control input-sm compact search-box" placeholder="filter" ng-model="keyFilter.key">
+                    </div>
+                </div>
+
+            </th>
+        </tr>
+        <tr>
+            <th></th>
+            <th><span class="text-muted">Key</span></th>
+            <th><span class="text-muted">Handler Type</span></th>
+            <th><span class="text-muted">Value</span></th>
+            <th><span class="text-muted">Response</span></th>
+            <th><span class="text-muted">Actions</span></th>
+            <th><span class="text-muted">Notes</span></th>
+            <!--<th><span class="text-muted">Last Edited</span></th>-->
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="h in selected.handlers | filter: keyFilter" ng-mouseenter="hoverrow=true" ng-mouseleave="hoverrow=false">
+            <td class="flags">
+                <span class="text-warning" ng-if="changed">
+                    <i class="fa fa-fw fa-exclamation-triangle" data-tooltip="Changed since last save"></i>
+                </span>
+                <span class="text-success" ng-if="h.key == 'NewKey'">
+                    <i class="fa fa-fw fa-plus-circle" data-tooltip="New Key since last save"></i>
+                </span>
+            </td>
+            <td class="keyname">
+                <em gg-editable-text="h.key" gg-edit-mode="isEditing"></em>
+            </td>
+            <td class="types">
+                <select class="form-control input-sm compact" ng-model="h.type" ng-options="hi for hi in handler_ids" ng-change="updateHandlerType(h); changed=true"></select>
+            </td>
+            <td class="values">
+                <input class="form-control input-sm compact" ng-model="h.value" ng-show="h.value !== undefined" ng-change="changed=true"></td>
+            <td class="values">
+                <select class="form-control input-sm compact" ng-model="h.response" ng-show="h.response !== undefined" ng-change="changed=true">
+                    <option ng-repeat="option in response_types" class="text-{{option.style}}" ng-value="option.name">{{option.name}}</option>
+                </select>
+            </td>
+            <td class="values">
+                    <span ng-show="hoverrow">
+                        <i class="fa fa-copy text-info" ng-click="cloneme(selected.handlers, h, $index); myform.$setDirty();"></i>
+                        <i class="fa fa-fw fa-sticky-note text-info" ng-click="addnote(h); myform.$setDirty(); changed=true"></i>
+                        <i class="fa fa-fw fa-trash text-danger" ng-click="removeme(selected.handlers, $index); myform.$setDirty();"></i>
+                    </span>
+            </td>
+            <td><li ng-repeat="n in h.notes">
+                <em gg-editable-text="n.text" gg-edit-mode="isEditing" ng-if="n.user == user.profile.username"></em>
+                <em ng-if="n.user != user.profile.username">{{n.text}}</em>
+                <b>{{n.user}}</b> | <small>{{n.timestamp | date:'medium'}}</small></li></td>
+            <!--<td>{{h.lastEdit | date}}</td>-->
+        </tr>
+        </tbody>
+    </table>
+</div><!--container-->
+
+
+
+<!--<div class="container">-->
+    <!--<div class="row" ng-repeat="scope in handlers">-->
+        <!--<table class="table table-condensed" ng-form style="margin-bottom: 0px;" name="myform">-->
+            <!--<thead>-->
+            <!--<tr>-->
+                <!--<th colspan="5"><h3>{{scope.scope}} <span ng-if="scope.modality !== null">| {{scope.modality}}</span> <small>Last Updated: {{scope.lastEdit | date:'medium'}}</small></h3>-->
+                <!--<a class="btn btn-info btn-xs" ng-click="newrow(scope.handlers); myform.$setDirty();"><i class="fa fa-fw fa-plus"></i> New Entry</a>-->
+                <!--<a class="btn btn-info btn-xs" ng-disabled="myform.$pristine" ng-click="save(scope); myform.$setPristine();"><i class="fa fa-fw fa-save"></i> Save Changes</a>-->
+                <!--<a class="btn btn-info btn-xs" ng-disabled="myform.$pristine" ng-click="revert(scope); myform.$setPristine();"><i class="fa fa-fw fa-undo"></i> Revert Changes</a>-->
+                <!--</th>-->
+                <!--<th>-->
+                    <!--<div class="form-group">-->
+                        <!--<div class="input-group">-->
+                            <!--<span class="input-group-addon compact"><i class="fa fa-fw fa-search"></i></span>-->
+                            <!--<input type="text" class="form-control input-sm compact" style="max-width=200px;" placeholder="filter" ng-model="keyFilter.key">-->
+                        <!--</div>-->
+                    <!--</div>-->
+
+                <!--</th>-->
+            <!--</tr>-->
+            <!--<tr><th><span class="text-muted">Key</span></th>-->
+                <!--<th><span class="text-muted">Handler Type</span></th>-->
+                <!--<th><span class="text-muted">Value</span></th>-->
+                <!--<th><span class="text-muted">Response</span></th>-->
+                <!--<th><span class="text-muted">Actions</span></th>-->
+                <!--<th><span class="text-muted">Notes</span></th>-->
+                <!--&lt;!&ndash;<th><span class="text-muted">Last Edited</span></th>&ndash;&gt;-->
+            <!--</tr>-->
+            <!--</thead>-->
+            <!--<tbody>-->
+            <!--<tr ng-repeat="h in scope.handlers | filter: keyFilter" ng-mouseenter="hoverrow=true" ng-mouseleave="hoverrow=false">-->
+                <!--<td class="keyname">-->
+                    <!--<em gg-editable-text="h.key" gg-edit-mode="isEditing"></em>-->
+                <!--</td>-->
+                <!--<td class="types">-->
+                    <!--<select class="form-control input-sm compact" ng-model="h.type" ng-options="hi for hi in handler_ids" ng-change="updateHandlerType(h);"></select>-->
+                <!--</td>-->
+                <!--<td class="values">-->
+                    <!--<input class="form-control input-sm compact" ng-model="h.value" ng-show="h.value !== undefined"></td>-->
+                <!--<td class="values">-->
+                    <!--<select class="form-control input-sm compact" ng-model="h.response" ng-show="h.response !== undefined">-->
+                        <!--<option ng-repeat="option in response_types" class="text-{{option.style}}" ng-value="option.name">{{option.name}}</option>-->
+                    <!--</select>-->
+                <!--</td>-->
+                <!--<td class="values">-->
+                    <!--<span ng-show="hoverrow">-->
+                        <!--<i class="fa fa-copy text-info" ng-click="cloneme(scope.handlers, h, $index); myform.$setDirty();"></i>-->
+                        <!--<i class="fa fa-fw fa-sticky-note text-info" ng-click="addnote(h); myform.$setDirty();"></i>-->
+                        <!--<i class="fa fa-fw fa-trash text-danger" ng-click="removeme(scope.handlers, $index); myform.$setDirty();"></i>-->
+                    <!--</span>-->
+                <!--</td>-->
+                <!--<td><li ng-repeat="n in h.notes">-->
+                    <!--<em gg-editable-text="n.text" gg-edit-mode="isEditing" ng-if="n.user == user.profile.username"></em>-->
+                    <!--<em ng-if="n.user != user.profile.username">{{n.text}}</em>-->
+                    <!--<b>{{n.user}}</b> | <small>{{n.timestamp | date:'medium'}}</small></li></td>-->
+                <!--&lt;!&ndash;<td>{{h.lastEdit | date}}</td>&ndash;&gt;-->
+            <!--</tr>-->
+            <!--</tbody>-->
+        <!--</table>-->
+        <!--<hr>-->
+    <!--</div>-->
+<!--</div>-->

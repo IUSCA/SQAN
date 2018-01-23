@@ -16,6 +16,7 @@ var app = angular.module('app', [
     'sca-product-raw',
     'ui.gravatar',
     'angular.filter',
+    'gg.editableText'
 ]);
 
 //show loading bar at the page top
@@ -62,6 +63,16 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         controller: 'QCController',
         requiresLogin: true
     })
+    .when('/dump', {
+        templateUrl: 't/dump.html',
+        controller: 'DumpController',
+        requiresLogin: true,
+    })
+    // .when('/handler', {
+    //     templateUrl: 't/handler.html',
+    //     controller: 'HandlerController',
+    //     requiresLogin: true,
+    // })
     .when('/admin', {
         templateUrl: 't/admin.html',
         controller: 'AdminController',
@@ -104,10 +115,10 @@ app.factory('serverconf', ['appconf', '$http', 'jwtHelper', function(appconf, $h
 }]);
 
 app.factory('users', ['appconf', '$http', 'jwtHelper', 'toaster', function(appconf, $http, jwtHelper, toaster) {
-    return $http.get(appconf.auth_api+'/profiles')
+    return $http.get(appconf.auth_api+'/profile')
     .then(function(res) {
         var users = {};
-        res.data.forEach(function(user) {
+        res.data.profiles.forEach(function(user) {
             users[user.id] = user;
         });
         return users;
@@ -200,3 +211,13 @@ app.filter('findTemplate', function() {
     };
 });
 
+app.filter('objLength', function() {
+    return function(object) {
+        var count = 0;
+
+        for(var i in object){
+            count++;
+        }
+        return count;
+    }
+});

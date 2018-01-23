@@ -2,7 +2,7 @@
 <div class="subbar">
     <div style="padding: 0px 15px; margin-bottom: 10px">
         <h2>All Exams</h2>
-        <p class="help-block">Showing all researches you have access to</p>
+        <p class="help-block">Showing all exams you have access to</p>
         <input type="text" class="form-control" ng-model="research_filter" placeholder="Filter"></input>
         <br>
         <div class="btn-group pull-right" style="left: 0px;top: -5px;">
@@ -18,7 +18,7 @@
             </ul>
         </div>
         <span ng-if="loading_research" class="text-muted"><i class="fa fa-circle-o-notch fa-spin"></i> Loading ...</span>
-        <span ng-if="!loading_research" class="text-muted">{{research_count}} researches</span>
+        <span ng-if="!loading_research" class="text-muted">{{research_count}} Modalities in {{iibisids | objLength}} IIBISIDs </span>
     </div>
     <hr style="margin: 0px;">
 

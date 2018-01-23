@@ -13,6 +13,7 @@
     "angular-animate": "^1.5.8",
     "angular-bootstrap": "^0.12.2",
     "angular-cookies": "^1.5.8",
+    "angular-editable-text": "^2.0.12",
     "angular-filter": "^0.5.11",
     "angular-gravatar": "^0.4.2",
     "angular-jwt": "^0.1.7",
