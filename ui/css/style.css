@@ -210,6 +210,9 @@ h3 {
 .study.study-accepted .qc-issues {
   opacity: 0.3;
 }
+.deprecated {
+  opacity: 0.3;
+}
 .template .qcalert,
 .study .qcalert {
   display: inline-block;

@@ -131,6 +131,36 @@ function incoming(h, msg_h, info, ack) {
             next();
         },
 
+        //set the default ACL for new IIBISids
+        function(next) {
+            db.Acl.findOne({key: config.acl.key}, function(err, acl) {
+                if (err) {
+                    console.log('error looking up  ACLs');
+                    return next();
+                }
+                if (!acl) {
+                    console.log('unable to locate ACLs');
+                    return next();
+                } else if (typeof acl.value[h.qc_iibisid] === 'undefined') {
+                    acl.value[h.qc_iibisid] = {};
+                    for( let a of config.acl.actions) {
+                        acl.value[h.qc_iibisid][a] = { users : [], groups : [config.acl.default_group]}
+                    }
+                } else {
+                    for( let a of config.acl.actions) {
+                        if(acl.value[h.qc_iibisid][a].groups.indexOf(config.acl.default_group) < 0){
+                            acl.value[h.qc_iibisid][a].groups.push(config.acl.default_group);
+                            //console.log(acl.value[h.qc_iibisid][a].groups);
+                        }
+                    }
+                }
+                db.Acl.findOneAndUpdate({key: config.acl.key}, {value: acl.value}, {upsert: true}, function (err, doc) {
+                    if (err) console.log('error updating ACLs');
+                    return next();
+                });
+            });
+        },
+
         //make sure we know about this research
         function(next) {
             //TODO radio_tracer should always be set for CT.. right? Should I validate?
@@ -227,6 +257,7 @@ function incoming(h, msg_h, info, ack) {
         },
 
         //deprecate older series under the same series_desc
+        //sometimes these show up out of order!
         function(next) {
             if(h.qc_istemplate) return next();  //if it's template then skip
             db.Series.update({
@@ -237,6 +268,34 @@ function incoming(h, msg_h, info, ack) {
             }, {
                 deprecated_by: series._id,
             }, {multi: true}, next);
+        },
+
+        //looks for newer updated series and deprecate this one with that series
+        function(next) {
+            db.Series.findOne({
+                research_id: research._id,
+                exam_id: exam._id,
+                series_desc: h.qc_series_desc,
+                SeriesNumber: { $gt: h.SeriesNumber },
+                deprecated_by: null
+            }, function(err, _series){
+                if(err) {
+                    console.log('error deprecating older series');
+                    console.log(err);
+                    return next();
+                }
+                if(!_series){
+                    return next();
+                }
+                db.Series.findOneAndUpdate({
+                    research_id: research._id,
+                    exam_id: exam._id,
+                    series_desc: h.qc_series_desc,
+                    SeriesNumber: h.SeriesNumber,
+                }, {
+                    deprecated_by: _series._id,
+                }, next);
+            })
         },
 
         //make sure we know about this acquisition

@@ -20,6 +20,16 @@ var common_customs = {
     "DeidentificationMethodCodeSequence": skip,
 
     "ImagePositionPatient": skip,
+    "ImageOrientationPatient" : function(k, v, tv, qc) {
+        if(!check_set(k, v, tv, qc)) return;
+        if(v.constructor === Array && tv.constructor === Array && v.length == tv.length) {
+            v.forEach(function(av, idx) {
+                check_absolute_diff(k, av, tv[idx], qc, 'errors', 0.3);
+            });
+        } else {
+            qc.errors.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "template and value do not match in type or length"});
+        }
+    },
 
     "MedComHistoryInformation": skip,
 
@@ -108,14 +118,20 @@ var customs = {
         "StudyID": skip,
         "StudyTime": skip,
         "TextValue": skip,
+        "TriggerTime" : function(k, v, tv, qc) {
+            if(!check_set(k, v, tv, qc)) return;
+            var fv = convertToFloat(v, k);
+            var ftv = convertToFloat(tv, k);
+            check_absolute_diff(k, fv, ftv, qc, 'errors', 3);
+        },
         "ValueType": skip,
         "VerificationFlag": skip,
         "WindowCenter": skip,
         "WindowCenterWidthExplanation": skip,
         "WindowWidth": skip,
-    
+
         "SAR": skip,
-        
+
     }, common_customs),
 
     "CT": _.extend({
@@ -146,24 +162,26 @@ var customs = {
             if(tv[0]) {
                 delete tv[0].RadiopharmaceuticalStartTime;
                 delete tv[0].RadionuclideTotalDose;
+                delete tv[0].RadiopharmaceuticalStartDateTime
             }
             if(v[0]) {
-                delete v[0].RadiopharmaceuticalStartTime; 
-                delete v[0].RadionuclideTotalDose; 
+                delete v[0].RadiopharmaceuticalStartTime;
+                delete v[0].RadionuclideTotalDose;
+                delete v[0].RadiopharmaceuticalStartDateTime
             }
             check_equal(k, v, tv, qc);
         },
 
         /*
-        "RelatedSeriesSequence": function(k, v, tv, qc) {
-            if(!check_set(k, v, tv, qc)) return;
-            delete tv[0].StudyInstanceUID;
-            delete v[0].StudyInstanceUID;
-            delete tv[0].SeriesInstanceUID;
-            delete v[0].SeriesInstanceUID;
-            check_equal(k, v, tv, qc);
-        },
-        */
+         "RelatedSeriesSequence": function(k, v, tv, qc) {
+         if(!check_set(k, v, tv, qc)) return;
+         delete tv[0].StudyInstanceUID;
+         delete v[0].StudyInstanceUID;
+         delete tv[0].SeriesInstanceUID;
+         delete v[0].SeriesInstanceUID;
+         check_equal(k, v, tv, qc);
+         },
+         */
 
         "RescaleIntercept": skip,
         "RescaleSlope": skip,
@@ -199,14 +217,14 @@ function check_equal(k, v, tv, qc) {
             var diff = Math.abs((v - tv)/((v+tv)/2));
             if(diff > 0.1) {
                 qc.errors.push({type: 'template_mismatch', k: k, v: v, tv: tv, perdiff: diff, msg: "value is more than 10% off template value."});
-            /*
-            } else if(diff > 0.01) {
-                qc.warnings.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "value is more than 0.01% off template value"});
-            } else if (diff != 0) {
-                qc.warnings.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "value is not exact match template value:"+diff});
-            }
-            */
-            //} else if(diff != 0) {
+                /*
+                 } else if(diff > 0.01) {
+                 qc.warnings.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "value is more than 0.01% off template value"});
+                 } else if (diff != 0) {
+                 qc.warnings.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "value is not exact match template value:"+diff});
+                 }
+                 */
+                //} else if(diff != 0) {
             } else if(diff > 0.0001) {
                 qc.warnings.push({type: 'template_mismatch', k: k, v: v, tv: tv, perdiff: diff, msg: "value does not match within 0.0001% of the template value."});
             }
@@ -219,6 +237,47 @@ function check_equal(k, v, tv, qc) {
     }
 }
 
+function convertToFloat(v, f) {
+    //if(v === undefined) return undefined;
+    if(v === null) return null;
+    if(v.constructor === Array) {
+        var newa = [];
+        v.forEach(function(av) {
+            newa.push(convertToFloat(av, f+".array"));
+        });
+        return newa;
+    } else {
+        var i = parseFloat(v);
+        if(i != v) console.error(f+":\""+v+"\" converted to " +i);
+        /*
+         var check = i.toString();
+         if(v != check) {
+         throw new Error(f+":"+v + " converted to " +i);
+         }
+         */
+        return i;
+    }
+}
+
+function check_absolute_diff(k, v, tv, qc, r, th) {
+    var l = 'template_mismatch'
+
+    var diff = Math.abs(v - tv);
+    if(diff > th) {
+        qc[r].push({type: l, k: k, v: v, tv: tv, msg: "value differs from template by more than "+th});
+    };
+};
+
+function check_percent_diff(k, v, tv, qc, r, th) {
+    var l = 'template_mismatch'
+
+    var diff = Math.abs((v - tv)/((v+tv)/2));
+    if(diff > th) {
+        qc[r].push({type: l, k: k, v: v, tv: tv, msg: "value differs from template by more than "+th*100+"%"});
+    };
+};
+
+
 //compare image headers against template headers
 exports.match = function(image, template, qc) {
 
@@ -228,7 +287,7 @@ exports.match = function(image, template, qc) {
         qc.errors.push({type: 'unknown_modality', msg: "unknown modality "+image.headers.Modality+" found for image:"+image.id});
         return;
     }
-    
+
     //compare each fields
     for(var k in template.headers) {
         var v = image.headers[k];
@@ -240,7 +299,7 @@ exports.match = function(image, template, qc) {
             if(!check_set(k, v, tv, qc)) continue;
             check_equal(k, v, tv, qc);
         }
-    }; 
+    };
 }
 
 exports.cc = common_customs;

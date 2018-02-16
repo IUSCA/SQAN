@@ -63,7 +63,7 @@ function qc(image, next) {
         image.qc = qc;
         //console.log(JSON.stringify(image.qc, null, 4));
         image.save(function(err) {
-            console.log(err);
+            //console.log(err);
             if(err) return next(err);
             //invalidate series qc
             db.Series.update({_id: image.series_id}, {$unset: {qc: 1}}, {multi: true}, next);

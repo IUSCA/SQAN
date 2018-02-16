@@ -107,6 +107,7 @@ app.component('exams', {
     bindings: {
         modality: '<',
         mode: '<', //view mode ('wide' / 'tall')
+        deprecated: '=',
         subject: '<', //subject to show
     },
     controller: function(appconf, $window, $http, toaster, $interval) { 
@@ -152,7 +153,8 @@ app.component('viewmodeToggler', {
     templateUrl: 't/components/viewmodetoggler.html',
     bindings: {
         mode: '=', //view mode ('wide' / 'tall')
-    },
+        deprecated: '='
+    }
 });
 
 

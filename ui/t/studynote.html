@@ -1,4 +1,4 @@
-<div class="studynote" style="position: relative;">
+<div class="studynote" style="position: relative;" ng-class="{deprecated : study.deprecated_by}">
     <div style="display: inline" ng-switch="studystate" title="Physical state of protocol QC">
         <span class="label label-info" ng-switch-when="na">QCing&nbsp;&nbsp;<i class="fa fa-spinner fa-spin"></i></span>
         <span class="label label-primary" ng-switch-when="notemp">NoTemp: {{::study.qc.notemps}}</span>
@@ -6,8 +6,8 @@
         <span class="label label-warning" ng-switch-when="warning">Warnings: {{::study.qc.warnings.length}}</span>
         <span class="label label-success" ng-switch-when="ok">OK</span>
     </div>
-    <span class="label label-{{qc1}}" ng-if="qc1" title="State of protocol QC(1) set by radiologist">QC1</span>
-    <span class="label label-{{qc2}}" ng-if="qc2" title="State of Image QC(2) set by radiologist">QC2</span>
+    <span class="label label-{{qc1}}" ng-if="qc1 && !study.deprecated_by" title="State of protocol QC(1) set by radiologist">QC1</span>
+    <span class="label label-{{qc2}}" ng-if="qc2 && !study.deprecated_by" title="State of Image QC(2) set by radiologist">QC2</span>
 
     #{{::study.SeriesNumber}}
 

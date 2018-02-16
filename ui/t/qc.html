@@ -17,23 +17,29 @@
         <br>
         <div class="btn-group pull-right" style="left: 0px;top: -5px;">
             <button class="btn btn-xs btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Options <span class="caret"></span>
+            Display <span class="caret"></span>
             </button>
             <ul class="dropdown-menu">
-            <li><a href>Project ABC</a></li>
-            <li><a href>Project DEF</a></li>
-            <li><a href>Project AAA</a></li>
-            <li role="separator" class="divider"></li>
-            <li><a href>Separated link</a></li>
+                <li ng-repeat="(mod_id, settings) in modalities"
+                    ng-click="settings.display = !settings.display;">
+                    <a href>
+                    <i class="fa fa-fw fa-check" ng-show="settings.display"></i>
+                    <i class="fa fa-fw fa-square-o" ng-show="!settings.display"></i> {{mod_id}}</a>
+                </li>
+            <!--<li><a href>Project ABC</a></li>-->
+            <!--<li><a href>Project DEF</a></li>-->
+            <!--<li><a href>Project AAA</a></li>-->
+            <!--<li role="separator" class="divider"></li>-->
+            <!--<li><a href>Separated link</a></li>-->
             </ul>
         </div>
         <span ng-if="loading_series" class="text-muted"><i class="fa fa-circle-o-notch fa-spin"></i> Loading ...</span>
-        <span ng-if="!loading_series" class="text-muted">{{scan_count}} {{ecount}} scans in {{org | objLength}} IIBISIDs</span>
+        <span ng-if="!loading_series" class="text-muted">{{ecount}} scans in {{org | objLength}} IIBISIDs</span>
     </div>
     <hr style="margin: 0px;">
     <div class="subbar-list" style="margin-top: 59px; bottom: 34px">
         <div ng-repeat="(iibisid, research) in org" ng-show="show_iibis(iibisid, research)">
-            <div class="subbar-list-header">{{$index + 1}}. {{iibisid}} - {{research | objLength}}</div>
+            <div class="subbar-list-header">{{$index + 1}}. {{iibisid}} - ({{research | objLength}})</div>
             <div class="subbar-list-item" 
                 ng-repeat="(modality_id, modality) in research" 
                 ng-class="{'active': modality == selected}"
@@ -78,7 +84,7 @@
     <div ng-show="selected">
         <div class="fixed-top" style="margin-left: 430px;">
             <h2 class="pull-right" style="position: relative; left: -15px;">
-                <viewmode-toggler mode="view_mode"></viewmode-toggler> 
+                <viewmode-toggler mode="view_mode" deprecated="show_deprecated"></viewmode-toggler>
             </h2>
             <h2> <b>{{selected._detail.IIBISID}}</b> </h2>
             <h3>
@@ -95,7 +101,7 @@
                     <b>{{subject}}</b>
                     <!-- <span class="text-muted">Subject</span> -->
                 </h4>
-                <exams subject="subject" modality="selected" mode="view_mode"></exams>
+                <exams subject="subject" modality="selected" mode="view_mode" deprecated="show_deprecated"></exams>
             </div>
             <div class="template">
                 <h4>

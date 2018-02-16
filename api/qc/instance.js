@@ -88,6 +88,7 @@ function convertTypes(h) {
         "PixelSpacing",
         "RescaleSlope",
         "ScatterFractionFactor",
+        "TriggerTime",
         "PercentPhaseFieldOfView",
         "PercentSampling",
     ].forEach(function(f) {

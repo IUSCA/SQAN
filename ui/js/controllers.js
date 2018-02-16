@@ -584,6 +584,7 @@ function($scope, appconf, toaster, $http, $location, serverconf, $document, $win
     $scope.selected = null;
     $scope.$parent.active_menu = "qc"+$routeParams.level;
     $scope.view_mode = "tall";
+    $scope.show_deprecated = true;
     $scope.serieses_count = 0;
 
     $scope.select = function(modality, subjectuid) {
@@ -653,12 +654,16 @@ function($scope, appconf, toaster, $http, $location, serverconf, $document, $win
             console.log(res.data);
             $scope.count($scope.org);
             $scope.scan_count = 0;
+            $scope.modalities = {};
 
             //select first modality or selected by user
             for(var iibisid in $scope.org) {
                 var modalities = $scope.org[iibisid];
                 for(var modality_id in modalities) {
                     var modality = modalities[modality_id];
+                    if(!$scope.modalities[modality._detail.Modality]){
+                        $scope.modalities[modality._detail.Modality] = {display: true}
+                    }
                     if($routeParams.researchid) {
                         if(modality._detail._id == $routeParams.researchid) {
                             //selecte first modality under research user specified
@@ -704,12 +709,14 @@ function($scope, appconf, toaster, $http, $location, serverconf, $document, $win
 
     $scope.show_modality = function(iibisid, modality_id, modality) {
         for(var subject_desc in modality.subjects) {
+            //console.log(modality);
+            if(!$scope.modalities[modality._detail.Modality].display) return false;
             if($scope.show_subject(iibisid, modality_id, subject_desc)) return true;
         }
         return false;
     }
+
     $scope.show_subject = function(iibisid, modality_id, subject_desc) {
-        return true;
         if(!$scope.research_filter) return true;
         if(~iibisid.toLowerCase().indexOf($scope.research_filter)) return true;
         if(~modality_id.toLowerCase().indexOf($scope.research_filter)) return true;

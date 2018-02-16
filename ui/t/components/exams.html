@@ -7,8 +7,8 @@
         <thead>
             <tr><th width="30%"><span class="text-muted">Series Description</span></th>
                 <th ng-repeat="(exam_id, exam) in $ctrl.modality.exams[$ctrl.subject]">
-                    <time>{{exam.date|date:'short'}}</time> &nbsp;
-                    <button class="btn btn-xs" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc(exam_id)">ReQC</button>
+                    <time>{{exam.date|date:'short':'+0400'}} <small>(EST)</small></time> &nbsp;
+                    <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc(exam_id)">ReQC</button>
                 </th>
             </tr>
         </thead>
@@ -22,13 +22,13 @@
                     <div class="slide-down"
                         ng-if="!series_group._isexcluded">
                         <div style="display: inline-block;" ng-repeat="series in series_group.exams[exam_id]">
-                            <div ng-if="!series.deprecated_by">
+                            <div ng-if="!series.deprecated_by || $ctrl.deprecated">
                                 <studynote ng-click="$ctrl.openstudy(series._id)" study="series"></studynote>
                             </div>
-                            <div ng-if="series.deprecated_by" class="studynote" ng-click="$ctrl.openstudy(series._id)">
-                                <!-- only show seriesnumber for older series-->
-                                <span class="text-muted">#{{series.SeriesNumber}}</span>
-                            </div>
+                            <!--<div ng-if="series.deprecated_by" class="studynote" ng-click="$ctrl.openstudy(series._id)">-->
+                                <!--&lt;!&ndash; only show seriesnumber for older series&ndash;&gt;-->
+                                <!--<span class="text-muted">#{{series.SeriesNumber}}</span>-->
+                            <!--</div>-->
                         </div>
                     </div>
                 </td>
@@ -52,8 +52,8 @@
     <!-- tall view-->
     <div ng-if="$ctrl.mode == 'tall'" ng-repeat="(exam_id, exam) in $ctrl.modality.exams[$ctrl.subject]" class="subject-tall">
         <p>
-            <time style="position: relative; top: 5px"><b>{{exam.date|date:'short'}}</b></time> &nbsp;
-            <button class="btn btn-xs" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc(exam_id)">ReQC</button>
+            <time style="position: relative; top: 5px"><b>{{exam.date|date:'short':'+0400'}} <small>(EST)</small></b></time> &nbsp;
+            <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc(exam_id)">ReQC</button>
         </p>
 
         <!--
@@ -87,12 +87,12 @@
                     <div class="slide-down"
                         ng-if="!series_group._isexcluded">
                         <div class="studies" style="display: inline-block;" ng-repeat="series in series_group.exams[exam_id]">
-                            <div ng-if="!series.deprecated_by">
+                            <div ng-if="!series.deprecated_by || $ctrl.deprecated">
                                 <studynote ng-click="$ctrl.openstudy(series._id)" study="series">
                             </div>
-                            <div ng-if="series.deprecated_by" class="studynote" ng-click="$ctrl.openstudy(series._id)">
-                                <span class="text-muted">#{{series.SeriesNumber}}</span>
-                            </div>
+                            <!--<div ng-if="series.deprecated_by" class="studynote" ng-click="$ctrl.openstudy(series._id)">-->
+                                <!--<span class="text-muted">#{{series.SeriesNumber}}</span>-->
+                            <!--</div>-->
                         </div>
                     </div>
                 </td>
