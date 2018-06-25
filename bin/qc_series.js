@@ -14,6 +14,7 @@ const config = require('../config');
 const logger = new winston.Logger(config.logger.winston);
 const db = require('../api/models');
 const events = require('../api/events');
+var api_qc = require('../api/qc');
 
 //connect to db and start processing batch indefinitely
 db.init(function(err) {
@@ -136,6 +137,10 @@ function qc_series(series, next) {
         */
 
         //now do series level QC (TODO - there aren't much to do right now)
+        //check exclusion status
+        series.isexcluded = api_qc.series.isExcluded(series.Modality, series.series_desc);
+
+
         if(qc.template_id) {
             //check for template header count 
             db.TemplateHeader.where({template_id: qc.template_id}).count(function(err, template_count) {

@@ -68,6 +68,16 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         controller: 'DumpController',
         requiresLogin: true,
     })
+    .when('/dataflow', {
+        templateUrl: 't/dataflow.html',
+        controller: 'DataflowController',
+        requiresLogin: true,
+    })
+    .when('/summary', {
+        templateUrl: 't/summary.html',
+        controller: 'SummaryController',
+        requiresLogin: true,
+    })
     // .when('/handler', {
     //     templateUrl: 't/handler.html',
     //     controller: 'HandlerController',
@@ -173,14 +183,11 @@ app.filter('propsFilter', function() {
     };
 });
 
-/*
-app.filter('toArray', function() { return function(obj) {
-    if (!(obj instanceof Object)) return obj;
-    return _.map(obj, function(val, key) {
-        return Object.defineProperty(val, '$key', {__proto__: null, value: key});
-    });
-}});
-*/
+
+function valuesToArray(obj) {
+    return Object.keys(obj).map(function (key) { return obj[key]; });
+}
+
 
 app.filter('uniqueSeriesDesc', function() {
     return function(items, props) {
@@ -221,3 +228,32 @@ app.filter('objLength', function() {
         return count;
     }
 });
+
+// https://gist.github.com/Cacodaimon/7309268
+app.filter('sumByKey', function() {
+        return function(data, keyprops) {
+            if (typeof(data) === 'undefined' || typeof(keyprops) === 'undefined') {
+                return 0;
+            }
+
+            var sum = 0;
+            if(typeof(keyprops[1]) !== 'undefined' ){
+                var key = keyprops[0];
+                var validkey = keyprops[1];
+            } else {
+                var key = keyprops;
+                var validkey = false;
+            }
+            console.log(typeof(data));
+            if(typeof(data) === 'object'){
+                data = valuesToArray(data);
+            }
+            for (var i = data.length - 1; i >= 0; i--) {
+                if(data[i][validkey] || !validkey){
+                    sum += parseInt(data[i][key]);
+                }
+            }
+
+            return sum;
+        };
+    });

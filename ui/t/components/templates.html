@@ -2,7 +2,7 @@
     <p class="text-muted" ng-if="$ctrl.times.length == 0">No templates received</p>
     <table class="table table-condensed" ng-if="$ctrl.times.length > 0">
         <thead><tr><th width="30%" style="color: #333;">Series Description</th>
-            <th ng-repeat="time in $ctrl.times | orderBy:'-toString()'">{{time|date:'short'}}</th>
+            <th ng-repeat="time in $ctrl.times | orderBy:'-toString()'">{{time| date:'short':'+0400'}}</th>
         </tr></thead>
         <tbody>
             <tr ng-repeat="times in $ctrl.templates | toArray:true | orderBy:'min_SeriesNumber'" ng-init="desc = times.$key">

@@ -1,8 +1,12 @@
 <div class="subbar">
     <div style="padding: 0px 15px; margin-bottom: 10px">
+        <div ng-if="$parent.active_menu == 'qcall'">
+            <h2>All Exams</h2>
+            <p class="help-block">Showing all exams and status</p>
+        </div>
         <div ng-if="$parent.active_menu == 'qcrecent'">
             <h2>Recent Exams</h2>
-            <p class="help-block">Showing all recent exams and status</p>
+            <p class="help-block">Showing status of exams taken in last {{recentrange}} days</p>
         </div>
         <div ng-if="$parent.active_menu == 'qc1'">
             <h2>QC1</h2>
@@ -24,7 +28,7 @@
                     ng-click="settings.display = !settings.display;">
                     <a href>
                     <i class="fa fa-fw fa-check" ng-show="settings.display"></i>
-                    <i class="fa fa-fw fa-square-o" ng-show="!settings.display"></i> {{mod_id}}</a>
+                    <i class="fa fa-fw fa-square-o" ng-show="!settings.display"></i> {{mod_id}} ({{settings.count}})</a>
                 </li>
             <!--<li><a href>Project ABC</a></li>-->
             <!--<li><a href>Project DEF</a></li>-->
@@ -34,7 +38,7 @@
             </ul>
         </div>
         <span ng-if="loading_series" class="text-muted"><i class="fa fa-circle-o-notch fa-spin"></i> Loading ...</span>
-        <span ng-if="!loading_series" class="text-muted">{{ecount}} scans in {{org | objLength}} IIBISIDs</span>
+        <span ng-if="!loading_series" class="text-muted">{{modalities|sumByKey:['count','display']}} subjects in {{org | objLength}} IIBISIDs</span>
     </div>
     <hr style="margin: 0px;">
     <div class="subbar-list" style="margin-top: 59px; bottom: 34px">
@@ -44,7 +48,7 @@
                 ng-repeat="(modality_id, modality) in research" 
                 ng-class="{'active': modality == selected}"
                 ng-click="select(modality)"
-                ng-show="show_modality(iibisid, modality_id, modality)">
+                ng-if="show_modality(iibisid, modality_id, modality)">
 
                 <!--modality detail-->
                 <div class="subbar-list-item-header">
@@ -54,17 +58,17 @@
                 <div ng-repeat="(subject_desc, subject) in modality.subjects" 
                     ng-click="select(modality, subject.uid);$event.stopPropagation()"
                     class="subject-label" 
-                    ng-show="show_subject(iibisid, modality_id, subject_desc)"
+                    ng-if="show_subject(iibisid, modality_id, subject_desc)"
                     ng-init="moreOne('ecount')" >
                     <!--subject_desc is not unique across all iibisid / modality..-->
-                    <small style="position: absolute;">{{subject_desc}}</small>
+                    <small style="position: absolute; color: black">{{subject_desc}}</small>
                     <div class="progress exam-state pull-right"
                         ng-init="total = subject.non_qced+subject.oks+subject.errors+subject.warnings+subject.notemps+subject.missing">
-                        <div class="progress-bar progress-bar-success" style="width: {{subject.oks / total*100}}%"></div>
-                        <div class="progress-bar progress-bar-danger" style="width: {{subject.errors / total*100}}%"></div>
-                        <div class="progress-bar progress-bar-warning" style="width: {{subject.warnings / total*100}}%"></div>
-                        <div class="progress-bar progress-bar-primary" style="width: {{subject.notemps / total*100}}%"></div>
-                        <div class="progress-bar progress-bar-info" style="width: {{subject.missing/ total*100}}%"></div>
+                        <div class="progress-bar progress-bar-success" style="height: 20%; width: {{subject.oks / total*100}}%"></div>
+                        <div class="progress-bar progress-bar-danger" style="height: 20%; width: {{subject.errors / total*100}}%"></div>
+                        <div class="progress-bar progress-bar-warning" style="height: 20%; width: {{subject.warnings / total*100}}%"></div>
+                        <div class="progress-bar progress-bar-primary" style="height: 20%; width: {{subject.notemps / total*100}}%"></div>
+                        <div class="progress-bar progress-bar-info" style="height: 20%; width: {{subject.missing/ total*100}}%"></div>
                     </div>
                 </div><!--ng-repeat/subjects-->
             </div><!--subbar-list-item-->
@@ -86,7 +90,9 @@
             <h2 class="pull-right" style="position: relative; left: -15px;">
                 <viewmode-toggler mode="view_mode" deprecated="show_deprecated"></viewmode-toggler>
             </h2>
-            <h2> <b>{{selected._detail.IIBISID}}</b> </h2>
+            <h2> <b>{{selected._detail.IIBISID}}</b>
+                <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="reqc()">ReQC all</button>
+            </h2>
             <h3>
                 Modality: <b>{{selected._detail.Modality}}</b> 
                 StationName: <b>{{selected._detail.StationName}}</b>
@@ -96,7 +102,10 @@
             </h3>
         </div>
         <div style="margin-top: 65px;">
-            <div ng-repeat="(subject, subject_detail) in selected.subjects" class="subject" id="{{subject_detail.uid}}">
+            <div ng-repeat="(subject, subject_detail) in selected.subjects"
+                 ng-if="show_subject(selected._detail.IIBISID, selected._detail.modality_id, subject)"
+                 class="subject"
+                 id="{{subject_detail.uid}}">
                 <h4>
                     <b>{{subject}}</b>
                     <!-- <span class="text-muted">Subject</span> -->

@@ -593,9 +593,16 @@ router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub}), function(
         if(err) return next(err);
         if(!series) return res.status(404).json({message: "can't find specified series"});
         //make sure user has access to this research
+        var event = {
+            user_id: req.user.sub,
+            title: "Series-level ReQC",
+            date: new Date(), //should be set by default, but UI needs this right away
+            detail: "",
+        };
         db.Acl.can(req.user, 'qc', series.IIBISID, function(can) {
             if(!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:"+series.IIBISID});
             series.qc = undefined;
+            series.events.push(event);
             events.series(series);
             series.save(function(err) {
                 if(err) next(err);

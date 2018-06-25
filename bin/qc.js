@@ -92,11 +92,17 @@ function pick_template(series, exam_id, cb) {
             //UI dynamically generates list of missing series. This truncation needs to happen in ui as well
             //(see ui/js/controllers.js@organize)
             tdesc = tdesc.replace(/\d+$/, '');
+            //TODO: this is ugly
+            if(longest == null) {
+                var ldesc = tdesc;
+            } else {
+                var ldesc = longest.series_desc.replace(/\d+$/, '');
+            }
 
             if(~series.series_desc.indexOf(tdesc)) {
                 if(longest == null || 
-                    longest.series_desc.length < tdesc.length ||
-                    (longest.series_desc.length == tdesc.length && longest.SeriesNumber < template.SeriesNumber)) {
+                    ldesc.length < tdesc.length ||
+                    (ldesc.length == tdesc.length && longest.SeriesNumber < template.SeriesNumber)) {
                     longest = template; //better match
                 }
             }

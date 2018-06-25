@@ -198,7 +198,7 @@ var seriesSchema = mongoose.Schema({
         comment: String,
         date: {type: Date, default: Date.now},
     }) ],
-});
+}, {strict: false});
 //these hooks are too unreliable / non-useful (I will do the event posting from controller..)
 //seriesSchema.post('save', events.series);
 //seriesSchema.post('findOneAndUpdate', events.series);
@@ -261,6 +261,26 @@ var imageSchema = mongoose.Schema({
 });
 imageSchema.index({acquisition_id: 1, InstanceNumber: 1});
 exports.Image = mongoose.model('Image', imageSchema);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+var dataflowSchema = mongoose.Schema({
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // keys
+    //
+    isManual: {type: Boolean, index: true},
+    requestedAt: {type: Date, default: Date.now, index: true},
+    sentAt: {type: Date},
+    imagesSent: {type: Number},
+    arrivalAt: {type: Date},
+    imagesReceived: {type: Number},
+    ingestionAt: {type: Date},
+    qc1At: {type: Date},
+    qc1State: Boolean
+});
+dataflowSchema.index({requestedAt: 1, isManual: 1});
+exports.Dataflow = mongoose.model('Dataflow', dataflowSchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 

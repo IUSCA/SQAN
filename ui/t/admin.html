@@ -1,14 +1,31 @@
 <!--<sca-menutab fluid="true" menu="appconf.menu" active="'admin'" user="user"></sca-menutab>-->
 <div class="container">
+        <h2>Research Management</h2>
+        <p class="help-block">Define groups who have access to specific IIBISIDs, or re-run QC on entire IIBISID groups.</p>
+        <div class="row">
+            <div class="col-md-2">
+                <input type="text" class="form-control" ng-model="research_filter" placeholder="Filter">
+            </div>
+        </div>
     <form ng-submit="update_acl();" name="form" confirm-on-exit>
-        <h2>Research Access</h2>
-        <p class="help-block">Define groups who has access to specific IIBISIDs</p>
         <table class="table">
         <thead>
-            <tr><th>IIBISID</th><th width="40%">Can View/Comment</th><th width="40%">Can QC</th></tr>
+            <tr>
+                <th ng-click="toggle_selectall()">
+                    <i class="text-info fa fa-fw"
+                       ng-class="{'fa-check-square-o': selectall, 'fa-square-o': !selectall}">
+                </i></th>
+                <th>IIBISID</th>
+                <th width="40%">Can View/Comment</th>
+                <th width="40%">Can QC</th></tr>
         </thead>
         <tbody>
-            <tr ng-repeat="iibisid in iibisids">
+            <tr ng-repeat="iibisid in iibisids | filter:research_filter" ng-init="_selected[iibisid] = false;">
+                <td ng-click="_selected[iibisid] = !_selected[iibisid]">
+                    <i class="text-info fa fa-fw"
+                       ng-class="{'fa-check-square-o': _selected[iibisid], 'fa-square-o': !_selected[iibisid]}">
+                    </i>
+                </td>
                 <th>{{iibisid}}</th>
                 <td>
                     <ui-select multiple ng-model="_acl[iibisid].view.groups">
@@ -41,7 +58,8 @@
             </tr>
         </tbody>
         </table>
-        <input type="submit" class="btn btn-primary pull-right" value="Update"/>
+        <input class="btn btn-primary pull-right" value="Update Access" ng-click="update_acl();"/>
+        <input class="btn btn-info pull-right" value="ReQC ({{selectedCount()}})" ng-click="reqc()"/>
     </form>
 </div>
 

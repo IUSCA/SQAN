@@ -55,5 +55,22 @@ router.get('/profiles', jwt({secret: config.express.jwt.pub}), function(req, res
     res.json(profile.getall());
 });
 
+router.get('/stats', function(req, res, next) {
+    db.Image.count({}, function(err, img_cnt){
+        if (err) return next(err);
+        db.Exam.distinct('subject', function(err, subject_ids){
+            if (err) return next(err);
+            var subj_cnt = subject_ids.length;
+            db.Research.aggregate([
+                {$group:{"_id":"$Modality","IIBISIDS":{$addToSet:"$IIBISID"}}},
+                {$project:{"Modality":"$_id","_id":0,"count":{$size:"$IIBISIDS"}}}
+            ], function(err, res_cnts) {
+                if (err) return next(err);
+                res.json({images: img_cnt, subjects: subj_cnt, researches: res_cnts});
+            });
+        });
+    });
+});
+
 module.exports = router;
 

@@ -144,6 +144,7 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
                     //count number of status for each subject
                     for(var series_desc in subject.serieses) {
                         var series_group = subject.serieses[series_desc];
+                        if(series_group._isexcluded) continue;
                         for(var exam_id in series_group.exams) {
                             var serieses = series_group.exams[exam_id];
                             serieses.forEach(function(series, idx) {
@@ -588,6 +589,7 @@ function($scope, appconf, toaster, $http, $location, serverconf, $document, $win
     $scope.serieses_count = 0;
 
     $scope.select = function(modality, subjectuid) {
+        console.log(modality);
         $scope.selected = modality;
         window.scrollTo(0,0); 
 
@@ -617,6 +619,8 @@ function($scope, appconf, toaster, $http, $location, serverconf, $document, $win
     //construct query
     var where = {};
     switch($routeParams.level) {
+    case "all":
+        break;
     case "recent":
         var d = new Date();
         d.setDate(d.getDate() - (appconf.recent_study_days||300));
@@ -638,6 +642,8 @@ function($scope, appconf, toaster, $http, $location, serverconf, $document, $win
     default:
         toaster.error("Unknown QC level "+$routeParams.level);
     }
+
+    $scope.recentrange = (appconf.recent_study_days||300);
 
     $scope.ecount = 0;
 
@@ -662,7 +668,7 @@ function($scope, appconf, toaster, $http, $location, serverconf, $document, $win
                 for(var modality_id in modalities) {
                     var modality = modalities[modality_id];
                     if(!$scope.modalities[modality._detail.Modality]){
-                        $scope.modalities[modality._detail.Modality] = {display: true}
+                        $scope.modalities[modality._detail.Modality] = {display: true, count: 0}
                     }
                     if($routeParams.researchid) {
                         if(modality._detail._id == $routeParams.researchid) {
@@ -676,8 +682,11 @@ function($scope, appconf, toaster, $http, $location, serverconf, $document, $win
                     //while at it, create serieses catalog
                     $scope.serieses = {};
                     for(var subject in modality.subjects) {
+                        if (Object.keys(modality.subjects[subject].serieses).length < 1) continue;
                         $scope.scan_count++; //count the number of subjects in each modality in each research series
+                        $scope.modalities[modality._detail.Modality].count++;
                         for(var series_desc in modality.subjects[subject].serieses) {
+
                             var exams = modality.subjects[subject].serieses[series_desc].exams; 
                             for(var exam_id in exams) {
                                 exams[exam_id].forEach(function(series) {
@@ -717,6 +726,7 @@ function($scope, appconf, toaster, $http, $location, serverconf, $document, $win
     }
 
     $scope.show_subject = function(iibisid, modality_id, subject_desc) {
+        if(Object.keys($scope.org[iibisid][modality_id].subjects[subject_desc].serieses).length < 1) return false;
         if(!$scope.research_filter) return true;
         if(~iibisid.toLowerCase().indexOf($scope.research_filter)) return true;
         if(~modality_id.toLowerCase().indexOf($scope.research_filter)) return true;
@@ -732,6 +742,13 @@ function($scope, appconf, toaster, $http, $location, serverconf, $document, $win
             $scope.selected = null;
         }
     });
+
+    $scope.reqc = function() {
+        $http.post(appconf.api+'/research/reqc', {_id:$scope.selected._detail._id})
+            .then(function(res) {
+                toaster.success(res.data.message);
+            }, $scope.toast_error);
+    }
 });
 
 //used to be StudyController
@@ -914,10 +931,49 @@ function($scope, appconf, toaster, $http, $location, serverconf, $routeParams) {
     }
 });
 
+
+app.controller('DataflowController',
+function($scope, appconf, toaster, $http, serverconf) {
+    $scope.datasends = [];
+
+    $http.get(appconf.api+'/dataflow')
+        .then(function(res) {
+            $scope.datasends = res.data;
+        }, $scope.toast_error);
+});
+
+
+app.controller('SummaryController',
+function($scope, appconf, toaster, $http, serverconf) {
+    $scope.researches = [];
+    $scope.research_id = '';
+    $scope.selected = '';
+
+    $http.get(appconf.api+'/research')
+        .then(function(res) {
+            $scope.researches = res.data;
+            console.log(res.data);
+            $scope.selected = res.data[0];
+            $scope.getSummary();
+        }, $scope.toast_error);
+
+    $scope.getSummary = function() {
+        $http.get(appconf.api+'/research/summary/'+$scope.selected._id)
+            .then(function(res) {
+                $scope.summary = res.data;
+                console.log(res.data);
+            }, $scope.toast_error);
+    };
+
+});
+
+
 app.controller('AdminController', 
 function($scope, appconf, toaster, $http, serverconf, groups) {
     $scope.appconf = appconf;
     $scope.$parent.active_menu = "admin";
+    $scope._selected = {};
+    $scope.selectall = false;
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
 
     $http.get(appconf.api+'/research', {params: {admin: true}})
@@ -985,7 +1041,35 @@ function($scope, appconf, toaster, $http, serverconf, groups) {
             $scope.form.$setPristine();
             toaster.success("Updated Successfully!");
         }, $scope.toast_error);
+    };
+
+
+    $scope.reqc = function() {
+        var selected = [];
+        angular.forEach($scope._selected, function(s,k){
+            if(s) selected.push(k);
+        });
+        $http.post(appconf.api+'/research/reqc', {IIBISID: { '$in': selected}})
+            .then(function(res) {
+                toaster.success(res.data.message);
+            }, $scope.toast_error);
+    };
+
+    $scope.toggle_selectall = function() {
+        $scope.selectall = !$scope.selectall;
+        angular.forEach($scope._selected, function(s, k){
+            $scope._selected[k] = $scope.selectall;
+        });
+    };
+
+    $scope.selectedCount = function() {
+        var count = 0;
+        angular.forEach($scope._selected, function(s){
+            count += s ? 1 : 0;
+        });
+        return count;
     }
+
 });
 
 

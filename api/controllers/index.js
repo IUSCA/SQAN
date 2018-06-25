@@ -16,6 +16,7 @@ router.use('/image', require('./image'));
 router.use('/template', require('./template'));
 router.use('/event', require('./event'));
 router.use('/handler', require('./handler'));
+router.use('/dataflow', require('./dataflow'));
 
 //router.use('/study', require('./series')); //deprecated .. use /series
 

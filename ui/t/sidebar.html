@@ -1,10 +1,11 @@
 <div class="sca-sidebar">
-    <h2 class="text-muted"><i class="fa fa-check-square-o" aria-hidden="true"></i></h2>
+    <!--<h2 class="text-muted"><i class="fa fa-check-square-o" aria-hidden="true"></i></h2>-->
+    <h2 class="text-muted"><img src="images/radyqc.png" width="48"></h2>
     <br>
     <br>
 
-    <div class="menu" ng-class="{'active':  active_menu == 'research'}" ng-click="openpage('/research');">
-        <h3><i class="fa fa-list-alt" aria-hidden="true"></i></h3> All Exam
+    <div class="menu" ng-class="{'active':  active_menu == 'qcall'}" ng-click="openpage('/qc/all');">
+        <h3><i class="fa fa-list-alt" aria-hidden="true"></i></h3> All Exams
     </div>
     <div class="menu" ng-class="{'active':  active_menu == 'qcrecent'}" ng-click="openpage('/qc/recent')">
         <h3><i class="fa fa-newspaper-o" aria-hidden="true"></i></h3> Recent Exams
@@ -22,6 +23,9 @@
         </div>
         <div class="menu" ng-click="relocate('/profile')">
             <h3><i class="fa fa-cog" aria-hidden="true"></i></h3> Settings
+        </div>
+        <div class="menu" ng-click="relocate('/auth/#!/signout')">
+            <h3><i class="fa fa-sign-out" aria-hidden="true"></i></h3> Logout
         </div>
         <hr>
         <div class="menu" ng-class="{'active':  active_menu == 'about'}" ng-click="openpage('/about')">

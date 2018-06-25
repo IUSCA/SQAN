@@ -34,17 +34,46 @@ router.get('/', jwt({secret: config.express.jwt.pub}), function(req, res, next) 
     });
 });
 
+router.get('/summary/:id', function(req, res, next) {
+    var subjects = {};
+    db.Series.find({'research_id': req.params.id}, {'series_desc' : 1, 'subject' : 1, 'qc' : 1, 'qc1_state' : 1}).exec(function(err, _series){
+        if(err) return next(err);
+        db.Series.distinct('subject', {'research_id': req.params.id}).exec(function(err, _subjects){
+            if(err) return next(err);
+            db.Series.distinct('series_desc', {'research_id': req.params.id}).exec(function(err, _seriesDesc){
+                if(err) return next(err);
+                _subjects.forEach(function(sub){
+                    subjects[sub] = {}
+                    _series.forEach(function(ser){
+                        if(ser.subject == sub){
+                            subjects[sub][ser.series_desc] = ser;
+                        }
+                    });
+                });
+
+                res.json({series_desc: _seriesDesc, subjects: subjects});
+            });
+        });
+    });
+});
+
 //rerun QC1 on the entire "research"
 router.post('/reqc', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     db.Research.find(req.body).exec(function(err, researches) {
         if(err) return next(err);
         var total_modified = 0;
+        var event = {
+            user_id: req.user.sub,
+            title: "Research-level ReQC",
+            date: new Date(), //should be set by default, but UI needs this right away
+            detail: "",
+        };
         async.forEach(researches, function(research, done) {
             //make sure user has access to this research
             db.Acl.can(req.user, 'qc', research.IIBISID, function(can) {
                 if(!can) return res.status(401).json({message: "you are not authorized to QC this IIBISID:"+research.IIBISID});
                 //invalidate series QC (although not exactly necessary..)
-                db.Series.update({research_id: research._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected) {
+                db.Series.update({research_id: research._id}, {$unset: {qc: 1}, $push: {'events': event}}, {multi: true}, function(err, affected) {
                     if(err) return next(err);
                     //invalidate image QC.
                     db.Image.update({research_id: research._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
@@ -55,9 +84,11 @@ router.post('/reqc', jwt({secret: config.express.jwt.pub}), function(req, res, n
                 });
             });
         }, function(err) {
-            res.json({message: "Template updated. Re-running QC on "+total_modified+" images."});
+            res.json({message: "Re-running QC on "+total_modified+" images."});
         });
     });
 });
+
+
 module.exports = router;
 
