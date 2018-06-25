@@ -1,0 +1,23 @@
+<div class="container">
+    <h2>Research Summary</h2>
+
+    <select ng-model="selected" ng-change="getSummary()" ng-options="r.IIBISID for r in researches track by r._id"></select>
+    <table class="table table-header-rotated table-condensed">
+        <thead>
+        <tr>
+            <th>Series</th>
+            <th class="rotate-45" ng-repeat="(k,v) in summary.subjects"><div><span>{{k}}</span></div></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="sd in summary.series_desc">
+            <th>{{sd}}</th>
+            <td ng-repeat="(k,v) in summary.subjects" ng-init="qcs = v[sd].qc1_state" ng-class="{'pass': qcs == 'autopass',
+                                'fail' : qcs == 'fail',
+                                'warning' : qcs == 'accept',
+                                '' : qcs == 'reject'}">
+               </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
