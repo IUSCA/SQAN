@@ -945,24 +945,54 @@ function($scope, appconf, toaster, $http, serverconf) {
 
 app.controller('SummaryController',
 function($scope, appconf, toaster, $http, serverconf) {
-    $scope.researches = [];
+    $scope.researches = {};
     $scope.research_id = '';
     $scope.selected = '';
 
     $http.get(appconf.api+'/research')
         .then(function(res) {
-            $scope.researches = res.data;
+            //$scope.researches = res.data;
+
+            //group by IIBISID
+            angular.forEach(res.data, function(r){
+                if (!(r.IIBISID in $scope.researches)){
+                    $scope.researches[r.IIBISID] = [r];
+                } else {
+                    $scope.researches[r.IIBISID].push(r);
+                }
+            })
+
+            console.log($scope.researches);
             console.log(res.data);
-            $scope.selected = res.data[0];
+            $scope.selected = $scope.researches[res.data[0].IIBISID];
             $scope.getSummary();
         }, $scope.toast_error);
 
+
     $scope.getSummary = function() {
-        $http.get(appconf.api+'/research/summary/'+$scope.selected._id)
-            .then(function(res) {
-                $scope.summary = res.data;
-                console.log(res.data);
-            }, $scope.toast_error);
+        $scope.summary = {};
+        $scope.subjects = [];
+        angular.forEach($scope.selected, function(s){
+            $http.get(appconf.api+'/research/summary/'+s._id)
+                .then(function(res) {
+                    console.log(s);
+                    var label = s.Modality;
+                    if(s.radio_tracer !== null){
+                        label += ' - ' + s.radio_tracer;
+                    }
+
+                    $scope.summary[label] = res.data;
+                    console.log(res.data);
+                    angular.forEach(res.data.subjects, function(v, k){
+                        if($scope.subjects.indexOf(k) < 0){
+                            $scope.subjects.push(k);
+                        }
+                    });
+                }, $scope.toast_error);
+        });
+
+        console.dir($scope.subjects);
+
     };
 
 });
