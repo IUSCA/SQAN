@@ -78,11 +78,11 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         controller: 'SummaryController',
         requiresLogin: true,
     })
-    // .when('/handler', {
-    //     templateUrl: 't/handler.html',
-    //     controller: 'HandlerController',
-    //     requiresLogin: true,
-    // })
+    .when('/templatesummary', {
+        templateUrl: 't/templatesummary.html',
+        controller: 'TemplateSummaryController',
+        requiresLogin: true,
+    })
     .when('/admin', {
         templateUrl: 't/admin.html',
         controller: 'AdminController',

@@ -1,4 +1,5 @@
-body {
+
+dy {
   /*font-family: 'Lato', serif;*/
 }
 span.errorcount {
@@ -114,31 +115,31 @@ ul.images li:hover {
   /*background-color: black;*/
 }
 /*
-ol.subjects {
-    list-style: none;
-    padding: 0px;
-    margin: 0px;
-    .subject-name {
-        padding: 3px;
-    }
-    .template-link {
-        color: #666;
-    }
-    li:hover {
-        cursor: pointer;
-
-        .subject-name {
-            background-color: #ddd;
-        }
-    }
-    li.inview {
-        .subject-name {
-            color: white;
-            background-color: #008cba;
-        }
-    }
-}
-*/
+ * ol.subjects {
+ *     list-style: none;
+ *         padding: 0px;
+ *             margin: 0px;
+ *                 .subject-name {
+ *                         padding: 3px;
+ *                             }
+ *                                 .template-link {
+ *                                         color: #666;
+ *                                             }
+ *                                                 li:hover {
+ *                                                         cursor: pointer;
+ *
+ *                                                                 .subject-name {
+ *                                                                             background-color: #ddd;
+ *                                                                                     }
+ *                                                                                         }
+ *                                                                                             li.inview {
+ *                                                                                                     .subject-name {
+ *                                                                                                                 color: white;
+ *                                                                                                                             background-color: #008cba;
+ *                                                                                                                                     }
+ *                                                                                                                                         }
+ *                                                                                                                                         }
+ *                                                                                                                                         */
 .template-head {
   background-color: #ccc;
 }
@@ -412,10 +413,10 @@ h3 {
 }
 
 /*-----------------------------------------------
-
-    Footer
-
------------------------------------------------*/
+ *
+ *     Footer
+ *
+ *     -----------------------------------------------*/
 /* brand footer */
 #push-the-footer {
   height: 121px;
@@ -823,3 +824,4 @@ h3 {
 .fail {
   background-color: rgb(201, 0, 17);
 }
+

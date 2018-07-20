@@ -1,3 +1,16 @@
+#!/bin/bash
+#FILES=($(find /opt/sca/dicom-raw/0000-00013 -name *.json))
+#for file in "${FILES[@]}"
+#do
+#    node /opt/sca/rady-qc/bin/post.js ${file}
+#done
+
+find /opt/sca/dicom-raw/ -iname '*.json' -print0 |
+while IFS= read -r -d '' file; do
+    node /opt/sca/rady-qc/bin/post.js "${file}"
+done
+
+
 #everything
 #find /usr/local/dicom-raw -name *.json | node post.js
 
@@ -17,9 +30,11 @@
 #find /usr/local/dicom-raw/2008-00050 -name *.json | node post.js
 #find /usr/local/dicom-raw/2013-00131 -name *.json | node post.js
 #find /usr/local/dicom-raw/2013-00107 -name *.json | node post.js
-find /usr/local/dicom-raw/2015-00239 -name *.json | node ../bin/post.js
+#find /usr/local/dicom-raw/2015-00239 -name *.json | node ../bin/post.js
 
 #mr (>100k?)
 #find /usr/local/dicom-raw/0000-00001 -name *.json | node post.js
 
 #echo /usr/local/dicom-raw/2013-00131/CSN009/1.2.840.113654.2.70.1.118773634537836566383844156645401151862/FBP_FAL_dynamic_90min_200/1.2.840.113654.2.70.1.66128441808582892090193881277589860568.json | node post.js
+
+
