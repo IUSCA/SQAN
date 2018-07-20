@@ -1,6 +1,6 @@
 
-pm2 delete dicom
-pm2 start api/dicom.js --watch --ignore-watch="\.log \.git \.sh bin ui"
+pm2 delete rady-api
+pm2 start api/dicom.js --name="rady-api" --watch --ignore-watch="\.log \.git \.sh bin ui"
 
 pm2 delete cleanAndStore
 pm2 start bin/cleanAndStore.js --watch --ignore-watch="\.log$ \.css$ \.less$ \.sh$ ui"
