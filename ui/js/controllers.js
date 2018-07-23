@@ -979,7 +979,7 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
 
     $scope.sorting = {
         filter: '',
-        fieldname: $scope.fieldnames[1]        
+        fieldname: $scope.fieldnames[0]        
     };
 
     $scope.getTemplateSummary = function() {
