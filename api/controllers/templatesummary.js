@@ -18,8 +18,6 @@ router.get('/istemplate', jwt({secret: config.express.jwt.pub}),function(req,res
         { $group: { 
             _id: "$research_id",  
             IIBISID:{$addToSet:"$IIBISID"}, 
-            //date_acq:  {$addToSet:{ $dateToString: { format: "%Y-%m-%d", date: "$date" }}}, 
-            //exam_id: {$addToSet: "$_id"}, 
             count: { $sum: 1 } 
             } 
         },{$lookup: {
@@ -30,8 +28,6 @@ router.get('/istemplate', jwt({secret: config.express.jwt.pub}),function(req,res
             }
         },{ $project: {
             IIBISID: 1,
-            //date_acq: 1,
-            //exam_id: 1,
             count: 1,
             Modality: "$fromResearch.Modality",
 	        radio_tracer: "$fromResearch.radio_tracer"
@@ -49,7 +45,6 @@ router.get('/istemplate', jwt({secret: config.express.jwt.pub}),function(req,res
 
 
 // search template's by research_id and group them by exam_id:
-// router.get('/examids/:research_id', check_jwt, function(req, res, next) {
 router.get('/examids/:research_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     console.log(req.params.research_id)
     db.Template.aggregate([    
