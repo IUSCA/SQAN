@@ -970,10 +970,11 @@ function($scope, appconf, toaster, $http, serverconf) {
 
 app.controller('TemplateSummaryController',
 function($scope, appconf, toaster, $http, $location, serverconf) {
+    
     $scope.$parent.active_menu = "tsummary";
 
-    $scope.fields = ['IIBISID','Modality','radio_tracer','count'];
-    $scope.fieldnames = ['IIBISID','Modality','Radio Tracer','# Timestamps'];
+    $scope.fields = ['IIBISID','Modality','StationName','radio_tracer','count'];
+    $scope.fieldnames = ['IIBISID','Modality','Station Name','Radio Tracer','# Timestamps'];
     
     $scope.detailnames = ['Series Number','Series Description','Times used for QC','# Images'];
 
@@ -985,98 +986,198 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
     $scope.getTemplateSummary = function() {
         $http.get(appconf.api+'/templatesummary/istemplate').then(function(res) {
             $scope.templates = res.data;
-            console.log($scope.templates)
-            console.log('templates retrieved from exam db');
+            console.log($scope.templates.length + ' templates retrieved from exam db');
         }, function(err) {
             console.log("Error contacting API");
-            console.log(err);
+            console.dir(err);
         });       
     };
     $scope.getTemplateSummary();
 
     $scope.rowNumber = -1;
-    $scope.indexDetails=-1;
+    $scope.indexDetails=-1; 
 
-    $scope.templatesByTimestamp = function(research,index){        
+    $scope.templatesByTimestamp = function(research,index){
+       
         $scope.showDetails = false;
-        $scope.indexDetails = -1;
-        console.log(`show details is ${$scope.showDetails}`)
+        $scope.indexDetails=-1;
 
         if($scope.rowNumber!==index){
             
             $scope.rowNumber=index;
+            $scope.templatebytimestamp = [];
+            $scope.templatesUsed = [];
 
             $http.get(appconf.api+'/templatesummary/examids/'+research._id, {}).then(function(res) {
-                console.log("we are here");
-                console.log(res.data);
-                $scope.templatebytimestamp = res.data;
-                console.log(`Number of dates for this research -- ${$scope.templatebytimestamp.length}`);                                
+                console.log(res.data)                
+                console.log(`Number of dates for this research -- ${res.data.length}`);                                                
 
-                for(let j=0;j<$scope.templatebytimestamp.length;j++) {
-                    
-                    let usedInQC = [];
-                    let imageCount = [];
-                    let templateArr = $scope.templatebytimestamp[j];
+                res.data.forEach(function(tbyt,j) {
+                    var arrDetails = [];
+                    $scope.templatesUsed[j] = 0;
+                    tbyt.template_id.forEach(function(tid,i) {
+                        var arrItems = {};                                            
+                        arrItems['SeriesNumber'] = tbyt.SeriesNumber[i];
+                        arrItems['series_desc'] = tbyt.series_desc[i];
+                        arrItems['template_id'] = tid;
 
-                    for(let i=0;i<templateArr.template_id.length;i++){
-
-                        let template_id = templateArr.template_id[i];
-                        //console.log(template_id)
-
-                        $http.get(appconf.api+'/templatesummary/series/'+template_id, {}).then(function(res) {
-                            
+                        $http.get(appconf.api+'/templatesummary/series/'+tid, {}).then(function(res) {                            
                             if(res.data.length>0) {
-                                //console.log(i + ' ' + res.data[0].usedInQC)
-                                usedInQC.push(res.data[0].usedInQC);
-                            } else {
-                                usedInQC.push(0);
+                                arrItems['usedInQC'] = res.data[0].usedInQC;
+                                $scope.templatesUsed[j]++;
                             }
-                            //console.log($scope.usedInQC)
+                            else arrItems['usedInQC']=0                            
                         }, function(err) {
                             toaster.error("Error retrieving template details");
                             console.dir(err);
                         });
-                        $scope.templatebytimestamp[j].usedInQC = usedInQC;
 
-                        $http.get(appconf.api+'/templatesummary/imagecount/'+template_id, {}).then(function(res) {
-                            
-                            if(res.data.length>0) {
-                                //console.log(i + ' ' + res.data[0].usedInQC)
-                                imageCount.push(res.data[0].imageCount);
-                            } else {
-                                imageCount.push(0);
-                            }
-                            //console.log($scope.usedInQC)
+                        $http.get(appconf.api+'/templatesummary/imagecount/'+tid, {}).then(function(res) {                            
+                            if(res.data.length>0) arrItems['imageCount']=res.data[0].imageCount
+                            else arrItems['imageCount']=0                           
                         }, function(err) {
                             toaster.error("Error retrieving template details");
                             console.dir(err);
                         });
-                        $scope.templatebytimestamp[j].imageCount = imageCount;
-                    }
-                }            
+                        
+                        arrDetails.push(arrItems)
+                    })
+                    var timestampObj = {};
+                    timestampObj['date']=tbyt.date;
+                    timestampObj['_id']=tbyt._id;
+                    timestampObj['details']=arrDetails;
+                    $scope.templatebytimestamp.push(timestampObj)
+                })  
+                console.log($scope.templatebytimestamp)
+                console.log($scope.templatesUsed)
             }, function(err) {
                 toaster.error("Error retrieving template details");
                 console.dir(err);
             });                
-        } else {$scope.rowNumber=-1};
-    }  
-    
+        } else {$scope.rowNumber=-1};               
+    }   
 
     $scope.templateDetails = function(timestamp,index){
-        console.log(index)       
+        console.log('index  ' + index)
+        console.log('indexDetails ' + $scope.indexDetails)       
 
         if($scope.indexDetails!==index){  
-            console.log('inside function')          
             $scope.indexDetails=index;            
             $scope.showDetails = true; 
             console.log(timestamp)           
-            $scope.details = timestamp;                      
+            $scope.details = timestamp; 
         } else {
             $scope.indexDetails=-1;
             $scope.showDetails = false;
             $scope.details = [];
         }
     }  
+
+    // $scope.fields = ['IIBISID','Modality','radio_tracer','count'];
+    // $scope.fieldnames = ['IIBISID','Modality','Radio Tracer','# Timestamps'];
+    
+    // $scope.detailnames = ['Series Number','Series Description','Times used for QC','# Images'];
+
+    // $scope.sorting = {
+    //     filter: '',
+    //     fieldname: $scope.fieldnames[0]        
+    // };
+
+    // $scope.getTemplateSummary = function() {
+    //     $http.get(appconf.api+'/templatesummary/istemplate').then(function(res) {
+    //         $scope.templates = res.data;
+    //         console.log($scope.templates)
+    //         console.log('templates retrieved from exam db');
+    //     }, function(err) {
+    //         console.log("Error contacting API");
+    //         console.log(err);
+    //     });       
+    // };
+    // $scope.getTemplateSummary();
+
+    // $scope.rowNumber = -1;
+    // $scope.indexDetails=-1;
+
+    // $scope.templatesByTimestamp = function(research,index){        
+    //     $scope.showDetails = false;
+    //     $scope.indexDetails = -1;
+    //     console.log(`show details is ${$scope.showDetails}`)
+
+    //     if($scope.rowNumber!==index){
+            
+    //         $scope.rowNumber=index;
+
+    //         $http.get(appconf.api+'/templatesummary/examids/'+research._id, {}).then(function(res) {
+    //             console.log("we are here");
+    //             console.log(res.data);
+    //             $scope.templatebytimestamp = res.data;
+    //             console.log(`Number of dates for this research -- ${$scope.templatebytimestamp.length}`);                                
+
+    //             for(let j=0;j<$scope.templatebytimestamp.length;j++) {
+                    
+    //                 let usedInQC = [];
+    //                 let imageCount = [];
+    //                 let templateArr = $scope.templatebytimestamp[j];
+
+    //                 for(let i=0;i<templateArr.template_id.length;i++){
+
+    //                     let template_id = templateArr.template_id[i];
+    //                     //console.log(template_id)
+
+    //                     $http.get(appconf.api+'/templatesummary/series/'+template_id, {}).then(function(res) {
+                            
+    //                         if(res.data.length>0) {
+    //                             //console.log(i + ' ' + res.data[0].usedInQC)
+    //                             usedInQC.push(res.data[0].usedInQC);
+    //                         } else {
+    //                             usedInQC.push(0);
+    //                         }
+    //                         //console.log($scope.usedInQC)
+    //                     }, function(err) {
+    //                         toaster.error("Error retrieving template details");
+    //                         console.dir(err);
+    //                     });
+    //                     $scope.templatebytimestamp[j].usedInQC = usedInQC;
+
+    //                     $http.get(appconf.api+'/templatesummary/imagecount/'+template_id, {}).then(function(res) {
+                            
+    //                         if(res.data.length>0) {
+    //                             //console.log(i + ' ' + res.data[0].usedInQC)
+    //                             imageCount.push(res.data[0].imageCount);
+    //                         } else {
+    //                             imageCount.push(0);
+    //                         }
+    //                         //console.log($scope.usedInQC)
+    //                     }, function(err) {
+    //                         toaster.error("Error retrieving template details");
+    //                         console.dir(err);
+    //                     });
+    //                     $scope.templatebytimestamp[j].imageCount = imageCount;
+    //                 }
+    //             }            
+    //         }, function(err) {
+    //             toaster.error("Error retrieving template details");
+    //             console.dir(err);
+    //         });                
+    //     } else {$scope.rowNumber=-1};
+    // }  
+    
+
+    // $scope.templateDetails = function(timestamp,index){
+    //     console.log(index)       
+
+    //     if($scope.indexDetails!==index){  
+    //         console.log('inside function')          
+    //         $scope.indexDetails=index;            
+    //         $scope.showDetails = true; 
+    //         console.log(timestamp)           
+    //         $scope.details = timestamp;                      
+    //     } else {
+    //         $scope.indexDetails=-1;
+    //         $scope.showDetails = false;
+    //         $scope.details = [];
+    //     }
+    // }  
 });
 
 app.controller('AdminController', 

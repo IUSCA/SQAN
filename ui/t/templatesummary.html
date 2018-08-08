@@ -14,6 +14,101 @@
 </style>
 
 <div class="container">
+    <div class="row">
+        <div class="col-sm-12 col-offset-1">
+            <h4>Template Summary Table</h4>
+
+            <div class="panel-body">
+                <div class="card">
+                    <div class="row">
+                        <div class="col-xs-6 col-sm-4 col-md-2">
+                            <input class="form-control" type="text" placeholder="filter..." ng-model="sorting.filter">
+                        </div>
+                    </div>
+                    <br><br>
+                    <div class="row col-sm-8 col-md-10">
+                        <table class="table table-striped table-hover info" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th class="text-center" ng-repeat="fieldname in fieldnames"><span ng-click="sorting.fieldname = fieldname">{{fieldname}}</span><i class="fa fa-fw fa-arrow-up" ng-show="sorting.fieldname == fieldname"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat-start="templ in templates | filter:sorting.filter | orderBy: sorting.fieldname"> 
+                                    <td ng-repeat="ff in fields" class="text-center">{{templ[ff]}}</td>
+                                    <td class="text-center"><a href=""><i ng-show="showDates!=rowNumber" class="fa fa-plus" ng-click="showDates=$index; templatesByTimestamp(templ,showDates)"></i><i ng-hide="showDates!=rowNumber" class="fa fa-minus" ng-click="templatesByTimestamp(templ,showDates)"></i></a></td>                
+                                </tr>
+                                <tr ng-repeat-end ng-if="rowNumber==showDates" ng-repeat="timestamp in templatebytimestamp">
+                                    <td colspan="6">
+                                        <div class="card">
+                                            <div class="card-header lighten-1"> 
+                                                <p>
+                                                    <h5 class="text-center">Timestamp:  {{timestamp.date | date:'yyyy-MM-dd HH:mm:ss' }}</h5>
+                                                    <h5 class="text-center">{{timestamp.details.length}} templates uploaded - {{templatesUsed[$index]}} templates used for QC</h5>
+                                                </p>
+                                                <p><h5 class="text-center">
+                                                    <a href="">
+                                                        <button ng-show="indexDetails != $index || showDetails==false" ng-click="templateDetails(timestamp,$index)">
+                                                            <b >Show Details</b></button>
+                                                        <button ng-show="indexDetails === $index && showDetails==true" ng-click="templateDetails(timestamp,$index)">
+                                                            <b>Hide Details</b></button>
+                                                    </a>
+                                                </h5></p>        
+                                            </div>
+                                            <div class="card-body" ng-show="indexDetails === $index && showDetails==true && rowNumber==showDates">
+                                                <table class="table table-striped table-hover info" width="80%" cellspacing="0" ng-show="indexDetails === $index && showDetails==true && rowNumber==showDates">
+                                                    <tr ng-show="indexDetails === $index && showDetails==true && rowNumber==showDates" style="background-color:#e2eef5">
+                                                        <th class="text-center" ng-repeat="dd in detailnames track by $index">{{dd}}</th>
+                                                        <th><i class="fa fa-trash fa-lg" aria-hidden="true"></i></th>
+                                                        <tr ng-repeat-end style="background-color:#f2f7fa" ng-if="showDetails==true && rowNumber==showDates" ng-repeat="dd in details.details | orderBy: 'SeriesNumber'">              
+                                                            <td class="text-center">{{dd.SeriesNumber}}</td>
+                                                            <td class="text-center" style="word-wrap: break-all;">{{dd.series_desc}}</td>
+                                                            <td class="text-center">{{dd.usedInQC}}</td>
+                                                            <td class="text-center">{{dd.imageCount}}</td>  
+                                                            <td><input type="checkbox" ng-click="deleteSeriesTemplate(dd.)"></td>                                                      
+                                                        </tr>
+                                                    </tr>                                               
+                                                </table>
+                                            </div>
+                                        </div>                                    
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>                    
+                </div>
+            </div>                            
+        </div>
+    </div>  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- <style>
+    table { border-collapse: collapse; }
+    .sel { background-color: #bce65e; }
+    .desc { background-color: #d1e6ac; }        
+
+    button {
+    background-color: Transparent;
+    background-repeat:no-repeat;
+    border: none;
+    cursor:pointer;
+    overflow: hidden;
+    outline:none;
+    }
+</style>
+
+<div class="container">
 
     <div class="row">
         <div class="col-sm-20 col-offset-1">
@@ -35,7 +130,6 @@
                         </thead>
                         <tbody>
                             <tr ng-repeat-start="templ in templates | filter:sorting.filter | orderBy: sorting.fieldname"> 
-                                <!-- <td class="text-center">{{$index + 1}}</td> -->
                                 <td class="text-center">{{templ[fields[0]][0]}}</td>
                                 <td class="text-center">{{templ[fields[1]][0]}}</td>
                                 <td class="text-center">{{templ[fields[2]][0]}}</td>
@@ -61,7 +155,6 @@
                                                 <tr ng-show="indexDetails === $index && showDetails==true && rowNumber==showDates" style="background-color:#e2eef5">
                                                     <th class="text-center" ng-repeat="dd in detailnames track by $index">{{dd}}</th>
                                                     <tr ng-repeat-end colspan="6" style="background-color:#f2f7fa" ng-if="showDetails==true && rowNumber==showDates" ng-repeat="ii in details.SeriesNumber">                                  
-                                                        <!-- <td class="text-center">{{$index+1}}</td>   -->
                                                         <td class="text-center">{{ii}}</td>
                                                         <td style="word-wrap: break-all;" class="text-left" >{{details.series_desc[$index]}}</td>
                                                         <td class="text-center">{{details.usedInQC[$index]}}</td>
@@ -73,103 +166,13 @@
                                     </div>                                    
                                 </td>
                             </tr>
-                            <!-- <tr ng-repeat-end ng-hide="true"></tr>
-                            <tr ng-repeat-end ng-hide="true"></tr>                                                         -->
                         </tbody>
                     </table>
                 </div>
             </div>                            
         </div>
     </div>  
-</div>
+</div> -->
 
 
 
-
-
-
-
-
-<!-- <style>
-    table { border-collapse: collapse; table-layout:fixed; }
-    .sel { background-color: #bce65e; }
-    .desc { background-color: #d1e6ac; }        
-
-    button {
-    background-color: Transparent;
-    background-repeat:no-repeat;
-    border: none;
-    cursor:pointer;
-    overflow: hidden;
-    outline:none;
-}
-</style>
-
-<div class="container">
-    <div class="row">
-        <div class="col-sm-20 col-offset-1">
-            <h2>Template Summary Table</h2>
-
-
-            <div class="panel-body">
-                <div class="row">
-                    <div class="col-xs-6 col-sm-4 col-md-2">
-                        <input class="form-control" type="text" placeholder="filter..." ng-model="sorting.filter">
-                    </div>
-                </div>
-                <br><br>
-                <table class="table table-striped table-hover info" width="100%" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th class="text-center" ng-repeat="fieldname in fieldnames"><span ng-click="sorting.fieldname = fieldname">{{fieldname}}</span><i class="fa fa-fw fa-arrow-up" ng-show="sorting.fieldname == fieldname"></i></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr ng-repeat-start="templ in templates | filter:sorting.filter | orderBy: sorting.fieldname"> 
-                            <td class="text-center">{{$index + 1}}</td>
-                            <td class="text-center">{{templ[fields[0]][0]}}</td>
-                            <td class="text-center">{{templ[fields[1]][0]}}</td>
-                            <td class="text-center">{{templ[fields[2]][0]}}</td>
-                            <td class="text-center">{{templ[fields[3]]}}</td>
-                            <td class="text-center"><a href=""><i ng-show="showDates!=rowNumber" class="fa fa-plus" ng-click="showDates=$index; templatesByTimestamp(templ,showDates)"></i><i ng-hide="showDates!=rowNumber" class="fa fa-minus" ng-click="templatesByTimestamp(templ,showDates)"></i></a></td>                
-                        </tr>
-                        <tr ng-if="rowNumber==showDates" style="background-color:#c5d4dd" ng-repeat-start="timestamp in templatebytimestamp">
-                            <td colspan="6">
-                                <div class="panel">
-                                    <div class="panel-heading" style="background-color:#92afb3">
-                                        <p><h5 class="panel-title text-center">Timestamp:  {{timestamp.date | date:'yyyy-MM-dd HH:mm:ss' }}</h5></p>
-                                        <p><h5 class="panel-title text-center">
-                                            <a href="">
-                                                <button ng-show="indexDetails != $index || showDetails==false" class="text-center" ng-click="templateDetails(timestamp,$index)">
-                                                    <b>Show {{timestamp.template_id.length}} templates</b></button>
-                                                <button ng-show="indexDetails === $index && showDetails==true" class="text-center" ng-click="templateDetails(timestamp,$index)">
-                                                    <b>Hide {{timestamp.template_id.length}} templates</b></button>
-                                            </a>
-                                        </h5></p>        
-                                    </div>
-                                    <div class="panel-body" ng-show="indexDetails === $index && showDetails==true && rowNumber==showDates">
-                                        <table class="table table-striped table-hover info" width="100%" cellspacing="0" ng-show="indexDetails === $index && showDetails==true && rowNumber==showDates">
-                                            <tr ng-show="indexDetails === $index && showDetails==true && rowNumber==showDates" style="background-color:#e2eef5">
-                                                <th class="text-center" ng-repeat="dd in detailnames track by $index">{{dd}}</th>
-                                                <tr ng-repeat-end colspan="6" style="background-color:#f2f7fa" ng-if="showDetails==true && rowNumber==showDates" ng-repeat="ii in details.SeriesNumber">                                  
-                                                    <td class="text-center">{{$index+1}}</td>  
-                                                    <td style="word-wrap: break-all;" class="text-left" >{{details.series_desc[$index]}}</td>
-                                                    <td class="text-center">{{details.usedInQC[$index]}}</td>
-                                                    <td class="text-center">{{details.imageCount[$index]}}</td>
-                                                    <td class="text-center">{{ii}}</td>
-                                                </tr>
-                                            </tr>                                               
-                                        </table>
-                                    </div>
-                                </div>                                    
-                            </td>
-                        </tr>
-                        <tr ng-repeat-end ng-hide="true"></tr>
-                        <tr ng-repeat-end ng-hide="true"></tr>                                                        
-                    </tbody>
-                </table>
-            </div>                        
-        </div>
-    </div>  
-</div>
- -->
