@@ -37,7 +37,7 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
     
     //open another page inside the app.
     $scope.openpage = function(page) {
-        //console.log("path to "+page);
+        console.log("path to "+page);
         $location.path(page);
     }
 
