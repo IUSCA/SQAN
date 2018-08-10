@@ -752,7 +752,7 @@ h3 {
 }
 
 .table-header-rotated td{
-  width: 40px;
+  /*width: 40px;*/
   border-top: 1px solid #dddddd;
   border-left: 1px solid #dddddd;
   border-right: 1px solid #dddddd;
@@ -814,14 +814,14 @@ h3 {
 }
 
 .pass {
-  background-color: rgb(0, 139, 86);
+  background-color: rgb(0, 139, 86, 0.5);
 }
 
 .warning {
-  background-color: rgb(189, 176, 51);
+  background-color: rgb(189, 176, 51, 0.5);
 }
 
 .fail {
-  background-color: rgb(201, 0, 17);
+  background-color: rgb(201, 0, 17, 0.5);
 }
 

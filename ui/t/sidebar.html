@@ -1,6 +1,6 @@
 <div class="sca-sidebar">
     <!--<h2 class="text-muted"><i class="fa fa-check-square-o" aria-hidden="true"></i></h2>-->
-    <h2 class="text-muted"><img src="images/radyqc.png" width="48"></h2>
+    <h2 class="text-muted"><img style="cursor: pointer" src="images/radyqc.png" width="48" ng-click="openpage('/about')"></h2>
     <br>
     <br>
 
@@ -16,21 +16,24 @@
     <div class="menu" ng-class="{'active':  active_menu == 'tsummary'}" ng-click="openpage('/templatesummary')">
         <h3><i class="fa fa-files-o" aria-hidden="true"></i></h3> Template Summary
     </div>
+    <div class="menu" ng-class="{'active':  active_menu == 'rsummary'}" ng-click="openpage('/summary')">
+        <h3><i class="fa fa-flask" aria-hidden="true"></i></h3> Research Summary
+    </div>
 
     <div class="bottom">
         <div class="menu" ng-if="user.isadmin" ng-class="{'active':  active_menu == 'admin'}" ng-click="openpage('/admin')">
-            <h3><i class="fa fa-users" aria-hidden="true"></i></h3> Management
+            <h3><i class="fa fa-users" aria-hidden="true"></i></h3> Access Control
         </div>
-        <div class="menu" ng-click="relocate('/profile')">
-            <h3><i class="fa fa-cog" aria-hidden="true"></i></h3> Settings
+        <div class="menu" ng-click="opentab('/profile')">
+            <h3><i class="fa fa-cog" aria-hidden="true"></i></h3> Profile
         </div>
         <div class="menu" ng-click="relocate('/auth/#!/signout')">
             <h3><i class="fa fa-sign-out" aria-hidden="true"></i></h3> Logout
         </div>
         <hr>
-        <div class="menu" ng-class="{'active':  active_menu == 'about'}" ng-click="openpage('/about')">
-            <h3><i class="fa fa-question" aria-hidden="true"></i></h3> About
-        </div>
+        <!--<div class="menu" ng-class="{'active':  active_menu == 'about'}" ng-click="openpage('/about')">-->
+            <!--<h3><i class="fa fa-question" aria-hidden="true"></i></h3> About-->
+        <!--</div>-->
     </div>
 
     <!--

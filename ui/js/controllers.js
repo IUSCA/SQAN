@@ -34,7 +34,11 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
     $scope.opentemplate = function(id) {
         $window.open("#/template/"+id,  "tepmlate:"+id);
     }
-    
+
+    $scope.opentab = function(page) {
+        $window.open(page);
+    }
+
     //open another page inside the app.
     $scope.openpage = function(page) {
         //console.log("path to "+page);
@@ -944,35 +948,63 @@ function($scope, appconf, toaster, $http, serverconf) {
 
 
 app.controller('SummaryController',
-function($scope, appconf, toaster, $http, serverconf) {
-    $scope.researches = {};
+function($scope, appconf, toaster, $http, $window, $sce, serverconf) {
+    $scope.$parent.active_menu = "rsummary";
+    $scope.researches = [];
+    $scope.research_detail = {};
     $scope.research_id = '';
-    $scope.selected = '';
+    $scope.research = {
+        selected: ''
+    };
+
+    $scope.openstudy = function(id) {
+        $window.open("#/series/"+id, "study:"+id);
+    }
 
     $http.get(appconf.api+'/research')
         .then(function(res) {
             //$scope.researches = res.data;
-
+            var res_temp = {};
             //group by IIBISID
             angular.forEach(res.data, function(r){
-                if (!(r.IIBISID in $scope.researches)){
-                    $scope.researches[r.IIBISID] = [r];
+                if (!(r.IIBISID in res_temp)){
+                    res_temp[r.IIBISID] = [r];
                 } else {
-                    $scope.researches[r.IIBISID].push(r);
+                    res_temp[r.IIBISID].push(r);
                 }
-            })
+            });
+
+            angular.forEach(res_temp, function(v, k){
+                $scope.researches.push({id: k, studies: v})
+            });
 
             console.log($scope.researches);
             console.log(res.data);
-            $scope.selected = $scope.researches[res.data[0].IIBISID];
+            $scope.research.selected = $scope.researches[0];
             $scope.getSummary();
         }, $scope.toast_error);
 
 
+    $scope.trustAsHtml = function(value) {
+        return $sce.trustAsHtml(value);
+    };
+
+    $scope.getIIBIS = function() {
+        var url = appconf.api+'/iibis/'+$scope.research.selected.id;
+        console.log(url);
+        $http.get(url)
+            .then(function(res) {
+                console.log(res);
+                $scope.research_detail = res.data[0];
+            }, $scope.toast_error);
+    };
+
     $scope.getSummary = function() {
         $scope.summary = {};
         $scope.subjects = [];
-        angular.forEach($scope.selected, function(s){
+        $scope.getIIBIS();
+        angular.forEach($scope.research.selected.studies, function(s){
+            console.log(s);
             $http.get(appconf.api+'/research/summary/'+s._id)
                 .then(function(res) {
                     console.log(s);

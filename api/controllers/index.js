@@ -10,6 +10,7 @@ var config = require('../../config');
 
 router.use('/', require('./root'));
 router.use('/research', require('./research'));
+router.use('/iibis', require('./iibis'));
 router.use('/exam', require('./exam'));
 router.use('/series', require('./series'));
 router.use('/image', require('./image'));
