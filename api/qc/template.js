@@ -195,7 +195,9 @@ var customs = {
 };
 
 
-function skip(k, v, tv, qc) {}
+function skip(k, v, tv, qc) {
+    console.log('skip')
+}
 
 function check_set(k, v, tv, qc) {
     //raise error if the field is missing
