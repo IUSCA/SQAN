@@ -50,6 +50,7 @@ var examSchema = mongoose.Schema({
     research_id: {type: mongoose.Schema.Types.ObjectId, index: true, ref: 'Research'},
     subject: {type: String, index: true}, //not set if it's template
     date: {type: Date, index: true}, //date when this template is received (probabbly use StudyTimestamp of the template?)
+    istemplate: {type: Boolean},
     //
     //
     ///////////////////////////////////////////////////////////////////////////
@@ -77,7 +78,6 @@ var templateSchema = mongoose.Schema({
     //
     // keys
     //
-    research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     exam_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     series_desc: {type: String, index: true}, //original SeriesDescription minut anything after ^
     SeriesNumber: {type: Number, index: true},

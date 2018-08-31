@@ -2,6 +2,7 @@
 
 //node
 var fs = require('fs');
+var tar = require('tar');
 
 //contrib
 var amqp = require('amqp');
@@ -90,38 +91,34 @@ function incoming(h, msg_h, info, ack) {
         },
 
         function(next) {
-            //store a copy of raw input before cleaning
             var path = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
-            //logger.debug("storing header to "+path);
             write_to_disk(path, h, function(err) {
                 if(err) throw err; //let's kill the app - to alert the operator of this critical issue
-                //logger.debug("wrote to raw_headers");
+                //logger.debug("wrote to raw_headers");                
+                next();
+            });
+        },
+
+        function(next) {            
+            var path2tar = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc+".tar"
+            var path2file = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc+"/"+h.SOPInstanceUID+".json"
+             logger.debug("storing file "+ path2file+ " to "+path2tar);
+            write_to_tar(path2tar,path2file, function(err) {
+                if(err) throw err; //let's kill the app - to alert the operator of this critical issue
+                logger.debug("wrote to tar");                
                 next();
             });
         },
 
         function(next) {
             try {       
-                qc.instance.clean(h);
+                qc.instance.clean(h); 
                 console.log('after cleaning image is a template: '+h.qc_istemplate)
                 next();
             } catch(err) {
                 next(err);
             }
         },
-
-        // ********************************
-        // AAK -- do we really need to store the cleaned data? It might be better to store a copy of the raw data and not store the clean....
-        // ********************************
-        // function(next) {
-        //     //store clearned data to cleaned directory
-        //     var path = config.cleaner.cleaned+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
-        //     //logger.debug("storing headers to "+path);
-        //     write_to_disk(path, h, function(err) {
-        //         if(err) logger.error(err); //continue
-        //         next();
-        //     });
-        // },
 
         // ********************************
         // AAK -- why do we do this???
@@ -174,15 +171,10 @@ function incoming(h, msg_h, info, ack) {
         //make sure we know about this research
         function(next) {
             //TODO radio_tracer should always be set for CT.. right? Should I validate?
-            // AAK --  make radio_tracer an array and store all radio_tracers
-            var radio_tracer = [];
+            var radio_tracer = null;
             if(h.RadiopharmaceuticalInformationSequence && h.RadiopharmaceuticalInformationSequence.length > 0) {
-                //TODO - what should I do if there are more than 1? - for now just pick the first one
-                // AAK -- store radio tracers in array
-                //radio_tracer = h.RadiopharmaceuticalInformationSequence[0].Radiopharmaceutical;
-                h.RadiopharmaceuticalInformationSequence.forEach(function(rt) {
-                    radio_tracer.push(rt.Radiopharmaceutical);
-                  });                
+                //AAK - h.RadiopharmaceuticalInformationSequence is an array with a single entry. Can there be more than 1 entry? - for now just pick the first one
+                radio_tracer = h.RadiopharmaceuticalInformationSequence[0].Radiopharmaceutical;                
             }
             db.Research.findOneAndUpdate({
                 IIBISID: h.qc_iibisid,
@@ -197,12 +189,13 @@ function incoming(h, msg_h, info, ack) {
         
         //make sure we know about this exam 
         function(next) {
-            if(h.qc_istemplate) return next();  //if it's template then skip
+            //if(h.qc_istemplate) return next();  //if it's template then skip
 
             db.Exam.findOneAndUpdate({
                 research_id: research._id,
                 subject: (h.qc_istemplate?null:h.qc_subject),
                 date: h.qc_StudyTimestamp, 
+                istemplate:h.qc_istemplate,
             }, {},
                 // {$push: {series_desc:h.qc_series_desc}},  // push into array of series descriptions
             {upsert:true, 'new': true}, function(err, _exam) {
@@ -212,21 +205,20 @@ function incoming(h, msg_h, info, ack) {
             });
         },
         
-        //make sure we know about this template 
+        //make sure we know about this template and insert template header
         function(next) {
-            if(h.qc_istemplate==false) {
-                console.log('This is NOT a template -- should not go into Template')   
-                return next();  //if not a template then skip
-            }
-            console.log('template: ' + h.qc_istemplate+ ' -- querrying template db...' )
+            if(h.qc_istemplate==false) return next();  //if not a template then skip
+
+            console.log("image is template")
             db.Template.findOneAndUpdate({
-                research_id: research._id,
+                exam_id: exam._id,
                 series_desc: h.qc_series_desc,
                 SeriesNumber: h.SeriesNumber,                
             }, {date: h.qc_StudyTimestamp},  //headers: h, //update with the latest headers (or mabe we should store all under an array?)
             {upsert:true, 'new': true}, function(err, _template) {
                 if(err) return next(err);
                 template = _template;
+                
                 //store template header
                 db.TemplateHeader.findOne({
                     template_id: template._id,
@@ -234,7 +226,7 @@ function incoming(h, msg_h, info, ack) {
                 }, function(err, _primarytemplate) {
                     if(err) return next(err);
                     if (!_primarytemplate) {   
-                        console.log('primary template header not found')                     
+                        console.log('primary template image does not exist')                     
                         db.TemplateHeader.create({
                             template_id: template._id,
                             InstanceNumber: h.InstanceNumber,
@@ -243,33 +235,36 @@ function incoming(h, msg_h, info, ack) {
                             headers:h
                         },function(err,_primary_template) {
                             if (err) return next(err);
-                            console.log('assigning primary template to template '+ _primary_template._id);
                             // finally, insert primary_template._id into the template collection  
                             db.Template.updateOne({
                                 _id: template._id
-                            }, {primary_image:_primary_template._id}, function(err,s) {if (err) return next(err)});                          
-                        })    
-                        next();
+                            }, {primary_image:_primary_template._id}, function(err) {
+                                if (err) return next(err);  
+                                return next();                              
+                            });                                                   
+                        })                            
                     } else if(_primarytemplate) {
+                        // first check if this image is same instance as primary, if so, send warning
+                        // we cannot update the primary without comparing with all other images for this series...
+                        if (_primarytemplate.InstanceNumber == h.InstanceNumber) {
+                            logger.warn("This image is the same instance number as primary image. Not inserting!!");  
+                            return next();                            
+                        }
                         console.log('primary template header already exists... compressing current template header')                     
-                        compare_with_primary(_primarytemplate.headers,h,function(err){
-                            if(err) throw err;
-                            console.log('this is the compressed template header: ')
-                            console.log(h)
-                        });
-                        db.TemplateHeader.findOneAndUpdate({
-                            template_id: template._id,
-                            InstanceNumber: h.InstanceNumber,
-                            EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
-                        }, {primary_image: _primarytemplate._id,
-                            headers:h
-                        },{upsert:true, 'new': false}, function(err, _tempheader) {
-                            if(err) return next(err);
-                            //I am setting new:false so that _image will be null if this is the first time
-                            if(_tempheader) {
-                                logger.warn("template header already inserted");
-                            }
-                            next();
+                        compare_with_primary(_primarytemplate.headers,h,function(){
+                            db.TemplateHeader.findOneAndUpdate({
+                                template_id: template._id,
+                                InstanceNumber: h.InstanceNumber,
+                                EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
+                            }, {
+                                primary_image: _primarytemplate._id,
+                                headers:h
+                            },{upsert:true, 'new': false}, function(err, _tempheader) {
+                                if(err) return next(err);
+                                //I am setting new:false so that _image will be null if this is the first time
+                                if(_tempheader) logger.warn("template header already inserted");
+                                return next();
+                            });
                         });                          
                     }
                 });
@@ -278,78 +273,76 @@ function incoming(h, msg_h, info, ack) {
         
         //make sure we know about this series
         function(next) {
-            if(h.qc_istemplate==true) {
-                console.log('This is a template -- should not go into Series')   
-                return next();  //if it's template then skip
-            }
-            console.log('template: ' + h.qc_istemplate+ ' -- querrying series db...' )
+            if(h.qc_istemplate==true) return next();  //if it's template then skip
+
             db.Series.findOneAndUpdate({
                 exam_id: exam._id,
                 series_desc: h.qc_series_desc,
                 SeriesNumber: h.SeriesNumber,
-            }, {  //AAK -- is it ok for these to be updated every time? why are we updating the studyinstanceUID?
+            }, { 
                 StudyInstanceUID: h.StudyInstanceUID,  
                 isexcluded: qc.series.isExcluded(h.Modality, h.qc_series_desc),
             }, {upsert: true, 'new': true}, function(err, _series) {   
                 if(err) return next(err);
-                series = _series;                
+                series = _series;   
 
                 db.Image.findOne({
                     series_id: series._id,                    
                     primary_image: null
                 }, function(err, _primaryimage) {
                     if(err) return next(err);
+                    
                     if (!_primaryimage) {   // AAK -- if primary does NOT exist, there should be no images for this series-- should I check for this? 
-                        console.log('primary image not found');
-                        // db.Images.find({series_id: series._id}, function(err,_images) {
-                        //     if(err) return next(err);
-                        //     if (_images) {
-                        //         logger.warn('There is no primary image for this series, but there are images inserted for this series!');
-                        //         return next(err);
-                        //     }
-                        // })                     
-                        db.Image.findOneAndUpdate({
+                        console.log('primary does not exist');                     
+                        db.Image.create({
                             series_id: series._id,
                             InstanceNumber: h.InstanceNumber,
                             EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
                             primary_image: null,
-                        }, {headers:h},
-                        {upsert:true, 'new': true}, function(err,_primary_image) {
+                            headers:h
+                        },function(err,_primary_image) {
                             if (err) return next(err);
-                            console.log('assigning primary_image to series '+ _primary_image._id);
-                            primary_image = _primary_image;
                             // finally, insert primary_image._id into the series collection
                             db.Series.updateOne({
                                 _id: series._id
-                            }, {primary_image:primary_image._id}, function(err,s) {if (err) return next(err)});
+                            }, {
+                                primary_image:_primary_image._id,
+                                deprecated_by: deprecatedBy(series),
+                            }, function(err) {
+                                if (err) return next(err);
+                                return next(); 
+                            });
                         }) 
-                        next();
                     } else if(_primaryimage) {
-                        console.log('primary image already exists... compressing current image before inserting')                     
+                        // first check if this image is same instance as primary, if so, send warning
+                        // we cannot update the primary without comparing with all other images for this series...
+                        if (_primaryimage.InstanceNumber == h.InstanceNumber) {
+                            logger.warn("This image is the same instance number as primary image. Not inserting!!");  
+                            return next();                            
+                        }                    
                         // primary image exists, so we compress current image header
-                        compare_with_primary(_primaryimage.headers,h,function(err){
-                            if(err) throw err;
-                        });
-                        db.Image.findOneAndUpdate({
-                            series_id: series._id,
-                            InstanceNumber: h.InstanceNumber,
-                            EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
-                            primary_image: _primaryimage._id,
-                        }, {headers:h},
-                        {upsert:true, 'new': false}, function(err, _image) {
-                            if(err) return next(err);
-                            //I am setting new:false so that _image will be null if this is the first time
-                            if(_image) {
-                                logger.warn("image already inserted - not sending to es since it can't update");                                
-                            }
-                            //I am now setting document_id on logstash. Elasticsearch can update the document as long as document_id matches and index name
-                            //stays the same!
-                            cleaned_ex.publish('', h, {}, function(err) {
-                                next(err);
+                        compare_with_primary(_primaryimage.headers,h,function(){
+                            db.Image.findOneAndUpdate({
+                                series_id: series._id,
+                                InstanceNumber: h.InstanceNumber,
+                                EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
+                            }, {
+                                primary_image: _primaryimage._id,
+                                headers:h
+                            },{upsert:true, 'new': false}, function(err, _image) {
+                                if(err) return next(err);
+                                //I am setting new:false so that _image will be null if this is the first time
+                                if(_image) logger.warn("image already inserted - not sending to es since it can't update");                                
+                                //I am now setting document_id on logstash. Elasticsearch can update the document as long as document_id matches and index name
+                                //stays the same!
+                                // cleaned_ex.publish('', h, {}, function(err) {
+                                //     return next(err);
+                                // });
+                                return next();
                             });
                         });
-                    }                                        
-                });
+                    }                                      
+                 });
             });
         },
 
@@ -358,7 +351,6 @@ function incoming(h, msg_h, info, ack) {
         // function(next) {
         //     if(h.qc_istemplate) return next();  //if it's template then skip
         //     db.Series.update({
-        //         research_id: research._id,
         //         exam_id: exam._id,
         //         series_desc: h.qc_series_desc,
         //         SeriesNumber: { $lt: h.SeriesNumber },
@@ -367,10 +359,9 @@ function incoming(h, msg_h, info, ack) {
         //     }, {multi: true}, next);
         // },
 
-        // //looks for newer updated series and deprecate this one with that series
+        //looks for newer updated series and deprecate this one with that series
         // function(next) {
         //     db.Series.findOne({
-        //         research_id: research._id,
         //         exam_id: exam._id,
         //         series_desc: h.qc_series_desc,
         //         SeriesNumber: { $gt: h.SeriesNumber },
@@ -394,24 +385,6 @@ function incoming(h, msg_h, info, ack) {
         //         }, next);
         //     })
         // },
-
-        // //make sure we know about this acquisition
-        // function(next) {
-        //     if(h.qc_istemplate) return next();  //if it's template then skip
-
-        //     db.Acquisition.findOneAndUpdate({
-        //         series_id: series._id,
-        //         AcquisitionNumber: h.AcquisitionNumber,
-        //     }, {
-        //         research_id: research._id,
-        //         exam_id: exam._id,
-        //         series_id: series._id,
-        //     }, {upsert:true, 'new': true}, function(err, _aq) {
-        //         if(err) return next(err);
-        //         aq = _aq;
-        //         next();
-        //     });
-        // },
         
 
     ], function(err) {
@@ -431,6 +404,43 @@ function incoming(h, msg_h, info, ack) {
     });
 }
 
+
+var deprecatedBy = function(series) {
+    
+    db.Series.update({
+        exam_id: series.exam_id,
+        series_desc: series.series_desc,
+        SeriesNumber: { $lt: series.SeriesNumber },
+    }, {
+        deprecated_by: series._id,
+    }, {multi: true}, function(err) {
+        logger.warn("error deprecating older series");
+        if (err) return null;
+    })
+                
+    db.Series.findOne({
+        exam_id: exam._id,
+        series_desc: h.qc_series_desc,
+        SeriesNumber: { $gt: h.SeriesNumber },
+        deprecated_by: null
+    }, function(err, _series){
+        if(err) {
+            logger.warn("error deprecating current series");
+            return null
+        }
+        if(!_series) return null;
+        if(_series) return(_series._id);
+    });    
+}
+
+
+
+function write_to_tar(path2tar, path2file, cb) {
+    tar.u({file: path2tar},[path2file]
+    ).then(cb);
+}
+
+
 function write_to_disk(dir, h, cb) {
     fs.exists(dir, function (exists) {
         //if(!exists) fs.mkdirSync(dir);
@@ -440,21 +450,21 @@ function write_to_disk(dir, h, cb) {
 }
 
 function compare_with_primary(primaryImg,h,cb) {
+
     for (var k in primaryImg) {     
         v = primaryImg[k]; 
         //AAK -- these are identifiers so we don't want to remove them; should we add other non-removable fields?  
-        if (['qc_istemplate','SeriesNumber'].indexOf(k) < 0) {
+        if (['qc_istemplate','SeriesNumber','EchoNumbers'].indexOf(k) < 0) {
             if (!Array.isArray(v) && !isObject(v) && h.hasOwnProperty(k) && h[k] === v) {  
                 //console.log('deleting field: '+k +' -- ' + h[k]);
                 delete h[k]
             } 
             else if (Array.isArray(v) || isObject(v)) {
-                if (isEqual(v,h[k]) == true) {
-                    delete h[k];
-                }
+                if (isEqual(v,h[k]) == true) delete h[k];
             }
         }     
     }
+    cb();
 }
 
 function isObject (value) {
@@ -462,56 +472,38 @@ function isObject (value) {
 }
 
 
-var isEqual = function (value, other) {
+var isEqual = function (field1, field2) {
 
-	// Get the value type
-	var type = Object.prototype.toString.call(value);
-	// If the two objects are not the same type, return false
-	if (type !== Object.prototype.toString.call(other)) return false;
-    
-    // If items are not an object or array, return false
-	//if (['[object Array]', '[object Object]'].indexOf(type) < 0) return false;  // from compre_with_primary we already know that items are array or object
+	var type = Object.prototype.toString.call(field1);
+	if (type !== Object.prototype.toString.call(field2)) return false;
 
-	// Compare the length of the length of the two items
-	var valueLen = type === '[object Array]' ? value.length : Object.keys(value).length;
-	var otherLen = type === '[object Array]' ? other.length : Object.keys(other).length;
-	if (valueLen !== otherLen) return false;
+	var len1 = type === '[object Array]' ? field1.length : Object.keys(field1).length;
+	var len2 = type === '[object Array]' ? field2.length : Object.keys(field2).length;
+	if (len1 !== len2) return false;
 
-	// Compare two items
 	var compare = function (item1, item2) {
 		var itemType = Object.prototype.toString.call(item1);
 
-		// If an object or array, compare recursively
 		if (['[object Array]', '[object Object]'].indexOf(itemType) >= 0) {
 			if (!isEqual(item1, item2)) return false;
 		}
-		// Otherwise, do a simple comparison
 		else {
-			// If the two items are not the same type, return false
             if (itemType !== Object.prototype.toString.call(item2)) return false;
             if (item1 !== item2) return false;
-			// Else if it's a function, convert to a string and compare
-			// Otherwise, just compare
-			// if (itemType === '[object Function]') {
-			// 	if (item1.toString() !== item2.toString()) return false;
-			// } else {
-			// 	if (item1 !== item2) return false;
-			// }
 		}
-	};
-	// Compare properties
+    };
+    
 	if (type === '[object Array]') {
-		for (var i = 0; i < valueLen; i++) {
-			if (compare(value[i], other[i]) === false) return false;
+		for (var i = 0; i < len1; i++) {
+			if (compare(field1[i], field2[i]) === false) return false;
 		}
 	} else {
-		for (var key in value) {
-			if (value.hasOwnProperty(key)) {
-				if (compare(value[key], other[key]) === false) return false;
+		for (var key in field1) {
+			if (field1.hasOwnProperty(key)) {
+				if (compare(field1[key], field2[key]) === false) return false;
 			}
 		}
 	}
-	// If items are equal then return true
 	return true;
 
 };

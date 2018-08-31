@@ -307,7 +307,7 @@ exports.parseMeta = function(h) {
     //more on this again
     if(h.SeriesDescription) {
         var ts = h.SeriesDescription.split("^");
-        meta.series_desc = ts[0];
+        meta.series_desc = ts[0]; //.replace(/\d+$/, '');  // remove trailing numbers
         meta.series_desc_version = ts[1];
     }
 

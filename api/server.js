@@ -3,6 +3,8 @@
 //node
 var fs = require('fs');
 var path = require('path');
+var tar = require('tar');
+
 
 //contrib
 var express = require('express');

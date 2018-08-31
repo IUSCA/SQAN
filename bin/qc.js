@@ -23,31 +23,50 @@ db.init(function(err) {
 });
 
 function run(cb) {
-    logger.info("querying un-qc-ed images");
-    //find images that needs QC in a batch
-    db.Image.find({qc: {$exists: false}}).limit(config.qc.batch_size).exec(function(err, images) {
+    logger.info("querying un-qc-ed images-- "+ new Date());
+    // get primary images that are not qc-ed
+    db.Image.find({qc: {$exists: false},primary_image:null}).limit(1).exec(function(err, primimages) { //config.qc.batch_size
         if(err) return cb(err);
-        async.forEach(images, qc, function(err) {
-            if(err) return cb(err);
-            logger.info("batch complete. sleeping before next batch");
-            setTimeout(function() {
-                run(cb);
-            }, 1000*3);
-        });
+        console.log(`run --primary images retrieved: ${primimages.length}`);
+        // for each primary image find the batch of image headers for that series (including the primary image) and qc all 
+        for (var i = 0;i<primimages.length;i++) { // PERHAPS CHANGE THIS INTO A primimages.forEach...
+            var primimages_i = primimages[i];
+            console.log(`run --qc-ing series : ${primimages_i.headers.qc_series_desc}`);            
+            db.Image.find({$or: [ {primary_image: primimages_i._id},{_id:primimages_i._id}]},function(err,images) {
+                if (err) return cb(err);
+                console.log(`run -- number of images for this series : ${images.length}`)                
+                async.forEach(images, qc, function(err) {
+                    if(err) return cb(err);
+                    // this is where we create a tarball with all files in a series directory
+                    // var path2tar = config.cleaner.raw_headers+"/"+primimages_i.qc_iibisid+"/"+primimages_i.qc_subject+"/"+primimages_i.StudyInstanceUID+"/"+primimages_i.qc_series_desc+".tar"
+                    // var path2file = path2tar"/*.json"
+                    // logger.debug("storing file "+ path2file+ " to "+path2tar);
+                    // write_to_tar(path2tar,path2file, function(err) {
+                    //     if(err) throw err; //let's kill the app - to alert the operator of this critical issue
+                    //     logger.debug("wrote to tar");                
+                    //     next();
+                    // });
+                    logger.info("Series complete. sleeping before next batch -- "+new Date());
+                    setTimeout(function() {
+                        run(cb);
+                    }, 1000*3);
+                });
+            })
+        }
+
     });
 }
 
 //iii) Compare headers on the images with the chosen template (on fields configured to be checked against) and store discrepancies. 
 function qc(image, next) {
-    logger.info("QC-ing image_id:"+image.id+ '-- primary: '+image.primary_image);
+    logger.info("QC-ing image_id:"+image.id);
+    
     reconstruct_header(image, function (err,image){        
         if (err) return next(err);
-        console.log('cb -- reconstruct_header -- reconstructed image')
         
-        find_template_headers(image, function(err, templateheaders) {
-            //console.log(`cb -- find_template_headers -- reconstructed template: ${templateheaders}`)
-            console.log(`template instance number is ${templateheaders.InstanceNumber}
-            image instance number is ${image.InstanceNumber}`);
+        find_template_headers(image, function(err, templateheader) {
+            //console.log(`cb -- find_template_headers -- reconstructed template: ${templateheader}`)
+            //console.log(`template instance number is ${templateheader.InstanceNumber} image instance number is ${image.InstanceNumber}`);
             if(err) return next(err);
             var qc = {
                 template_id: null,
@@ -56,9 +75,9 @@ function qc(image, next) {
                 warnings: [],
                 notemp: false, //set to true if no template was found
             };
-            if(templateheaders) {
-                qc.template_id = templateheaders.template_id;
-                qc_template.match(image, templateheaders, qc);
+            if(templateheader) {
+                qc.template_id = templateheader.template_id;
+                qc_template.match(image, templateheader, qc);
             } else {
                 //templte missing for the entire series, or just for this instance number
                 //either way.. just mark it as notemp
@@ -72,7 +91,7 @@ function qc(image, next) {
                 //console.log(err);
                 if(err) return next(err);
                 //invalidate series qc
-                db.Series.update({_id: image.series_id}, {$unset: {qc: 1}}, {multi: true}, next);
+                //db.Series.update({_id: image.series_id}, {$unset: {qc: 1}}, {multi: true}, next);
             });
          });
     });        
@@ -80,11 +99,10 @@ function qc(image, next) {
 }
 
 function reconstruct_header(header,cb) {
-    console.log('reconstruct_header')
     if (header.primary_image !== null) { //image is not primary image
-        console.log('reconstruct_header -- image is not primary image')
+        //console.log('reconstruct_header -- image is not primary image')
         if (header.template_id) {// header is a templateheader
-            console.log('reconstruct_header -- header is a template')
+            //console.log('reconstruct_header -- header is a template')
             db.TemplateHeader.findById(header.primary_image,function(err,primary_image){
                 if (err) return cb(err)
                 rec(primary_image,header,function() {
@@ -92,7 +110,7 @@ function reconstruct_header(header,cb) {
                 });
             });
         } else if (header.series_id) { // header is a image header
-            console.log('reconstruct_header -- header is an image')
+            //console.log('reconstruct_header -- header is an image')
             db.Image.findById(header.primary_image,function(err,primary_image){
                 if (err) return cb(err)
                 rec(primary_image,header,function(){
@@ -100,12 +118,12 @@ function reconstruct_header(header,cb) {
                 })
             });
         } else {
-            console.log('header is not image nor template!'); 
+            logger.info('header is not image nor template!'); 
             cb(err,null)
         }
     } else {
-        console.log('reconstruct_header -- image is a primary -- no reconstruction')
-        cb(null,header);
+        //console.log('reconstruct_header -- image is a primary -- no reconstruction')
+        cb(null);
     }
 }
 
@@ -139,7 +157,7 @@ function find_template_headers(image, cb) {
                 EchoNumbers: image.EchoNumbers !== undefined ? image.EchoNumbers : null,
             }, function(err,templateheader){
                 if (err) cb(err)
-                console.log(`find_template_headers -- template header found:  ${templateheader._id}`);
+                //console.log(`find_template_headers -- template header found:  ${templateheader._id}`);
                 reconstruct_header(templateheader, function(err,templateheader) {
                     if(err) cb(err);
                     cb(null,templateheader);

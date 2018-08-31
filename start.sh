@@ -10,7 +10,7 @@ pm2 delete orthanc2incomingQ
 pm2 start bin/orthanc2incomingQ.js --name="orthanc2incomingQ" --watch --ignore-watch="\.git \.log$ \.css$ \.less$ \.sh$ ui" --output /opt/sca/tmp/.pm2/logs/orthanc2incomingQ.out --error /opt/sca/tmp/.pm2/logs/orthanc2incomingQ.err
 
 #pm2 delete qc
-#pm2 start bin/qc.js --name="qc" --watch --ignore-watch="\.log$ \.sh$ ui \.git" --output /opt/sca/tmp/.pm2/logs/qc.out --error /opt/sca/tmp/.pm2/logs/qc.err
+#pm2 start bin/qc.js --name="qc" --watch --max_restarts=1 --ignore-watch="\.log$ \.sh$ ui \.git" --output /opt/sca/tmp/.pm2/logs/qc.out --error /opt/sca/tmp/.pm2/logs/qc.err
 
 #pm2 delete qc_series
 #pm2 start bin/qc_series.js --name="qc_series" --watch --ignore-watch="\.log$ \.sh$ ui \.git" --output /opt/sca/tmp/.pm2/logs/qc_series.out --error /opt/sca/tmp/.pm2/logs/qc_series.err
