@@ -281,6 +281,8 @@ function check_percent_diff(k, v, tv, qc, r, th) {
 //compare image headers against template headers
 exports.match = function(image, template, qc) {
 
+    console.log("image is " + image.InstanceNumber)
+    console.log("template is " + template.InstanceNumber)
     //find exclusion list
     var cus = customs[image.headers.Modality];
     if(!cus) {
@@ -300,6 +302,7 @@ exports.match = function(image, template, qc) {
             check_equal(k, v, tv, qc);
         }
     };
+    console.log("qc for image " + image.InstanceNumber+ "is " + qc)
 }
 
 exports.cc = common_customs;

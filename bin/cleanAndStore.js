@@ -209,8 +209,8 @@ function incoming(h, msg_h, info, ack) {
         function(next) {
             if(h.qc_istemplate==false) return next();  //if not a template then skip
 
-            console.log("image is template")
             db.Template.findOneAndUpdate({
+                research_id: research._id,
                 exam_id: exam._id,
                 series_desc: h.qc_series_desc,
                 SeriesNumber: h.SeriesNumber,                
@@ -226,7 +226,6 @@ function incoming(h, msg_h, info, ack) {
                 }, function(err, _primarytemplate) {
                     if(err) return next(err);
                     if (!_primarytemplate) {   
-                        console.log('primary template image does not exist')                     
                         db.TemplateHeader.create({
                             template_id: template._id,
                             InstanceNumber: h.InstanceNumber,
@@ -235,10 +234,14 @@ function incoming(h, msg_h, info, ack) {
                             headers:h
                         },function(err,_primary_template) {
                             if (err) return next(err);
+                            var deprecated_by = deprecatedByTemplate(template);
                             // finally, insert primary_template._id into the template collection  
                             db.Template.updateOne({
                                 _id: template._id
-                            }, {primary_image:_primary_template._id}, function(err) {
+                            }, {
+                                primary_image:_primary_template._id,
+                                deprecated_by: deprecated_by !== "undefined"? deprecated_by : null
+                            }, function(err) {
                                 if (err) return next(err);  
                                 return next();                              
                             });                                                   
@@ -250,7 +253,6 @@ function incoming(h, msg_h, info, ack) {
                             logger.warn("This image is the same instance number as primary image. Not inserting!!");  
                             return next();                            
                         }
-                        console.log('primary template header already exists... compressing current template header')                     
                         compare_with_primary(_primarytemplate.headers,h,function(){
                             db.TemplateHeader.findOneAndUpdate({
                                 template_id: template._id,
@@ -284,7 +286,7 @@ function incoming(h, msg_h, info, ack) {
                 isexcluded: qc.series.isExcluded(h.Modality, h.qc_series_desc),
             }, {upsert: true, 'new': true}, function(err, _series) {   
                 if(err) return next(err);
-                series = _series;   
+                series = _series;  
 
                 db.Image.findOne({
                     series_id: series._id,                    
@@ -292,8 +294,7 @@ function incoming(h, msg_h, info, ack) {
                 }, function(err, _primaryimage) {
                     if(err) return next(err);
                     
-                    if (!_primaryimage) {   // AAK -- if primary does NOT exist, there should be no images for this series-- should I check for this? 
-                        console.log('primary does not exist');                     
+                    if (!_primaryimage) {   
                         db.Image.create({
                             series_id: series._id,
                             InstanceNumber: h.InstanceNumber,
@@ -302,12 +303,13 @@ function incoming(h, msg_h, info, ack) {
                             headers:h
                         },function(err,_primary_image) {
                             if (err) return next(err);
+                            var deprecated_by = deprecatedBySeries(series);
                             // finally, insert primary_image._id into the series collection
                             db.Series.updateOne({
                                 _id: series._id
                             }, {
                                 primary_image:_primary_image._id,
-                                deprecated_by: deprecatedBy(series),
+                                deprecated_by: deprecated_by !== "undefined"? deprecated_by : null,
                             }, function(err) {
                                 if (err) return next(err);
                                 return next(); 
@@ -335,6 +337,7 @@ function incoming(h, msg_h, info, ack) {
                                 if(_image) logger.warn("image already inserted - not sending to es since it can't update");                                
                                 //I am now setting document_id on logstash. Elasticsearch can update the document as long as document_id matches and index name
                                 //stays the same!
+                                // AAK -- what is this? 
                                 // cleaned_ex.publish('', h, {}, function(err) {
                                 //     return next(err);
                                 // });
@@ -345,47 +348,6 @@ function incoming(h, msg_h, info, ack) {
                  });
             });
         },
-
-        // //deprecate older series under the same series_desc
-        // //sometimes these show up out of order!
-        // function(next) {
-        //     if(h.qc_istemplate) return next();  //if it's template then skip
-        //     db.Series.update({
-        //         exam_id: exam._id,
-        //         series_desc: h.qc_series_desc,
-        //         SeriesNumber: { $lt: h.SeriesNumber },
-        //     }, {
-        //         deprecated_by: series._id,
-        //     }, {multi: true}, next);
-        // },
-
-        //looks for newer updated series and deprecate this one with that series
-        // function(next) {
-        //     db.Series.findOne({
-        //         exam_id: exam._id,
-        //         series_desc: h.qc_series_desc,
-        //         SeriesNumber: { $gt: h.SeriesNumber },
-        //         deprecated_by: null
-        //     }, function(err, _series){
-        //         if(err) {
-        //             console.log('error deprecating older series');
-        //             console.log(err);
-        //             return next();
-        //         }
-        //         if(!_series){
-        //             return next();
-        //         }
-        //         db.Series.findOneAndUpdate({
-        //             research_id: research._id,
-        //             exam_id: exam._id,
-        //             series_desc: h.qc_series_desc,
-        //             SeriesNumber: h.SeriesNumber,
-        //         }, {
-        //             deprecated_by: _series._id,
-        //         }, next);
-        //     })
-        // },
-        
 
     ], function(err) {
         //all done
@@ -404,36 +366,57 @@ function incoming(h, msg_h, info, ack) {
     });
 }
 
-
-var deprecatedBy = function(series) {
-    
+// AAK -- there must be a more compact way of doing this with a single query...
+var deprecatedBySeries = function(series) {    
     db.Series.update({
         exam_id: series.exam_id,
         series_desc: series.series_desc,
         SeriesNumber: { $lt: series.SeriesNumber },
     }, {
         deprecated_by: series._id,
-    }, {multi: true}, function(err) {
-        logger.warn("error deprecating older series");
-        if (err) return null;
-    })
-                
+    },{multi: true}, function(err) {        
+        if (err) logger.warn("error deprecating older series");
+    });
+
     db.Series.findOne({
-        exam_id: exam._id,
-        series_desc: h.qc_series_desc,
-        SeriesNumber: { $gt: h.SeriesNumber },
-        deprecated_by: null
+        exam_id: series.exam_id,
+        series_desc: series.series_desc,
+        SeriesNumber: { $gt: series.SeriesNumber },
     }, function(err, _series){
         if(err) {
             logger.warn("error deprecating current series");
-            return null
+            return (null);
         }
-        if(!_series) return null;
-        if(_series) return(_series._id);
-    });    
+        if(!_series) return (undefined); //series.deprecated_by = null;
+        if(_series) return (_series._id); //series.deprecated_by = _series._id;
+    }); 
 }
 
+var deprecatedByTemplate = function(template) {    
+    db.Template.update({
+        exam_id: template.exam_id,
+        series_desc: template.series_desc,
+        SeriesNumber: { $lt: template.SeriesNumber },
+    }, {
+        deprecated_by: template._id,
+    },{multi: true}, function(err,numdeprecated) {        
+        if (err) logger.warn("error deprecating older template");
+        console.log(numdeprecated);
+    });
 
+    db.Template.findOne({
+        exam_id: template.exam_id,
+        series_desc: template.series_desc,
+        SeriesNumber: { $gt: template.SeriesNumber },
+    }, function(err, _template){
+        if(err) {
+            logger.warn("error deprecating current series");
+            return (null);
+        }
+        if(!_template) return (undefined); //series.deprecated_by = null;
+        if(_template) return (_template._id); //series.deprecated_by = _series._id;
+    }); 
+}
 
 function write_to_tar(path2tar, path2file, cb) {
     tar.u({file: path2tar},[path2file]

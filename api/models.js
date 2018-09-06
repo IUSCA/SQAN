@@ -78,6 +78,7 @@ var templateSchema = mongoose.Schema({
     //
     // keys
     //
+    research_id: {type: mongoose.Schema.Types.ObjectId, index: true},
     exam_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     series_desc: {type: String, index: true}, //original SeriesDescription minut anything after ^
     SeriesNumber: {type: Number, index: true},
@@ -91,7 +92,7 @@ var templateSchema = mongoose.Schema({
     //
     //IIBISID: {type: String, index: true},//make it easier to do access control
     //Modality: {type: String, index: true},  //like.. PT
-    
+    deprecated_by: {type: mongoose.Schema.Types.ObjectId, index: true},
     count: Number, //number of images in a given series
     date: Date, //date when this template is received (probabbly use StudyTimestamp of the template?) //TODO - maybe needed since we have exam collection now?
 });
@@ -171,7 +172,7 @@ var seriesSchema = mongoose.Schema({
 
     //if set, that means there is another series with higher SeriesNumber that deprecate this series
     //QC view only shows series where this field is not set
-    deprecated_by: mongoose.Schema.Types.ObjectId, 
+    deprecated_by: {type: mongoose.Schema.Types.ObjectId, index: true},
 
     //qc.series.isExcluded(h.Modality, h.qc_series_desc)
     isexcluded: Boolean,
