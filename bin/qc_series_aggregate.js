@@ -1,17 +1,11 @@
 #!/usr/bin/node
 'use strict';
 
-//node
-const fs = require('fs');
-
 //contrib
-const winston = require('winston');
-const async = require('async');
 const _ = require('underscore'); 
 
 //mine
 const config = require('../config');
-const logger = new winston.Logger(config.logger.winston);
 const db = require('../api/models');
 const events = require('../api/events');
 var api_qc = require('../api/qc');
@@ -21,25 +15,10 @@ db.init(function(err) {
     if(err) throw err;
 });
 
-// function run(cb) {
-//     logger.info("querying un-qc-ed studies");
-//     //find images that needs QC in a batch
-//     db.Series.find({qc: {$exists: false}}).limit(400).exec(function(err, studies) {
-//         if(err) return cb(err);
-//         async.each(studies, qc_series, function(err) {
-//             if(err) return cb(err);
-//             logger.info("batch complete. sleeping before the next try");
-//             setTimeout(function() {
-//                 run(cb);
-//             }, 1000*3);
-//         });
-//     });
-// }
-
 //iii) Compare headers on the images with the chosen template (on fields configured to be checked against) and store discrepancies. 
 exports.qc_series = function(series) {
     //console.log("Inside qc series aggregation")
-    console.log("Inside qc series aggregation --QC-ing series: "+series._id + "series description " +series.series_desc);
+    console.log("Inside qc series aggregation --QC-ing series: "+ series._id + "  series description " +series.series_desc);
 
     //find all images for this series
     db.Image
