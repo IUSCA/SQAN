@@ -1,0 +1,108 @@
+<div class="subbar subbarnew">
+    <div style="padding: 0px 15px; margin-bottom: 10px">
+        <div>
+            <h2>Exams</h2>
+            <p class="help-block" ng-if="search.recentrange != 'all'">Showing exams taken in last {{search.recentrange}} days</p>
+            <p class="help-block" ng-if="search.recentrange == 'all'">Showing all exams</p>
+        </div>
+
+        <input type="text" class="form-control" ng-model="research_filter" placeholder="Filter">
+        <br>
+        <div class="btn-group pull-right" style="left: 0px;top: -5px;">
+            <button class="btn btn-xs btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Search Options <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+                <li class="dropdown-header">Date Range</li>
+                <li ng-repeat="(range_id, label) in ranges"
+                    ng-click="changerange(range_id)">
+                    <a href>
+                        <i class="fa fa-fw fa-check" ng-if="search.recentrange == range_id"></i>
+                        <i class="fa fa-fw" ng-if="search.recentrange !=  range_id"></i> {{label}}</a>
+                </li>
+                <!--<li><a ng-click="recentrange = 30" href>30 days</a></li>-->
+                <!--<li><a ng-click="recentrange = 60" href>60 days</a></li>-->
+                <!--<li><a ng-click="recentrange = 90" href>90 days</a></li>-->
+                <!--<li><a ng-click="recentrange = 'all'" href>All Time</a></li>-->
+                <li role="separator" class="divider"></li>
+                <li class="dropdown-header">Show/Hide</li>
+                <li ng-repeat="(mod_id, settings) in modalities"
+                    ng-click="settings.display = !settings.display;">
+                    <a href>
+                        <i class="fa fa-fw fa-check" ng-show="settings.display"></i>
+                        <i class="fa fa-fw fa-square-o" ng-show="!settings.display"></i> {{mod_id}} </a>
+                </li>
+                <li role="separator" class="divider"></li>
+                <li class="dropdown-header">Sort By</li>
+                <li ng-repeat="(sort_id, label) in sortoptions"
+                    ng-click="changesort(sort_id)">
+                    <a href>
+                        <i class="fa fa-fw fa-check" ng-if="search.sort == sort_id"></i>
+                        <i class="fa fa-fw" ng-if="search.sort !=  sort_id"></i> {{label}}</a>
+                </li>
+            </ul>
+        </div>
+        <span ng-if="loading_series" class="text-muted"><i class="fa fa-circle-o-notch fa-spin"></i> Loading ...</span>
+    </div>
+    <div class="subbar-list subbar-listnew" style="margin-top: 59px; bottom: 34px">
+        <div ng-repeat="(iibisid, research) in org" ng-show="show_iibis(iibisid, research)">
+            <div class="subbar-list-header"><small class="text-muted">{{$index + 1}}. </small> {{iibisid}}</div>
+            <div class="subbar-list-item"
+                 ng-repeat="modality in research"
+                 ng-show="show_modality(iibisid, modality.research.Modality)"
+                 ng-class="{'active': modality == selected_modality}"
+                 ng-click="select(modality)">
+
+                <!--modality detail-->
+                <h6>
+                    {{modality.research.Modality}} / {{modality.research.StationName}}
+                    <small ng-show="modality.research.Modality == 'PT'"> / {{modality.research.radio_tracer}}</small> <em>({{modality.exams.length}})</em>
+                </h6>
+            </div><!--subbar-list-item-->
+        </div><!--ng-repeat-->
+    </div>
+</div>
+<div class="subbar-content subbar-contentnew">
+    <h3 ng-show="!selected" class="help-block">Please select a research to display</h3>
+    <div ng-show="selected">
+        <div class="fixed-top" style="margin-left: 355px;">
+            <h2 class="pull-right" style="position: relative; left: -15px;">
+                <viewmode-toggler mode="view_mode" deprecated="show_deprecated"></viewmode-toggler>
+            </h2>
+            <h2> <b>{{selected._detail.IIBISID}}</b>
+                <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="reqc()">ReQC all</button>
+            </h2>
+            <h3>
+                Modality: <b>{{selected._detail.Modality}}</b>
+                StationName: <b>{{selected._detail.StationName}}</b>
+                <small ng-show="selected._detail.Modality == 'PT'">
+                    RadioTracer: <b>{{selected._detail.radio_tracer}}</b>
+                </small>
+            </h3>
+        </div>
+        <div style="margin-top: 65px;">
+            <div ng-repeat="(subject, subject_detail) in selected.subjects"
+                 class="subject"
+                 id="{{subject_detail.uid}}">
+                <h4>
+                    <b>{{subject}}</b>
+                    <!-- <span class="text-muted">Subject</span> -->
+                </h4>
+                <exams subject="subject" modality="selected" mode="view_mode" deprecated="show_deprecated"></exams>
+            </div>
+            <div class="template">
+                <h4>
+                    <b>Templates</b>
+                </h4>
+                <templates templates="selected.templates" times="selected.templates_times"></templates>
+            </div>
+        </div>
+    </div>
+
+    <!--
+    <pre style="font-size: 80%;">
+        {{selected|json}}
+    </pre>
+    -->
+</div><!--container-->
+

@@ -319,6 +319,11 @@ h3 {
   border-right: 1px solid #ddd;
   background-color: white;
 }
+
+.subbarnew {
+  width: 275px;
+}
+
 .subbar h2 {
   color: #878787;
   font-weight: bold;
@@ -332,10 +337,15 @@ h3 {
   top: 108px;
   bottom: 0px;
 }
+
+.subbar-listnew {
+  width: 275px;
+}
+
 .subbar-list .subbar-list-item {
-  padding: 5px 0px 5px 15px;
+  padding: 2px 0px 2px 15px;
   box-sizing: border-box;
-  border: 3px solid transparent;
+  border: 1px solid transparent;
   box-shadow: 0px -1px 1px #eee;
 }
 .subbar-list .subbar-list-item:hover {
@@ -345,7 +355,7 @@ h3 {
 .subbar-list .subbar-list-item.active {
   border: 3px solid #008cba;
 }
-.subbar-list .subbar-list-item .subbar-list-item-header {
+.subbar-list .subbar-list-item-header {
   font-size: 15px;
   font-weight: 400;
   color: #666;
@@ -361,6 +371,11 @@ h3 {
 .subbar-content {
   margin-left: 350px;
 }
+
+.subbar-contentnew {
+  margin-left: 275px;
+}
+
 .subbar-content h2 {
   padding-left: 15px;
   color: #008cba;
@@ -825,3 +840,7 @@ h3 {
   background-color: rgb(201, 0, 17, 0.5);
 }
 
+
+.dropdown-menu>li>a {
+  padding: 3px 15px;
+}

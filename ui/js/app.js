@@ -63,6 +63,11 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         controller: 'QCController',
         requiresLogin: true
     })
+    .when('/exams', {
+        templateUrl: 't/exams.html',
+        controller: 'ExamsController',
+        requiresLogin: true
+    })
     .when('/dump', {
         templateUrl: 't/dump.html',
         controller: 'DumpController',
@@ -228,6 +233,7 @@ app.filter('objLength', function() {
         return count;
     }
 });
+
 
 // https://gist.github.com/Cacodaimon/7309268
 app.filter('sumByKey', function() {

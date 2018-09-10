@@ -47,7 +47,7 @@ var examSchema = mongoose.Schema({
     //
     // keys
     //
-    research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    research_id: {type: mongoose.Schema.Types.ObjectId, index: true, ref: 'Research'},
     subject: {type: String, index: true}, //not set if it's template
     date: {type: Date, index: true}, //date when this template is received (probabbly use StudyTimestamp of the template?)
     //

@@ -54,5 +54,41 @@ router.post('/comment/:exam_id', jwt({secret: config.express.jwt.pub}), function
         });
     });
 });
+
+router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    //lookup iibisids that user has access to (TODO - refactor this to aclSchema statics?)
+    db.Acl.getCan(req.user, 'view', function(err, iibisids) {
+        if(err) return next(err);
+
+        var query = db.Exam.find().populate('research_id');
+        query.where('IIBISID').in(iibisids);
+        if(req.query.where) {
+            var where = JSON.parse(req.query.where);
+            for(var field in where) {
+                query.where(field, where[field]); //TODO is it safe to pass this from UI?
+            }
+        }
+
+        if(req.query.sort) {
+            query.sort(JSON.parse(req.query.sort));
+        }
+
+        var org = {};
+        query.exec(function(err, _exams) {
+            if(err) return next(err);
+            _exams.forEach(function(_exam){
+                var research = _exam.research_id._id;
+                org[_exam.IIBISID] = org[_exam.IIBISID] || {};
+                org[_exam.IIBISID][research] = org[_exam.IIBISID][research] || {research : _exam.research_id, exams: []};
+                org[_exam.IIBISID][research].exams.push({
+                    subject: _exam.subject,
+                    date: _exam.date
+                });
+            })
+            res.json(org);
+        });
+    });
+});
+
 module.exports = router;
 
