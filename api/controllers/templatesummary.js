@@ -13,30 +13,33 @@ var db = require('../models');
 var mongoose = require('mongoose')
 
 router.get('/istemplate', jwt({secret: config.express.jwt.pub}),function(req,res,next) {
-    db.Exam.aggregate([
-        { $match: { $and: [ { subject: null }, { istemplate: true } ] } },
-        { $group: { 
-            _id: "$research_id",  
-            IIBISID:{$addToSet:"$IIBISID"}, 
-            //date_acq:  {$addToSet:{ $dateToString: { format: "%Y-%m-%d", date: "$date" }}}, 
-            //exam_id: {$addToSet: "$_id"}, 
-            count: { $sum: 1 } 
-            } 
+    db.Template.aggregate([
+        {$group: {
+            _id:"$research_id",
+            IIBISID:{$addToSet:"$IIBISID"},
+            Modality:{$addToSet:"$Modality"},
+            date: {$addToSet:"$date"},
+            series_desc: {$push: "$series_desc"}
+            }
         },{$lookup: {
-            from:"researches",
-            localField:"_id",
-            foreignField:"_id",
-            as:"fromResearch"
-            }
+                from:"researches",
+                localField:"_id",
+                foreignField:"_id",
+                as:"fromResearch"
+                }
         },{ $project: {
-            IIBISID: 1,
-            //date_acq: 1,
-            //exam_id: 1,
-            count: 1,
-            Modality: "$fromResearch.Modality",
-	        radio_tracer: "$fromResearch.radio_tracer"
-            }
-        }
+                IIBISID: 1,
+                Modality: 1,
+                date: 1,
+                seroes_desc: 1,
+                count: { $size: "$date" },
+                StationName: "$fromResearch.StationName",
+                radio_tracer: "$fromResearch.radio_tracer"
+                }
+        },{$unwind:"$IIBISID"},
+        {$unwind:"$Modality"},
+        {$unwind:"$StationName"},
+        {$unwind:"$radio_tracer"}
         ], function (err, data) {
              if (err) {
                  next(err);
@@ -49,7 +52,6 @@ router.get('/istemplate', jwt({secret: config.express.jwt.pub}),function(req,res
 
 
 // search template's by research_id and group them by exam_id:
-// router.get('/examids/:research_id', check_jwt, function(req, res, next) {
 router.get('/examids/:research_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     console.log(req.params.research_id)
     db.Template.aggregate([    
