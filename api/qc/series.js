@@ -13,15 +13,15 @@ db.init(function(err) {
 });
 
 
-function qc_series(series) {
+function qc_series(series,images) {
     //console.log("*********************")
     console.log("QC-ing series: "+series._id + "series description " +series.series_desc);
 
-    //find all images for this series
-    db.Image
-    .find({series_id: series._id}) //TODO pick largest SeriesNumber and add it to this query..
-    .select('qc InstanceNumber')
-    .exec(function(err, images) {
+    // //find all images for this series
+    // db.Image
+    // .find({series_id: series._id}) //TODO pick largest SeriesNumber and add it to this query..
+    // .select('qc InstanceNumber')
+    // .exec(function(err, images) {
         var qc = {
             image_count: images.length,  //number of images in this series
             clean: 0, //number of images with no problems
@@ -38,6 +38,7 @@ function qc_series(series) {
         var all_qced = true;
         var errors = 0;
         var warnings = 0;
+
         images.forEach(function(image) {
             if(image.qc) {
 
@@ -140,7 +141,7 @@ function qc_series(series) {
             });
             //series.save(next);
         }
-    });
+    //});
 }
 
 //ECMA6 Polyfill for endsWith
