@@ -277,12 +277,12 @@ function check_percent_diff(k, v, tv, qc, r, th) {
     };
 };
 
-
+var flag_cus = false;
 //compare image headers against template headers
 exports.match = function(image, template, qc) {
 
-    console.log("image is " + image.InstanceNumber)
-    console.log("template is " + template.InstanceNumber)
+    console.log("QC-ing image " + image.InstanceNumber + " with template " + template.InstanceNumber);
+
     //find exclusion list
     var cus = customs[image.headers.Modality];
     if(!cus) {
@@ -290,7 +290,11 @@ exports.match = function(image, template, qc) {
         return;
     }
 
-    //compare each fields
+    var num_cus = 0;
+    var num_irreg = 0;
+    
+
+    //compare each field of the template with the corresponding filed in the image
     for(var k in template.headers) {
         var v = image.headers[k];
         var tv = template.headers[k];
@@ -302,7 +306,15 @@ exports.match = function(image, template, qc) {
             check_equal(k, v, tv, qc);
         }
     };
-    //console.log("qc for image " + image.InstanceNumber+ "is " + qc)
+
+    // find fileds that are in image and not in template
+    var tk = Object.keys(template.headers);
+    var ik = Object.keys(image.headers);
+    var lengthdiff = ik.length - tk.length;
+    if (lengthdiff > 0) {
+        qc.errors.push({type: 'image_mismatch', tk: tk, ik: ik, lengthdiff: lengthdiff, msg: "image has more fields than template"});
+    }
+
 }
 
 exports.cc = common_customs;

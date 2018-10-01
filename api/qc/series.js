@@ -14,8 +14,8 @@ db.init(function(err) {
 
 
 function qc_series(series) {
-    console.log("*********************")
-    console.log("Inside qc series aggregation --QC-ing series: "+series._id + "series description " +series.series_desc);
+    //console.log("*********************")
+    console.log("QC-ing series: "+series._id + "series description " +series.series_desc);
 
     //find all images for this series
     db.Image
@@ -40,10 +40,6 @@ function qc_series(series) {
         var warnings = 0;
         images.forEach(function(image) {
             if(image.qc) {
-                
-                //TODO all images for series should be compared against the same template_id (with templateheader for each imageinstance)
-                //but, if some images are already qc-ed, then another images could be qc-ed against different template_id
-                //should I raise warning if such images are around?
 
                 if(!qc.template_id) qc.template_id = image.qc.template_id;
 
@@ -115,10 +111,6 @@ function qc_series(series) {
         */
 
         //now do series level QC (TODO - there aren't much to do right now)
-        //check exclusion status
-        // AAK -- fix this!! ********************************
-        //series.isexcluded = isExcluded(series.Modality, series.series_desc);
-
 
         if(qc.template_id) {
             //check for template header count 
@@ -165,7 +157,6 @@ if (!String.prototype.endsWith) {
 }
 
 exports.isExcluded = function(modality, series_desc) {
-//function isExcluded(modality, series_desc) {    
     switch(modality) {
     case "MR":
         if(series_desc == "MoCoSeries") return true;
@@ -185,4 +176,3 @@ exports.isExcluded = function(modality, series_desc) {
 }
 
 exports.qc_series = qc_series;
-//exports.isExcluded = isExcluded;
