@@ -289,10 +289,18 @@ exports.match = function(image, template, qc) {
         qc.errors.push({type: 'unknown_modality', msg: "unknown modality "+image.headers.Modality+" found for image:"+image.id});
         return;
     }
-
-    var num_cus = 0;
-    var num_irreg = 0;
     
+    // find fileds that are in image and not in template
+    var tk = Object.keys(template.headers).length;
+    var ik = Object.keys(image.headers).length;
+    var lengthdiff = ik - tk;
+    if (lengthdiff > 0) {
+        var keydiff = [];
+        for (var kk in image.headers) {
+            if(template.headers[kk] === undefined) keydiff.push({ik:kk,v:image.headers[kk]})
+        }
+        qc.errors.push({type: 'image_mismatch', keydiff: keydiff,lengthdiff: lengthdiff, msg: "image has "+ lengthdiff + " more fields than template"});
+    }    
 
     //compare each field of the template with the corresponding filed in the image
     for(var k in template.headers) {
@@ -307,15 +315,26 @@ exports.match = function(image, template, qc) {
         }
     };
 
-    // find fileds that are in image and not in template
-    var tk = Object.keys(template.headers);
-    var ik = Object.keys(image.headers);
-    var lengthdiff = ik.length - tk.length;
-    if (lengthdiff > 0) {
-        qc.errors.push({type: 'image_mismatch', tk: tk, ik: ik, lengthdiff: lengthdiff, msg: "image has more fields than template"});
+    var value_mismatch = 0;
+    var value_undefined = 0;
+
+    qc.errors.forEach(function(e) {
+        if (e.type == 'template_mismatch') value_mismatch++;
+        if (e.type == 'not_set') value_undefined++;
+    })
+
+    var error_stats = {
+        value_mismatch: value_mismatch,
+        value_undefined: value_undefined,
+        temp_key_count: tk,
+        image_key_count: ik
     }
 
+    qc.error_stats = error_stats;
+
 }
+
+
 
 exports.cc = common_customs;
 exports.c = customs;

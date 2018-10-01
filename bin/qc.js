@@ -116,6 +116,7 @@ function qc_one_image(image,primimage,primtemplate,next) {
         errors: [],
         warnings: [],
         notemp: false, //set to true if no template was found
+        error_stats: {}
     };
 
     async.series([
