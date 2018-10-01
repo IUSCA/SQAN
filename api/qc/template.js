@@ -302,7 +302,7 @@ exports.match = function(image, template, qc) {
             check_equal(k, v, tv, qc);
         }
     };
-    console.log("qc for image " + image.InstanceNumber+ "is " + qc)
+    //console.log("qc for image " + image.InstanceNumber+ "is " + qc)
 }
 
 exports.cc = common_customs;
