@@ -74,9 +74,9 @@ function qc_images(primimage,next) {
                             console.log(images.length + " images have been qc-ed, now aggregating qc for the series "+ primimage.headers.qc_series_desc + " -- " + new Date());
                             db.Series.findById(primimage.series_id, function(err,series) {
                                 if (err) return next(err);
-                                //console.log(series);
-                                qc_aggregate.qc_series(series,images)
-                                //if (err) console.log("error aggregating qc at the series level " + err);
+
+                                qc_aggregate.qc_series(series,images);
+
                                 logger.info(primimage.headers.qc_series_desc + " Series has been qc-ed")
                                 return next();
                             })

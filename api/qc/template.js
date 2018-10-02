@@ -323,7 +323,7 @@ exports.match = function(image, template, qc) {
     })
 
     var error_stats = {
-        template_mismatch: template_mismatch,
+        template_mismatch: template_mismatch,        
         not_set: not_set,
         template_field_count: tk,
         image_field_count: ik
