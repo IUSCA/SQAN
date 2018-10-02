@@ -277,7 +277,9 @@ function check_percent_diff(k, v, tv, qc, r, th) {
     };
 };
 
-var flag_cus = false;
+var template_mismatch = 0;
+var not_set = 0;
+
 //compare image headers against template headers
 exports.match = function(image, template, qc) {
 
@@ -315,19 +317,16 @@ exports.match = function(image, template, qc) {
         }
     };
 
-    var value_mismatch = 0;
-    var value_undefined = 0;
-
     qc.errors.forEach(function(e) {
-        if (e.type == 'template_mismatch') value_mismatch++;
-        if (e.type == 'not_set') value_undefined++;
+        if (e.type == 'template_mismatch') template_mismatch++;
+        if (e.type == 'not_set') not_set++;
     })
 
     var error_stats = {
-        value_mismatch: value_mismatch,
-        value_undefined: value_undefined,
-        temp_key_count: tk,
-        image_key_count: ik
+        template_mismatch: template_mismatch,
+        not_set: not_set,
+        template_field_count: tk,
+        image_field_count: ik
     }
 
     qc.error_stats = error_stats;
