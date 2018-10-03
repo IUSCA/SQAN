@@ -301,7 +301,7 @@ exports.match = function(image, template, qc) {
         for (var kk in image.headers) {
             if(template.headers[kk] === undefined) keydiff.push({ik:kk,v:image.headers[kk]})
         }
-        qc.errors.push({type: 'image_mismatch', keydiff: keydiff,lengthdiff: lengthdiff, msg: "image has "+ lengthdiff + " more fields than template"});
+        qc.errors.push({type: 'template_mismatch', k: keydiff, c: lengthdiff, msg: "image has "+ lengthdiff + " fields that are not found in the template"});
     }    
 
     //compare each field of the template with the corresponding filed in the image

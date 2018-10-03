@@ -12,113 +12,34 @@ db.init(function(err) {
     if(err) throw err;
 });
 
-var all_qced = true;
-var errored_InstanceNumber = [];
-var template_mismatch = 0;  // number of fields with template_mismatch error
-var not_set = 0;  // number of fields with not_set error
-var diff = 0;
-var warnings = 0;
-
-var qc = {
-    series_image_count: undefined,  //number of images in this series
-    clean: 0, //number of images with no problems
-    errored_images: 0,  // number of images with errors
-    series_field_count: 0, // number of fields across all images
-    series_fields_errored: 0,  // number of fields that errored across entire series
-    template_field_count: 0,
-    template_image_count: undefined,
-
-    template_id: null, //template set used to do qc for this series (sampled from one images's qc.template_id)
-    date: new Date(), //series-qc time
-
-    //series-qc errros / warnings / notemp count
-    errors: [], 
-    warnings: [],
-    notemps: 0, 
-}
-
 function qc_series(series,images) {
-    //console.log("*********************")
+
     console.log("QC-ing series: "+series._id + " -- series description " +series.series_desc);
 
-    qc.series_image_count = images.length;
+    var all_qced = true;
+    var errored_InstanceNumber = [];
+    var template_mismatch = 0;  // number of fields with template_mismatch error
+    var not_set = 0;  // number of fields with not_set error
+    var diff = 0;
+    var warnings = 0;
 
-    aggregate_errors(images, qc, function() {
+    var qc = {
+        series_image_count: images.length,  //number of images in this series
+        clean: 0, //number of images with no problems
+        errored_images: 0,  // number of images with errors
+        series_field_count: 0, // number of fields across all images
+        series_fields_errored: 0,  // number of fields that errored across entire series
+        template_field_count: 0,
+        template_image_count: undefined,
 
-        //if there is an image that's not yet qc-ed, series cannot be qc-ed.
-        if(!all_qced) {
-            console.log("cannot qc the series because not all images have been qc-ed");
-            // This should not happen, unless a series has too many images and cannot be retrieved all at once. 
-            return 
-        } else {
-            qc.series_fields_errored = template_mismatch + not_set;
-            qc.template_id = images[0].qc.template_id;
-            //check for template header count 
-            db.TemplateHeader.where({template_id: qc.template_id}).count(function(err, tc) {
-                
-                if (err) console.log(err);
-                qc.template_image_count = tc;
-                diff = tc - images.length; 
-                
-                console.log("template count is "+ qc.template_image_count + " diff is "+ Math.abs(diff));
+        template_id: null, //template set used to do qc for this series (sampled from one images's qc.template_id)
+        date: new Date(), //series-qc time
 
-                if(qc.errored_images > 0) {
-                    qc.errors.push({
-                        type: "image_errors", 
-                        msg: "Series contains "+qc.errored_images+" images with qc errors", 
-                        c: qc.errored_images,
-                        errored_images: errored_InstanceNumber,
-                        per: qc.errored_images / qc.template_image_count,
-                    }); 
-        
-                    qc.errors.push({
-                        type: "field_template_mismatch", 
-                        msg: "Series contains "+template_mismatch+" fields with 'template_mismatch' error", 
-                        c: template_mismatch,
-                        per: template_mismatch / qc.template_field_count,
-                    });   
-        
-                    qc.errors.push({
-                        type: "field_not_set", 
-                        msg: "Series contains "+not_set+" fields with 'not_set' error", 
-                        c: not_set,
-                        per: not_set / qc.template_field_count,
-                    });               
-                }
-        
-                if(warnings > 0) {
-                    qc.warnings.push({
-                        type: "image_warning", 
-                        msg: "Series contains "+warnings+" images with QC warnings", 
-                        c: warnings,
-                        per: warnings / qc.template_image_count,
-                    });        
-                }
-                        
-                if(diff != 0) {
-                    qc.errors.push({
-                        type: "image_count_mismatch", 
-                        msg: diff > 0 ? "Series is missing "+diff+ " image headers":"Series has "+Math.abs(diff)+ " excess image headers",
-                        c: images.length, 
-                        tc: qc.template_image_count
-                    });
-                }
-        
-                series.qc1_state = (qc.errors.length > 0 ? "fail" : "autopass");
-                series.qc = qc;
-                events.series(series);
-                db.Series.update({_id: series._id}, {qc: qc}, function(err) {
-                    if (err) {
-                        console.log(err);
-                    }
-                });  
-            })   
-        }        
-    })
-
-}
-
-function aggregate_errors(images, qc,cb) {
+        //series-qc errros / warnings / notemp count
+        errors: [], 
+        warnings: [],
+        notemps: 0, 
+    }
 
     images.forEach(function(image) {
         if(image.qc) {
@@ -148,8 +69,83 @@ function aggregate_errors(images, qc,cb) {
             all_qced = false;
         }
     });
-    cb();
+
+    //if there is an image that's not yet qc-ed, series cannot be qc-ed.
+    if(!all_qced) {
+        console.log("cannot qc the series because not all images have been qc-ed");
+        // This should not happen, unless a series has too many images and cannot be retrieved all at once. 
+        return 
+    } else {
+        qc.series_fields_errored = template_mismatch + not_set;
+        qc.template_id = images[0].qc.template_id;
+        //check for template header count 
+        db.TemplateHeader.where({template_id: qc.template_id}).count(function(err, tc) {
+            
+            if (err) console.log(err);
+            qc.template_image_count = tc;
+            diff = qc.template_image_count - images.length; 
+            
+            console.log("template count is "+ qc.template_image_count + " diff is "+ Math.abs(diff));
+
+            if(qc.errored_images > 0) {
+                qc.errors.push({
+                    type: "image_errors", 
+                    msg: "Series contains "+qc.errored_images+" images with qc errors", 
+                    c: qc.errored_images,
+                    errored_images: errored_InstanceNumber,
+                    per: qc.errored_images / qc.template_image_count,
+                }); 
+                
+                if(template_mismatch > 0) {
+                    qc.errors.push({
+                        type: "field_template_mismatch", 
+                        msg: "Series contains "+template_mismatch+" fields with 'template_mismatch' error", 
+                        c: template_mismatch,
+                        per: template_mismatch / qc.template_field_count,
+                    });  
+                }
+     
+                if(not_set > 0) {
+                    qc.errors.push({
+                        type: "field_not_set", 
+                        msg: "Series contains "+not_set+" fields with 'not_set' error", 
+                        c: not_set,
+                        per: not_set / qc.template_field_count,
+                    }); 
+                }
+              
+            }
+    
+            if(warnings > 0) {
+                qc.warnings.push({
+                    type: "image_warning", 
+                    msg: "Series contains "+warnings+" images with QC warnings", 
+                    c: warnings,
+                    per: warnings / qc.template_image_count,
+                });        
+            }
+                    
+            if(diff != 0) {
+                qc.errors.push({
+                    type: "image_count_mismatch", 
+                    msg: diff > 0 ? "Series is missing "+diff+ " image headers":"Series has "+Math.abs(diff)+ " excess image headers",
+                    c: images.length, 
+                    tc: qc.template_image_count
+                });
+            }
+    
+            series.qc1_state = (qc.errors.length > 0 ? "fail" : "autopass");
+            series.qc = qc;
+            events.series(series);
+            db.Series.update({_id: series._id}, {qc: qc}, function(err) {
+                if (err) {
+                    console.log(err);
+                }
+            });  
+        })   
+    }        
 }
+
 
 
 //ECMA6 Polyfill for endsWith
