@@ -39,7 +39,7 @@ function run(cb) {
 
             setTimeout(function() {
                 run(cb);
-            }, 1000*10);
+            }, 1000*3);
         })
     });
 }
@@ -201,7 +201,7 @@ function get_template(series, cb) {
             research_id: exam.research_id,
             series_desc:series.series_desc,
             deprecated_by: null,
-        }).sort({"SeriesNumber":-1}).limit(1) // I don't think I need this; there should only be one with deprecated_by:null
+        }).sort({"date":-1}).limit(1) 
         .exec(function(err, template) {
             if(err) return cb(err);
             if(template.length == 0) {                    
