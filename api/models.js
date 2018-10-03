@@ -61,7 +61,8 @@ var examSchema = mongoose.Schema({
     //
     //IIBISID: {type: String, index: true},//make it easier to do access control
 
-    //istemplate: Boolean,
+    istemplate: Boolean,
+    series_desc:{type: String, index: true},
 
     comments: [ mongoose.Schema({
         user_id: String, //req.user.sub

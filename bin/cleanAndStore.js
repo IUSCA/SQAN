@@ -196,8 +196,8 @@ function incoming(h, msg_h, info, ack) {
                 subject: (h.qc_istemplate?null:h.qc_subject),
                 date: h.qc_StudyTimestamp, 
                 istemplate:h.qc_istemplate,
-            }, {},
-                // {$push: {series_desc:h.qc_series_desc}},  // push into array of series descriptions
+            }, //{},
+            {$addToSet: {series_desc:h.qc_series_desc}},  // push into array of series descriptions
             {upsert:true, 'new': true}, function(err, _exam) {
                 if(err) return next(err);
                 exam = _exam;
