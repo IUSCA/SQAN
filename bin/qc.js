@@ -140,8 +140,6 @@ function qc_one_image(image,primimage,primtemplate,next) {
                     }  // template header is missing for this instance number                                  
                 })
             } else {  
-                //console.log("primary template is the corresponding header for this image")
-                //console.log("matching primary template header "+ primtemplate.InstanceNumber+ " with image header " + image.InstanceNumber);
                 qc_template.match(image,primtemplate,qc);
                 next()
             } 
@@ -149,13 +147,9 @@ function qc_one_image(image,primimage,primtemplate,next) {
 
         function(next) {
             image.qc = qc;
-            //console.log("after qc-ing image : " +image.InstanceNumber + " qc is ")
-            //console.log(image.qc);
             image.save(function(err) {
                 if(err) next(err);
                 return next();
-                //invalidate series qc
-                //db.Series.update({_id: image.series_id}, {$unset: {qc: 1}}, {multi: true}, next);
             });
         }
     ], function(err) {
@@ -163,7 +157,6 @@ function qc_one_image(image,primimage,primtemplate,next) {
         next();
     });
 }
-
 
 
 // ************************** Template functions ********************************//

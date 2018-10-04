@@ -138,12 +138,20 @@ function qc_series(series,images) {
             series.qc = qc;
             events.series(series);
             db.Series.update({_id: series._id}, {qc: qc}, function(err) {
-                if (err) {
-                    console.log(err);
-                }
+                if (err) console.log(err);
+                qc_the_exam(series);    
             });  
         })   
-    }        
+    }
+}
+
+
+function qc_the_exam(series) {
+    console.log(series.series_desc);
+    db.Exam.update({"_id": series.exam_id, "qc.series_desc": series.series_desc}, 
+    {$set: {"qc.$.status": "qc-ed"}}, {upsert:false}, function(err,exam) {
+        if (err) console.log("error in exam qc");         
+    })
 }
 
 
