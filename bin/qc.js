@@ -169,6 +169,10 @@ function find_template(image,cb) {
             if(err) return cb(err);
             if(!template) {
                 logger.info("couldn't find template for series:"+series._id+" and image_id:"+image._id);
+                db.Exam.update({"_id": series.exam_id, "qc.series_desc": series.series_desc}, 
+                {$set: {"qc.$.status": "no_temp"}}, {upsert:false}, function(err) {
+                    if (err) return cb(err);         
+                })
                 return cb(null);
             }
             cb(null,template)

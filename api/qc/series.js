@@ -139,17 +139,18 @@ function qc_series(series,images) {
             events.series(series);
             db.Series.update({_id: series._id}, {qc: qc}, function(err) {
                 if (err) console.log(err);
-                qc_the_exam(series);    
+                qc_the_exam(series,true);    
             });  
         })   
     }
 }
 
 
-function qc_the_exam(series) {
-    console.log(series.series_desc);
+function qc_the_exam(series,qced) {
+    if (qced) var status = "qc-ed";
+    if(!qced) var status = "no template"
     db.Exam.update({"_id": series.exam_id, "qc.series_desc": series.series_desc}, 
-    {$set: {"qc.$.status": "qc-ed"}}, {upsert:false}, function(err,exam) {
+    {$set: {"qc.$.status": status}}, {upsert:false}, function(err,exam) {
         if (err) console.log("error in exam qc");         
     })
 }
