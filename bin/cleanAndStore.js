@@ -196,8 +196,7 @@ function incoming(h, msg_h, info, ack) {
                 subject: (h.qc_istemplate?null:h.qc_subject),
                 date: h.qc_StudyTimestamp, 
                 istemplate:h.qc_istemplate,
-                StudyInstanceUID: h.StudyInstanceUID 
-            }, 
+            }, //{},
             {$addToSet: {qc:{series_desc:h.qc_series_desc, status:null}}},
             {upsert:true, 'new': true}, function(err, _exam) {
                 if(err) return next(err);
@@ -211,12 +210,11 @@ function incoming(h, msg_h, info, ack) {
             if(h.qc_istemplate==false) return next();  //if not a template then skip
 
             db.Template.findOneAndUpdate({
-                //research_id: research._id,
+                research_id: research._id,
                 exam_id: exam._id,
                 series_desc: h.qc_series_desc,
-                SeriesNumber: h.SeriesNumber,   
-                date: h.qc_StudyTimestamp,    // should correlate with StudyInstanceUID 
-            }, {},  
+                SeriesNumber: h.SeriesNumber,                
+            }, {date: h.qc_StudyTimestamp},  //headers: h, //update with the latest headers (or mabe we should store all under an array?)
             {upsert:true, 'new': true}, function(err, _template) {
                 if(err) return next(err);
                 template = _template;
@@ -224,15 +222,14 @@ function incoming(h, msg_h, info, ack) {
                 //store template header
                 db.TemplateHeader.findOne({
                     template_id: template._id,
-                    StudyInstanceUID: h.StudyInstanceUID,
                     primary_image: null
                 }, function(err, _primarytemplate) {
                     if(err) return next(err);
-                    if (!_primarytemplate) {  // primary image does not exist yet => this is a new series 
+                    if (!_primarytemplate) {   
                         db.TemplateHeader.create({
                             template_id: template._id,
                             InstanceNumber: h.InstanceNumber,
-                            StudyInstanceUID: h.StudyInstanceUID,
+                            EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
                             primary_image: null,
                             headers:h
                         },function(err,_primary_template) {
@@ -251,21 +248,18 @@ function incoming(h, msg_h, info, ack) {
                         })                            
                     } else if(_primarytemplate) {
                         // first check if this image is same instance as primary, if so, send warning
-                        // we cannot update the primary because all other images depend on primary
+                        // we cannot update the primary without comparing with all other images for this series...
                         if (_primarytemplate.InstanceNumber == h.InstanceNumber) {
                             logger.warn("This image is the same instance number as primary image. Not inserting!!");  
                             return next();                            
-                        }  // LEAVE THIS FOR NOW, BUT WE NEED TO DO SOMETHING ABOUT THIS
-
-                        // first check if we are dealing with a repeated instance of an image that is already in the database; whenever we receive a repeated image, we assume that the entire batch for this series is being pushed again, and therefore we want to re-write all documents for this series.
-                        //db.TemplateHeader.findOne({StudyInstanceUID: h.StudyInstanceUID})
+                        }
                         compare_with_primary(_primarytemplate.headers,h,function(){
                             db.TemplateHeader.findOneAndUpdate({
                                 template_id: template._id,
                                 InstanceNumber: h.InstanceNumber,
-                                StudyInstanceUID: h.StudyInstanceUID,
+                                EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
+                            }, {
                                 primary_image: _primarytemplate._id,
-                            }, {                                
                                 headers:h
                             },{upsert:true, 'new': false}, function(err, _tempheader) {
                                 if(err) return next(err);
@@ -295,8 +289,7 @@ function incoming(h, msg_h, info, ack) {
                 series = _series;  
 
                 db.Image.findOne({
-                    series_id: series._id,
-                    StudyInstanceUID: h.StudyInstanceUID,                    
+                    series_id: series._id,                    
                     primary_image: null
                 }, function(err, _primaryimage) {
                     if(err) return next(err);
@@ -305,7 +298,7 @@ function incoming(h, msg_h, info, ack) {
                         db.Image.create({
                             series_id: series._id,
                             InstanceNumber: h.InstanceNumber,
-                            StudyInstanceUID: h.StudyInstanceUID,
+                            EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
                             primary_image: null,
                             headers:h
                         },function(err,_primary_image) {
@@ -444,7 +437,7 @@ function compare_with_primary(primaryImg,h,cb) {
     for (var k in primaryImg) {     
         v = primaryImg[k]; 
         //AAK -- these are identifiers so we don't want to remove them; should we add other non-removable fields?  
-        if (['qc_istemplate','SeriesNumber','qc_SeriesTimestamp'].indexOf(k) < 0) {
+        if (['qc_istemplate','SeriesNumber','EchoNumbers'].indexOf(k) < 0) {
             if (!Array.isArray(v) && !isObject(v) && h.hasOwnProperty(k) && h[k] === v) {  
                 //console.log('deleting field: '+k +' -- ' + h[k]);
                 delete h[k]

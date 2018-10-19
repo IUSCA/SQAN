@@ -182,18 +182,30 @@ function find_template(image,cb) {
 
 
 function get_template(series, cb) {
-
-    db.Template.find({
-        exam_id: series.exam_id,
-        series_desc:series.series_desc,
-        deprecated_by: null,
-    }).sort({"date":-1}).limit(1) 
-    .exec(function(err, template) {
+    //find the latest exam
+    db.Exam
+        .findById(series.exam_id, 'research_id')
+        .sort('-date')
+        .limit(1)
+        .exec(function(err, exam) {
         if(err) return cb(err);
-        if(template.length == 0) {                    
-            return cb(null);            
+        if(!exam) {
+            logger.info("couldn't find such exam: "+series.exam_id);
+            return cb(null);
         }
-        cb(null,template[0]);
+        if(exam.length > 1) exam = exam[0];
+        db.Template.find({
+            research_id: exam.research_id,
+            series_desc:series.series_desc,
+            deprecated_by: null,
+        }).sort({"date":-1}).limit(1) 
+        .exec(function(err, template) {
+            if(err) return cb(err);
+            if(template.length == 0) {                    
+                return cb(null);            
+            }
+            cb(null,template[0]);
+        });
     });
 }
 
