@@ -210,6 +210,7 @@ function incoming(h, msg_h, info, ack) {
             if(h.qc_istemplate==false) return next();  //if not a template then skip
 
             db.Template.findOneAndUpdate({
+                research_id: research._id,
                 exam_id: exam._id,
                 series_desc: h.qc_series_desc,
                 SeriesNumber: h.SeriesNumber,                

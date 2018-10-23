@@ -192,43 +192,53 @@ function get_template(series, cb) {
             logger.info("couldn't find such exam: "+series.exam_id);
             return cb(null);
         }
-        db.Exam.find({
-            research_id: exam.research_id,
-            istemplate: true
-        }).exec(function(err,texams){
-            if(err) return cb(err);
-            //console.log(texams);
-            var latest = null;
-            texams.forEach(function(te,index) {
-                //console.log(te._id)
-                db.Template.findOne({
-                    exam_id:te._id,
-                    series_desc: series.series_desc,
-                    deprecated_by: null
-                }).exec(function(err,t) {
-                    if (err) return cb(err);
-                    if(!t) {
-                        logger.info("couldn't find template for exam id: "+te._id);
-                        return cb(null);
-                    }
-                    if (latest == null) {                        
-                        latest = t._id;
-                        console.log("latest equals t: "+ latest)
-                    }
-                    else {
-                        latest = t.date > latest.date ? t._id : latest;
-                        console.log("latest date is " + latest);
-                    }
-               })    
-               if (index + 1 == texams.length) {
-                   console.log(latest)
-                    cb(null,latest);
-               } else {
-                   console.log("index is "+ index + " and texams.length is "+ texams.length);
-                   cb(null,null);
-               }
-            })                        
-        });
+        db.Template.find({
+            research_id:exam.research_id,
+            series_desc:series.series_desc,
+            deprecated_by: null
+        }).sort('-date')
+        .exec(function(err,templates){
+            if (err) return cb(err);
+            console.log(templates);
+            cb(null,templates[0]);
+        })
+        // db.Exam.find({
+        //     research_id: exam.research_id,
+        //     istemplate: true
+        // }).exec(function(err,texams){
+        //     if(err) return cb(err);
+        //     //console.log(texams);
+        //     var latest = null;
+        //     texams.forEach(function(te,index) {
+        //         //console.log(te._id)
+        //         db.Template.findOne({
+        //             exam_id:te._id,
+        //             series_desc: series.series_desc,
+        //             deprecated_by: null
+        //         }).exec(function(err,t) {
+        //             if (err) return cb(err);
+        //             if(!t) {
+        //                 logger.info("couldn't find template for exam id: "+te._id);
+        //                 return cb(null);
+        //             }
+        //             if (latest == null) {                        
+        //                 latest = t._id;
+        //                 console.log("latest equals t: "+ latest)
+        //             }
+        //             else {
+        //                 latest = t.date > latest.date ? t._id : latest;
+        //                 console.log("latest date is " + latest);
+        //             }
+        //        })    
+        //        if (index + 1 == texams.length) {
+        //            console.log(latest)
+        //             cb(null,latest);
+        //        } else {
+        //            console.log("index is "+ index + " and texams.length is "+ texams.length);
+        //            cb(null,null);
+        //        }
+        //     })                        
+        // });
     });
 }
 
