@@ -199,7 +199,8 @@ function get_template(series, cb) {
         }).sort('-date')
         .exec(function(err,templates){
             if (err) return cb(err);
-            console.log(templates);
+            console.log("templates found: "+ templates.length);
+            if (templates.lenght == 0) logger.info("couldn't find template for exam:"+exam._id+" and research_id:"+exam.research_id);
             cb(null,templates[0]);
         })
         // db.Exam.find({

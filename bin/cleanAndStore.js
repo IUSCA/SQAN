@@ -179,8 +179,9 @@ function incoming(h, msg_h, info, ack) {
             db.Research.findOneAndUpdate({
                 IIBISID: h.qc_iibisid,
                 Modality: h.Modality,
-                StationName: h.StationName,                                
-            }, {radio_tracer: radio_tracer}, {upsert:true, 'new': true}, function(err, _research) {
+                StationName: h.StationName, 
+                radio_tracer: radio_tracer                               
+            }, {}, {upsert:true, 'new': true}, function(err, _research) {
                 if(err) return next(err);
                 research = _research;
                 next();
@@ -213,8 +214,9 @@ function incoming(h, msg_h, info, ack) {
                 research_id: research._id,
                 exam_id: exam._id,
                 series_desc: h.qc_series_desc,
-                SeriesNumber: h.SeriesNumber,                
-            }, {date: h.qc_StudyTimestamp},  //headers: h, //update with the latest headers (or mabe we should store all under an array?)
+                SeriesNumber: h.SeriesNumber,   
+                date: h.qc_StudyTimestamp             
+            }, {},  //headers: h, //update with the latest headers (or mabe we should store all under an array?)
             {upsert:true, 'new': true}, function(err, _template) {
                 if(err) return next(err);
                 template = _template;                
