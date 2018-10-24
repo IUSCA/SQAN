@@ -13,3 +13,7 @@ do
          done
      done
 done
+
+find /opt/sca/dicom-raw/0000-00004 -iname "*.json" | wc -l
+
+
