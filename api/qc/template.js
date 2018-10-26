@@ -277,11 +277,11 @@ function check_percent_diff(k, v, tv, qc, r, th) {
     };
 };
 
-var template_mismatch = 0;
-var not_set = 0;
-
 //compare image headers against template headers
 exports.match = function(image, template, qc) {
+
+    var template_mismatch = 0;
+    var not_set = 0;
 
     console.log("QC-ing image " + image.InstanceNumber + " with template " + template.InstanceNumber);
 
@@ -295,14 +295,14 @@ exports.match = function(image, template, qc) {
     // find fileds that are in image and not in template
     var tk = Object.keys(template.headers).length;
     var ik = Object.keys(image.headers).length;
-    var lengthdiff = ik - tk;
-    if (lengthdiff > 0) {
-        var keydiff = [];
-        for (var kk in image.headers) {
-            if(template.headers[kk] === undefined) keydiff.push({ik:kk,v:image.headers[kk]})
-        }
-        qc.errors.push({type: 'template_mismatch', k: keydiff, c: lengthdiff, msg: "image has "+ lengthdiff + " fields that are not found in the template"});
-    }    
+    
+    // first check if image header has fields that are not in the template    
+    var keydiff = [];
+    for (var kk in image.headers) {
+        if(template.headers[kk] === undefined) keydiff.push({ik:kk,v:image.headers[kk]})
+    }
+    var lengthdiff = keydiff.length;
+    if (lengthdiff > 0) qc.errors.push({type: 'image_tags_mismatch', k: keydiff, c: lengthdiff, msg: "image has "+ lengthdiff + " fields that are not found in the template"});
 
     //compare each field of the template with the corresponding filed in the image
     for(var k in template.headers) {
@@ -326,7 +326,8 @@ exports.match = function(image, template, qc) {
         template_mismatch: template_mismatch,        
         not_set: not_set,
         template_field_count: tk,
-        image_field_count: ik
+        image_field_count: ik,
+        image_tags_mismatch: lengthdiff 
     }
 
     qc.error_stats = error_stats;

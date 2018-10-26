@@ -113,7 +113,7 @@ function incoming(h, msg_h, info, ack) {
         function(next) {
             try {       
                 qc.instance.clean(h); 
-                console.log('after cleaning image is a template: '+h.qc_istemplate)
+                console.log('after cleaning image is a template: '+h.qc_istemplate+ ' and EchoNumbers is: '+h.EchoNumbers)
                 next();
             } catch(err) {
                 next(err);
@@ -255,11 +255,12 @@ function incoming(h, msg_h, info, ack) {
                             logger.warn("This image is the same instance number as primary image. Not inserting!!");  
                             return next();                            
                         }
+                        var echonumber = h.EchoNumbers;
                         compare_with_primary(_primarytemplate.headers,h,function(){
                             db.TemplateHeader.findOneAndUpdate({
                                 template_id: template._id,
                                 InstanceNumber: h.InstanceNumber,
-                                EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
+                                EchoNumbers: echonumber !== undefined ? echonumber : null,
                             }, {
                                 primary_image: _primarytemplate._id,
                                 headers:h
@@ -324,11 +325,12 @@ function incoming(h, msg_h, info, ack) {
                             return next();                            
                         }                    
                         // primary image exists, so we compress current image header
+                        var echonumber = h.EchoNumbers;
                         compare_with_primary(_primaryimage.headers,h,function(){
                             db.Image.findOneAndUpdate({
                                 series_id: series._id,
                                 InstanceNumber: h.InstanceNumber,
-                                EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
+                                EchoNumbers: echonumber !== undefined ? echonumber : null,
                             }, {
                                 primary_image: _primaryimage._id,
                                 headers:h
