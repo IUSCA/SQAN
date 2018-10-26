@@ -7,9 +7,9 @@ do
          echo "${subj}"; 
          for sdir in `ls /opt/sca/dicom-raw/"${iibis}"/"${subj}"`;
          do  
-            ls -lat /opt/sca/dicom-raw/"${iibis}"/"${subj}"/"${sdir}";
-            find /opt/sca/dicom-raw/"${iibis}"/"${subj}"/"${sdir}" -iname "*.json" | node /opt/sca/rady-qc/bin/post.js
-            sleep 500s
+            #ls -lat /opt/sca/dicom-raw/"${iibis}"/"${subj}"/"${sdir}";
+            find /opt/sca/dicom-raw/"${iibis}"/"${subj}"/"${sdir}" -iname "*.json" | node /opt/sca/rady-qc/bin/post.js;
+            sleep 100s
          done
      done
 done
