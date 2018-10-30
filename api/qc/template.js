@@ -195,7 +195,7 @@ var customs = {
 };
 
 
-function skip(k, v, tv, qc) {}
+function skip(k, v, tv, qc) {check_set(k, v, tv, qc)}
 
 function check_set(k, v, tv, qc) {
     //raise error if the field is missing
@@ -293,8 +293,8 @@ exports.match = function(image, template, qc) {
     }
     
     // find fileds that are in image and not in template
-    var tk = Object.keys(template.headers).length;
-    var ik = Object.keys(image.headers).length;
+    var tl = Object.keys(template.headers).length;
+    var il = Object.keys(image.headers).length;
     
     // first check if image header has fields that are not in the template    
     var keydiff = [];
@@ -302,7 +302,7 @@ exports.match = function(image, template, qc) {
         if(template.headers[kk] === undefined) keydiff.push({ik:kk,v:image.headers[kk]})
     }
     var lengthdiff = keydiff.length;
-    if (lengthdiff > 0) qc.errors.push({type: 'image_tags_mismatch', k: keydiff, c: lengthdiff, msg: "image has "+ lengthdiff + " fields that are not found in the template"});
+    if (lengthdiff > 0) qc.errors.push({type: 'image_tag_mismatch', k: keydiff, c: lengthdiff, msg: "image has "+ lengthdiff + " fields that are not found in the template"});
 
     //compare each field of the template with the corresponding filed in the image
     for(var k in template.headers) {
@@ -325,9 +325,9 @@ exports.match = function(image, template, qc) {
     var error_stats = {
         template_mismatch: template_mismatch,        
         not_set: not_set,
-        template_field_count: tk,
-        image_field_count: ik,
-        image_tags_mismatch: lengthdiff 
+        template_field_count: tl,
+        image_field_count: il,
+        image_tag_mismatch: lengthdiff 
     }
 
     qc.error_stats = error_stats;

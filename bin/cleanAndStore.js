@@ -240,7 +240,7 @@ function incoming(h, msg_h, info, ack) {
                                     template_id: template._id,
                                     SOPInstanceUID: h.SOPInstanceUID,
                                     InstanceNumber: h.InstanceNumber,
-                                    EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
+                                    //EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
                                     primary_image: null,
                                     headers: h
                                 }, function(err,primary_template) {
@@ -258,13 +258,14 @@ function incoming(h, msg_h, info, ack) {
                                     });
                                 })                                
                             } else {
-                                var echonumber = h.EchoNumbers;
+                                //var echonumber = h.EchoNumbers;
                                 compare_with_primary(_primary_template.headers,h,function(){
                                     db.TemplateHeader.create({
                                         template_id: template._id,
                                         SOPInstanceUID: h.SOPInstanceUID,
                                         InstanceNumber: h.InstanceNumber,
-                                        EchoNumbers: echonumber !== undefined ? echonumber : null,                           primary_image: _primary_template._id,
+                                        //EchoNumbers: echonumber !== undefined ? echonumber : null,                           
+                                        primary_image: _primary_template._id,
                                         headers:h
                                     }, function(err) {
                                         if(err) return next(err);
@@ -281,27 +282,27 @@ function incoming(h, msg_h, info, ack) {
         //make sure we know about this series
         function(next) {
             if(h.qc_istemplate==true) return next();  //if it's template then skip
+            
+            // Make sure this header is not in the databse already
+            db.Image.findOne({
+                SOPInstanceUID: h.SOPInstanceUID
+            }, function(err,repeated_header) {
+                if (err) return next(err);
+                if (repeated_header) {
+                    logger.info("Repeated image header identified");   
+                    return next("Repeated image header identified -- aborting!!");  
+                    // AAK -- WHAT TO DO HERE!!!
+                } else {
+                    db.Series.findOneAndUpdate({
+                        exam_id: exam._id,
+                        series_desc: h.qc_series_desc,
+                        SeriesNumber: h.SeriesNumber,
+                        isexcluded: qc.series.isExcluded(h.Modality, h.qc_series_desc)
+                    }, {}, {upsert: true, 'new': true}, 
+                    function(err, _series) {   
+                        if(err) return next(err);
+                        series = _series;  
 
-            db.Series.findOneAndUpdate({
-                exam_id: exam._id,
-                series_desc: h.qc_series_desc,
-                SeriesNumber: h.SeriesNumber,
-                isexcluded: qc.series.isExcluded(h.Modality, h.qc_series_desc)
-            }, {}, {upsert: true, 'new': true}, 
-            function(err, _series) {   
-                if(err) return next(err);
-                series = _series;  
-
-                // Make sure this header is not in the databse already
-                db.Image.findOne({
-                    SOPInstanceUID: h.SOPInstanceUID
-                }, function(err,repeated_header) {
-                    if (err) return next(err);
-                    if (repeated_header) {
-                        logger.info("Repeated image header identified");   
-                        return next("Repeated image header identified -- aborting!!");  
-                     // AAK -- WHAT TO DO HERE!!!
-                    } else {
                         // Check if a primary image already exists for this series
                         db.Image.findOne({
                             series_id: series._id,
@@ -313,7 +314,7 @@ function incoming(h, msg_h, info, ack) {
                                     series_id: series._id,
                                     SOPInstanceUID: h.SOPInstanceUID,
                                     InstanceNumber: h.InstanceNumber,
-                                    EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
+                                    //EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
                                     primary_image: null,
                                     headers: h
                                 }, function(err,primary_image) {
@@ -330,23 +331,37 @@ function incoming(h, msg_h, info, ack) {
                                     });
                                 })                                
                             } else {
-                                var echonumber = h.EchoNumbers;
-                                compare_with_primary(_primary_image.headers,h,function(){
-                                    db.Image.create({
-                                        series_id: series._id,
-                                        SOPInstanceUID: h.SOPInstanceUID,
-                                        InstanceNumber: h.InstanceNumber,
-                                        EchoNumbers: echonumber !== undefined ? echonumber : null,                         primary_image: _primary_image._id,
-                                        headers:h
-                                    }, function(err) {
-                                        if(err) return next(err);
-                                        return next();
+                                // Check if series has been QC-ed already (i.e. if this is a new image for an existing series)
+                                db.Series.find({_id: series._id, qc: {$exists: true}}).exec(function(err,qced_series) {
+                                    if (err) return next(err);
+                                    if (qced_series) {  // remove embedded qc objects from series and from all images in the series                                        
+                                        db.Series.update({_id:series._id}, {$unset:{qc:1}},{multi:false}, function(err) {
+                                            if (err) return next(err);                                        
+                                            // db.Image.update({series_id:series._id}, {$unset:{qc:1}},{multi:true}, function(err) {
+                                            //     if (err) return next(err);
+                                            // })  AAK -- not sure that I need this; perhaps the qc object for images can be overwritten? 
+                                        })
+                                    }
+                                    // Finally, insert the image in the database
+                                    //var echonumber = h.EchoNumbers;
+                                    compare_with_primary(_primary_image.headers,h,function(){
+                                        db.Image.create({
+                                            series_id: series._id,
+                                            SOPInstanceUID: h.SOPInstanceUID,
+                                            InstanceNumber: h.InstanceNumber,
+                                            //EchoNumbers: echonumber !== undefined ? echonumber : null,                         
+                                            primary_image: _primary_image._id,
+                                            headers:h
+                                        }, function(err) {
+                                            if(err) return next(err);
+                                            return next();
+                                        });
                                     });
-                                }); 
+                                });
                             }
-                        })
-                    }
-                })
+                        });
+                    });
+                }
             });
         },
                 
@@ -437,15 +452,20 @@ function compare_with_primary(primaryImg,h,cb) {
 
     for (var k in primaryImg) {     
         v = primaryImg[k];  
-        if (['qc_istemplate'].indexOf(k) < 0) {
-            if (!Array.isArray(v) && !isObject(v) && h.hasOwnProperty(k) && h[k] === v) {  
-                //console.log('deleting field: '+k +' -- ' + h[k]);
-                delete h[k]
-            } 
-            else if (Array.isArray(v) || isObject(v)) {
-                if (isEqual(v,h[k]) == true) delete h[k];
-            }
-        }     
+        if (h.hasOwnProperty(k) && h[k] !== undefined) {
+            if (['qc_istemplate'].indexOf(k) < 0) { 
+                if (!Array.isArray(v) && !isObject(v) && h[k] === v) {  
+                    //console.log('deleting field: '+k +' -- ' + h[k]);
+                    delete h[k]
+                } 
+                else if (Array.isArray(v) || isObject(v)) {
+                    if (isEqual(v,h[k]) == true) delete h[k];
+                }
+            }  
+        } else {//if (!h[k]) {
+            h[k] = "not_set"; // label fields that are not in the primary
+        }
+   
     }
     cb();
 }

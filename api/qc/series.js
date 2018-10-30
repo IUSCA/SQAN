@@ -17,9 +17,10 @@ function qc_series(series,images) {
     console.log("QC-ing series: "+series._id + " -- series description " +series.series_desc);
 
     var all_qced = true;
-    var errored_InstanceNumber = [];
+    //var errored_InstanceNumber = [];
     var template_mismatch = 0;  // number of fields with template_mismatch error
     var not_set = 0;  // number of fields with not_set error
+    var image_tag_mismatch = 0;  // number of tags found in image but not in templates
     var diff = 0;
     var warnings = 0;
 
@@ -50,11 +51,11 @@ function qc_series(series,images) {
                 qc.template_field_count += image.qc.error_stats.template_field_count;
                 // image has errors
                 if(image.qc.errors.length > 0) {
-                    errored_InstanceNumber.push(image.InstanceNumber);
+                    //errored_InstanceNumber.push(image.InstanceNumber);
                     qc.errored_images++;
                     template_mismatch +=  image.qc.error_stats.template_mismatch;
                     not_set += image.qc.error_stats.not_set;
-    
+                    image_tag_mismatch += image.qc.error_stats.image_tag_mismatch;
                 }
                 // image has warnings
                 if(image.qc.warnings.length > 0) {
@@ -76,14 +77,14 @@ function qc_series(series,images) {
         // This should not happen, unless a series has too many images and cannot be retrieved all at once. 
         return 
     } else {
-        qc.series_fields_errored = template_mismatch + not_set;
+        qc.series_fields_errored = template_mismatch + not_set + image_tag_mismatch;
         qc.template_id = images[0].qc.template_id;
         //check for template header count 
         db.TemplateHeader.where({template_id: qc.template_id}).count(function(err, tc) {
             
             if (err) console.log(err);
             qc.template_image_count = tc;
-            diff = qc.template_image_count - images.length; 
+            diff = qc.template_image_count - qc.series_image_count; 
             
             console.log("template count is "+ qc.template_image_count + " diff is "+ Math.abs(diff));
 
@@ -92,13 +93,13 @@ function qc_series(series,images) {
                     type: "image_errors", 
                     msg: "Series contains "+qc.errored_images+" images with qc errors", 
                     c: qc.errored_images,
-                    errored_images: errored_InstanceNumber,
+                    //errored_images: errored_InstanceNumber,
                     per: qc.errored_images / qc.template_image_count,
                 }); 
                 
                 if(template_mismatch > 0) {
                     qc.errors.push({
-                        type: "field_template_mismatch", 
+                        type: "template_mismatch", 
                         msg: "Series contains "+template_mismatch+" fields with 'template_mismatch' error", 
                         c: template_mismatch,
                         per: template_mismatch / qc.template_field_count,
@@ -107,10 +108,19 @@ function qc_series(series,images) {
      
                 if(not_set > 0) {
                     qc.errors.push({
-                        type: "field_not_set", 
+                        type: "not_set", 
                         msg: "Series contains "+not_set+" fields with 'not_set' error", 
                         c: not_set,
                         per: not_set / qc.template_field_count,
+                    }); 
+                }
+
+                if(image_tag_mismatch > 0) {
+                    qc.errors.push({
+                        type: "image_tag_mismatch", 
+                        msg: "Series contains "+image_tag_mismatch+" fields with 'image_tag_mismatch' error", 
+                        c: image_tag_mismatch,
+                        per: image_tag_mismatch / qc.series_image_count,
                     }); 
                 }
               
@@ -125,7 +135,7 @@ function qc_series(series,images) {
                 });        
             }
                     
-            if(diff != 0) {
+            if(diff !== 0) {
                 qc.errors.push({
                     type: "image_count_mismatch", 
                     msg: diff > 0 ? "Series is missing "+diff+ " image headers":"Series has "+Math.abs(diff)+ " excess image headers",
@@ -150,7 +160,7 @@ function qc_the_exam(series,qced) {
     if (qced) var status = "qc-ed";
     if(!qced) var status = "no template"
     db.Exam.update({"_id": series.exam_id, "qc.series_desc": series.series_desc}, 
-    {$set: {"qc.$.status": status}}, {upsert:false}, function(err,exam) {
+    {$set: {"qc.$.status": status,"qc.$.state": series.qc1_state}}, {upsert:false}, function(err,exam) {
         if (err) console.log("error in exam qc");         
     })
 }

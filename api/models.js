@@ -78,7 +78,7 @@ var templateHeaderSchema = mongoose.Schema({
 
     template_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     InstanceNumber: {type: Number},
-    EchoNumbers: {type: Number},
+    //EchoNumbers: {type: Number},
     SOPInstanceUID : {type: String, index: true},
     
     headers: mongoose.Schema.Types.Mixed, 
@@ -148,8 +148,8 @@ var imageSchema = mongoose.Schema({
     series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     SOPInstanceUID : {type: String, index: true},
 
-    InstanceNumber: {type: Number, index: true},
-    EchoNumbers: {type: Number},
+    InstanceNumber: {type: Number},
+    //EchoNumbers: {type: Number},
 
     //the actual headers for this instance (cleaned)
     headers: mongoose.Schema.Types.Mixed, 
