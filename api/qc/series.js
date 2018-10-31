@@ -149,20 +149,28 @@ function qc_series(series,images) {
             events.series(series);
             db.Series.update({_id: series._id}, {qc: qc}, function(err) {
                 if (err) console.log(err);
-                qc_the_exam(series,true);    
+                update_exam(series,true);    
             });  
         })   
     }
 }
 
 
-function qc_the_exam(series,qced) {
-    if (qced) var status = "qc-ed";
-    if(!qced) var status = "no template"
-    db.Exam.update({"_id": series.exam_id, "qc.series_desc": series.series_desc}, 
-    {$set: {"qc.$.status": status,"qc.$.state": series.qc1_state}}, {upsert:false}, function(err,exam) {
-        if (err) console.log("error in exam qc");         
-    })
+function update_exam(series,qced) {
+    if (qced) {
+        var status = "qc-ed";    
+        db.Exam.update({"_id": series.exam_id, "qc.series_desc": series.series_desc}, 
+            {$set: {"qc.$.status": status,"qc.$.state": series.qc1_state}}, {upsert:false}, 
+            function(err) {
+             if (err) console.log("error in exam qc");         
+        })
+    } else {
+        var status = "no template";
+        db.Exam.update({"_id": series.exam_id, "qc.series_desc": series.series_desc}, 
+            {$set: {"qc.$.status": status}}, {upsert:false}, function(err,exam) {
+            if (err) console.log("error updating qc status in exam "+exam.id);         
+        })
+    }
 }
 
 
@@ -200,3 +208,4 @@ exports.isExcluded = function(modality, series_desc) {
 }
 
 exports.qc_series = qc_series;
+exports.update_exam = update_exam;

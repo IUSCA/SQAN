@@ -259,7 +259,7 @@ function incoming(h, msg_h, info, ack) {
                                 })                                
                             } else {
                                 //var echonumber = h.EchoNumbers;
-                                compare_with_primary(_primary_template.headers,h,function(){
+                                qc.instance.compare_with_primary(_primary_template.headers,h,function(){
                                     db.TemplateHeader.create({
                                         template_id: template._id,
                                         SOPInstanceUID: h.SOPInstanceUID,
@@ -344,7 +344,7 @@ function incoming(h, msg_h, info, ack) {
                                     }
                                     // Finally, insert the image in the database
                                     //var echonumber = h.EchoNumbers;
-                                    compare_with_primary(_primary_image.headers,h,function(){
+                                    qc.instance.compare_with_primary(_primary_image.headers,h,function(){
                                         db.Image.create({
                                             series_id: series._id,
                                             SOPInstanceUID: h.SOPInstanceUID,
@@ -448,65 +448,65 @@ function write_to_disk(dir, h, cb) {
     });
 }
 
-function compare_with_primary(primaryImg,h,cb) {
+// function compare_with_primary(primaryImg,h,cb) {
 
-    for (var k in primaryImg) {     
-        v = primaryImg[k];  
-        if (h.hasOwnProperty(k) && h[k] !== undefined) {
-            if (['qc_istemplate'].indexOf(k) < 0) { 
-                if (!Array.isArray(v) && !isObject(v) && h[k] === v) {  
-                    //console.log('deleting field: '+k +' -- ' + h[k]);
-                    delete h[k]
-                } 
-                else if (Array.isArray(v) || isObject(v)) {
-                    if (isEqual(v,h[k]) == true) delete h[k];
-                }
-            }  
-        } else {//if (!h[k]) {
-            h[k] = "not_set"; // label fields that are not in the primary
-        }
+//     for (var k in primaryImg) {     
+//         v = primaryImg[k];  
+//         if (h.hasOwnProperty(k) && h[k] !== undefined) {
+//             if (['qc_istemplate'].indexOf(k) < 0) { 
+//                 if (!Array.isArray(v) && !isObject(v) && h[k] === v) {  
+//                     //console.log('deleting field: '+k +' -- ' + h[k]);
+//                     delete h[k]
+//                 } 
+//                 else if (Array.isArray(v) || isObject(v)) {
+//                     if (isEqual(v,h[k]) == true) delete h[k];
+//                 }
+//             }  
+//         } else {//if (!h[k]) {
+//             h[k] = "not_set"; // label fields that are not in the primary
+//         }
    
-    }
-    cb();
-}
+//     }
+//     cb();
+// }
 
-function isObject (value) {
-    return value && typeof value === 'object' && value.constructor === Object;
-}
+// function isObject (value) {
+//     return value && typeof value === 'object' && value.constructor === Object;
+// }
 
 
-var isEqual = function (field1, field2) {
+// var isEqual = function (field1, field2) {
 
-	var type = Object.prototype.toString.call(field1);
-	if (type !== Object.prototype.toString.call(field2)) return false;
+// 	var type = Object.prototype.toString.call(field1);
+// 	if (type !== Object.prototype.toString.call(field2)) return false;
 
-	var len1 = type === '[object Array]' ? field1.length : Object.keys(field1).length;
-	var len2 = type === '[object Array]' ? field2.length : Object.keys(field2).length;
-	if (len1 !== len2) return false;
+// 	var len1 = type === '[object Array]' ? field1.length : Object.keys(field1).length;
+// 	var len2 = type === '[object Array]' ? field2.length : Object.keys(field2).length;
+// 	if (len1 !== len2) return false;
 
-	var compare = function (item1, item2) {
-		var itemType = Object.prototype.toString.call(item1);
+// 	var compare = function (item1, item2) {
+// 		var itemType = Object.prototype.toString.call(item1);
 
-		if (['[object Array]', '[object Object]'].indexOf(itemType) >= 0) {
-			if (!isEqual(item1, item2)) return false;
-		}
-		else {
-            if (itemType !== Object.prototype.toString.call(item2)) return false;
-            if (item1 !== item2) return false;
-		}
-    };
+// 		if (['[object Array]', '[object Object]'].indexOf(itemType) >= 0) {
+// 			if (!isEqual(item1, item2)) return false;
+// 		}
+// 		else {
+//             if (itemType !== Object.prototype.toString.call(item2)) return false;
+//             if (item1 !== item2) return false;
+// 		}
+//     };
     
-	if (type === '[object Array]') {
-		for (var i = 0; i < len1; i++) {
-			if (compare(field1[i], field2[i]) === false) return false;
-		}
-	} else {
-		for (var key in field1) {
-			if (field1.hasOwnProperty(key)) {
-				if (compare(field1[key], field2[key]) === false) return false;
-			}
-		}
-	}
-	return true;
+// 	if (type === '[object Array]') {
+// 		for (var i = 0; i < len1; i++) {
+// 			if (compare(field1[i], field2[i]) === false) return false;
+// 		}
+// 	} else {
+// 		for (var key in field1) {
+// 			if (field1.hasOwnProperty(key)) {
+// 				if (compare(field1[key], field2[key]) === false) return false;
+// 			}
+// 		}
+// 	}
+// 	return true;
 
-};
+// };

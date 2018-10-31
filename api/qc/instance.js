@@ -1,5 +1,10 @@
 'use strict';
 
+//node
+var fs = require('fs');
+
+var config = require('../../config');
+
 //hide some fields, or problematic values on some fields
 function maskFields(h) {
 
@@ -269,6 +274,46 @@ function convertToFloat(v, f) {
     }
 }
 
+
+function isObject (value) {
+    return value && typeof value === 'object' && value.constructor === Object;
+}
+
+var isEqual = function (field1, field2) {
+
+	var type = Object.prototype.toString.call(field1);
+	if (type !== Object.prototype.toString.call(field2)) return false;
+
+	var len1 = type === '[object Array]' ? field1.length : Object.keys(field1).length;
+	var len2 = type === '[object Array]' ? field2.length : Object.keys(field2).length;
+	if (len1 !== len2) return false;
+
+	var compare = function (item1, item2) {
+		var itemType = Object.prototype.toString.call(item1);
+
+		if (['[object Array]', '[object Object]'].indexOf(itemType) >= 0) {
+			if (!isEqual(item1, item2)) return false;
+		}
+		else {
+            if (itemType !== Object.prototype.toString.call(item2)) return false;
+            if (item1 !== item2) return false;
+		}
+    };
+    
+	if (type === '[object Array]') {
+		for (var i = 0; i < len1; i++) {
+			if (compare(field1[i], field2[i]) === false) return false;
+		}
+	} else {
+		for (var key in field1) {
+			if (field1.hasOwnProperty(key)) {
+				if (compare(field1[key], field2[key]) === false) return false;
+			}
+		}
+	}
+	return true;
+
+};
 /*
 function convertToArray(v) {
     //ImageType: 'ORIGINAL\\PRIMARY\\M\\ND\\MOSAIC',
@@ -352,3 +397,56 @@ exports.clean = function(h) {
     maskFields(h);
 }
 
+
+exports.compare_with_primary = function(primaryImg,h,cb) {
+
+    for (var k in primaryImg) {     
+        let v = primaryImg[k];  
+        if (h.hasOwnProperty(k) && h[k] !== undefined) {
+            if (['qc_istemplate'].indexOf(k) < 0) { 
+                if (!Array.isArray(v) && !isObject(v) && h[k] === v) {  
+                    //console.log('deleting field: '+k +' -- ' + h[k]);
+                    delete h[k]
+                } 
+                else if (Array.isArray(v) || isObject(v)) {
+                    if (isEqual(v,h[k]) == true) delete h[k];
+                }
+            }  
+        } else {//if (!h[k]) {
+            h[k] = "not_set"; // label fields that are not in the primary
+        }
+   
+    }
+    cb();
+}
+
+exports.reconstruct_header = function(_header,_primary_image,cb) {
+
+    if (_header.SOPInstanceUID !== _primary_image.SOPInstanceUID) { //image is not primary image
+        for (var k in _primary_image.headers) {     
+            let v = _primary_image.headers[k]; 
+            if (!_header.headers[k]) {                      
+                _header.headers[k] = v;
+            } 
+            if (_header.headers[k] == "not_set") {
+               delete _header.headers[k];                                
+            }            
+        }
+        cb()
+    } else {
+        console.log("image with InstanceNumber" +_header.InstanceNumber + " is a primary -- no reconstruction")
+        cb();
+    }
+}
+
+
+
+exports.check_tarball_mtime = function(primimage,cb) {
+    // check for the last modified date on the coresponding tar file
+    var path2tar = config.cleaner.raw_headers+"/"+primimage.qc_iibisid+"/"+primimage.qc_subject+"/"+primimage.StudyInstanceUID+"/"+primimage.qc_series_desc+".tar";          
+    fs.stat(path2tar,function(err,stats){
+        if (err) cb(err); 
+        var mtime = (parseInt((new Date).getTime()) - parseInt(new Date(stats.mtime).getTime()))/1000;
+        cb(null,mtime);
+    });
+}
