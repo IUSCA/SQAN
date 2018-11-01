@@ -58,12 +58,12 @@ function incoming(h, msg_h, info, ack) {
     var exam = null;
     var series = null;
     var template = null;
-    var primary_image = null;
     var aq = null;
 
     async.series([
         function(next) {
             try {
+                // AAK -- this should be removed once we are ready to deploy
                 //debug - remove qc_ fields... it shouldn't be there, but there are.. maybe I've corrupted the data?
                 for(var k in h) {
                     if(k.indexOf("qc_") === 0) delete h[k];
@@ -77,13 +77,12 @@ function incoming(h, msg_h, info, ack) {
                 h.qc_subject = meta.subject;
                 h.qc_istemplate = meta.template;
                 h.qc_series_desc = meta.series_desc;
-                h.qc_series_desc_version = meta.series_desc_version;
+                //h.qc_series_desc_version = meta.series_desc_version;
 
                 //construct esindex
                 var esindex = qc.instance.composeESIndex(h);
                 logger.info(h.qc_iibisid+" subject:"+h.qc_subject+" esindex:"+esindex+" "+h.SOPInstanceUID);
                 h.qc_esindex = esindex;
-                console.log('image is a template: '+h.qc_istemplate)
                 next();
             } catch(err) {
                 next(err);
@@ -102,42 +101,42 @@ function incoming(h, msg_h, info, ack) {
         function(next) {            
             var path2tar = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc+".tar"
             var path2file = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc+"/"+h.SOPInstanceUID+".json"
-             logger.debug("storing file "+ path2file+ " to "+path2tar);
+             logger.debug("tarball -- storing file>> "+ path2file);
             write_to_tar(path2tar,path2file, function(err) {
                 if(err) throw err; //let's kill the app - to alert the operator of this critical issue
-                logger.debug("wrote to tar");                
+                //logger.debug("wrote to tar");                
                 next();
             });
         },
 
         function(next) {
             try {       
-                qc.instance.clean(h); 
-                console.log('after cleaning image is a template: '+h.qc_istemplate+ ' and EchoNumbers is: '+h.EchoNumbers)
+                qc.instance.clean(h);                 
+                console.log('cleaned image: '+h.SOPInstanceUID)
                 next();
             } catch(err) {
                 next(err);
             }
         },
 
-        // ********************************
-        // AAK -- why do we do this???
-        // ********************************
+
         function(next) {
             //ignore all image/template with SeriesNumber > 200
-            //console.dir(h.SeriesNumber);
+            // AAK - large SeriesNumber's identify reconstructed images which should not be inserted in the database
             if(h.Modality == "MR") {
                 if(h.SeriesNumber > 200) {
-                    return next("SeriesNumber is >200:"+h.SeriesNumber);
+                    return next("MR image SeriesNumber is >200:"+h.SeriesNumber);
                 }
             } else {
                 if(h.SeriesNumber > 100) {
-                    return next("SeriesNumber is >100:"+h.SeriesNumber);
+                    return next("image SeriesNumber is >100:"+h.SeriesNumber);
                 }
             } 
             next();
         },
         
+        // AAK - we need this 
+
         // //set the default ACL for new IIBISids
         // function(next) {
         //     db.Acl.findOne({key: config.acl.key}, function(err, acl) {
@@ -216,63 +215,66 @@ function incoming(h, msg_h, info, ack) {
                 series_desc: h.qc_series_desc,
                 SeriesNumber: h.SeriesNumber,   
                 date: h.qc_StudyTimestamp             
-            }, {},  //headers: h, //update with the latest headers (or mabe we should store all under an array?)
-            {upsert:true, 'new': true}, function(err, _template) {
+            }, {}, {upsert:true, 'new': true}, 
+            function(err, _template) {
                 if(err) return next(err);
-                template = _template;                
+                template = _template; 
 
-                //store template header
+                // Make sure this header is not in the databse already
                 db.TemplateHeader.findOne({
-                    template_id: template._id,
-                    primary_image: null
-                }, function(err, _primarytemplate) {
-                    if(err) return next(err);
-                    if (!_primarytemplate) {   
-                        db.TemplateHeader.create({
+                    SOPInstanceUID: h.SOPInstanceUID
+                }, function(err,repeated_header) {
+                    if (err) return next(err);
+                    if (repeated_header) {
+                        logger.info("Repeated template header identified -- Please delete previous version before overwriting!!");   
+                        return next("Cannot overwrite template headers as some series may be have been QC-ed with this template");                     
+                    } else {
+                        // Check if a primary image already exists for this series
+                        db.TemplateHeader.findOne({
                             template_id: template._id,
-                            InstanceNumber: h.InstanceNumber,
-                            EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
-                            primary_image: null,
-                            headers:h
-                        },function(err,_primary_template) {
+                            primary_image: null,                               
+                        }, function(err, _primary_template) {
                             if (err) return next(err);
-                            var deprecated_by = deprecatedByTemplate(template);
-                            // finally, insert primary_template._id into the template collection  
-                            db.Template.updateOne({
-                                _id: template._id
-                            }, {
-                                primary_image:_primary_template._id,
-                                deprecated_by: deprecated_by !== "undefined"? deprecated_by : null
-                            }, function(err) {
-                                if (err) return next(err);  
-                                return next();                              
-                            });                                                   
-                        })                            
-                    } else if(_primarytemplate) {
-                        // first check if this image is same instance as primary, if so, send warning
-                        // we cannot update the primary without comparing with all other images for this series...
-                        if (_primarytemplate.InstanceNumber == h.InstanceNumber) {
-                            logger.warn("This image is the same instance number as primary image. Not inserting!!");  
-                            return next();                            
-                        }
-                        var echonumber = h.EchoNumbers;
-                        compare_with_primary(_primarytemplate.headers,h,function(){
-                            db.TemplateHeader.findOneAndUpdate({
-                                template_id: template._id,
-                                InstanceNumber: h.InstanceNumber,
-                                EchoNumbers: echonumber !== undefined ? echonumber : null,
-                            }, {
-                                primary_image: _primarytemplate._id,
-                                headers:h
-                            },{upsert:true, 'new': false}, function(err, _tempheader) {
-                                if(err) return next(err);
-                                //I am setting new:false so that _image will be null if this is the first time
-                                if(_tempheader) logger.warn("template header over-written");
-                                return next();
-                            });
-                        });                          
+                            if (!_primary_template) {
+                                db.TemplateHeader.create({
+                                    template_id: template._id,
+                                    SOPInstanceUID: h.SOPInstanceUID,
+                                    InstanceNumber: h.InstanceNumber,
+                                    EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
+                                    primary_image: null,
+                                    headers: h
+                                }, function(err,primary_template) {
+                                    if (err) return next(err);
+                                    var deprecated_by = deprecatedByTemplate(template);
+                                    console.log("derprecated_by " + deprecated_by)
+                                    // finally, insert primary_template._id into the template document  
+                                    db.Template.updateOne({_id: template._id}, 
+                                    {
+                                        primary_image:primary_template._id,
+                                        deprecated_by: deprecated_by !== "undefined"? deprecated_by : null
+                                    }, function(err) {
+                                        if (err) return next(err);  
+                                        return next();                              
+                                    });
+                                })                                
+                            } else {
+                                var echonumber = h.EchoNumbers;
+                                compare_with_primary(_primary_template.headers,h,function(){
+                                    db.TemplateHeader.create({
+                                        template_id: template._id,
+                                        SOPInstanceUID: h.SOPInstanceUID,
+                                        InstanceNumber: h.InstanceNumber,
+                                        EchoNumbers: echonumber !== undefined ? echonumber : null,                           primary_image: _primary_template._id,
+                                        headers:h
+                                    }, function(err) {
+                                        if(err) return next(err);
+                                        return next();
+                                    });
+                                }); 
+                            }
+                        })
                     }
-                });
+                })
             });
         },
         
@@ -284,73 +286,70 @@ function incoming(h, msg_h, info, ack) {
                 exam_id: exam._id,
                 series_desc: h.qc_series_desc,
                 SeriesNumber: h.SeriesNumber,
-            }, { 
-                isexcluded: qc.series.isExcluded(h.Modality, h.qc_series_desc),
-            }, {upsert: true, 'new': true}, function(err, _series) {   
+                isexcluded: qc.series.isExcluded(h.Modality, h.qc_series_desc)
+            }, {}, {upsert: true, 'new': true}, 
+            function(err, _series) {   
                 if(err) return next(err);
                 series = _series;  
 
+                // Make sure this header is not in the databse already
                 db.Image.findOne({
-                    series_id: series._id,                    
-                    primary_image: null
-                }, function(err, _primaryimage) {
-                    if(err) return next(err);
-                    
-                    if (!_primaryimage) {   
-                        db.Image.create({
+                    SOPInstanceUID: h.SOPInstanceUID
+                }, function(err,repeated_header) {
+                    if (err) return next(err);
+                    if (repeated_header) {
+                        logger.info("Repeated image header identified");   
+                        return next("Repeated image header identified -- aborting!!");  
+                     // AAK -- WHAT TO DO HERE!!!
+                    } else {
+                        // Check if a primary image already exists for this series
+                        db.Image.findOne({
                             series_id: series._id,
-                            InstanceNumber: h.InstanceNumber,
-                            EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
-                            primary_image: null,
-                            headers:h
-                        },function(err,_primary_image) {
+                            primary_image: null,                               
+                        }, function(err, _primary_image) {
                             if (err) return next(err);
-                            var deprecated_by = deprecatedBySeries(series);
-                            // finally, insert primary_image._id into the series collection
-                            db.Series.updateOne({
-                                _id: series._id
-                            }, {
-                                primary_image:_primary_image._id,
-                                deprecated_by: deprecated_by !== "undefined"? deprecated_by : null,
-                            }, function(err) {
-                                if (err) return next(err);
-                                return next(); 
-                            });
-                        }) 
-                    } else if(_primaryimage) {
-                        // first check if this image is same instance as primary, if so, send warning
-                        // we cannot update the primary without comparing with all other images for this series...
-                        if (_primaryimage.InstanceNumber == h.InstanceNumber) {
-                            logger.warn("This image is the same instance number as primary image. Not inserting!!");  
-                            return next();                            
-                        }                    
-                        // primary image exists, so we compress current image header
-                        var echonumber = h.EchoNumbers;
-                        compare_with_primary(_primaryimage.headers,h,function(){
-                            db.Image.findOneAndUpdate({
-                                series_id: series._id,
-                                InstanceNumber: h.InstanceNumber,
-                                EchoNumbers: echonumber !== undefined ? echonumber : null,
-                            }, {
-                                primary_image: _primaryimage._id,
-                                headers:h
-                            },{upsert:true, 'new': false}, function(err, _image) {
-                                if(err) return next(err);
-                                //I am setting new:false so that _image will be null if this is the first time
-                                if(_image) logger.warn("image already inserted - not sending to es since it can't update");                                
-                                //I am now setting document_id on logstash. Elasticsearch can update the document as long as document_id matches and index name
-                                //stays the same!
-                                // AAK -- what is this? 
-                                // cleaned_ex.publish('', h, {}, function(err) {
-                                //     return next(err);
-                                // });
-                                return next();
-                            });
-                        });
-                    }                                      
-                 });
+                            if (!_primary_image) {
+                                db.Image.create({
+                                    series_id: series._id,
+                                    SOPInstanceUID: h.SOPInstanceUID,
+                                    InstanceNumber: h.InstanceNumber,
+                                    EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
+                                    primary_image: null,
+                                    headers: h
+                                }, function(err,primary_image) {
+                                    if (err) return next(err);
+                                    var deprecated_by = deprecatedBySeries(series);
+                                    // finally, insert primary_image._id into the series document  
+                                    db.Series.updateOne({_id: series._id}, 
+                                    {
+                                        primary_image:primary_image._id,
+                                        deprecated_by: deprecated_by !== "undefined"? deprecated_by : null
+                                    }, function(err) {
+                                        if (err) return next(err);  
+                                        return next();                              
+                                    });
+                                })                                
+                            } else {
+                                var echonumber = h.EchoNumbers;
+                                compare_with_primary(_primary_image.headers,h,function(){
+                                    db.Image.create({
+                                        series_id: series._id,
+                                        SOPInstanceUID: h.SOPInstanceUID,
+                                        InstanceNumber: h.InstanceNumber,
+                                        EchoNumbers: echonumber !== undefined ? echonumber : null,                         primary_image: _primary_image._id,
+                                        headers:h
+                                    }, function(err) {
+                                        if(err) return next(err);
+                                        return next();
+                                    });
+                                }); 
+                            }
+                        })
+                    }
+                })
             });
         },
+                
 
     ], function(err) {
         //all done
@@ -369,7 +368,6 @@ function incoming(h, msg_h, info, ack) {
     });
 }
 
-// AAK -- there must be a more compact way of doing this with a single query...
 var deprecatedBySeries = function(series) {    
     db.Series.update({
         exam_id: series.exam_id,
@@ -438,8 +436,7 @@ function write_to_disk(dir, h, cb) {
 function compare_with_primary(primaryImg,h,cb) {
 
     for (var k in primaryImg) {     
-        v = primaryImg[k]; 
-        //AAK -- these are identifiers so we don't want to remove them; should we add other non-removable fields?  
+        v = primaryImg[k];  
         if (['qc_istemplate'].indexOf(k) < 0) {
             if (!Array.isArray(v) && !isObject(v) && h.hasOwnProperty(k) && h[k] === v) {  
                 //console.log('deleting field: '+k +' -- ' + h[k]);

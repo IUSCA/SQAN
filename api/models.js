@@ -9,7 +9,6 @@ const config = require('../config');
 const logger = new winston.Logger(config.logger.winston);
 //const events = require('./events');
 
-//var sequelize = new Sequelize('database', 'username', 'password', config.sequelize);
 exports.init = function(cb) {
     if(config.debug) mongoose.set('debug', true);
     mongoose.connect(config.mongodb, {
@@ -30,13 +29,10 @@ exports.disconnect = function(cb) {
 var researchSchema = mongoose.Schema({
     ///////////////////////////////////////////////////////////////////////////
     //
-    // keys
-    //
     IIBISID: {type: String, index: true}, //like.. 2016-00001
     Modality: {type: String, index: true},  //like.. PT
     StationName: {type: String}, //like.. CT71271
-    radio_tracer: mongoose.Schema.Types.Mixed, //like DOTA NOC (from RadiopharmaceuticalInformationSequence.Radiopharmaceutical - only used for CT)
-    //
+    radio_tracer: {type: String}
     ///////////////////////////////////////////////////////////////////////////
 });
 researchSchema.index({IIBISID: 1, Modality: 1});
@@ -44,27 +40,12 @@ exports.Research = mongoose.model('Research', researchSchema);
 
 var examSchema = mongoose.Schema({
     ///////////////////////////////////////////////////////////////////////////
-    //
-    // keys
-    //
     research_id: {type: mongoose.Schema.Types.ObjectId, index: true, ref: 'Research'},
-    //research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     subject: {type: String}, //not set if it's template
-    //: {type: Date, index: true}, //date when this template is received (probabbly use StudyTimestamp of the template?)
     StudyInstanceUID: {type: String, index: true},
     istemplate: {type: Boolean},
-    //
-    //
-    ///////////////////////////////////////////////////////////////////////////
-    
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    //foreign key to assist lookup
-    //
-    //IIBISID: {type: String, index: true},//make it easier to do access control
 
     qc: mongoose.Schema.Types.Mixed, 
-    //series_desc:{type: String, index: true},
 
     comments: [ mongoose.Schema({
         user_id: String, //req.user.sub
@@ -78,23 +59,12 @@ exports.Exam = mongoose.model('Exam', examSchema);
 //counter part for "series"
 var templateSchema = mongoose.Schema({
     ///////////////////////////////////////////////////////////////////////////
-    //
-    // keys
-    //
+
     research_id: {type: mongoose.Schema.Types.ObjectId, index: true},
     exam_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     series_desc: {type: String}, //original SeriesDescription minut anything after ^
     SeriesNumber: {type: Number},
     primary_image: {type: mongoose.Schema.Types.ObjectId, index: true},
-    //
-    ///////////////////////////////////////////////////////////////////////////
-    
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    //foreign key to assist lookup
-    //
-    //IIBISID: {type: String, index: true},//make it easier to do access control
-    //Modality: {type: String, index: true},  //like.. PT
     deprecated_by: {type: mongoose.Schema.Types.ObjectId},
     count: Number, //number of images in a given series
     date: Date, //date when this template is received (probabbly use StudyTimestamp of the template?) //TODO - maybe needed since we have exam collection now?
@@ -105,38 +75,27 @@ exports.Template = mongoose.model('Template', templateSchema);
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 var templateHeaderSchema = mongoose.Schema({
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    // keys
-    //
+
     template_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-    //AcquisitionNumber: {type: Number, index: true},
     InstanceNumber: {type: Number},
     EchoNumbers: {type: Number},
-    //
-    ///////////////////////////////////////////////////////////////////////////
-
-    //IIBISID: {type: String, index: true},//make it easier to do access control
+    SOPInstanceUID : {type: String, index: true},
     
     headers: mongoose.Schema.Types.Mixed, 
     primary_image: {type: mongoose.Schema.Types.ObjectId, index: true}
 });
-templateHeaderSchema.index({template_id: 1, primary_image: 1});
+templateHeaderSchema.index({template_id: 1, SOPInstanceUID: 1, primary_image: 1});
 exports.TemplateHeader = mongoose.model('TemplateHeader', templateHeaderSchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 var handlerSchema = mongoose.Schema({
     ///////////////////////////////////////////////////////////////////////////
-    //
-    // keys
-    //
+
     handler_id: {type: mongoose.Schema.Types.ObjectId, index: true},
     scope: {type: String, index: true},
     modality: {type: String, index: true},
     series: {type: String, index: true},
-    //
-    ///////////////////////////////////////////////////////////////////////////
 
     handlers: mongoose.Schema.Types.Mixed,
     notes: mongoose.Schema.Types.Mixed,
@@ -149,28 +108,15 @@ exports.Handler = mongoose.model('Handler', handlerSchema);
 
 var seriesSchema = mongoose.Schema({
     ///////////////////////////////////////////////////////////////////////////
-    //
-    // keys
-    //
-    //research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+
     exam_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     series_desc: {type: String}, //original SeriesDescription minut anything after ^
     SeriesNumber: {type: Number}, //some study has repeated series
-    //
-    //if set, that means there is another series with higher SeriesNumber that deprecate this series
-    //QC view only shows series where this field is not set
     deprecated_by: {type: mongoose.Schema.Types.ObjectId},
 
-    //qc.series.isExcluded(h.Modality, h.qc_series_desc)
     isexcluded: Boolean,
     primary_image: {type: mongoose.Schema.Types.ObjectId, index: true},
-    //template to use for QC (if not set, the latest set will be used)
-    //template_exam_id: {type: mongoose.Schema.Types.ObjectId, index: true},
 
-    //study first received
-    //create_date: {type: Date, default: Date.now},
-
-    //study level qc result 
     qc: mongoose.Schema.Types.Mixed, //has to be Mixed so that mongoose will let me set to null
     qc1_state: String, //(null), fail, autopass, accept, reject
     qc2_state: String, //(null), accept, condaccept, reject
@@ -189,68 +135,29 @@ var seriesSchema = mongoose.Schema({
         date: {type: Date, default: Date.now},
     }) ],
 }, {strict: false});
-//these hooks are too unreliable / non-useful (I will do the event posting from controller..)
-//seriesSchema.post('save', events.series);
-//seriesSchema.post('findOneAndUpdate', events.series);
-//seriesSchema.post('update', events.series); //'update' doesn't pass object
-//seriesSchema.post('findOneAndRemove', events.series);
-//seriesSchema.post('remove', events.series);
 
 seriesSchema.index({exam_id: 1, primary_image:1});
 exports.Series = mongoose.model('Series', seriesSchema);
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-///
-// var acquisitionSchema = mongoose.Schema({
-
-//     ///////////////////////////////////////////////////////////////////////////
-//     //
-//     // keys
-//     //
-//     //study that this aq belongs to
-//     series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-//     AcquisitionNumber: {type: Number, index: true},
-//     //
-//     ///////////////////////////////////////////////////////////////////////////
-    
-//     ///////////////////////////////////////////////////////////////////////////
-//     //
-//     //foreign key to assist lookup
-//     //
-//     research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-//     exam_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-//     series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-// });
-// acquisitionSchema.index({research_id: 1, exam_id: 1, series_id: 1});
-// exports.Acquisition = mongoose.model('Acquisition', acquisitionSchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 var imageSchema = mongoose.Schema({
     
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    //key
-    //SOPInstanceUID: String,
+
     series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    SOPInstanceUID : {type: String, index: true},
+
     InstanceNumber: {type: Number, index: true},
     EchoNumbers: {type: Number},
-    //
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-
-    //foreigh keys to make it easier to find related information
-    //research_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-    //exam_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-    //series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
-    //IIBISID: {type: String, index: true},  //for easy access control
 
     //the actual headers for this instance (cleaned)
     headers: mongoose.Schema.Types.Mixed, 
 
-    //qc result (null if not qc-ed)
     qc: mongoose.Schema.Types.Mixed,
     primary_image:  {type: mongoose.Schema.Types.ObjectId, index: true}
 });
-imageSchema.index({series_id: 1, InstanceNumber: 1,primary_image:1});
+imageSchema.index({series_id: 1, SOPInstanceUID: 1, primary_image:1});
 exports.Image = mongoose.model('Image', imageSchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -275,38 +182,6 @@ exports.Dataflow = mongoose.model('Dataflow', dataflowSchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-var iibisSchema = mongoose.Schema({
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    // keys
-    //
-
-    area_of_study: String,
-    co_pi: String,
-    coordinator_email: String,
-    department: String,
-    email_address: String,
-    end_date: {type: Date},
-    full_title: String,
-    iibis_project_id: String,
-    location: String,
-    modality_or_laboratory: String,
-    mri_scan_time: String,
-    pi_first_name: String,
-    pi_last_name: String,
-    project_coordinator_or_contact: String,
-    project_status: String,
-    research_type: String,
-    short_title: String,
-    start_date: {type: Date},
-    study_type: String,
-    tracer: String
-});
-
-iibisSchema.index({iibis_project_id: 1});
-exports.IIBIS = mongoose.model('IIBIS', iibisSchema, 'iibis');
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 
 var aclSchema = mongoose.Schema({
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -320,16 +195,7 @@ var aclSchema = mongoose.Schema({
 
 //return true if user can do action on iibisid
 aclSchema.statics.can = function(user, action, iibisid, cb) {
-    /*
-    this.findOne({key: 'iibisid'}, function(err, acl) {
-        var _acl = acl.value[iibisid];
-        if(!_acl || !_acl[action]) return cb(false);  //not set
-        var inter = _acl.groups.filter(function(gid) {
-            return ~user.gids.indexOf(gid);
-        });
-        cb(~acl[action].users.indexOf(user.sub) || inter.length > 0);
-    });
-    */
+
     this.getCan(user, action, function(err, iibisids) {
         cb(~iibisids.indexOf(iibisid));
     });

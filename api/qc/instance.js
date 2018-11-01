@@ -311,6 +311,15 @@ exports.parseMeta = function(h) {
         //meta.series_desc_version = ts[1];
     }
 
+    if(h.Modality == "MR") {
+        var sd  = meta.series_desc.toLowerCase();
+        if(sd.indexOf("gre_fieldmap") > -1 && h.ImageType.indexOf("\\M\\") > -1) {
+            //console.log(h.ImageType.indexOf("\\M\\"));
+            //console.log(h.ImageType)
+        meta.series_desc += "_M"; // this is a magnitude template so we label it as such
+        }
+    }
+
     return meta;
 }
 
