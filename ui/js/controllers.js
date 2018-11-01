@@ -7,9 +7,7 @@ function($scope, appconf, toaster, $http, serverconf) {
 });
 
 
-
-
-
+// AAK -- This has to be moved into its own separate file
 app.controller('ExamsController',
     function($scope, appconf, toaster, $http, $location, serverconf, $document, $window, $routeParams, $timeout) {
         $scope.appconf = appconf;
@@ -41,6 +39,7 @@ app.controller('ExamsController',
         };
 
         $scope.select = function(modality, subjectuid) {
+            console.log(modality)
 
             var where = {};
             var research = modality.research;
@@ -57,6 +56,8 @@ app.controller('ExamsController',
 
             $scope.selected_modality = modality;
             var modality_id = research.Modality+"."+research.StationName+"."+research.radio_tracer;
+
+            console.log("where "); console.log(where)
             $http.get(appconf.api+'/series/query', {params: {
                     skip: 0,
                     limit: 5000000,
