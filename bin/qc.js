@@ -86,7 +86,6 @@ function qc_images(series,next) {
             }
         })
     });
-
 }
 
 // ************************** QC functions ********************************//
@@ -159,7 +158,7 @@ function qc_one_image(image,primimage,primtemplate,next) {
             }, {upsert: false, 'new': true}, function(err,new_image){
                 if(err) next(err);
                 if (!new_image) console.log("something broke!")
-                console.log(new_image)
+                //console.log(new_image)
                 return next();
             }) 
         }
