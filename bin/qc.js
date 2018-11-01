@@ -181,30 +181,53 @@ function find_template(image,cb) {
 }
 
 
+
 function get_template(series, cb) {
-    //find the latest exam
+    //find the research_id by looking in the exam doc
     db.Exam
         .findById(series.exam_id, 'research_id')
-        .sort('-date')
-        .limit(1)
         .exec(function(err, exam) {
         if(err) return cb(err);
         if(!exam) {
             logger.info("couldn't find such exam: "+series.exam_id);
             return cb(null);
         }
-        if(exam.length > 1) exam = exam[0];
-        db.Template.find({
+        db.Exam.find({
             research_id: exam.research_id,
-            series_desc:series.series_desc,
-            deprecated_by: null,
-        }).sort({"date":-1}).limit(1) 
-        .exec(function(err, template) {
+            istemplate: true
+        }).exec(function(err,texams){
             if(err) return cb(err);
-            if(template.length == 0) {                    
-                return cb(null);            
-            }
-            cb(null,template[0]);
+            //console.log(texams);
+            var latest = null;
+            texams.forEach(function(te,index) {
+                //console.log(te._id)
+                db.Template.findOne({
+                    exam_id:te._id,
+                    series_desc: series.series_desc,
+                    deprecated_by: null
+                }).exec(function(err,t) {
+                    if (err) return cb(err);
+                    if(!t) {
+                        logger.info("couldn't find template for exam id: "+te._id);
+                        return cb(null);
+                    }
+                    if (latest == null) {                        
+                        latest = t._id;
+                        console.log("latest equals t: "+ latest)
+                    }
+                    else {
+                        latest = t.date > latest.date ? t._id : latest;
+                        console.log("latest date is " + latest);
+                    }
+               })    
+               if (index + 1 == texams.length) {
+                   console.log(latest)
+                    cb(null,latest);
+               } else {
+                   console.log("index is "+ index + " and texams.length is "+ texams.length);
+                   cb(null,null);
+               }
+            })                        
         });
     });
 }

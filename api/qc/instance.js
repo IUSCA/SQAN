@@ -101,78 +101,78 @@ function convertTypes(h) {
     });
 }
 
-function splitFields(h) {
-    /*
-    if(h.Modality != "PT") {
-        h.WindowCenterWidthExplanation = convertToArray(h.WindowCenterWidthExplanation);
-    }
-    */
-    //split WindowCenter into min/max if array
-    if(h.WindowCenter && h.WindowCenter.constructor === Array) {
-    //if(h.Modality == "CT") {
-        h.qc_WindowCenterMin = h.WindowCenter[0];
-        h.qc_WindowCenterMax = h.WindowCenter[1];
-        //delete h.WindowCenter;
-    }
+// function splitFields(h) {
+//     /*
+//     if(h.Modality != "PT") {
+//         h.WindowCenterWidthExplanation = convertToArray(h.WindowCenterWidthExplanation);
+//     }
+//     */
+//     //split WindowCenter into min/max if array
+//     if(h.WindowCenter && h.WindowCenter.constructor === Array) {
+//     //if(h.Modality == "CT") {
+//         h.qc_WindowCenterMin = h.WindowCenter[0];
+//         h.qc_WindowCenterMax = h.WindowCenter[1];
+//         //delete h.WindowCenter;
+//     }
 
-    if(h.WindowWidth && h.WindowWidth.constructor === Array) {
-        h.qc_WindowWidthMin = h.WindowWidth[0];
-        h.qc_WindowWidthMax = h.WindowWidth[1];
-        //delete h.WindowWidth;
-    }
+//     if(h.WindowWidth && h.WindowWidth.constructor === Array) {
+//         h.qc_WindowWidthMin = h.WindowWidth[0];
+//         h.qc_WindowWidthMax = h.WindowWidth[1];
+//         //delete h.WindowWidth;
+//     }
     
-    //for PixelSpacing / ImagePositionPatient, ImageOrientationPatient fields
-    //http://nipy.org/nibabel/dicom/dicom_orientation.html
+//     //for PixelSpacing / ImagePositionPatient, ImageOrientationPatient fields
+//     //http://nipy.org/nibabel/dicom/dicom_orientation.html
 
-    if(h.PixelSpacing && h.PixelSpacing.constructor === Array) {
-        h.qc_PixelSpacingMin = h.PixelSpacing[0];
-        h.qc_PixelSpacingMax = h.PixelSpacing[1];
-        //delete h.PixelSpacing;
-    }
-}
+//     if(h.PixelSpacing && h.PixelSpacing.constructor === Array) {
+//         h.qc_PixelSpacingMin = h.PixelSpacing[0];
+//         h.qc_PixelSpacingMax = h.PixelSpacing[1];
+//         //delete h.PixelSpacing;
+//     }
+// }
 
 function mergeFields(h) {
-    var timestamp = toTimestamp(h.AcquisitionDate, h.AcquisitionTime, h.Timezone);
-    if(timestamp) {
-        h.qc_AcquisitionTimestamp = timestamp;
-        //delete h.AcquisitionDate;
-        //delete h.AcquisitionTime;
-    }
+    // var timestamp = toTimestamp(h.AcquisitionDate, h.AcquisitionTime, h.Timezone);
+    // if(timestamp) {
+    //     h.qc_AcquisitionTimestamp = timestamp;
+    //     //delete h.AcquisitionDate;
+    //     //delete h.AcquisitionTime;
+    // }
 
-    timestamp = toTimestamp(h.StudyDate, h.StudyTime, h.Timezone);
+    var timestamp = toTimestamp(h.StudyDate, h.StudyTime, h.Timezone);
     if(timestamp) {
         h.qc_StudyTimestamp = timestamp;
         //delete h.StudyDate;
         //delete h.StudyTime;
     }
 
-    timestamp = toTimestamp(h.SeriesDate, h.SeriesTime, h.Timezone);
-    if(timestamp) {
-        h.qc_SeriesTimestamp = timestamp;
-        //delete h.SeriesDate;
-        //delete h.SeriesTime;
-    }
+    // timestamp = toTimestamp(h.SeriesDate, h.SeriesTime, h.Timezone);
+    // if(timestamp) {
+    //     h.qc_SeriesTimestamp = timestamp;
+    //     //delete h.SeriesDate;
+    //     //delete h.SeriesTime;
+    // }
 
-    timestamp = toTimestamp(h.ContentDate, h.ContentTime, h.Timezone);
-    if(timestamp) {
-        h.qc_ContentTimestamp = timestamp;
-        //delete h.ContentDate;
-        //delete h.ContentTime;
-    }
+    // timestamp = toTimestamp(h.ContentDate, h.ContentTime, h.Timezone);
+    // if(timestamp) {
+    //     h.qc_ContentTimestamp = timestamp;
+    //     //delete h.ContentDate;
+    //     //delete h.ContentTime;
+    // }
 
-    timestamp = toTimestamp(h.InstanceCreationDate, h.InstanceCreationTime, h.Timezone);
-    if(timestamp) {
-        h.qc_InstanceCreationTimestamp = timestamp;
-        //delete h.InstanceCreationDate;
-        //delete h.InstanceCreationTime;
-    }
+    // timestamp = toTimestamp(h.InstanceCreationDate, h.InstanceCreationTime, h.Timezone);
+    // if(timestamp) {
+    //     h.qc_InstanceCreationTimestamp = timestamp;
+    //     //delete h.InstanceCreationDate;
+    //     //delete h.InstanceCreationTime;
+    // }
 
-    timestamp = toTimestamp(h.PerformedProcedureStepStartDate, h.PerformedProcedureStepStartTime, h.Timezone);
-    if(timestamp) {
-        h.qc_PerformedProcedureStepStartTimestamp = timestamp;
-        //delete h.PerformedProcedureStepStartDate;
-        //delete h.PerformedProcedureStepStartTime;
-    }
+    // timestamp = toTimestamp(h.PerformedProcedureStepStartDate, h.PerformedProcedureStepStartTime, h.Timezone);
+    // if(timestamp) {
+    //     h.qc_PerformedProcedureStepStartTimestamp = timestamp;
+    //     //delete h.PerformedProcedureStepStartDate;
+    //     //delete h.PerformedProcedureStepStartTime;
+    // }
 }
 
 function parseFields(h) {
@@ -308,7 +308,7 @@ exports.parseMeta = function(h) {
     if(h.SeriesDescription) {
         var ts = h.SeriesDescription.split("^");
         meta.series_desc = ts[0]; //.replace(/\d+$/, '');  // remove trailing numbers
-        meta.series_desc_version = ts[1];
+        //meta.series_desc_version = ts[1];
     }
 
     return meta;
@@ -337,7 +337,7 @@ exports.composeESIndex = function(h) {
 //function to run during clean up
 exports.clean = function(h) {
     convertTypes(h); //"2.34" => 2.34
-    splitFields(h); 
+    //splitFields(h); 
     mergeFields(h); //date+time => timestamp
     parseFields(h); //PatientAge -> qc_PatientAge
     maskFields(h);

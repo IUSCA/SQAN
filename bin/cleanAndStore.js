@@ -189,15 +189,15 @@ function incoming(h, msg_h, info, ack) {
         
         //make sure we know about this exam 
         function(next) {
-            //if(h.qc_istemplate) return next();  //if it's template then skip
-
             db.Exam.findOneAndUpdate({
-                research_id: research._id,
+                StudyInstanceUID: h.StudyInstanceUID, 
+            },
+            {
+                $addToSet: {qc:{series_desc:h.qc_series_desc, status:null}},
                 subject: (h.qc_istemplate?null:h.qc_subject),
-                date: h.qc_StudyTimestamp, 
-                istemplate:h.qc_istemplate,
-            }, //{},
-            {$addToSet: {qc:{series_desc:h.qc_series_desc, status:null}}},
+                research_id: research._id,
+                istemplate:h.qc_istemplate
+            },
             {upsert:true, 'new': true}, function(err, _exam) {
                 if(err) return next(err);
                 exam = _exam;
@@ -210,15 +210,14 @@ function incoming(h, msg_h, info, ack) {
             if(h.qc_istemplate==false) return next();  //if not a template then skip
 
             db.Template.findOneAndUpdate({
-                research_id: research._id,
                 exam_id: exam._id,
                 series_desc: h.qc_series_desc,
                 SeriesNumber: h.SeriesNumber,                
             }, {date: h.qc_StudyTimestamp},  //headers: h, //update with the latest headers (or mabe we should store all under an array?)
             {upsert:true, 'new': true}, function(err, _template) {
                 if(err) return next(err);
-                template = _template;
-                
+                template = _template;                
+
                 //store template header
                 db.TemplateHeader.findOne({
                     template_id: template._id,
@@ -264,7 +263,7 @@ function incoming(h, msg_h, info, ack) {
                             },{upsert:true, 'new': false}, function(err, _tempheader) {
                                 if(err) return next(err);
                                 //I am setting new:false so that _image will be null if this is the first time
-                                if(_tempheader) logger.warn("template header already inserted");
+                                if(_tempheader) logger.warn("template header over-written");
                                 return next();
                             });
                         });                          
@@ -282,7 +281,6 @@ function incoming(h, msg_h, info, ack) {
                 series_desc: h.qc_series_desc,
                 SeriesNumber: h.SeriesNumber,
             }, { 
-                StudyInstanceUID: h.StudyInstanceUID,  
                 isexcluded: qc.series.isExcluded(h.Modality, h.qc_series_desc),
             }, {upsert: true, 'new': true}, function(err, _series) {   
                 if(err) return next(err);
@@ -437,7 +435,7 @@ function compare_with_primary(primaryImg,h,cb) {
     for (var k in primaryImg) {     
         v = primaryImg[k]; 
         //AAK -- these are identifiers so we don't want to remove them; should we add other non-removable fields?  
-        if (['qc_istemplate','SeriesNumber','EchoNumbers'].indexOf(k) < 0) {
+        if (['qc_istemplate'].indexOf(k) < 0) {
             if (!Array.isArray(v) && !isObject(v) && h.hasOwnProperty(k) && h[k] === v) {  
                 //console.log('deleting field: '+k +' -- ' + h[k]);
                 delete h[k]
