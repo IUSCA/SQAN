@@ -44,7 +44,7 @@ var examSchema = mongoose.Schema({
     subject: {type: String}, //not set if it's template
     StudyInstanceUID: {type: String, index: true},
     istemplate: {type: Boolean},
-
+    StudyTimestamp: Date,
     series: mongoose.Schema.Types.Mixed, 
     qc: mongoose.Schema.Types.Mixed,
 
@@ -61,16 +61,16 @@ exports.Exam = mongoose.model('Exam', examSchema);
 var templateSchema = mongoose.Schema({
     ///////////////////////////////////////////////////////////////////////////
 
-    research_id: {type: mongoose.Schema.Types.ObjectId, index: true},
+    //research_id: {type: mongoose.Schema.Types.ObjectId, index: true},
     exam_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
     series_desc: {type: String}, //original SeriesDescription minut anything after ^
     SeriesNumber: {type: Number},
     primary_image: {type: mongoose.Schema.Types.ObjectId, index: true},
     deprecated_by: {type: mongoose.Schema.Types.ObjectId},
     count: Number, //number of images in a given series
-    date: Date, //date when this template is received (probabbly use StudyTimestamp of the template?) //TODO - maybe needed since we have exam collection now?
+    //date: Date, //date when this template is received (probabbly use StudyTimestamp of the template?) //TODO - maybe needed since we have exam collection now?
 });
-templateSchema.index({research_id: 1, exam_id: 1, primary_image:1});
+templateSchema.index({exam_id: 1, primary_image:1});
 exports.Template = mongoose.model('Template', templateSchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

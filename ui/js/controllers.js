@@ -103,16 +103,16 @@ app.controller('ExamsController',
             var sortby = {};
             switch($scope.search.sort) {
                 case "dateup":
-                    sortby.date = -1;
+                    sortby.StudyTimestamp = -1;
                     break;
                 case "datedown":
-                    sortby.date = 1;
+                    sortby.StudyTimestamp = 1;
                     break;
                 case "iibis":
                     sortby.IIBISID = -1;
                     break
                 default:
-                    sortby.date = -1;
+                    sortby.StudyTimestamp = -1;
             }
             $scope.selected = null;
             $scope.loading_series = true;

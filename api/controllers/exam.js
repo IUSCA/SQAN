@@ -73,6 +73,7 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
             query.sort(JSON.parse(req.query.sort));
         }
 
+        console.log(query)
         var org = {};
         query.exec(function(err, _exams) {
             if(err) return next(err);

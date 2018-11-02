@@ -157,17 +157,21 @@ function qc_series(series,images) {
 
 
 function update_exam(series,qced) {
-    if (qced) {  // there is something wrong with this query... it is not updating the Exams documents as I wanted.
-        console.log("inside update_exam and series number is "+series.SeriesNumber)
+
+    if (qced) {  
         var status = "qc-ed";  
-        db.Exam.update({"_id": series.exam_id},{$set: {"series.$[elem].status": status, "series.$[elem].state":series.qc1_state}},
-        {arrayFilters:[{"elem.SeriesNumber":series.SeriesNumber,"elem.series_desc":series.series_desc}]}, function(err) {
+        // db.Exam.update({_id: series.exam_id},{$set: {'series.$[element].status': status,"series.$[elem].state":series.qc1_state}},  
+        // {arrayFilters:[{'element.SeriesNumber':series.SeriesNumber,'element.series_desc':series.series_desc}]}, 
+        db.Exam.update({_id: series.exam_id, series:{$elemMatch:{SeriesNumber:series.SeriesNumber}}},
+            {$set: {'series.$.status': status,"series.$.state":series.qc1_state}},
+        function(err) {
              if (err) {console.log("error in exam qc"); console.log(err)};
         })
     } else {
         var status = "no template";
-        db.Exam.update({"_id": series.exam_id},{$set: {"series.$[elem].status": status}},
-        {arrayFilters:[{"elem.SeriesNumber":series.SeriesNumber,"elem.series_desc":series.series_desc}]}, function(err,exam) {
+        db.Exam.update({_id: series.exam_id, series:{$elemMatch:{SeriesNumber:series.SeriesNumber}}},
+            {$set: {'series.$.status': status}},
+        function(err,exam) {
             if (err) console.log("error updating qc status in exam "+exam.id);         
         })
     }

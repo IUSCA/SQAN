@@ -146,16 +146,12 @@ function qc_one_image(image,primimage,primtemplate,next) {
 
         function(next) {
             image.qc = qc;
-        //     image.save(function(err) {
-        //         if(err) next(err);
-        //         return next();
-        //     });
-        //image.save(function(err) {
+
             db.Image.findOneAndUpdate({
                 _id: image._id,
             },{
                 qc:qc
-            }, {upsert: false, 'new': true}, function(err,new_image){
+            }, {'new': true}, function(err,new_image){
                 if(err) next(err);
                 if (!new_image) console.log("something broke!")
                 //console.log(new_image)
@@ -205,19 +201,42 @@ function get_template(series, cb) {
             logger.info("couldn't find such exam: "+series.exam_id);
             return cb(null);
         }
-        db.Template.find({
-            research_id:exam.research_id,
-            series_desc:series.series_desc,
-            deprecated_by: null
-        }).sort('-date')
-        .exec(function(err,templates){
-            if (err) return cb(err);
-            console.log("templates found: "+ templates.length);
-            if (templates.length == 0) logger.info("couldn't find template for exam:"+exam._id+" and research_id:"+exam.research_id);
-            cb(null,templates[0]);
-        })
-    });
-}
+                
+        db.Exam.find({"research_id":exam.research_id, "istemplate":true})
+            .sort({"StudyTimestamp":-1})  //.sort('-date')
+            .exec(function(err,texams) {
+                if (err) return cb(err);
+                console.log(texams.length + " template exams retrieved for research_id "+exam.research_id);
+                if (!texams) logger.info("couldn't find template for exam:"+series._id+" and research_id:"+exam.research_id);
+                    db.Template.findOne({
+                        exam_id: texams[0]._id,
+                        series_desc: series.series_desc,
+                        deprecated_by: null
+                    },function(err,temp) {
+                        if (err) return cb(err);
+                        return cb(null,temp)        
+                    }) 
+                // var found = false;
+                // var indx = 0;
+                // while (!found && indx < texams.length) {
+                //     db.Template.findOne({
+                //         exam_id: texams[indx]._id,
+                //         series_desc: series.series_desc,
+                //         deprecated_by: null
+                //     },function(err,temp) {
+                //         if (err) return cb(err);
+                //         if (temp) {
+                //             found = true;
+                //             return cb(null,temp)
+                //         } else  {
+                //             indx++;
+                //         }
+                //     }) 
+                // }                   
+            })
+        });
+    }
+
 
 
 function find_template_primary(template,cb) {
