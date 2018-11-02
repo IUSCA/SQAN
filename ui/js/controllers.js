@@ -144,7 +144,7 @@ app.controller('ExamsController',
                 default:
                     var d = new Date();
                     d.setDate(d.getDate() - (range));
-                    where.date = {$gt: d};
+                    where.StudyTimestamp = {$gt: d};
             }
             where.istemplate = false;
 
