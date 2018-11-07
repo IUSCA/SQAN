@@ -89,6 +89,42 @@ function incoming(h, msg_h, info, ack) {
             }
         },
 
+        // Make sure this header is not in the databse already
+        function(next) {
+            if(h.qc_istemplate==false) return next();
+            
+            db.TemplateHeader.findOne({
+                SOPInstanceUID: h.SOPInstanceUID
+            }, function(err,repeated_header) {
+                if (err) return next(err);
+                if (repeated_header) {
+                    logger.info("Repeated template header identified -- Please delete previous version before overwriting!!");   
+                    return next("Cannot overwrite template headers as some series may be have been QC-ed with this template");                     
+                } else {
+                    next();
+                }
+            });
+        },
+
+
+        // Make sure this header is not in the databse already
+        function(next) {
+            if(h.qc_istemplate==true) return next();
+            
+            db.Image.findOne({
+                SOPInstanceUID: h.SOPInstanceUID
+            }, function(err,repeated_header) {
+                if (err) return next(err);
+                if (repeated_header) {
+                    logger.info("Repeated template header identified -- Please delete previous version before overwriting!!");   
+                    return next("Cannot overwrite template headers as some series may be have been QC-ed with this template");                     
+                } else {
+                    next();
+                }
+            });
+        },
+
+
         function(next) {
             var path = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
             write_to_disk(path, h, function(err) {
@@ -208,6 +244,7 @@ function incoming(h, msg_h, info, ack) {
         function(next) {
             if(h.qc_istemplate==false) return next();  //if not a template then skip
 
+            console.log("Inserting template!!!")
             db.Template.findOneAndUpdate({
                 //research_id: research._id,
                 exam_id: exam._id,
@@ -219,15 +256,15 @@ function incoming(h, msg_h, info, ack) {
                 if(err) return next(err);
                 template = _template; 
 
-                // Make sure this header is not in the databse already
-                db.TemplateHeader.findOne({
-                    SOPInstanceUID: h.SOPInstanceUID
-                }, function(err,repeated_header) {
-                    if (err) return next(err);
-                    if (repeated_header) {
-                        logger.info("Repeated template header identified -- Please delete previous version before overwriting!!");   
-                        return next("Cannot overwrite template headers as some series may be have been QC-ed with this template");                     
-                    } else {
+                // // Make sure this header is not in the databse already
+                // db.TemplateHeader.findOne({
+                //     SOPInstanceUID: h.SOPInstanceUID
+                // }, function(err,repeated_header) {
+                //     if (err) return next(err);
+                //     if (repeated_header) {
+                //         logger.info("Repeated template header identified -- Please delete previous version before overwriting!!");   
+                //         return next("Cannot overwrite template headers as some series may be have been QC-ed with this template");                     
+                //     } else {
                         // Check if a primary image already exists for this series
                         db.TemplateHeader.findOne({
                             template_id: template._id,
@@ -273,25 +310,25 @@ function incoming(h, msg_h, info, ack) {
                                 }); 
                             }
                         })
-                    }
+                    //}
                 })
-            });
+            //});
         },
         
         //make sure we know about this series
         function(next) {
             if(h.qc_istemplate==true) return next();  //if it's template then skip
-            
-            // Make sure this header is not in the databse already
-            db.Image.findOne({
-                SOPInstanceUID: h.SOPInstanceUID
-            }, function(err,repeated_header) {
-                if (err) return next(err);
-                if (repeated_header) {
-                    logger.info("Repeated image header identified");   
-                    return next("Repeated image header identified -- aborting!!");  
-                    // AAK -- WHAT TO DO HERE!!!
-                } else {
+            console.log("Inserting Image!!!")
+            // // Make sure this header is not in the databse already
+            // db.Image.findOne({
+            //     SOPInstanceUID: h.SOPInstanceUID
+            // }, function(err,repeated_header) {
+            //     if (err) return next(err);
+            //     if (repeated_header) {
+            //         logger.info("Repeated image header identified");   
+            //         return next("Repeated image header identified -- aborting!!");  
+            //         // AAK -- WHAT TO DO HERE!!!
+            //     } //else {
                     db.Series.findOneAndUpdate({
                         exam_id: exam._id,
                         series_desc: h.qc_series_desc,
@@ -335,10 +372,10 @@ function incoming(h, msg_h, info, ack) {
                                     if (err) return next(err);
                                     if (qced_series) {  // remove embedded qc objects from series and from all images in the series                                        
                                         db.Series.update({_id:series._id}, {$unset:{qc:1}},{multi:false}, function(err) {
-                                            if (err) return next(err);                                        
-                                            // db.Image.update({series_id:series._id}, {$unset:{qc:1}},{multi:true}, function(err) {
-                                            //     if (err) return next(err);
-                                            // })  AAK -- not sure that I need this; perhaps the qc object for images can be overwritten? 
+                                            if (err) return next(err);                                                         
+                                            db.Image.update({series_id:series._id}, {$unset:{qc:1}},{multi:true}, function(err) {
+                                                if (err) return next(err);
+                                            })  
                                         })
                                     }
                                     // Finally, insert the image in the database
@@ -360,8 +397,8 @@ function incoming(h, msg_h, info, ack) {
                             }
                         });
                     });
-                }
-            });
+                //}
+            //});
         },
                 
 
