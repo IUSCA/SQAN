@@ -85,3 +85,21 @@ exports.start = function(cb) {
 }
 */
 
+exports.getUserCan = function(user,action,cb) {
+    
+    db.Acl.getCan(user, action, function(err, iibisids) {
+        if(err) return cb(err);
+                
+        db.Research.find({"IIBISID":{$in:iibisids}},function(err,rr){
+            if(err) return cb(err);
+            var researchids = [];
+            rr.forEach(function(r){
+                researchids.push(r._id);
+            });            
+            if (researchids.length == iibisids.length) {
+                console.log(researchids);
+                cb(null,researchids);
+            }            
+        }); 
+    })
+}

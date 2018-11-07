@@ -59,37 +59,47 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
     //lookup iibisids that user has access to (TODO - refactor this to aclSchema statics?)
     db.Acl.getCan(req.user, 'view', function(err, iibisids) {
         if(err) return next(err);
-        //console.log(iibisids)
-        var query = db.Exam.find().populate('research_id');
-        //query.where('research_id.IIBISID').in(iibisids);
-        if(req.query.where) {
-            var where = JSON.parse(req.query.where);
-            for(var field in where) {
-                query.where(field, where[field]); //TODO is it safe to pass this from UI?
+            
+        db.Research.find({"IIBISID":{$in:iibisids}},function(err,rr){
+            if(err) return cb(err);
+            var researchids = [];
+            rr.forEach(function(r){
+                researchids.push(r._id);
+            })            
+            console.log(researchids);
+
+            var query = db.Exam.find().populate('research_id');
+            query.where('research_id').in(researchids);
+            
+            if(req.query.where) {
+                var where = JSON.parse(req.query.where);
+                for(var field in where) {
+                    query.where(field, where[field]); //TODO is it safe to pass this from UI?
+                }
             }
-        }
-
-        if(req.query.sort) {
-            query.sort(JSON.parse(req.query.sort));
-        }
-
-        var org = {};
-        query.exec(function(err, _exams) {
-            if(err) return next(err);
-            //console.log(_exams)
-
-            _exams.forEach(function(_exam){
-                var research = _exam.research_id._id;
-                org[_exam.research_id.IIBISID] = org[_exam.research_id.IIBISID] || {};
-                org[_exam.research_id.IIBISID][research] = org[_exam.research_id.IIBISID][research] || {research : _exam.research_id, exams: []};
-                org[_exam.research_id.IIBISID][research].exams.push({
-                    subject: _exam.subject,
-                    StudyTimestamp: _exam.StudyTimestamp
-                });
-            })
-            console.log(org);
-            res.json(org);
-        });
+    
+            if(req.query.sort) {
+                query.sort(JSON.parse(req.query.sort));
+            }
+    
+            var org = {};
+            query.exec(function(err, _exams) {
+                if(err) return next(err);
+                //console.log(_exams)
+    
+                _exams.forEach(function(_exam){
+                    var research = _exam.research_id._id;
+                    org[_exam.research_id.IIBISID] = org[_exam.research_id.IIBISID] || {};
+                    org[_exam.research_id.IIBISID][research] = org[_exam.research_id.IIBISID][research] || {research : _exam.research_id, exams: []};
+                    org[_exam.research_id.IIBISID][research].exams.push({
+                        subject: _exam.subject,
+                        StudyTimestamp: _exam.StudyTimestamp
+                    });
+                })
+                console.log(org);
+                res.json(org);
+            });
+        });            
     });
 });
 

@@ -169,24 +169,17 @@ function qc_one_image(image,primimage,primtemplate,next) {
 
 // ************************** Template functions ********************************//
 function find_template(series, cb) {
-    // db.Series.findById(image.series_id, 'template_exam_id series_desc exam_id', function(err, series) {
-    //     if(err) return cb(err);
-    //     if(!series) return cb("couldn't find such series: "+image.series_id);
-    //     //then find template
-        get_template(series, function(err, template) {
-            if(err) return cb(err);
-            if(!template) {
-                logger.info("couldn't find template for series:"+series._id);
-                qc_funcs.series.update_exam(series,false);
-                // db.Exam.update({"_id": series.exam_id, "qc.series_desc": series.series_desc}, 
-                // {$set: {"qc.$.status": "no_temp"}}, {upsert:false}, function(err) {
-                //     if (err) return cb(err);         
-                // })
-                return cb(null);
-            }
-            cb(null,template)
-        })
-    //})
+
+    get_template(series, function(err, template) {
+        if(err) return cb(err);
+        if(!template) {
+            logger.info("couldn't find template for series:"+series._id);
+            qc_funcs.series.update_exam(series,false);
+
+            return cb(null);
+        }
+        cb(null,template)
+    })
 }
 
 
@@ -207,7 +200,10 @@ function get_template(series, cb) {
             .exec(function(err,texams) {
                 if (err) return cb(err);
                 console.log(texams.length + " template exams retrieved for research_id "+exam.research_id);
-                if (!texams) logger.info("couldn't find template for exam:"+series._id+" and research_id:"+exam.research_id);
+                if (!texams || texams.length == 0) {
+                    logger.info("couldn't find template for exam:"+series._id+" and research_id:"+exam.research_id);
+                    return cb(null,null);
+                } else {
                     db.Template.findOne({
                         exam_id: texams[0]._id,
                         series_desc: series.series_desc,
@@ -216,23 +212,7 @@ function get_template(series, cb) {
                         if (err) return cb(err);
                         return cb(null,temp)        
                     }) 
-                // var found = false;
-                // var indx = 0;
-                // while (!found && indx < texams.length) {
-                //     db.Template.findOne({
-                //         exam_id: texams[indx]._id,
-                //         series_desc: series.series_desc,
-                //         deprecated_by: null
-                //     },function(err,temp) {
-                //         if (err) return cb(err);
-                //         if (temp) {
-                //             found = true;
-                //             return cb(null,temp)
-                //         } else  {
-                //             indx++;
-                //         }
-                //     }) 
-                // }                   
+                }                                      
             })
         });
     }
