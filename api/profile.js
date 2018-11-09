@@ -85,7 +85,7 @@ exports.start = function(cb) {
 }
 */
 
-exports.getUserCan = function(user,action,cb) {
+function getUserCan(user,action,cb) {
     
     db.Acl.getCan(user, action, function(err, iibisids) {
         if(err) return cb(err);
@@ -96,10 +96,10 @@ exports.getUserCan = function(user,action,cb) {
             rr.forEach(function(r){
                 researchids.push(r._id);
             });            
-            if (researchids.length == iibisids.length) {
-                console.log(researchids);
-                cb(null,researchids);
-            }            
+            console.log(researchids);
+            cb(null,researchids);
         }); 
     })
 }
+
+exports.getUserCan = getUserCan;
