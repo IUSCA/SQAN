@@ -9,6 +9,10 @@ var amqp = require('amqp');
 var winston = require('winston');
 var async = require('async');
 var mkdirp = require('mkdirp');
+var ncp = require('ncp').ncp;
+var rimraf = require('rimraf');
+var touch = require("touch")
+ 
 
 //mine
 var config = require('../config');
@@ -116,8 +120,22 @@ function incoming(h, msg_h, info, ack) {
             }, function(err,repeated_header) {
                 if (err) return next(err);
                 if (repeated_header) {
-                    logger.info("Repeated template header identified -- Please delete previous version before overwriting!!");   
-                    return next("Cannot overwrite template headers as some series may be have been QC-ed with this template");                     
+                    logger.info("Repeated image header identified -- arxiving and deprecating qc state"); 
+                    
+                    var path = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
+                    var dir1 = config.cleaner.raw_headers+"/"+path;
+                    //var dir2 = config.cleaner.arxive_headers+"/"+path;                    
+                    // copy_to_arxive(dir1,dir2,function(err){
+                    //     if(err) throw err;
+                        var path2tar = dir1+".tar";
+                        fs.utimes(path2tar,new Date(),new Date(),function(err) {
+                            if(err) return next(err);
+                            qc.series.reset_and_deprecate(h,function(err) {
+                                if (err) return next(err);
+                                return next()
+                            })
+                        })
+                    //})                    
                 } else {
                     next();
                 }
@@ -134,9 +152,10 @@ function incoming(h, msg_h, info, ack) {
             });
         },
 
-        function(next) {            
-            var path2tar = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc+".tar"
-            var path2file = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc+"/"+h.SOPInstanceUID+".json"
+        function(next) {  
+            var path = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;          
+            var path2tar = path+".tar"
+            var path2file = path+"/"+h.SOPInstanceUID+".json"
              logger.debug("tarball -- storing file>> "+ path2file);
             write_to_tar(path2tar,path2file, function(err) {
                 if(err) throw err; //let's kill the app - to alert the operator of this critical issue
@@ -171,35 +190,35 @@ function incoming(h, msg_h, info, ack) {
             next();
         },    
 
-        //set the default ACL for new IIBISids
-        function(next) {
-            db.Acl.findOne({key: config.acl.key}, function(err, acl) {
-                if (err) {
-                    console.log('error looking up ACLs');
-                    return next();
-                }
-                if (!acl) {
-                    console.log('unable to locate ACLs');
-                    return next();
-                } else if (typeof acl.value[h.qc_iibisid] === 'undefined') {
-                    acl.value[h.qc_iibisid] = {};
-                    for( let a of config.acl.actions) {
-                        acl.value[h.qc_iibisid][a] = { users : [], groups : config.acl.default_groups}
-                    }
-                } else {
-                    for( let a of config.acl.actions) {
-                        if(acl.value[h.qc_iibisid][a].groups.indexOf(config.acl.default_groups[0]) < 0){
-                            acl.value[h.qc_iibisid][a].groups = acl.value[h.qc_iibisid][a].groups.concat(config.acl.default_groups);
-                            //console.log(acl.value[h.qc_iibisid][a].groups);
-                        }
-                    }
-                }
-                db.Acl.findOneAndUpdate({key: config.acl.key}, {value: acl.value}, {upsert: true}, function (err, doc) {
-                    if (err) console.log('error updating ACLs');
-                    return next();
-                });
-            });
-        },
+        // //set the default ACL for new IIBISids
+        // function(next) {
+        //     db.Acl.findOne({key: config.acl.key}, function(err, acl) {
+        //         if (err) {
+        //             console.log('error looking up ACLs');
+        //             return next();
+        //         }
+        //         if (!acl) {
+        //             console.log('unable to locate ACLs');
+        //             return next();
+        //         } else if (typeof acl.value[h.qc_iibisid] === 'undefined') {
+        //             acl.value[h.qc_iibisid] = {};
+        //             for( let a of config.acl.actions) {
+        //                 acl.value[h.qc_iibisid][a] = { users : [], groups : config.acl.default_groups}
+        //             }
+        //         } else {
+        //             for( let a of config.acl.actions) {
+        //                 if(acl.value[h.qc_iibisid][a].groups.indexOf(config.acl.default_groups[0]) < 0){
+        //                     acl.value[h.qc_iibisid][a].groups = acl.value[h.qc_iibisid][a].groups.concat(config.acl.default_groups);
+        //                     //console.log(acl.value[h.qc_iibisid][a].groups);
+        //                 }
+        //             }
+        //         }
+        //         db.Acl.findOneAndUpdate({key: config.acl.key}, {value: acl.value}, {upsert: true}, function (err, doc) {
+        //             if (err) console.log('error updating ACLs');
+        //             return next();
+        //         });
+        //     });
+        // },
 
         //make sure we know about this research
         function(next) {
@@ -256,149 +275,125 @@ function incoming(h, msg_h, info, ack) {
                 if(err) return next(err);
                 template = _template; 
 
-                // // Make sure this header is not in the databse already
-                // db.TemplateHeader.findOne({
-                //     SOPInstanceUID: h.SOPInstanceUID
-                // }, function(err,repeated_header) {
-                //     if (err) return next(err);
-                //     if (repeated_header) {
-                //         logger.info("Repeated template header identified -- Please delete previous version before overwriting!!");   
-                //         return next("Cannot overwrite template headers as some series may be have been QC-ed with this template");                     
-                //     } else {
-                        // Check if a primary image already exists for this series
-                        db.TemplateHeader.findOne({
+                // Check if a primary image already exists for this series
+                db.TemplateHeader.findOne({
+                    template_id: template._id,
+                    primary_image: null,                               
+                }, function(err, _primary_template) {
+                    if (err) return next(err);
+                    if (!_primary_template) {
+                        db.TemplateHeader.create({
                             template_id: template._id,
-                            primary_image: null,                               
-                        }, function(err, _primary_template) {
+                            SOPInstanceUID: h.SOPInstanceUID,
+                            InstanceNumber: h.InstanceNumber,
+                            //EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
+                            primary_image: null,
+                            headers: h
+                        }, function(err,primary_template) {
                             if (err) return next(err);
-                            if (!_primary_template) {
-                                db.TemplateHeader.create({
-                                    template_id: template._id,
-                                    SOPInstanceUID: h.SOPInstanceUID,
-                                    InstanceNumber: h.InstanceNumber,
-                                    //EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
-                                    primary_image: null,
-                                    headers: h
-                                }, function(err,primary_template) {
-                                    if (err) return next(err);
-                                    var deprecated_by = deprecatedByTemplate(template);
-                                    console.log("derprecated_by " + deprecated_by)
-                                    // finally, insert primary_template._id into the template document  
-                                    db.Template.updateOne({_id: template._id}, 
-                                    {
-                                        primary_image:primary_template._id,
-                                        deprecated_by: deprecated_by !== "undefined"? deprecated_by : null
-                                    }, function(err) {
-                                        if (err) return next(err);  
-                                        return next();                              
-                                    });
-                                })                                
-                            } else {
-                                //var echonumber = h.EchoNumbers;
-                                qc.instance.compare_with_primary(_primary_template.headers,h,function(){
-                                    db.TemplateHeader.create({
-                                        template_id: template._id,
-                                        SOPInstanceUID: h.SOPInstanceUID,
-                                        InstanceNumber: h.InstanceNumber,
-                                        //EchoNumbers: echonumber !== undefined ? echonumber : null,                           
-                                        primary_image: _primary_template._id,
-                                        headers:h
-                                    }, function(err) {
-                                        if(err) return next(err);
-                                        return next();
-                                    });
-                                }); 
-                            }
-                        })
-                    //}
+                            var deprecated_by = deprecatedByTemplate(template);
+                            console.log("derprecated_by " + deprecated_by)
+                            // finally, insert primary_template._id into the template document  
+                            db.Template.updateOne({_id: template._id}, 
+                            {
+                                primary_image:primary_template._id,
+                                deprecated_by: deprecated_by !== "undefined"? deprecated_by : null
+                            }, function(err) {
+                                if (err) return next(err);  
+                                return next();                              
+                            });
+                        })                                
+                    } else {
+                        //var echonumber = h.EchoNumbers;
+                        qc.instance.compare_with_primary(_primary_template.headers,h,function(){
+                            db.TemplateHeader.create({
+                                template_id: template._id,
+                                SOPInstanceUID: h.SOPInstanceUID,
+                                InstanceNumber: h.InstanceNumber,
+                                //EchoNumbers: echonumber !== undefined ? echonumber : null,                           
+                                primary_image: _primary_template._id,
+                                headers:h
+                            }, function(err) {
+                                if(err) return next(err);
+                                return next();
+                            });
+                        }); 
+                    }
                 })
-            //});
+            })
         },
         
         //make sure we know about this series
         function(next) {
             if(h.qc_istemplate==true) return next();  //if it's template then skip
-            console.log("Inserting Image!!!")
-            // // Make sure this header is not in the databse already
-            // db.Image.findOne({
-            //     SOPInstanceUID: h.SOPInstanceUID
-            // }, function(err,repeated_header) {
-            //     if (err) return next(err);
-            //     if (repeated_header) {
-            //         logger.info("Repeated image header identified");   
-            //         return next("Repeated image header identified -- aborting!!");  
-            //         // AAK -- WHAT TO DO HERE!!!
-            //     } //else {
-                    db.Series.findOneAndUpdate({
-                        exam_id: exam._id,
-                        series_desc: h.qc_series_desc,
-                        SeriesNumber: h.SeriesNumber,
-                        isexcluded: qc.series.isExcluded(h.Modality, h.qc_series_desc)
-                    }, {}, {upsert: true, 'new': true}, 
-                    function(err, _series) {   
-                        if(err) return next(err);
-                        series = _series;  
 
-                        // Check if a primary image already exists for this series
-                        db.Image.findOne({
+            db.Series.findOneAndUpdate({
+                exam_id: exam._id,
+                series_desc: h.qc_series_desc,
+                SeriesNumber: h.SeriesNumber,
+                isexcluded: qc.series.isExcluded(h.Modality, h.qc_series_desc)
+            }, {}, {upsert: true, 'new': true}, 
+            function(err, _series) {   
+                if(err) return next(err);
+                series = _series;  
+
+                // Check if a primary image already exists for this series
+                db.Image.findOne({
+                    series_id: series._id,
+                    primary_image: null,                               
+                }, function(err, _primary_image) {
+                    if (err) return next(err);
+                    if (!_primary_image) {
+                        db.Image.create({
                             series_id: series._id,
-                            primary_image: null,                               
-                        }, function(err, _primary_image) {
+                            SOPInstanceUID: h.SOPInstanceUID,
+                            InstanceNumber: h.InstanceNumber,
+                            primary_image: null,
+                            headers: h
+                        }, function(err,primary_image) {
                             if (err) return next(err);
-                            if (!_primary_image) {
+                            var deprecated_by = deprecatedBySeries(series);
+                            // finally, insert primary_image._id into the series document  
+                            db.Series.updateOne({_id: series._id}, 
+                            {
+                                primary_image:primary_image._id,
+                                deprecated_by: deprecated_by !== "undefined"? deprecated_by : null
+                            }, function(err) {
+                                if (err) return next(err);  
+                                return next();                              
+                            });
+                        })                                
+                    } else {
+                        // Check if series has been QC-ed already (i.e. if this is a new image for an existing series)
+                        db.Series.find({_id: series._id, qc: {$exists: true}}).exec(function(err,qced_series) {
+                            if (err) return next(err);
+                            if (qced_series) {  // remove embedded qc objects from series and from all images in the series                                        
+                                db.Series.update({_id:series._id}, {$unset:{qc:1}},{multi:false}, function(err) {
+                                    if (err) return next(err);                                                         
+                                    db.Image.update({series_id:series._id}, {$unset:{qc:1}},{multi:true}, function(err) {
+                                        if (err) return next(err);
+                                    })  
+                                })
+                            }
+                            // Finally, insert the image in the database
+                            //var echonumber = h.EchoNumbers;
+                            qc.instance.compare_with_primary(_primary_image.headers,h,function(){
                                 db.Image.create({
                                     series_id: series._id,
                                     SOPInstanceUID: h.SOPInstanceUID,
                                     InstanceNumber: h.InstanceNumber,
-                                    //EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
-                                    primary_image: null,
-                                    headers: h
-                                }, function(err,primary_image) {
-                                    if (err) return next(err);
-                                    var deprecated_by = deprecatedBySeries(series);
-                                    // finally, insert primary_image._id into the series document  
-                                    db.Series.updateOne({_id: series._id}, 
-                                    {
-                                        primary_image:primary_image._id,
-                                        deprecated_by: deprecated_by !== "undefined"? deprecated_by : null
-                                    }, function(err) {
-                                        if (err) return next(err);  
-                                        return next();                              
-                                    });
-                                })                                
-                            } else {
-                                // Check if series has been QC-ed already (i.e. if this is a new image for an existing series)
-                                db.Series.find({_id: series._id, qc: {$exists: true}}).exec(function(err,qced_series) {
-                                    if (err) return next(err);
-                                    if (qced_series) {  // remove embedded qc objects from series and from all images in the series                                        
-                                        db.Series.update({_id:series._id}, {$unset:{qc:1}},{multi:false}, function(err) {
-                                            if (err) return next(err);                                                         
-                                            db.Image.update({series_id:series._id}, {$unset:{qc:1}},{multi:true}, function(err) {
-                                                if (err) return next(err);
-                                            })  
-                                        })
-                                    }
-                                    // Finally, insert the image in the database
-                                    //var echonumber = h.EchoNumbers;
-                                    qc.instance.compare_with_primary(_primary_image.headers,h,function(){
-                                        db.Image.create({
-                                            series_id: series._id,
-                                            SOPInstanceUID: h.SOPInstanceUID,
-                                            InstanceNumber: h.InstanceNumber,
-                                            //EchoNumbers: echonumber !== undefined ? echonumber : null,                         
-                                            primary_image: _primary_image._id,
-                                            headers:h
-                                        }, function(err) {
-                                            if(err) return next(err);
-                                            return next();
-                                        });
-                                    });
+                                    //EchoNumbers: echonumber !== undefined ? echonumber : null,                         
+                                    primary_image: _primary_image._id,
+                                    headers:h
+                                }, function(err) {
+                                    if(err) return next(err);
+                                    return next();
                                 });
-                            }
+                            });
                         });
-                    });
-                //}
-            //});
+                    }
+                });
+            });
         },
                 
 
@@ -484,65 +479,16 @@ function write_to_disk(dir, h, cb) {
     });
 }
 
-// function compare_with_primary(primaryImg,h,cb) {
-
-//     for (var k in primaryImg) {     
-//         v = primaryImg[k];  
-//         if (h.hasOwnProperty(k) && h[k] !== undefined) {
-//             if (['qc_istemplate'].indexOf(k) < 0) { 
-//                 if (!Array.isArray(v) && !isObject(v) && h[k] === v) {  
-//                     //console.log('deleting field: '+k +' -- ' + h[k]);
-//                     delete h[k]
-//                 } 
-//                 else if (Array.isArray(v) || isObject(v)) {
-//                     if (isEqual(v,h[k]) == true) delete h[k];
-//                 }
-//             }  
-//         } else {//if (!h[k]) {
-//             h[k] = "not_set"; // label fields that are not in the primary
-//         }
-   
-//     }
-//     cb();
-// }
-
-// function isObject (value) {
-//     return value && typeof value === 'object' && value.constructor === Object;
-// }
-
-
-// var isEqual = function (field1, field2) {
-
-// 	var type = Object.prototype.toString.call(field1);
-// 	if (type !== Object.prototype.toString.call(field2)) return false;
-
-// 	var len1 = type === '[object Array]' ? field1.length : Object.keys(field1).length;
-// 	var len2 = type === '[object Array]' ? field2.length : Object.keys(field2).length;
-// 	if (len1 !== len2) return false;
-
-// 	var compare = function (item1, item2) {
-// 		var itemType = Object.prototype.toString.call(item1);
-
-// 		if (['[object Array]', '[object Object]'].indexOf(itemType) >= 0) {
-// 			if (!isEqual(item1, item2)) return false;
-// 		}
-// 		else {
-//             if (itemType !== Object.prototype.toString.call(item2)) return false;
-//             if (item1 !== item2) return false;
-// 		}
-//     };
-    
-// 	if (type === '[object Array]') {
-// 		for (var i = 0; i < len1; i++) {
-// 			if (compare(field1[i], field2[i]) === false) return false;
-// 		}
-// 	} else {
-// 		for (var key in field1) {
-// 			if (field1.hasOwnProperty(key)) {
-// 				if (compare(field1[key], field2[key]) === false) return false;
-// 			}
-// 		}
-// 	}
-// 	return true;
-
-// };
+function copy_to_arxive(dir1,dir2, cb) {
+    fs.exists(dir2, function (exists) {
+        if(!exists) mkdirp.sync(dir2);
+        ncp(dir1, dir2, function (err) {
+            if (err) return cb(err);
+            console.log('copied files from ' + dir1 + ' to  '+ dir2);
+            rimraf(dir1, function (err) {
+                if(err) return cb(err);
+                cb();
+            });            
+        });
+    });
+}

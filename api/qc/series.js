@@ -211,5 +211,30 @@ exports.isExcluded = function(modality, series_desc) {
     return false;
 }
 
+
+function reset_and_deprecate(header,cb) {
+
+    db.Exam.findOne({StudyInstanceUID: header.StudyInstanceUID},function(err,exam){
+        if (err) return next(err);
+        // Un-qc the series
+        db.Series.findOneAndUpdate({
+            exam_id: exam._id,
+            series_desc: header.qc_series_desc,
+            SeriesNumber: header.SeriesNumber,
+        }, {$unset:{qc:1}}, {'new': true}, 
+        function(err, series) {   
+            if(err) return cb(err);
+            // deprecate all images in that series
+            db.Image.deleteMany({
+                series_id: series._id,
+            }, function(err) {
+                if(err) return cb(err);
+                return cb();
+            })
+        })
+    })
+}
+
 exports.qc_series = qc_series;
 exports.update_exam = update_exam;
+exports.reset_and_deprecate = reset_and_deprecate;
