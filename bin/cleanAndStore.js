@@ -190,35 +190,35 @@ function incoming(h, msg_h, info, ack) {
             next();
         },    
 
-        // //set the default ACL for new IIBISids
-        // function(next) {
-        //     db.Acl.findOne({key: config.acl.key}, function(err, acl) {
-        //         if (err) {
-        //             console.log('error looking up ACLs');
-        //             return next();
-        //         }
-        //         if (!acl) {
-        //             console.log('unable to locate ACLs');
-        //             return next();
-        //         } else if (typeof acl.value[h.qc_iibisid] === 'undefined') {
-        //             acl.value[h.qc_iibisid] = {};
-        //             for( let a of config.acl.actions) {
-        //                 acl.value[h.qc_iibisid][a] = { users : [], groups : config.acl.default_groups}
-        //             }
-        //         } else {
-        //             for( let a of config.acl.actions) {
-        //                 if(acl.value[h.qc_iibisid][a].groups.indexOf(config.acl.default_groups[0]) < 0){
-        //                     acl.value[h.qc_iibisid][a].groups = acl.value[h.qc_iibisid][a].groups.concat(config.acl.default_groups);
-        //                     //console.log(acl.value[h.qc_iibisid][a].groups);
-        //                 }
-        //             }
-        //         }
-        //         db.Acl.findOneAndUpdate({key: config.acl.key}, {value: acl.value}, {upsert: true}, function (err, doc) {
-        //             if (err) console.log('error updating ACLs');
-        //             return next();
-        //         });
-        //     });
-        // },
+        //set the default ACL for new IIBISids
+        function(next) {
+            db.Acl.findOne({key: config.acl.key}, function(err, acl) {
+                if (err) {
+                    console.log('error looking up ACLs');
+                    return next();
+                }
+                if (!acl) {
+                    console.log('unable to locate ACLs');
+                    return next();
+                } else if (typeof acl.value[h.qc_iibisid] === 'undefined') {
+                    acl.value[h.qc_iibisid] = {};
+                    for( let a of config.acl.actions) {
+                        acl.value[h.qc_iibisid][a] = { users : [], groups : config.acl.default_groups}
+                    }
+                } else {
+                    for( let a of config.acl.actions) {
+                        if(acl.value[h.qc_iibisid][a].groups.indexOf(config.acl.default_groups[0]) < 0){
+                            acl.value[h.qc_iibisid][a].groups = acl.value[h.qc_iibisid][a].groups.concat(config.acl.default_groups);
+                            //console.log(acl.value[h.qc_iibisid][a].groups);
+                        }
+                    }
+                }
+                db.Acl.findOneAndUpdate({key: config.acl.key}, {value: acl.value}, {upsert: true}, function (err, doc) {
+                    if (err) console.log('error updating ACLs');
+                    return next();
+                });
+            });
+        },
 
         //make sure we know about this research
         function(next) {
