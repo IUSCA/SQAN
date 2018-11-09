@@ -87,9 +87,9 @@ function reorg(data) {
 
     //for easy research detail lookup
     var researches = {}; 
-    data.researches.forEach(function(research) {
+    research = data.researches[0];//.forEach(function(research) {
         researches[research._id] = research;
-    });
+    //});
     
     //for easy exam lookup
     var exams = {};
@@ -285,98 +285,124 @@ function reorg(data) {
 //query against all serieses
 router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     //lookup iibisids that user has access to (TODO - refactor this to aclSchema statics?)
-    db.Acl.getCan(req.user, 'view', function(err, iibisids) {
+    
+    profile.getUserCan(req.user,'view', function(err,researchids){        
+       
         if(err) return next(err);
-
+        
+        console.log('inside series controller in api!!')
+        
         //load various raw records
         var serieses = null;
-        var all_serieses = null;
-        var researches = null;
+        //var all_serieses = null;
+        var research = null;
         var exams = null;
+        var eids = [];
+        var teids = [];
         var templates = null;
+
         async.series([
-            //first query series
+
+            //query exams records for the selected research
             function(next) {
-                //construct query for series record
-                var query = db.Series.find().lean();
-                query.where('IIBISID').in(iibisids);
+                var query = db.Exam.find().lean()
+                query.where('research_id').in(researchids);
+                query.where('istemplate', false)
+                
+                
                 if(req.query.where) {
                     var where = JSON.parse(req.query.where);
                     for(var field in where) {
                         query.where(field, where[field]); //TODO is it safe to pass this from UI?
                     }
                 }
-                query.sort({StudyTimestamp: -1, SeriesNumber: 1});
-                //query.limit(parseInt(req.query.limit || 50)); 
-                //if(req.query.skip) {
-                //    query.skip(parseInt(req.query.skip));
-                //}
+                query.sort({StudyTimestamp: -1});
+
+                query.exec(function(err, _exams) {
+                    exams = _exams;
+                    _exams.forEach(function(exam) {
+                        eids.push(exam._id);
+                    });
+                    console.log(exams);
+                    console.log(eids);
+                    next(err);
+                });
+            },
+
+            //now query serie documents that belong to the exams in the selected research
+            function(next) {                
+
+                var query = db.Series.find().lean();
+                query.where('exam_id').in(eids);
+                query.sort({SeriesNumber: 1});
                 query.exec(function(err, _serieses) {
                     serieses = _serieses;
+                    console.log(serieses);
                     next(err);
                 });
             },
         
-            //query research records referenced by series
+            //retrieve the research document 
             function(next) {
-                var rids = [];
-                serieses.forEach(function(series) {
-                    rids.push(series.research_id);
-                });
-                db.Research.find().lean()
-                .where('_id')
-                .in(rids)
-                .exec(function(err, _researches) {
-                    researches = _researches;
+                var where = JSON.parse(req.query.where);
+                var r_id = where.research_id;
+                db.Research.findById(r_id).lean()
+                .exec(function(err, _research) {
+                    research = _research;
+                    console.log(research);
                     next(err);
                 });
             },
 
+            // function(next) {
+            //     var rids = [];
+            //     serieses.forEach(function(series) {
+            //         rids.push(series.research_id);
+            //     });
+            //     db.Series.find().lean() //get all series referenced by rids (to fix 'missing' problem in view')
+            //     .where('research_id')
+            //     .in(rids)
+            //     .exec(function(err, _series) {
+            //         all_serieses = _series;
+            //         next(err);
+            //     });
+            // },
 
+
+            //query all exams for the templates in this research
             function(next) {
-                var rids = [];
-                serieses.forEach(function(series) {
-                    rids.push(series.research_id);
-                });
-                db.Series.find().lean() //get all series referenced by rids (to fix 'missing' problem in view')
-                .where('research_id')
-                .in(rids)
-                .exec(function(err, _series) {
-                    all_serieses = _series;
+
+                var query = db.Exam.find().lean()
+                query.where('research_id').in(researchids);
+                query.where('istemplate', true);
+                query.where('research_id', research._id);
+
+                query.sort({StudyTimestamp: -1});
+
+                query.exec(function(err, _texams) {                    
+                    _texams.forEach(function(te) {
+                        teids.push(te._id);
+                    });
+                    console.log(_texams);
                     next(err);
                 });
             },
 
-            //query exams records referenced by series
-            function(next) {
-                var eids = [];
-                serieses.forEach(function(series) {
-                    eids.push(series.exam_id);
-                });
-                db.Exam.find().lean()
-                .where('_id')
-                .in(eids)
-                .exec(function(err, _exams) {
-                    exams = _exams;
-                    next(err);
-                });
-            },
+            //now query serie documents that belong to the exams in the selected research
+            function(next) {                
 
-            //query all templates referenced also
-            function(next) {
-                var rids = [];
-                serieses.forEach(function(series) {
-                    rids.push(series.research_id);
-                });
-                db.Template.find().lean()
-                .where('research_id')
-                .sort({date: -1})
-                .in(rids)
-                .exec(function(err, _templates) {
+                var query = db.Templates.find().lean();
+                query.where('exam_id').in(teids);
+                query.sort({SeriesNumber: 1});
+                query.exec(function(err, _templates) {
                     templates = _templates;
+                    console.log(templates);
                     next(err);
                 });
-            }
+            },
+
+
+
         ], function(err) {
             if(err) return next(err);
             res.json(reorg({

@@ -39,7 +39,10 @@ router.post('/comment/:exam_id', jwt({secret: config.express.jwt.pub}), function
         if(err) return next(err);
         //make sure user has access to this series
         if(!exam) return res.status(404).json({message: "no such exam:"+req.params.exam_id});
-        db.Acl.can(req.user, 'view', exam.IIBISID, function(can) {
+        
+        profile.isUserAllowed(req.user,'view',exam.IIBISID,function(err,can){
+        //db.Acl.can(req.user, 'view', exam.IIBISID, function(can) {
+            if (err) return res.status(404).json({message:"there was an error during authorization - please contact SCA team"})
             if(!can) return res.status(401).json({message: "you are not authorized to view this IIBISID:"+exam.IIBISID});
             if(!exam.comments) exam.comments = [];
             var comment = {
@@ -59,7 +62,8 @@ router.post('/comment/:exam_id', jwt({secret: config.express.jwt.pub}), function
 
 router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     
-    //lookup iibisids that user has access to (TODO - refactor this to aclSchema statics?)    
+    //lookup iibisids that user has access to (TODO - refactor this to aclSchema statics?)  
+    //console.log(req.user);
     profile.getUserCan(req.user,'view', function(err,researchids){
 
         if (err) {
@@ -67,7 +71,7 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
             console.log(err);
             return next(err);
         }
-        console.log(researchids);
+        //console.log(researchids);
 
         var query = db.Exam.find().populate('research_id');
         query.where('research_id').in(researchids);
@@ -97,7 +101,7 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
                     StudyTimestamp: _exam.StudyTimestamp
                 });
             })
-            console.log(org);
+            //console.log(org);
             res.json(org);
         });
     })    

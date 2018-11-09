@@ -85,6 +85,16 @@ exports.start = function(cb) {
 }
 */
 
+//return true if user can do action on iibisid
+function isUserAllowed(user, action, iibisid, cb) {
+    
+    getUserCan(user,action,function(err, researchids){
+        if (err) return cb(err);
+        cb(null, ~researchids.indexOf(iibisid));
+    })
+}
+
+
 function getUserCan(user,action,cb) {
     
     db.Acl.getCan(user, action, function(err, iibisids) {
@@ -96,10 +106,11 @@ function getUserCan(user,action,cb) {
             rr.forEach(function(r){
                 researchids.push(r._id);
             });            
-            console.log(researchids);
+            //console.log(researchids);
             cb(null,researchids);
         }); 
     })
 }
 
 exports.getUserCan = getUserCan;
+exports.isUserAllowed = isUserAllowed;
