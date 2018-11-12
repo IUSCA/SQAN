@@ -86,11 +86,17 @@ exports.start = function(cb) {
 */
 
 //return true if user can do action on iibisid
-function isUserAllowed(user, action, iibisid, cb) {
+function isUserAllowed(user, action, research_id, cb) {
     
     getUserCan(user,action,function(err, researchids){
         if (err) return cb(err);
-        cb(null, ~researchids.indexOf(iibisid));
+        // console.log(researchids);
+        // console.log(research_id);
+        // console.log(researchids.indexOf(research_id));
+        for (var i=0;i<=researchids.length;i++){
+            if(researchids[i] == research_id) return cb(null,true);
+        } 
+        cb(null,false);       
     })
 }
 

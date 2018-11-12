@@ -80,45 +80,29 @@ function load_related_info(serieses, cb) {
 //  }
 function reorg(data) {
     var org = {};
-    //$scope.qcing = false; //will be reset to true if there is any series with no qc
-
-    //just a quick count used commonly in UI
-    //$scope.series_count = data.serieses.length;
-
-    //for easy research detail lookup
-    var researches = {}; 
-    research = data.researches[0];//.forEach(function(research) {
-        researches[research._id] = research;
-    //});
+    
+    var research_detail = data.research; //researches[research_id];
+    org[research_detail.IIBISID] = {};
+    var modality_id = compose_modalityid(research_detail);
+    var modality = {
+        _detail: research_detail,
+        exams: {},
+        subjects: {}, 
+        templates_times: [], //array - because not grouped by subjects like subjects_times
+        templates: {},
+    };
+    modality._detail.modality_id = modality_id; //to help UI
+    org[research_detail.IIBISID][modality_id] = modality;
+    
     
     //for easy exam lookup
     var exams = {};
     data.exams.forEach(function(exam) {
         exams[exam._id] = exam;  
     });
-    
-    function get_modality(research_id) {
-        var research_detail = researches[research_id];
-        if(org[research_detail.IIBISID] == undefined) org[research_detail.IIBISID] = {};
-        var modality_id = compose_modalityid(research_detail);
-        var modality = org[research_detail.IIBISID][modality_id];
-        if(modality === undefined) {
-            modality = {
-                _detail: research_detail,
-                exams: {},
-                subjects: {}, 
-                templates_times: [], //array - because not grouped by subjects like subjects_times
-                templates: {},
-            };
-            modality._detail.modality_id = modality_id; //to help UI
-            org[research_detail.IIBISID][modality_id] = modality;
-        }
-        return modality;
-    }
 
     //organize exams
     data.exams.forEach(function(exam) {
-        var modality = get_modality(exam.research_id);
         if(modality.exams[exam.subject] === undefined) modality.exams[exam.subject] = {};
         modality.exams[exam.subject][exam._id] = exam; 
     });
@@ -129,7 +113,6 @@ function reorg(data) {
         var series_desc = series.series_desc;
         var exam_id = series.exam_id;
 
-        var modality = get_modality(series.research_id);
 
         //initialize datastructure to fill
         if(modality.subjects[subject] == undefined) modality.subjects[subject] = {
@@ -286,10 +269,16 @@ function reorg(data) {
 router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     //lookup iibisids that user has access to (TODO - refactor this to aclSchema statics?)
     
-    profile.getUserCan(req.user,'view', function(err,researchids){        
-       
-        if(err) return next(err);
-        
+    var where = JSON.parse(req.query.where);
+    var r_id = where.research_id;
+    console.log(r_id);
+    var timerange = where.StudyTimestamp ? where.StudyTimestamp : null;
+
+    profile.isUserAllowed(req.user,'view', r_id, function(err, isallowed) {
+        console.log('isAllowed '+isallowed)
+        if (err) return res.status(404).json({message:"there was an error during authorization - please contact SCA team"})
+        if(!isallowed) return res.status(401).json({message: "you are not authorized to view this study"});               
+
         console.log('inside series controller in api!!')
         
         //load various raw records
@@ -306,16 +295,8 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
             //query exams records for the selected research
             function(next) {
                 var query = db.Exam.find().lean()
-                query.where('research_id').in(researchids);
-                query.where('istemplate', false)
-                
-                
-                if(req.query.where) {
-                    var where = JSON.parse(req.query.where);
-                    for(var field in where) {
-                        query.where(field, where[field]); //TODO is it safe to pass this from UI?
-                    }
-                }
+                query.where('research_id', r_id);
+                query.where('istemplate', false)                
                 query.sort({StudyTimestamp: -1});
 
                 query.exec(function(err, _exams) {
@@ -344,8 +325,8 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
         
             //retrieve the research document 
             function(next) {
-                var where = JSON.parse(req.query.where);
-                var r_id = where.research_id;
+                //var where = JSON.parse(req.query.where);
+                //var r_id = where.research_id;
                 db.Research.findById(r_id).lean()
                 .exec(function(err, _research) {
                     research = _research;
@@ -354,29 +335,12 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
                 });
             },
 
-            // function(next) {
-            //     var rids = [];
-            //     serieses.forEach(function(series) {
-            //         rids.push(series.research_id);
-            //     });
-            //     db.Series.find().lean() //get all series referenced by rids (to fix 'missing' problem in view')
-            //     .where('research_id')
-            //     .in(rids)
-            //     .exec(function(err, _series) {
-            //         all_serieses = _series;
-            //         next(err);
-            //     });
-            // },
-
-
             //query all exams for the templates in this research
             function(next) {
 
                 var query = db.Exam.find().lean()
-                query.where('research_id').in(researchids);
+                query.where('research_id',r_id);
                 query.where('istemplate', true);
-                query.where('research_id', research._id);
-
                 query.sort({StudyTimestamp: -1});
 
                 query.exec(function(err, _texams) {                    
@@ -391,7 +355,7 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
             //now query serie documents that belong to the exams in the selected research
             function(next) {                
 
-                var query = db.Templates.find().lean();
+                var query = db.Template.find().lean();
                 query.where('exam_id').in(teids);
                 query.sort({SeriesNumber: 1});
                 query.exec(function(err, _templates) {
@@ -401,17 +365,16 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
                 });
             },
 
-
-
         ], function(err) {
             if(err) return next(err);
-            res.json(reorg({
-                serieses: serieses,
-                all_serieses: all_serieses,
-                researches: researches,
-                templates: templates,
-                exams: exams,
-            }));
+            res.json(exams)
+            // res.json(reorg({
+            //     serieses: serieses,
+            //     //all_serieses: all_serieses,
+            //     researches: researches,
+            //     templates: templates,
+            //     exams: exams,
+            // }));
         });
 
     });
