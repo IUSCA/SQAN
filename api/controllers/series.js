@@ -20,31 +20,6 @@ function compose_modalityid(research_detail) {
     return research_detail.Modality+"."+research_detail.StationName+"."+research_detail.radio_tracer;
 }
 
-/*
-function load_related_info(serieses, cb) {
-
-..
-
-            //load comment profile
-            var subs = [];
-            exams.forEach(function(exam) {
-                //if(exam.comments) exam.comments.map(subs.push);
-                if(exam.comments) exam.comments.forEach(function(comment) {
-                    subs.push(comment.user_id);
-                });
-            });
-            var ps = profile.load_profiles(subs);
-            //add profile infor for each comment
-            exams.forEach(function(exam) {
-                if(exam.comments) exam.comments.forEach(function(comment) {
-                    comment._profile = ps[comment.user_id];
-                });
-            });
-
-        });
-    });
-}
-*/
 
 //organize flat data received from server into hierarchical data structure
 //  org: {
@@ -78,190 +53,167 @@ function load_related_info(serieses, cb) {
 //          }
 //      }        
 //  }
+
 function reorg(data) {
+    console.log("----------------beginning of reorg ----------------")
+
     var org = {};
-    
-    var research_detail = data.research; //researches[research_id];
-    org[research_detail.IIBISID] = {};
-    var modality_id = compose_modalityid(research_detail);
-    var modality = {
-        _detail: research_detail,
-        exams: {},
-        subjects: {}, 
-        templates_times: [], //array - because not grouped by subjects like subjects_times
-        templates: {},
-    };
-    modality._detail.modality_id = modality_id; //to help UI
-    org[research_detail.IIBISID][modality_id] = modality;
+
+    //for easy research detail lookup
+    var researches = {}; 
+    // data.research.forEach(function(res) {
+    //     researches[res._id] = res;
+    // });
+    researches[data.research._id] = data.research;
+    //console.log(researches)
+
+    function get_modality(research_id) {
+        var research_detail = researches[research_id];
+        if(org[research_detail.IIBISID] == undefined) org[research_detail.IIBISID] = {};
+        var modality_id = compose_modalityid(research_detail);
+        var modality = org[research_detail.IIBISID][modality_id];
+        if(modality === undefined) {
+            modality = {
+                _detail: research_detail,
+                exams: {},
+                subjects: {}, 
+                templates_times: [], //array - because not grouped by subjects like subjects_times
+                templates: {},
+            };
+            modality._detail.modality_id = modality_id; //to help UI
+            org[research_detail.IIBISID][modality_id] = modality;
+        }
+        return modality;
+    }
     
     
     //for easy exam lookup
     var exams = {};
-    data.exams.forEach(function(exam) {
+    data.subject_exams.forEach(function(exam) {
         exams[exam._id] = exam;  
     });
 
     //organize exams
-    data.exams.forEach(function(exam) {
+    data.subject_exams.forEach(function(exam) {
+
+        var modality = get_modality(exam.research_id);
+
         if(modality.exams[exam.subject] === undefined) modality.exams[exam.subject] = {};
         modality.exams[exam.subject][exam._id] = exam; 
+
+        //organize series
+        data.serieses.forEach(function(series) {
+
+            if (new String(series.exam_id).valueOf() == new String(exam._id).valueOf()){
+            //if (series.exam_id == exam._id) {
+
+                console.log('INSIDE THE SERIES LOOP -- series.exam_id: '+series.exam_id+ ' exam._id ' + exam._id);
+
+                var subject = exam.subject;
+                var series_desc = series.series_desc;
+                var exam_id = series.exam_id;
+                
+                var mod = get_modality(exam.research_id);
+    
+                //initialize datastructure to fill
+                if(mod.subjects[subject] == undefined) mod.subjects[subject] = {
+                    serieses: {},
+                    all_serieses: {},
+                    missing_serieses: {},
+                    missing: 0,
+                };
+                if(mod.subjects[subject].serieses[series_desc] == undefined)
+                mod.subjects[subject].serieses[series_desc] = {exams: {}};
+                if(mod.subjects[subject].serieses[series_desc].exams[exam_id] == undefined)
+                mod.subjects[subject].serieses[series_desc].exams[exam_id] = [];
+    
+                //unshift to put the latest one on the top - since serieses are sorted by studytime/-seriesnumber
+                mod.subjects[subject].serieses[series_desc].exams[exam_id].unshift(series);
+                //if(series.qc == undefined) $scope.qcing = true;
+                if(series.isexcluded) mod.subjects[subject].serieses[series_desc]._isexcluded = series.isexcluded;
+
+                //console.log(mod.subject[subject])
+            }            
+        });
     });
 
-    //organize series
-    data.serieses.forEach(function(series) {
-        var subject = series.subject;
-        var series_desc = series.series_desc;
-        var exam_id = series.exam_id;
-
-
-        //initialize datastructure to fill
-        if(modality.subjects[subject] == undefined) modality.subjects[subject] = {
-            serieses: {},
-            all_serieses: {},
-            missing_serieses: {},
-            missing: 0,
-        };
-        if(modality.subjects[subject].serieses[series_desc] == undefined)
-            modality.subjects[subject].serieses[series_desc] = {exams: {}};
-        if(modality.subjects[subject].serieses[series_desc].exams[exam_id] == undefined)
-            modality.subjects[subject].serieses[series_desc].exams[exam_id] = [];
-
-        //unshift to put the latest one on the top - since serieses are sorted by studytime/-seriesnumber
-        modality.subjects[subject].serieses[series_desc].exams[exam_id].unshift(series);
-        //if(series.qc == undefined) $scope.qcing = true;
-        if(series.isexcluded) modality.subjects[subject].serieses[series_desc]._isexcluded = series.isexcluded;
-    });
-
-    data.all_serieses.forEach(function(series) {
-        var subject = series.subject;
-        var series_desc = series.series_desc;
-        var exam_id = series.exam_id;
-
-        var modality = get_modality(series.research_id);
-        if(modality.subjects[subject] == undefined) modality.subjects[subject] = {
-            serieses: {},
-            all_serieses: {},
-            missing_serieses: {},
-            missing: 0,
-        };
-
-        if(modality.subjects[subject].all_serieses[series_desc] == undefined)
-            modality.subjects[subject].all_serieses[series_desc] = {exams: {}};
-        if(modality.subjects[subject].all_serieses[series_desc].exams[exam_id] == undefined)
-            modality.subjects[subject].all_serieses[series_desc].exams[exam_id] = [];
-
-        //unshift to put the latest one on the top - since serieses are sorted by studytime/-seriesnumber
-        modality.subjects[subject].all_serieses[series_desc].exams[exam_id].unshift(series);
-        //if(series.qc == undefined) $scope.qcing = true;
-        if(series.isexcluded) modality.subjects[subject].all_serieses[series_desc]._isexcluded = series.isexcluded;
-    });
 
     //organize templates
-    data.templates.forEach(function(template) {
-        //templates[template._id] = template;
+    data.template_exams.forEach(function(texam) {                  
 
-        var time = template.date.toISOString(); //TODO not exactly sure why I need to do this.
-        var series_desc = template.series_desc;
-        var modality = get_modality(template.research_id);
-        if(!~modality.templates_times.indexOf(time)) modality.templates_times.push(time);
-        if(modality.templates[series_desc] == undefined) modality.templates[series_desc] = {};
-        if(modality.templates[series_desc][time] == undefined) modality.templates[series_desc][time] = [];
-        modality.templates[series_desc][time].push(template);
-    });
-    
-    /*TODO - I should do this on UI (also, injecting min_SeriesNumber as part of series_group / times is bad)
-    //for each exam/template, find the min SeriesNumber so that UI can sort by it
-    for(var research_id in org) {
-        var modalities = org[research_id];
-        for(var modality_id in modalities) {
-            var modality = modalities[modality_id];
-
-            for(var subject_id in modality.subjects) {
-                var subject = modality.subjects[subject_id];
-                for(var series_desc in modality.subjects[subject_id].serieses) {
-                    var series_groups = modality.subjects[subject_id].serieses[series_desc];
-                    var min = null;
-                    for(var exam_id in series_groups.exams) {
-                        var serieses = series_groups.exams[exam_id];
-                        serieses.forEach(function(series) {
-                            if(min == null || series.SeriesNumber < min) min = series.SeriesNumber;
-                        });
-                    }
-                    series_groups.min_SeriesNumber = min;
-                }
-            }
-
-            for(var series_desc in modality.templates) {
-                var times = modality.templates[series_desc];
-                var min = null;
-                for(var time in times) {
-                    //TODO this could be a list of serieses in the near future?
-                    times[time].forEach(function(template) {
-                        if(min == null || template.SeriesNumber < min) min = template.SeriesNumber;
-                    });
-                }
-                times.min_SeriesNumber = min;
-            }
-        }
-    }
-    */
-
-    //TODO - I should probably look for missing series when I do qc_series
-    //find missing series
-    for(var research_id in org) {
-        var modalities = org[research_id];
-        for(var modality_id in modalities) {
-            var modality = modalities[modality_id];
-            for(var subject_id in modality.subjects) {
-                var subject = modality.subjects[subject_id];
-
-                //contruct unique id to be used by anchor
-                subject.uid = research_id+modality_id+subject_id;
+        data.templates.forEach(function(template) {
+            if (new String(template.exam_id).valueOf() == new String(texam._id).valueOf()) {
                 
-                ///////////////////////////////////////////////////////////////////////
-                //
-                // finding missing
-                //
-                // first.. find latest template timestamp
-                var latest = null;
-                modality.templates_times.forEach(function(time) {   
-                    if(latest == null || latest < time) latest = time;
-                });
-                // then create list of teamplate_series_desc that all exam should have
-                var template_series_descs = {};
-                for(var template_series_desc in modality.templates) {
-                    var templates = modality.templates[template_series_desc][latest];
-                    if(templates) template_series_descs[template_series_desc] = templates;
-                }
-                // finally find *missing* subject for each exam times (for this subject) using the latest set of template (tmeplate_series_descs)
-                for(var exam_id in modality.exams[subject_id]) {
-                    var time = modality.exams[subject_id][exam_id].date.toISOString(); //TODO not exactly sure why I need to convert to ISO string
-                    subject.missing_serieses[time] = {};
-                    for(var template_series_desc in template_series_descs) {
-                        var found = false;
-                        for(var series_desc in subject.all_serieses) {
-                            if(subject.all_serieses[series_desc].exams[exam_id] == undefined) continue; //wrong time
-
-                            //truncate number at the end of template name
-                            var tdesc = template_series_desc.replace(/\d+$/, '');
-
-                            if(series_desc.startsWith(tdesc)) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        if(!found) {
-                            subject.missing_serieses[time][template_series_desc] = template_series_descs[template_series_desc];
-                            subject.missing++;
-                            //console.log(subject.uid + " missing "+template_series_desc + " "+subject.missing);
-                        }
-                    }
-                };
-                //
-                ///////////////////////////////////////////////////////////////////////
+                var modality = get_modality(texam.research_id);
+                var time = texam.StudyTimestamp.toISOString(); //TODO not exactly sure why I need to do this.
+                var series_desc = template.series_desc;
+                if(!~modality.templates_times.indexOf(time)) modality.templates_times.push(time);
+                if(modality.templates[series_desc] == undefined) modality.templates[series_desc] = {};
+                if(modality.templates[series_desc][time] == undefined) modality.templates[series_desc][time] = [];
+                modality.templates[series_desc][time].push(template);
             }
-        }
-    }
+        });
+    });
+
+
+    // //TODO - I should probably look for missing series when I do qc_series
+    // //find missing series
+    // for(var research_id in org) {
+    //     var modalities = org[research_id];
+    //     for(var modality_id in modalities) {
+    //         var modality = modalities[modality_id];
+    //         for(var subject_id in modality.subjects) {
+    //             var subject = modality.subjects[subject_id];
+
+    //             //contruct unique id to be used by anchor
+    //             subject.uid = research_id+modality_id+subject_id;
+                
+    //             ///////////////////////////////////////////////////////////////////////
+    //             //
+    //             // finding missing
+    //             //
+    //             // first.. find latest template timestamp
+    //             var latest = null;
+    //             modality.templates_times.forEach(function(time) {   
+    //                 if(latest == null || latest < time) latest = time;
+    //             });
+    //             // then create list of teamplate_series_desc that all exam should have
+    //             var template_series_descs = {};
+    //             for(var template_series_desc in modality.templates) {
+    //                 var templates = modality.templates[template_series_desc][latest];
+    //                 if(templates) template_series_descs[template_series_desc] = templates;
+    //             }
+    //             // finally find *missing* subject for each exam times (for this subject) using the latest set of template (tmeplate_series_descs)
+    //             for(var exam_id in modality.exams[subject_id]) {
+    //                 var time = modality.exams[subject_id][exam_id].StudyTimestamp.toISOString(); //TODO not exactly sure why I need to convert to ISO string
+    //                 subject.missing_serieses[time] = {};
+    //                 for(var template_series_desc in template_series_descs) {
+    //                     var found = false;
+    //                     for(var series_desc in subject.all_serieses) {
+    //                         if(subject.all_serieses[series_desc].exams[exam_id] == undefined) continue; //wrong time
+
+    //                         //truncate number at the end of template name
+    //                         var tdesc = template_series_desc.replace(/\d+$/, '');
+
+    //                         if(series_desc.startsWith(tdesc)) {
+    //                             found = true;
+    //                             break;
+    //                         }
+    //                     }
+    //                     if(!found) {
+    //                         subject.missing_serieses[time][template_series_desc] = template_series_descs[template_series_desc];
+    //                         subject.missing++;
+    //                         //console.log(subject.uid + " missing "+template_series_desc + " "+subject.missing);
+    //                     }
+    //                 }
+    //             };
+    //             //
+    //             ///////////////////////////////////////////////////////////////////////
+    //         }
+    //     }
+    // }
+
+    console.log(org);
     return org;
 }
 
@@ -285,7 +237,8 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
         var serieses = null;
         //var all_serieses = null;
         var research = null;
-        var exams = null;
+        var subject_exams = null;
+        var template_exams = null;
         var eids = [];
         var teids = [];
         var templates = null;
@@ -300,11 +253,11 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
                 query.sort({StudyTimestamp: -1});
 
                 query.exec(function(err, _exams) {
-                    exams = _exams;
-                    _exams.forEach(function(exam) {
-                        eids.push(exam._id);
+                    subject_exams = _exams;
+                    _exams.forEach(function(subject_exams) {
+                        eids.push(subject_exams._id);
                     });
-                    console.log(exams);
+                    console.log(subject_exams);
                     console.log(eids);
                     next(err);
                 });
@@ -343,16 +296,17 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
                 query.where('istemplate', true);
                 query.sort({StudyTimestamp: -1});
 
-                query.exec(function(err, _texams) {                    
-                    _texams.forEach(function(te) {
+                query.exec(function(err, _texams) {  
+                    template_exams = _texams;                  
+                    template_exams.forEach(function(te) {
                         teids.push(te._id);
                     });
-                    console.log(_texams);
+                    console.log(template_exams);
                     next(err);
                 });
             },
 
-            //now query serie documents that belong to the exams in the selected research
+            //now query template documents that belong to the exams in the selected research
             function(next) {                
 
                 var query = db.Template.find().lean();
@@ -367,14 +321,15 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
 
         ], function(err) {
             if(err) return next(err);
-            res.json(exams)
-            // res.json(reorg({
-            //     serieses: serieses,
-            //     //all_serieses: all_serieses,
-            //     researches: researches,
-            //     templates: templates,
-            //     exams: exams,
-            // }));
+            //res.json(exams)
+            res.json(reorg({
+                serieses: serieses,
+                //all_serieses: all_serieses,
+                research: research,
+                templates: templates,
+                subject_exams: subject_exams,
+                template_exams: template_exams,
+            }));
         });
 
     });
