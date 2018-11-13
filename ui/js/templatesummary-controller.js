@@ -4,7 +4,7 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
     $scope.$parent.active_menu = "tsummary";
 
     $scope.fields = ['IIBISID','Modality','StationName','radio_tracer','count'];
-    $scope.fieldnames = ['IIBISID','Modality','Station Name','Radio Tracer','# Timestamps'];
+    $scope.fieldnames = ['IIBISID','Modality','Station Name','Radio Tracer','# Study Instances'];
     
     $scope.detailnames = ['Series Number','Series Description','Times used for QC','# Images'];
 
@@ -17,6 +17,7 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
         $http.get(appconf.api+'/templatesummary/istemplate').then(function(res) {
             $scope.templates = res.data;
             console.log($scope.templates.length + ' templates retrieved from exam db');
+            console.log($scope.templates);
         }, function(err) {
             console.log("Error contacting API");
             console.dir(err);

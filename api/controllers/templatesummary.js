@@ -13,33 +13,34 @@ var db = require('../models');
 var mongoose = require('mongoose')
 
 router.get('/istemplate', jwt({secret: config.express.jwt.pub}),function(req,res,next) {
-    db.Template.aggregate([
-        {$group: {
-            _id:"$research_id",
-            IIBISID:{$addToSet:"$IIBISID"},
-            Modality:{$addToSet:"$Modality"},
-            date: {$addToSet:"$date"},
-            series_desc: {$push: "$series_desc"}
+    db.Exam.aggregate([
+        {$match: {
+            istemplate:true
             }
-        },{$lookup: {
-                from:"researches",
-                localField:"_id",
-                foreignField:"_id",
-                as:"fromResearch"
-                }
-        },{ $project: {
-                IIBISID: 1,
-                Modality: 1,
-                date: 1,
-                seroes_desc: 1,
-                count: { $size: "$date" },
-                StationName: "$fromResearch.StationName",
-                radio_tracer: "$fromResearch.radio_tracer"
-                }
-        },{$unwind:"$IIBISID"},
-        {$unwind:"$Modality"},
-        {$unwind:"$StationName"},
-        {$unwind:"$radio_tracer"}
+         },{$group: {
+             _id:"$research_id",
+             StudyTimestamp: {$addToSet:"$StudyTimestamp"},
+             exam_id: {$addToSet:"$_id"},
+             }
+         },{$lookup: {
+                 from:"researches",
+                 localField:"_id",
+                 foreignField:"_id",
+                 as:"fromResearch"
+                 }
+         },{ $project: {
+                 StudyTimestamp: 1, 
+                 exam_id:1,
+                 count: { $size: "$exam_id" },       
+                 IIBISID: "$fromResearch.IIBISID",
+                 Modality: "$fromResearch.Modality",
+                 StationName: "$fromResearch.StationName",
+                 radio_tracer: "$fromResearch.radio_tracer"
+                 }
+         },{$unwind:"$IIBISID"},
+         {$unwind:"$Modality"},
+         {$unwind:"$StationName"},
+         {$unwind:"$radio_tracer"}
         ], function (err, data) {
              if (err) {
                  next(err);
@@ -53,29 +54,39 @@ router.get('/istemplate', jwt({secret: config.express.jwt.pub}),function(req,res
 
 // search template's by research_id and group them by exam_id:
 router.get('/examids/:research_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    console.log(req.params.research_id)
-    db.Template.aggregate([    
-        {$match: {"research_id": new mongoose.Types.ObjectId(req.params.research_id)} },
-	    {$group:{
-		    _id:"$exam_id",
-		    date:{$addToSet:"$date"},
-		    template_id:{$push: "$_id"},
-            series_desc:{$push:"$series_desc"},
-            SeriesNumber:{$push:"$SeriesNumber"}            
-		    }
-        },{$unwind:"$date"}//,
-        //{$sort:{"date":1}}
-    ],
-    function (err, data) {
+    console.log(req.params.research_id);
+    db.Exam.find({"research_id":new mongoose.Types.ObjectId(req.params.research_id),"istemplate":true},{_id: 1}, function(err,_te) {
         if (err) return next(err);
-        if (!data) {
-            return res.status(404).json({message: "no such research_id:" + req.params.research_id});
-        } else {
-            res.json(data);
-            //res.json({status: "ok"});
-            console.log(`retrieved ${data.length} templates with the matching research_id ...`);
-        }
+        if (!texams) return res.status(404).json({message: "no template exams for research_id:" + req.params.research_id});
+        var texams = [];
+        _te.forEach(function(te){
+            texams.push(te._id);
+        })
+        console.log(texams);
+
+        db.Template.aggregate([    
+            {$match: {"exam_id": {$in: texams}} },
+            {$group:{
+                _id:"$exam_id",
+                date:{$addToSet:"$date"},
+                template_id:{$push: "$_id"},
+                series_desc:{$push:"$series_desc"},
+                SeriesNumber:{$push:"$SeriesNumber"}            
+                }
+            },{$unwind:"$date"}
+        ],
+        function (err, data) {
+            if (err) return next(err);
+            if (!data) {
+                return res.status(404).json({message: "no such research_id:" + req.params.research_id});
+            } else {                
+                console.log(data);
+                console.log(`retrieved ${data.length} templates with the matching research_id ...`);
+                res.json(data);
+            }
+        });
     });
+
 });
 
 // for each template_id, search series and count times used for QC
