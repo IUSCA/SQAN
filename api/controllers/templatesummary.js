@@ -53,79 +53,48 @@ router.get('/istemplate', jwt({secret: config.express.jwt.pub}),function(req,res
 
 
 // search template's by research_id and group them by exam_id:
-router.get('/examids/:research_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    console.log(req.params.research_id);
-    db.Exam.find({"research_id":new mongoose.Types.ObjectId(req.params.research_id),"istemplate":true},{_id: 1}, function(err,_te) {
+router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+        
+    var template_instance = {
+        date: null,
+        exam_id: null,
+        details: []
+    };
+
+    db.Exam.findById(new mongoose.Types.ObjectId(req.params.exam_id), function(err,texam) {
         if (err) return next(err);
-        if (!texams) return res.status(404).json({message: "no template exams for research_id:" + req.params.research_id});
-        var texams = [];
-        _te.forEach(function(te){
-            texams.push(te._id);
-        })
-        console.log(texams);
+        template_instance.date = texam.StudyTimestamp;
+        template_instance.exam_id = texam._id;
 
-        db.Template.aggregate([    
-            {$match: {"exam_id": {$in: texams}} },
-            {$group:{
-                _id:"$exam_id",
-                date:{$addToSet:"$date"},
-                template_id:{$push: "$_id"},
-                series_desc:{$push:"$series_desc"},
-                SeriesNumber:{$push:"$SeriesNumber"}            
-                }
-            },{$unwind:"$date"}
-        ],
-        function (err, data) {
+        db.Template.find({"exam_id":texam._id},function(err,templates){
             if (err) return next(err);
-            if (!data) {
-                return res.status(404).json({message: "no such research_id:" + req.params.research_id});
-            } else {                
-                console.log(data);
-                console.log(`retrieved ${data.length} templates with the matching research_id ...`);
-                res.json(data);
-            }
-        });
-    });
 
+            templates.forEach(function(t,ind){
+
+                db.Series.find({"qc.template_id":t._id}).count(function (err, usedInQC) {
+                    if (err) return next(err);
+
+                    db.TemplateHeader.find({"template_id":t._id}).count(function(err,imageCount){
+                        if(err) return next(err);
+                        
+                        var tobj = {
+                            SeriesNumber: t.SeriesNumber,
+                            series_desc: t.series_desc,
+                            template_id: t._id,
+                            imageCount: imageCount,
+                            usedInQC: usedInQC
+                        };
+
+                        template_instance.details.push(tobj);
+                        if(ind + 1 == templates.length) {
+                            res.json(template_instance);
+                        }
+                    })
+                });
+            })                         
+        })                
+     });
 });
 
-// for each template_id, search series and count times used for QC
-// router.get('/series/:template_id', check_jwt, function(req, res, next) {
-router.get('/series/:template_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    console.log('in controler series_qc'+req.params.template_id);
-    db.Series.aggregate([
-        {$match: {"qc.template_id": new mongoose.Types.ObjectId(req.params.template_id)} },
-        {$count:"usedInQC"}
-    ],
-    function (err, data) {
-        if (err) return next(err);
-        if (!data) {
-            return res.status(404).json({message: "no such research_id:" + req.params.research_id});
-        } else {
-            res.json(data);
-            //res.json({status: "ok"});
-            console.log(`retrieved ${data.length} templates with the matching template_id ...`);
-        }
-   });
-});
-
-//search template QC by research
-// router.get('/imagecount/:template_id', check_jwt, function(req, res, next) {
-router.get('/imagecount/:template_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    console.log('in controler template_details'+req.params.template_id);
-    db.TemplateHeader.aggregate([
-        {$match: {template_id: new mongoose.Types.ObjectId(req.params.template_id)}},
-        {$count:"imageCount"}],
-        function (err, data) {
-            if (err) return next(err);
-            if (!data) {
-                return res.status(404).json({message: "no such template_id:" + req.params.template_id});
-            } else {
-                res.json(data);
-                //res.json({status: "ok"});
-                console.log(`retrieved ${data.length} templates with the matching template_id ...`);
-            }
-   });
-});
 
 module.exports = router;

@@ -221,7 +221,7 @@ function reset_and_deprecate(header,cb) {
             exam_id: exam._id,
             series_desc: header.qc_series_desc,
             SeriesNumber: header.SeriesNumber,
-        }, {$unset:{qc:1}}, {'new': true}, 
+        }, {$unset:{qc:1},qc1_state:"re-qcing" }, {'new': true}, 
         function(err, series) {   
             if(err) return cb(err);
             // deprecate all images in that series

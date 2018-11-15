@@ -39,53 +39,23 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
             $scope.templatebytimestamp = [];
             $scope.templatesUsed = [];
 
-            $http.get(appconf.api+'/templatesummary/examids/'+research._id, {}).then(function(res) {
-                console.log(res.data)                
-                console.log(`Number of dates for this research -- ${res.data.length}`);                                                
-
-                res.data.forEach(function(tbyt,j) {
-                    var arrDetails = [];
-                    $scope.templatesUsed[j] = 0;
-                    tbyt.template_id.forEach(function(tid,i) {
-                        var arrItems = {};                                            
-                        arrItems['SeriesNumber'] = tbyt.SeriesNumber[i];
-                        arrItems['series_desc'] = tbyt.series_desc[i];
-                        arrItems['template_id'] = tid;
-
-                        $http.get(appconf.api+'/templatesummary/series/'+tid, {}).then(function(res) {                            
-                            if(res.data.length>0) {
-                                arrItems['usedInQC'] = res.data[0].usedInQC;
-                                $scope.templatesUsed[j]++;
-                            }
-                            else arrItems['usedInQC']=0                            
-                        }, function(err) {
-                            toaster.error("Error retrieving template details");
-                            console.dir(err);
-                        });
-
-                        $http.get(appconf.api+'/templatesummary/imagecount/'+tid, {}).then(function(res) {                            
-                            if(res.data.length>0) arrItems['imageCount']=res.data[0].imageCount
-                            else arrItems['imageCount']=0                           
-                        }, function(err) {
-                            toaster.error("Error retrieving template details");
-                            console.dir(err);
-                        });
-                        
-                        arrDetails.push(arrItems)
+            research.exam_id.forEach(function(eid,ind) {
+                //console.log(eid);
+                $http.get(appconf.api+'/templatesummary/texams/'+eid,{}).then(function(res) {
+                    console.log(res.data)
+                    $scope.templatebytimestamp.push(res.data);
+                    var usedInQC = 0;
+                    res.data.details.forEach(function(d){
+                        usedInQC = d.usedInQC==0 ? usedInQC : usedInQC+1;
                     })
-                    var timestampObj = {};
-                    timestampObj['date']=tbyt.date;
-                    timestampObj['_id']=tbyt._id;
-                    timestampObj['details']=arrDetails;
-                    $scope.templatebytimestamp.push(timestampObj)
-                })  
-                console.log($scope.templatebytimestamp)
-                console.log($scope.templatesUsed)
-            }, function(err) {
-                toaster.error("Error retrieving template details");
-                console.dir(err);
-            });                
-        } else {$scope.rowNumber=-1};               
+                    $scope.templatesUsed.push(usedInQC);
+                })
+            })    
+
+            console.log($scope.templatebytimestamp)
+              
+        } else {$scope.rowNumber=-1};      
+        console.log('rowNumber is ' + $scope.rowNumber);         
     }   
 
     $scope.templateDetails = function(timestamp,index){

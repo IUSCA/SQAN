@@ -95,7 +95,7 @@ function incoming(h, msg_h, info, ack) {
 
         // Make sure this header is not in the databse already
         function(next) {
-            if(h.qc_istemplate==false) return next();
+            if(!h.qc_istemplate) return next();
             
             db.TemplateHeader.findOne({
                 SOPInstanceUID: h.SOPInstanceUID
@@ -113,15 +113,15 @@ function incoming(h, msg_h, info, ack) {
 
         // Make sure this header is not in the databse already
         function(next) {
-            if(h.qc_istemplate==true) return next();
+            if(h.qc_istemplate) return next();
             
             db.Image.findOne({
                 SOPInstanceUID: h.SOPInstanceUID
             }, function(err,repeated_header) {
                 if (err) return next(err);
                 if (repeated_header) {
-                    logger.info("Repeated image header identified -- arxiving and deprecating qc state"); 
-                    
+                    logger.info("Repeated image header identified -- archiving and deprecating qc state"); 
+                    // ******** AAK - not finished - still need to archive old states somehow...
                     var path = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
                     var dir1 = config.cleaner.raw_headers+"/"+path;
                     //var dir2 = config.cleaner.arxive_headers+"/"+path;                    
@@ -261,9 +261,9 @@ function incoming(h, msg_h, info, ack) {
         
         //make sure we know about this template and insert template header
         function(next) {
-            if(h.qc_istemplate==false) return next();  //if not a template then skip
+            if(!h.qc_istemplate) return next();  //if not a template then skip
 
-            console.log("Inserting template!!!")
+            console.log("Inserting template!!! h.qc_istemplate "+ h.qc_istemplate)
             db.Template.findOneAndUpdate({
                 //research_id: research._id,
                 exam_id: exam._id,
@@ -325,8 +325,9 @@ function incoming(h, msg_h, info, ack) {
         
         //make sure we know about this series
         function(next) {
-            if(h.qc_istemplate==true) return next();  //if it's template then skip
-
+            if(h.qc_istemplate) return next();  //if it's template then skip
+            
+            console.log("Inserting series!!! h.qc_istemplate "+ h.qc_istemplate)
             db.Series.findOneAndUpdate({
                 exam_id: exam._id,
                 series_desc: h.qc_series_desc,

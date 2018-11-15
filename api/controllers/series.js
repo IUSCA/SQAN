@@ -59,13 +59,8 @@ function reorg(data) {
 
     var org = {};
 
-    //for easy research detail lookup
     var researches = {}; 
-    // data.research.forEach(function(res) {
-    //     researches[res._id] = res;
-    // });
     researches[data.research._id] = data.research;
-    //console.log(researches)
 
     function get_modality(research_id) {
         var research_detail = researches[research_id];
