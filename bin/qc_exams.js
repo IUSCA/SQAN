@@ -21,7 +21,7 @@ db.init(function(err) {
 
 function run(cb) {
     logger.info("querying exams -- "+ new Date());
-    // get primary images that are not qc-ed=
+
     db.Exam.find({"istemplate":false, "qc": {$exists: false},"series.status":{$ne: null}}).limit(config.qc.exam_batch_size).exec(function(err, exams) { 
         if(err) return cb(err);
 
