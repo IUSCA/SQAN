@@ -82,11 +82,11 @@ function reorg(data) {
     }
     
     
-    //for easy exam lookup
-    var exams = {};
-    data.subject_exams.forEach(function(exam) {
-        exams[exam._id] = exam;  
-    });
+    // //for easy exam lookup
+    // var exams = {};
+    // data.subject_exams.forEach(function(exam) {
+    //     exams[exam._id] = exam;  
+    // });
 
     //organize exams
     data.subject_exams.forEach(function(exam) {

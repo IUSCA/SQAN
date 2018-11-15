@@ -47,7 +47,7 @@ app.controller('ExamsController',
             $scope.selected_modality = modality;
             var modality_id = research.Modality+"."+research.StationName+"."+research.radio_tracer;
 
-            console.log(where);
+            //console.log(where);
             
             $http.get(appconf.api+'/series/query', {params: {
                     skip: 0,
