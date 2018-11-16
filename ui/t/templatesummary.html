@@ -49,19 +49,19 @@
                                         </p>
                                         <p><h5 class="text-center">
                                             <a href="">
-                                                <button ng-show="indexDetails != $index || showDetails==false" ng-click="templateDetails(timestamp,$index)">
+                                                <button ng-show="indexDetails!=$index" ng-click="templateDetails(timestamp,$index)">
                                                     <b >Show Details</b></button>
-                                                <button ng-show="indexDetails === $index && showDetails==true" ng-click="templateDetails(timestamp,$index)">
+                                                <button ng-show="indexDetails==$index" ng-click="templateDetails(timestamp,$index)">
                                                     <b>Hide Details</b></button>
                                             </a>
                                         </h5></p>        
                                     </div>
-                                    <div class="card-body" ng-show="indexDetails === $index && showDetails==true && rowNumber==showDates">
-                                        <table class="table table-striped table-hover info" width="80%" cellspacing="0" ng-show="indexDetails === $index && showDetails==true && rowNumber==showDates">
-                                            <tr ng-show="indexDetails === $index && showDetails==true && rowNumber==showDates" style="background-color:#e2eef5">
+                                    <div class="card-body" ng-show="indexDetails==$index">
+                                        <table class="table table-striped table-hover info" width="80%" cellspacing="0">
+                                            <tr style="background-color:#e2eef5">
                                                 <th class="text-center" ng-repeat="dd in detailnames track by $index">{{dd}}</th>
                                                 <th><i class="fa fa-trash fa-lg" aria-hidden="true"></i></th>
-                                                <tr ng-repeat-end style="background-color:#f2f7fa" ng-if="showDetails==true && rowNumber==showDates" ng-repeat="dd in details.details | orderBy: 'SeriesNumber'">              
+                                                <tr ng-repeat-end style="background-color:#f2f7fa" ng-repeat="dd in details.details | orderBy: 'SeriesNumber'">              
                                                     <td class="text-center">{{dd.SeriesNumber}}</td>
                                                     <td class="text-center" style="word-wrap: break-all;">{{dd.series_desc}}</td>
                                                     <td class="text-center">{{dd.usedInQC}}</td>

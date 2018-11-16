@@ -30,7 +30,6 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
 
     $scope.templatesByTimestamp = function(research,index){
        
-        $scope.showDetails = false;
         $scope.indexDetails=-1;
 
         if($scope.rowNumber!==index){
@@ -59,14 +58,13 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
         console.log('indexDetails ' + $scope.indexDetails)       
 
         if($scope.indexDetails!==index){  
-            $scope.indexDetails=index;            
-            $scope.showDetails = true; 
+            $scope.indexDetails=index; 
             console.log(timestamp)           
             $scope.details = timestamp; 
         } else {
             $scope.indexDetails=-1;
-            $scope.showDetails = false;
             $scope.details = [];
         }
-    }  
+    } 
+
 });
