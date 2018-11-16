@@ -34,8 +34,7 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
         $scope.indexDetails=-1;
 
         if($scope.rowNumber!==index){
-            
-            $scope.rowNumber=index;
+                        
             $scope.templatebytimestamp = [];
             $scope.templatesUsed = [];
 
@@ -44,12 +43,9 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
                 $http.get(appconf.api+'/templatesummary/texams/'+eid,{}).then(function(res) {
                     console.log(res.data)
                     $scope.templatebytimestamp.push(res.data);
-                    var usedInQC = 0;
-                    res.data.details.forEach(function(d){
-                        usedInQC = d.usedInQC==0 ? usedInQC : usedInQC+1;
-                    })
-                    $scope.templatesUsed.push(usedInQC);
+                    if ($scope.templatebytimestamp.length == research.exam_id.length) $scope.rowNumber=index;
                 })
+                
             })    
 
             console.log($scope.templatebytimestamp)

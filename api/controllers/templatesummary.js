@@ -58,7 +58,8 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(r
     var template_instance = {
         date: null,
         exam_id: null,
-        details: []
+        details: [],
+        usedInQC:0
     };
 
     db.Exam.findById(new mongoose.Types.ObjectId(req.params.exam_id), function(err,texam) {
@@ -74,6 +75,8 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(r
                 db.Series.find({"qc.template_id":t._id}).count(function (err, usedInQC) {
                     if (err) return next(err);
 
+                    template_instance.usedInQC = usedInQC==0 ? template_instance.usedInQC : template_instance.usedInQC+1;
+
                     db.TemplateHeader.find({"template_id":t._id}).count(function(err,imageCount){
                         if(err) return next(err);
                         
@@ -86,7 +89,8 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(r
                         };
 
                         template_instance.details.push(tobj);
-                        if(ind + 1 == templates.length) {
+                        
+                        if(template_instance.details.length == templates.length) {
                             res.json(template_instance);
                         }
                     })
