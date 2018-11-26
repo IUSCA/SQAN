@@ -120,7 +120,7 @@ function qc_series(series,images) {
                         type: "image_tag_mismatch", 
                         msg: "Series contains "+image_tag_mismatch+" fields with 'image_tag_mismatch' error", 
                         c: image_tag_mismatch,
-                        per: image_tag_mismatch / qc.series_image_count,
+                        per: image_tag_mismatch / qc.series_field_count,
                     }); 
                 }
               
