@@ -160,8 +160,6 @@ function qc_series(series,images,template) {
 
 function update_exam(series,t_exam_id,next) {
    
-    //var exam = get_exam_qc(series.exam_id);
-    //console.log(exam);
     var exam = {};
 
     async.series([
@@ -201,16 +199,12 @@ function update_exam(series,t_exam_id,next) {
 
         function(next){
 
-            console.log(exam);
+            //console.log(exam);
             
             if (series.qc1_state == 'no template' && t_exam_id == null) {
     
                 if (exam.qc.series_no_template.indexOf(series.series_desc) == -1) {
                     exam.qc.series_no_template.push(series.series_desc);
-                    // set_exam_qc(exam.qc,exam._id,function(err){
-                    //     if(err) return next(err);
-                    //     next();
-                    // })
                     next();
                 }                 
             } else {return next();}
@@ -225,55 +219,63 @@ function update_exam(series,t_exam_id,next) {
             .select({'_id': 1, 'series_desc': 1})
             .exec(function(err, _template) {
                 if(err) return next(err); 
-                
-                //exam.qc.template_series_count = _template.length;  
-                
+
+                exam.qc.template_series = _template.length;
+
+                var template_series = [];
                 _template.forEach(function(t){
-                    if (exam.qc.template_series.indexOf(t.series_desc) == -1) 
-                    exam.qc.template_series.push(t.series_desc);
+                    if (template_series.indexOf(t.series_desc) == -1) 
+                        template_series.push(t.series_desc);
                 });
 
                 // check for no template
                 var notemp_indx = exam.qc.series_no_template.indexOf(series.series_desc);
-                console.log('notemp_indx is : ' + notemp_indx)
                 if ( notemp_indx > -1) {
-                    console.log('removing no_template at position : ' + notemp_indx)
                     exam.qc.series_no_template.splice(notemp_indx,1);
                 }
 
-                // make sure we know of this series
-                var indx = exam.qc.series.indexOf(series.series_desc);
-                console.log('indx is : ' + indx)
-                if ( indx == -1) {
-                    console.log('adding series_desc : '+ series.series_desc + ' in postion ' + indx)
-                    exam.qc.series.push(series.series_desc);
-                }
+                db.Series.find({'exam_id': exam._id,qc: {$exists: true}}).lean()
+                .select({'_id': 1, 'series_desc': 1})
+                .exec(function(err, _series) {                    
+                    if(err) return next(err); 
 
-                // check if series are in template
-                exam.qc.template_series.forEach(function(t){
-                    if (exam.qc.series.indexOf(t) == -1){
-                        exam.qc.series_missing.push(t);
-                    }
-                })
+                    exam.qc.series = _series.length;
+                    
+                    var exam_series = [];
+                    _series.forEach(function(s){
+                        if (exam_series.indexOf(s.series_desc) == -1) 
+                        exam_series.push(s.series_desc);
+                    });
 
-                // count "fail" / "autopass"
-                if (series.qc1_state == "fail") exam.qc.series_failed++;
-                if (series.qc1_state == "autopass") exam.qc.series_passed++;
+                    // check if series are in template
+                    var series_missing = [];
+                    template_series.forEach(function(t){
+                        if (exam_series.indexOf(t) == -1){
+                            series_missing.push(t);
+                        }
+                    })
+                    exam.qc.series_missing = series_missing;
 
-                // count images
-                exam.qc.image_count += series.qc.series_image_count;
-                exam.qc.images_errored += series.qc.errored_images;
-                exam.qc.images_clean += series.qc.clean;
-                exam.qc.images_no_template += series.qc.notemps;
+                    // count "fail" / "autopass"
+                    if (series.qc1_state == "fail") exam.qc.series_failed++;
+                    if (series.qc1_state == "autopass") exam.qc.series_passed++;
 
-                exam.qc.template_image_count += series.qc.template_image_count;
-                
-                next();                       
+                    // count images
+                    exam.qc.image_count += series.qc.series_image_count;
+                    exam.qc.images_errored += series.qc.errored_images;
+                    exam.qc.images_clean += series.qc.clean;
+                    exam.qc.images_no_template += series.qc.notemps;
+
+                    exam.qc.template_image_count += series.qc.template_image_count;
+                    
+                    next(); 
+
+                });                      
             })
         },
         
         function(next){
-            console.log(exam)
+            //console.log(exam)
             set_exam_qc(exam.qc,exam._id,function(err) {
                 if(err) return next(err);
                 next();
@@ -293,7 +295,6 @@ function set_exam_qc(qc,exam_id, cb){
         cb();
     }) 
 }
-
 
 
 //ECMA6 Polyfill for endsWith
