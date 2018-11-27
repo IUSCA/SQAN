@@ -2,6 +2,7 @@
 'use strict';
 
 const _ = require('underscore'); 
+var async = require('async');
 
 //const config = require('../../config');
 const db = require('../models');
@@ -12,7 +13,7 @@ db.init(function(err) {
     if(err) throw err;
 });
 
-function qc_series(series,images) {
+function qc_series(series,images,template) {
 
     console.log("QC-ing series: "+series._id + " -- series description " +series.series_desc);
 
@@ -33,7 +34,7 @@ function qc_series(series,images) {
         template_field_count: 0,
         template_image_count: undefined,
 
-        template_id: null, //template set used to do qc for this series (sampled from one images's qc.template_id)
+        template_id: template._id, //template set used to do qc for this series (sampled from one images's qc.template_id)
         date: new Date(), //series-qc time
 
         //series-qc errros / warnings / notemp count
@@ -78,22 +79,20 @@ function qc_series(series,images) {
         return 
     } else {
         qc.series_fields_errored = template_mismatch + not_set + image_tag_mismatch;
-        qc.template_id = images[0].qc.template_id;
+        //qc.template_id = images[0].qc.template_id;
+        
         //check for template header count 
-        db.TemplateHeader.where({template_id: qc.template_id}).count(function(err, tc) {
-            
+        db.TemplateHeader.where({template_id: qc.template_id}).count(function(err, tc) {            
             if (err) console.log(err);
+
             qc.template_image_count = tc;
             diff = qc.template_image_count - qc.series_image_count; 
             
-            //console.log("template count is "+ qc.template_image_count + " diff is "+ Math.abs(diff));
-
             if(qc.errored_images > 0) {
                 qc.errors.push({
                     type: "image_errors", 
                     msg: "Series contains "+qc.errored_images+" images with qc errors", 
                     c: qc.errored_images,
-                    //errored_images: errored_InstanceNumber,
                     per: qc.errored_images / qc.template_image_count,
                 }); 
                 
@@ -149,32 +148,150 @@ function qc_series(series,images) {
             events.series(series);
             db.Series.update({_id: series._id}, {qc: qc, qc1_state: series.qc1_state}, function(err) {
                 if (err) console.log(err);
-                update_exam(series,true);    
+                //update_exam(series,true);    
+                update_exam(series,template.exam_id, function(err){
+                    if (err) console.log(err);
+                })
             });  
         })   
     }
 }
 
 
-function update_exam(series,qced) {
+function update_exam(series,t_exam_id,next) {
+   
+    //var exam = get_exam_qc(series.exam_id);
+    //console.log(exam);
+    var exam = {};
 
-    if (qced) {  
-        var status = "qc-ed";  
-        // db.Exam.update({_id: series.exam_id},{$set: {'series.$[element].status': status,"series.$[elem].state":series.qc1_state}},  
-        // {arrayFilters:[{'element.SeriesNumber':series.SeriesNumber,'element.series_desc':series.series_desc}]}, 
-        db.Exam.update({_id: series.exam_id, series:{$elemMatch:{SeriesNumber:series.SeriesNumber}}},
-            {$set: {'series.$.status': status,"series.$.state":series.qc1_state}},
-        function(err) {
-             if (err) {console.log("error in exam qc"); console.log(err)};
-        })
-    } else {
-        var status = "no template";
-        db.Exam.update({_id: series.exam_id, series:{$elemMatch:{SeriesNumber:series.SeriesNumber}}},
-            {$set: {'series.$.status': status}},
-        function(err,exam) {
-            if (err) console.log("error updating qc status in exam "+exam.id);         
-        })
-    }
+    async.series([
+
+        function(next) {
+            db.Exam.findById(series.exam_id, function(err,s_exam) {
+                if (err) return next(err);
+                if (!s_exam.qc) {
+                    // create qc object for exam 
+                    console.log("creating qc object!!")
+                    var qc = {
+                        series:[],
+                        template_series:[],
+                        series_passed: 0,
+                        series_failed: 0,
+                        series_missing: [],
+                        series_no_template: [],
+                        template_image_count:0,
+                        image_count:0,
+                        images_errored: 0,
+                        images_clean:0,
+                        images_no_template:0                
+                    }
+                    db.Exam.update({_id: series.exam_id},{qc:qc},function(err,ns_exam){
+                        if (err) return next(err);
+                        exam = ns_exam;
+                        next()
+                    })
+                } else {
+                    console.log("qc object already exists!!");
+                    exam = s_exam;
+                    next()
+                }                                 
+            });
+        },
+
+
+        function(next){
+
+            console.log(exam);
+            
+            if (series.qc1_state == 'no template' && t_exam_id == null) {
+    
+                if (exam.qc.series_no_template.indexOf(series.series_desc) == -1) {
+                    exam.qc.series_no_template.push(series.series_desc);
+                    // set_exam_qc(exam.qc,exam._id,function(err){
+                    //     if(err) return next(err);
+                    //     next();
+                    // })
+                    next();
+                }                 
+            } else {return next();}
+        },
+            
+        function(next) { 
+
+            if (series.qc1_state == 'no template' && t_exam_id == null) return next();     
+            
+            db.Template.find().lean()
+            .where('exam_id',t_exam_id)
+            .select({'_id': 1, 'series_desc': 1})
+            .exec(function(err, _template) {
+                if(err) return next(err); 
+                
+                //exam.qc.template_series_count = _template.length;  
+                
+                _template.forEach(function(t){
+                    if (exam.qc.template_series.indexOf(t.series_desc) == -1) 
+                    exam.qc.template_series.push(t.series_desc);
+                });
+
+                // check for no template
+                var notemp_indx = exam.qc.series_no_template.indexOf(series.series_desc);
+                console.log('notemp_indx is : ' + notemp_indx)
+                if ( notemp_indx > -1) {
+                    console.log('removing no_template at position : ' + notemp_indx)
+                    exam.qc.series_no_template.splice(notemp_indx,1);
+                }
+
+                // make sure we know of this series
+                var indx = exam.qc.series.indexOf(series.series_desc);
+                console.log('indx is : ' + indx)
+                if ( indx == -1) {
+                    console.log('adding series_desc : '+ series.series_desc + ' in postion ' + indx)
+                    exam.qc.series.push(series.series_desc);
+                }
+
+                // check if series are in template
+                exam.qc.template_series.forEach(function(t){
+                    if (exam.qc.series.indexOf(t) == -1){
+                        exam.qc.series_missing.push(t);
+                    }
+                })
+
+                // count "fail" / "autopass"
+                if (series.qc1_state == "fail") exam.qc.series_failed++;
+                if (series.qc1_state == "autopass") exam.qc.series_passed++;
+
+                // count images
+                exam.qc.image_count += series.qc.series_image_count;
+                exam.qc.images_errored += series.qc.errored_images;
+                exam.qc.images_clean += series.qc.clean;
+                exam.qc.images_no_template += series.qc.notemps;
+
+                exam.qc.template_image_count += series.qc.template_image_count;
+                
+                next();                       
+            })
+        },
+        
+        function(next){
+            console.log(exam)
+            set_exam_qc(exam.qc,exam._id,function(err) {
+                if(err) return next(err);
+                next();
+            })  
+        }
+
+    ], function(err) {
+        if(err) console.log(err)
+        next();
+    });
+}
+
+
+function set_exam_qc(qc,exam_id, cb){
+    db.Exam.update({_id: exam_id},{qc:qc},function(err) {
+        if (err) return cb(err);
+        cb();
+    }) 
 }
 
 

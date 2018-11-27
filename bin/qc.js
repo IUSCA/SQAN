@@ -73,7 +73,7 @@ function qc_images(series,next) {
                                 if (err) return next(err);
                                 console.log(images.length + " images have been qc-ed, now aggregating qc for the series "+ primimage.headers.qc_series_desc + " -- " + new Date());
 
-                                qc_funcs.series.qc_series(series,images);
+                                qc_funcs.series.qc_series(series,images,template);
 
                                 logger.info(primimage.headers.qc_series_desc + " Series has been qc-ed")
                                 return next();
@@ -174,9 +174,12 @@ function find_template(series, cb) {
         if(err) return cb(err);
         if(!template) {
             logger.info("couldn't find template for series:"+series._id);
-            qc_funcs.series.update_exam(series,false);
-
-            return cb(null);
+            // qc_funcs.series.update_exam(series.exam_id,false);
+            // return cb(null);
+            series.qc1_state = 'no template';
+            qc_funcs.series.update_exam(series,null,function(err){
+                return cb(err);
+            })
         }
         cb(null,template)
     })
@@ -256,16 +259,3 @@ function get_template_image(primtemplate,InstanceNumber,cb) {
 
     });
 }
-
-// ************************** other functions ********************************//
-
-
-// function check_tarball_mtime(primimage,cb) {
-//     // check for the last modified date on the coresponding tar file
-//     var path2tar = config.cleaner.raw_headers+"/"+primimage.qc_iibisid+"/"+primimage.qc_subject+"/"+primimage.StudyInstanceUID+"/"+primimage.qc_series_desc+".tar";          
-//     fs.stat(path2tar,function(err,stats){
-//         if (err) cb(err); 
-//         var mtime = (parseInt((new Date).getTime()) - parseInt(new Date(stats.mtime).getTime()))/1000;
-//         cb(null,mtime);
-//     });
-// }

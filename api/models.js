@@ -45,7 +45,7 @@ var examSchema = mongoose.Schema({
     StudyInstanceUID: {type: String, index: true},
     istemplate: {type: Boolean},
     StudyTimestamp: Date,
-    series: mongoose.Schema.Types.Mixed, 
+    //series: mongoose.Schema.Types.Mixed, 
     qc: mongoose.Schema.Types.Mixed,
 
     comments: [ mongoose.Schema({

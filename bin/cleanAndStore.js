@@ -246,7 +246,7 @@ function incoming(h, msg_h, info, ack) {
                 StudyInstanceUID: h.StudyInstanceUID, 
             },
             {
-                $addToSet: {series:{series_desc:h.qc_series_desc, SeriesNumber: h.SeriesNumber,status:null}},
+                //$addToSet: {series:{series_desc:h.qc_series_desc, SeriesNumber: h.SeriesNumber,status:null}},
                 subject: (h.qc_istemplate?null:h.qc_subject),
                 research_id: research._id,
                 istemplate:h.qc_istemplate,
