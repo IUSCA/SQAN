@@ -1,6 +1,6 @@
  #!/bin/bash
    
-for iibis in `ls /opt/sca/dicom-raw/ |grep 0000-00001*`;
+for iibis in `ls /opt/sca/dicom-raw/ |grep 0000-00001`;
 do
      for subj in `ls /opt/sca/dicom-raw/"${iibis}"/`; 
      do 
@@ -14,6 +14,6 @@ do
      done
 done
 
-find /opt/sca/dicom-raw/0000-00001* -iname "*.json" | wc -l
+find /opt/sca/dicom-raw/0000-00001 -iname "*.json" | wc -l
 
 

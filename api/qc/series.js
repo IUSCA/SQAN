@@ -165,14 +165,20 @@ function update_exam(series,t_exam_id,next) {
     async.series([
 
         function(next) {
+
             db.Exam.findById(series.exam_id, function(err,s_exam) {
                 if (err) return next(err);
-                if (!s_exam.qc) {
+                if (s_exam.qc) {
+                    console.log("qc object already exists");
+                    exam = s_exam;
+                    next()
+                } else {
                     // create qc object for exam 
-                    console.log("creating qc object!!")
+                    console.log("creating qc object")
                     var qc = {
-                        series:[],
-                        template_series:[],
+                        qced_series:0,
+                        all_series: 0,
+                        template_series:0,
                         series_passed: 0,
                         series_failed: 0,
                         series_missing: [],
@@ -183,35 +189,36 @@ function update_exam(series,t_exam_id,next) {
                         images_clean:0,
                         images_no_template:0                
                     }
-                    db.Exam.update({_id: series.exam_id},{qc:qc},function(err,ns_exam){
+                    db.Exam.findOneAndUpdate({_id: s_exam._id},{qc:qc},{upsert:false,'new': true}, function(err,ns_exam){
                         if (err) return next(err);
                         exam = ns_exam;
                         next()
                     })
-                } else {
-                    console.log("qc object already exists!!");
-                    exam = s_exam;
-                    next()
                 }                                 
             });
         },
 
 
-        function(next){
-
-            //console.log(exam);
-            
+        function(next){     
+            // if there is no template for this series description, then add it to the series_no_template array       
             if (series.qc1_state == 'no template' && t_exam_id == null) {
-    
+                console.log('setting no_template for subject '+ exam.subject + ' and series description '+series.series_desc)
                 if (exam.qc.series_no_template.indexOf(series.series_desc) == -1) {
                     exam.qc.series_no_template.push(series.series_desc);
+                }
+                    
+                // count series (for this exam)
+                db.Series.find({'exam_id': exam._id}).count(function(err,ns) {                    
+                    if(err) return next(err); 
+                    console.log('counting series after registering no-template')
+                    exam.qc.all_series = ns;
                     next();
-                }                 
+                });
+                                 
             } else {return next();}
         },
             
         function(next) { 
-
             if (series.qc1_state == 'no template' && t_exam_id == null) return next();     
             
             db.Template.find().lean()
@@ -222,32 +229,38 @@ function update_exam(series,t_exam_id,next) {
 
                 exam.qc.template_series = _template.length;
 
+                // create array with all template series descriptions (for this template exam)
                 var template_series = [];
                 _template.forEach(function(t){
                     if (template_series.indexOf(t.series_desc) == -1) 
                         template_series.push(t.series_desc);
                 });
 
-                // check for no template
+                // check if the current series description is in the series_no_template array
                 var notemp_indx = exam.qc.series_no_template.indexOf(series.series_desc);
-                if ( notemp_indx > -1) {
+                console.log('notemp_indx is '+ notemp_indx)
+                if ( notemp_indx != -1) {
+                    console.log(`removing ${series.series_desc} from notemp_index ${notemp_indx}`)
                     exam.qc.series_no_template.splice(notemp_indx,1);
                 }
 
-                db.Series.find({'exam_id': exam._id,qc: {$exists: true}}).lean()
+                // create array with all qc-ed series (for this exam)
+                db.Series.find({'exam_id': exam._id}).lean()
                 .select({'_id': 1, 'series_desc': 1})
                 .exec(function(err, _series) {                    
                     if(err) return next(err); 
 
-                    exam.qc.series = _series.length;
+                    exam.qc.all_series = _series.length;
                     
                     var exam_series = [];
                     _series.forEach(function(s){
-                        if (exam_series.indexOf(s.series_desc) == -1) 
-                        exam_series.push(s.series_desc);
+                        if (exam_series.indexOf(s.series_desc) == -1) {
+                            exam_series.push(s.series_desc);
+                        }
                     });
 
-                    // check if series are in template
+                    console.log(exam_series);
+                    // check if any template series are missing in this exam
                     var series_missing = [];
                     template_series.forEach(function(t){
                         if (exam_series.indexOf(t) == -1){
@@ -259,6 +272,7 @@ function update_exam(series,t_exam_id,next) {
                     // count "fail" / "autopass"
                     if (series.qc1_state == "fail") exam.qc.series_failed++;
                     if (series.qc1_state == "autopass") exam.qc.series_passed++;
+                    exam.qc.qced_series++;
 
                     // count images
                     exam.qc.image_count += series.qc.series_image_count;
@@ -290,7 +304,7 @@ function update_exam(series,t_exam_id,next) {
 
 
 function set_exam_qc(qc,exam_id, cb){
-    db.Exam.update({_id: exam_id},{qc:qc},function(err) {
+    db.Exam.findOneAndUpdate({_id: exam_id},{qc:qc},function(err) {
         if (err) return cb(err);
         cb();
     }) 

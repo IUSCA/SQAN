@@ -265,11 +265,9 @@ function incoming(h, msg_h, info, ack) {
 
             console.log("Inserting template!!! h.qc_istemplate "+ h.qc_istemplate)
             db.Template.findOneAndUpdate({
-                //research_id: research._id,
                 exam_id: exam._id,
                 series_desc: h.qc_series_desc,
                 SeriesNumber: h.SeriesNumber,   
-                //date: h.qc_StudyTimestamp             
             }, {}, {upsert:true, 'new': true}, 
             function(err, _template) {
                 if(err) return next(err);
