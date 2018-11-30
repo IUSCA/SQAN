@@ -148,19 +148,21 @@ function qc_series(series,images,template) {
             events.series(series);
             db.Series.update({_id: series._id}, {qc: qc, qc1_state: series.qc1_state}, function(err) {
                 if (err) console.log(err);
-                //update_exam(series,true);    
-                update_exam(series,template.exam_id, function(err){
-                    if (err) console.log(err);
-                })
+
+                update_exam(series,template.exam_id); //, function(err){
+                    //if (err) console.log(err);
+                //})
             });  
-        })   
+        })      
     }
 }
 
 
-function update_exam(series,t_exam_id,next) {
+function update_exam(series,t_exam_id) {
    
     var exam = {};
+    var template_series = [];
+    var exam_series = [];
 
     async.series([
 
@@ -176,14 +178,14 @@ function update_exam(series,t_exam_id,next) {
                     // create qc object for exam 
                     console.log("creating qc object")
                     var qc = {
-                        qced_series:[],
-                        all_series: [],
-                        template_series: [], 
-                        series_passed: [],
-                        series_failed: [],
+                        qced_series:0,
+                        all_series: 0,
+                        template_series: 0, 
+                        series_passed: 0,
+                        series_failed: 0,
                         series_missing: [],
                         series_no_template: [],
-                        template_image_count:0,
+                        expected_qced_img_count:0,
                         image_count:0,
                         images_errored: 0,
                         images_clean:0,
@@ -227,15 +229,13 @@ function update_exam(series,t_exam_id,next) {
             .exec(function(err, _template) {
                 if(err) return next(err); 
 
-                //exam.qc.template_series = _template.length;
+                exam.qc.template_series = _template.length;
 
-                // create array with all template series descriptions (for this template exam)
-                var template_series = [];
+                // create array with all template series descriptions (for this template exam)                
                 _template.forEach(function(t){
                     if (template_series.indexOf(t.series_desc) == -1) 
                         template_series.push(t.series_desc);
                 });
-                exam.qc.template_series = template_series;
 
                 // check if the current series description is in the series_no_template array
                 var notemp_indx = exam.qc.series_no_template.indexOf(series.series_desc);
@@ -250,6 +250,7 @@ function update_exam(series,t_exam_id,next) {
         },
 
         function(next) { 
+
             if (series.qc1_state == 'no template' && t_exam_id == null) return next(); 
 
             // create array with all qc-ed series (for this exam)
@@ -258,21 +259,20 @@ function update_exam(series,t_exam_id,next) {
             .exec(function(err, _series) {                    
                 if(err) return next(err); 
 
-                //exam.qc.all_series = _series.length;
-                
-                var exam_series = [];
+                exam.qc.all_series = _series.length;
+                                
                 _series.forEach(function(s){
                     if (exam_series.indexOf(s.series_desc) == -1) {
                         exam_series.push(s.series_desc);
                     }
                 });
-                exam.qc.all_series = exam_series;
+                //exam.qc.all_series = exam_series.length;
 
                 console.log(exam_series);
 
                 // check if any template series are missing in this exam
                 var series_missing = [];
-                exam.qc.template_series.forEach(function(t){
+                template_series.forEach(function(t){
                     if (exam_series.indexOf(t) == -1){
                         series_missing.push(t);
                     }
@@ -281,9 +281,12 @@ function update_exam(series,t_exam_id,next) {
 
                 // count "fail" / "autopass"
                 console.log(`series.qc1_state is ${series.qc1_state}`);
-                if (series.qc1_state == "fail") exam.qc.series_failed.push(series.series_desc);
-                if (series.qc1_state == "autopass") exam.qc.series_passed.push(series.series_desc);
-                exam.qc.qced_series.push(series.series_desc);
+                if (series.qc1_state == "fail") //exam.qc.series_failed.push(series.series_desc);
+                    exam.qc.series_failed+=1;
+                if (series.qc1_state == "autopass") //exam.qc.series_passed.push(series.series_desc);
+                    exam.qc.series_passed+=1;
+                
+                exam.qc.qced_series += 1; //.push(series.series_desc);
 
                 // count images
                 exam.qc.image_count += series.qc.series_image_count;
@@ -291,7 +294,7 @@ function update_exam(series,t_exam_id,next) {
                 exam.qc.images_clean += series.qc.clean;
                 exam.qc.images_no_template += series.qc.notemps;
 
-                exam.qc.template_qced_image_count += series.qc.template_image_count;
+                exam.qc.expected_qced_img_count += series.qc.template_image_count;
                 
                 next(); 
 
@@ -299,25 +302,21 @@ function update_exam(series,t_exam_id,next) {
         },
         
         function(next){
-            //console.log(exam)
-            set_exam_qc(exam.qc,exam._id,function(err) {
-                if(err) return next(err);
-                next();
+            console.log(exam);
+
+            db.Exam.findOneAndUpdate({_id: exam._id},{qc:exam.qc},function(err) {
+                if (err) return next(err);
+                return next();
             })  
         }
 
     ], function(err) {
-        if(err) console.log(err)
-        next();
+        if(err) {
+            console.log(err);
+            //return cb(err);
+        } 
+        //cb();
     });
-}
-
-
-function set_exam_qc(qc,exam_id, cb){
-    db.Exam.findOneAndUpdate({_id: exam_id},{qc:qc},function(err) {
-        if (err) return cb(err);
-        cb();
-    }) 
 }
 
 
