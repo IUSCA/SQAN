@@ -176,11 +176,11 @@ function update_exam(series,t_exam_id,next) {
                     // create qc object for exam 
                     console.log("creating qc object")
                     var qc = {
-                        qced_series:0,
-                        all_series: 0,
-                        template_series:0,
-                        series_passed: 0,
-                        series_failed: 0,
+                        qced_series:[],
+                        all_series: [],
+                        template_series: [], 
+                        series_passed: [],
+                        series_failed: [],
                         series_missing: [],
                         series_no_template: [],
                         template_image_count:0,
@@ -227,7 +227,7 @@ function update_exam(series,t_exam_id,next) {
             .exec(function(err, _template) {
                 if(err) return next(err); 
 
-                exam.qc.template_series = _template.length;
+                //exam.qc.template_series = _template.length;
 
                 // create array with all template series descriptions (for this template exam)
                 var template_series = [];
@@ -235,6 +235,7 @@ function update_exam(series,t_exam_id,next) {
                     if (template_series.indexOf(t.series_desc) == -1) 
                         template_series.push(t.series_desc);
                 });
+                exam.qc.template_series = template_series;
 
                 // check if the current series description is in the series_no_template array
                 var notemp_indx = exam.qc.series_no_template.indexOf(series.series_desc);
@@ -244,48 +245,57 @@ function update_exam(series,t_exam_id,next) {
                     exam.qc.series_no_template.splice(notemp_indx,1);
                 }
 
-                // create array with all qc-ed series (for this exam)
-                db.Series.find({'exam_id': exam._id}).lean()
-                .select({'_id': 1, 'series_desc': 1})
-                .exec(function(err, _series) {                    
-                    if(err) return next(err); 
-
-                    exam.qc.all_series = _series.length;
-                    
-                    var exam_series = [];
-                    _series.forEach(function(s){
-                        if (exam_series.indexOf(s.series_desc) == -1) {
-                            exam_series.push(s.series_desc);
-                        }
-                    });
-
-                    console.log(exam_series);
-                    // check if any template series are missing in this exam
-                    var series_missing = [];
-                    template_series.forEach(function(t){
-                        if (exam_series.indexOf(t) == -1){
-                            series_missing.push(t);
-                        }
-                    })
-                    exam.qc.series_missing = series_missing;
-
-                    // count "fail" / "autopass"
-                    if (series.qc1_state == "fail") exam.qc.series_failed++;
-                    if (series.qc1_state == "autopass") exam.qc.series_passed++;
-                    exam.qc.qced_series++;
-
-                    // count images
-                    exam.qc.image_count += series.qc.series_image_count;
-                    exam.qc.images_errored += series.qc.errored_images;
-                    exam.qc.images_clean += series.qc.clean;
-                    exam.qc.images_no_template += series.qc.notemps;
-
-                    exam.qc.template_image_count += series.qc.template_image_count;
-                    
-                    next(); 
-
-                });                      
+                next();
             })
+        },
+
+        function(next) { 
+            if (series.qc1_state == 'no template' && t_exam_id == null) return next(); 
+
+            // create array with all qc-ed series (for this exam)
+            db.Series.find({'exam_id': exam._id}).lean()
+            .select({'_id': 1, 'series_desc': 1})
+            .exec(function(err, _series) {                    
+                if(err) return next(err); 
+
+                //exam.qc.all_series = _series.length;
+                
+                var exam_series = [];
+                _series.forEach(function(s){
+                    if (exam_series.indexOf(s.series_desc) == -1) {
+                        exam_series.push(s.series_desc);
+                    }
+                });
+                exam.qc.all_series = exam_series;
+
+                console.log(exam_series);
+
+                // check if any template series are missing in this exam
+                var series_missing = [];
+                exam.qc.template_series.forEach(function(t){
+                    if (exam_series.indexOf(t) == -1){
+                        series_missing.push(t);
+                    }
+                })
+                exam.qc.series_missing = series_missing;
+
+                // count "fail" / "autopass"
+                console.log(`series.qc1_state is ${series.qc1_state}`);
+                if (series.qc1_state == "fail") exam.qc.series_failed.push(series.series_desc);
+                if (series.qc1_state == "autopass") exam.qc.series_passed.push(series.series_desc);
+                exam.qc.qced_series.push(series.series_desc);
+
+                // count images
+                exam.qc.image_count += series.qc.series_image_count;
+                exam.qc.images_errored += series.qc.errored_images;
+                exam.qc.images_clean += series.qc.clean;
+                exam.qc.images_no_template += series.qc.notemps;
+
+                exam.qc.template_qced_image_count += series.qc.template_image_count;
+                
+                next(); 
+
+            });                      
         },
         
         function(next){
