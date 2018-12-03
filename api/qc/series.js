@@ -279,14 +279,20 @@ function update_exam(series,t_exam_id) {
                 })
                 exam.qc.series_missing = series_missing;
 
-                // count "fail" / "autopass"
-                console.log(`series.qc1_state is ${series.qc1_state}`);
-                if (series.qc1_state == "fail") //exam.qc.series_failed.push(series.series_desc);
-                    exam.qc.series_failed+=1;
-                if (series.qc1_state == "autopass") //exam.qc.series_passed.push(series.series_desc);
-                    exam.qc.series_passed+=1;
-                
-                exam.qc.qced_series += 1; //.push(series.series_desc);
+                // count "fail" / "autopass"                
+                if (series.qc1_state == "fail") {
+                    console.log(`increasing *series_failed* -- state of ${series.series_desc} is ${series.qc1_state}`);
+                    console.log(exam.qc.series_failed);
+                    exam.qc.series_failed++;
+                }
+                if (series.qc1_state == "autopass") {
+                    console.log(`increasing *series_passed* -- state of ${series.series_desc} is ${series.qc1_state}`);
+                    console.log(exam.qc.series_passed);
+
+                    exam.qc.series_passed++;
+                }
+                                
+                exam.qc.qced_series++; 
 
                 // count images
                 exam.qc.image_count += series.qc.series_image_count;
@@ -296,13 +302,14 @@ function update_exam(series,t_exam_id) {
 
                 exam.qc.expected_qced_img_count += series.qc.template_image_count;
                 
+                console.log(exam.qc);
                 next(); 
 
             });                      
         },
         
         function(next){
-            console.log(exam);
+            console.log(exam.qc);
 
             db.Exam.findOneAndUpdate({_id: exam._id},{qc:exam.qc},function(err) {
                 if (err) return next(err);
