@@ -73,10 +73,12 @@ function qc_images(series,next) {
                                 if (err) return next(err);
                                 console.log(images.length + " images have been qc-ed, now aggregating qc for the series "+ primimage.headers.qc_series_desc + " -- " + new Date());
 
-                                qc_funcs.series.qc_series(series,images,template);
+                                qc_funcs.series.qc_series(series,images,template,function(err) {
+                                    if (err) return next(err);
 
-                                logger.info(primimage.headers.qc_series_desc + " Series has been qc-ed")
-                                return next();
+                                    logger.info(primimage.headers.qc_series_desc + " Series has been qc-ed")
+                                    return next();
+                                });
                             })
                         }); 
                     })
@@ -107,7 +109,7 @@ function qc_the_series(images,primimage,primtemplate,cb) {
 }
 
 
-function qc_one_image(image,primimage,primtemplate,next) {
+function qc_one_image(image,primimage,primtemplate,cb) {
     var qc = {
         template_id: primtemplate.template_id,
         date: new Date(),
@@ -161,8 +163,11 @@ function qc_one_image(image,primimage,primtemplate,next) {
 
 
     ], function(err) {
-        if(err) logger.error(err)
-        next();
+        if(err) {
+            logger.error(err);
+            return cb(err);
+        }
+        cb();
     });
 }
 
@@ -174,14 +179,14 @@ function find_template(series, cb) {
         if(err) return cb(err);
         if(!template) {
             logger.info("couldn't find template for series:"+series._id);
-            // qc_funcs.series.update_exam(series.exam_id,false);
-            // return cb(null);
             series.qc1_state = 'no template';
             qc_funcs.series.update_exam(series,null,function(err){
-                return cb(err);
-            })
+                if (err) console.log(err);
+                return cb(null);
+            })               
+        } else {
+            cb(null,template)
         }
-        cb(null,template)
     })
 }
 

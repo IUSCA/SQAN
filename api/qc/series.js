@@ -13,7 +13,7 @@ db.init(function(err) {
     if(err) throw err;
 });
 
-function qc_series(series,images,template) {
+function qc_series(series,images,template,cb) {
 
     console.log("QC-ing series: "+series._id + " -- series description " +series.series_desc);
 
@@ -147,22 +147,34 @@ function qc_series(series,images,template) {
             series.qc = qc;
             events.series(series);
             db.Series.update({_id: series._id}, {qc: qc, qc1_state: series.qc1_state}, function(err) {
-                if (err) console.log(err);
-                //update_exam(series,true);    
-                update_exam(series,template.exam_id, function(err){
-                    if (err) console.log(err);
-                })
+                if (err) {
+                    console.log(err);
+                    return cb(err);
+                }
+                update_exam(series,template.exam_id,cb); 
+
             });  
-        })   
+        })      
     }
 }
 
 
-function update_exam(series,t_exam_id,next) {
+function update_exam(series,t_exam_id,cb) {
    
     var exam = {};
+    var template_series = [];
+    var exam_series = [];
 
-    async.series([
+    var series_failed = 0;
+    var series_passed = 0;
+    var qced_series = 0;
+    var image_count = 0;
+    var images_errored = 0;
+    var images_clean = 0;
+    var images_no_template = 0;
+    var fields_errored = 0;
+
+    async.series([        
 
         function(next) {
 
@@ -178,16 +190,16 @@ function update_exam(series,t_exam_id,next) {
                     var qc = {
                         qced_series:0,
                         all_series: 0,
-                        template_series:0,
+                        template_series: 0, 
                         series_passed: 0,
                         series_failed: 0,
                         series_missing: [],
                         series_no_template: [],
-                        template_image_count:0,
                         image_count:0,
                         images_errored: 0,
                         images_clean:0,
-                        images_no_template:0                
+                        images_no_template:0,
+                        fields_errored:0                
                     }
                     db.Exam.findOneAndUpdate({_id: s_exam._id},{qc:qc},{upsert:false,'new': true}, function(err,ns_exam){
                         if (err) return next(err);
@@ -229,8 +241,7 @@ function update_exam(series,t_exam_id,next) {
 
                 exam.qc.template_series = _template.length;
 
-                // create array with all template series descriptions (for this template exam)
-                var template_series = [];
+                // create array with all template series descriptions (for this template exam)                
                 _template.forEach(function(t){
                     if (template_series.indexOf(t.series_desc) == -1) 
                         template_series.push(t.series_desc);
@@ -244,70 +255,118 @@ function update_exam(series,t_exam_id,next) {
                     exam.qc.series_no_template.splice(notemp_indx,1);
                 }
 
-                // create array with all qc-ed series (for this exam)
-                db.Series.find({'exam_id': exam._id}).lean()
-                .select({'_id': 1, 'series_desc': 1})
-                .exec(function(err, _series) {                    
-                    if(err) return next(err); 
-
-                    exam.qc.all_series = _series.length;
-                    
-                    var exam_series = [];
-                    _series.forEach(function(s){
-                        if (exam_series.indexOf(s.series_desc) == -1) {
-                            exam_series.push(s.series_desc);
-                        }
-                    });
-
-                    console.log(exam_series);
-                    // check if any template series are missing in this exam
-                    var series_missing = [];
-                    template_series.forEach(function(t){
-                        if (exam_series.indexOf(t) == -1){
-                            series_missing.push(t);
-                        }
-                    })
-                    exam.qc.series_missing = series_missing;
-
-                    // count "fail" / "autopass"
-                    if (series.qc1_state == "fail") exam.qc.series_failed++;
-                    if (series.qc1_state == "autopass") exam.qc.series_passed++;
-                    exam.qc.qced_series++;
-
-                    // count images
-                    exam.qc.image_count += series.qc.series_image_count;
-                    exam.qc.images_errored += series.qc.errored_images;
-                    exam.qc.images_clean += series.qc.clean;
-                    exam.qc.images_no_template += series.qc.notemps;
-
-                    exam.qc.template_image_count += series.qc.template_image_count;
-                    
-                    next(); 
-
-                });                      
+                next();
             })
+        },
+
+        function(next) { 
+
+            if (series.qc1_state == 'no template' && t_exam_id == null) return next(); 
+
+            // create array with all qc-ed series (for this exam)
+            db.Series.find({'exam_id': exam._id}).lean()
+            //.select({'_id': 1, 'series_desc': 1, })
+            .exec(function(err, _series) {                    
+                if(err) return next(err); 
+
+                exam.qc.all_series = _series.length;
+                                
+                _series.forEach(function(s){
+                    if (exam_series.indexOf(s.series_desc) == -1) {
+                        exam_series.push(s.series_desc);
+                    }
+                    console.log(typeof s.qc === 'object');
+                    console.log(s.qc !== null);
+                    if (typeof s.qc === 'object' && s.qc !== null) {
+                        console.log('Only if series is already qc-ed')
+                        if (series.qc1_state == "fail") {
+                            series_failed++;
+                        }
+                        if (series.qc1_state == "autopass") {
+                            series_passed++;
+                        }
+                                        
+                        qced_series++; 
+
+                        // count images
+                        image_count += series.qc.series_image_count;
+                        images_errored += series.qc.errored_images;
+                        images_clean += series.qc.clean;
+                        images_no_template += series.qc.notemps;
+
+                        fields_errored += series.qc.series_fields_errored;
+
+                    }
+                });
+
+                console.log(exam_series);
+
+                // check if any template series are missing in this exam
+                var series_missing = [];
+                template_series.forEach(function(t){
+                    if (exam_series.indexOf(t) == -1){
+                        series_missing.push(t);
+                    }
+                })
+                exam.qc.series_missing = series_missing;
+
+                // // count "fail" / "autopass"                
+                // if (series.qc1_state == "fail") {
+                //     console.log(`increasing *series_failed* -- state of ${series.series_desc} is ${series.qc1_state}`);
+                //     console.log(`previous *series_failed* from ${exam.qc.series_failed}`);                                       
+                //     exam.qc.series_failed++;
+                //     console.log(`updated *series_failed* from ${exam.qc.series_failed}`);
+                // }
+                // if (series.qc1_state == "autopass") {
+                //     console.log(`increasing *series_passed* -- state of ${series.series_desc} is ${series.qc1_state}`);
+                //     console.log(`previous *series_passed* from ${exam.qc.series_passed}`); 
+                //     exam.qc.series_passed++;
+                //     console.log(`updated *series_passed* from ${exam.qc.series_passed}`);
+
+                // }
+                                
+                // exam.qc.qced_series++; 
+
+                // // count images
+                // exam.qc.image_count += series.qc.series_image_count;
+                // exam.qc.images_errored += series.qc.errored_images;
+                // exam.qc.images_clean += series.qc.clean;
+                // exam.qc.images_no_template += series.qc.notemps;
+
+                // exam.qc.fields_errored += series.qc.series_fields_errored;
+                
+                next(); 
+
+            });                      
         },
         
         function(next){
-            //console.log(exam)
-            set_exam_qc(exam.qc,exam._id,function(err) {
-                if(err) return next(err);
-                next();
+            console.log(exam.qc);
+            
+            if (series.qc1_state != 'no template' && t_exam_id != null) {
+                exam.qc.series_failed = series_failed;
+                exam.qc.series_passed = series_passed;
+                exam.qc.qced_series = qced_series;
+                exam.qc.image_count = image_count;
+                exam.qc.images_errored = images_errored;
+                exam.qc.images_clean = images_clean;
+                exam.qc.images_no_template = images_no_template;
+                exam.qc.fields_errored = fields_errored;
+            }
+
+            db.Exam.findOneAndUpdate({_id: exam._id},{qc:exam.qc},function(err) {
+                if (err) return next(err);
+                return next();
             })  
         }
 
     ], function(err) {
-        if(err) console.log(err)
-        next();
-    });
-}
-
-
-function set_exam_qc(qc,exam_id, cb){
-    db.Exam.findOneAndUpdate({_id: exam_id},{qc:qc},function(err) {
-        if (err) return cb(err);
+        if(err) {
+            console.log(err);
+            cb(err);
+        } 
         cb();
-    }) 
+    });
 }
 
 
