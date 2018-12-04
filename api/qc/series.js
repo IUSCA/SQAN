@@ -165,7 +165,16 @@ function update_exam(series,t_exam_id,cb) {
     var template_series = [];
     var exam_series = [];
 
-    async.series([
+    var series_failed = 0;
+    var series_passed = 0;
+    var qced_series = 0;
+    var image_count = 0;
+    var images_errored = 0;
+    var images_clean = 0;
+    var images_no_template = 0;
+    var fields_errored = 0;
+
+    async.series([        
 
         function(next) {
 
@@ -256,7 +265,7 @@ function update_exam(series,t_exam_id,cb) {
 
             // create array with all qc-ed series (for this exam)
             db.Series.find({'exam_id': exam._id}).lean()
-            .select({'_id': 1, 'series_desc': 1})
+            //.select({'_id': 1, 'series_desc': 1, })
             .exec(function(err, _series) {                    
                 if(err) return next(err); 
 
@@ -266,8 +275,29 @@ function update_exam(series,t_exam_id,cb) {
                     if (exam_series.indexOf(s.series_desc) == -1) {
                         exam_series.push(s.series_desc);
                     }
+                    console.log(typeof s.qc === 'object');
+                    console.log(s.qc !== null);
+                    if (typeof s.qc === 'object' && s.qc !== null) {
+                        console.log('Only if series is already qc-ed')
+                        if (series.qc1_state == "fail") {
+                            series_failed++;
+                        }
+                        if (series.qc1_state == "autopass") {
+                            series_passed++;
+                        }
+                                        
+                        qced_series++; 
+
+                        // count images
+                        image_count += series.qc.series_image_count;
+                        images_errored += series.qc.errored_images;
+                        images_clean += series.qc.clean;
+                        images_no_template += series.qc.notemps;
+
+                        fields_errored += series.qc.series_fields_errored;
+
+                    }
                 });
-                //exam.qc.all_series = exam_series.length;
 
                 console.log(exam_series);
 
@@ -280,30 +310,30 @@ function update_exam(series,t_exam_id,cb) {
                 })
                 exam.qc.series_missing = series_missing;
 
-                // count "fail" / "autopass"                
-                if (series.qc1_state == "fail") {
-                    console.log(`increasing *series_failed* -- state of ${series.series_desc} is ${series.qc1_state}`);
-                    console.log(`previous *series_failed* from ${exam.qc.series_failed}`);                                       
-                    exam.qc.series_failed++;
-                    console.log(`updated *series_failed* from ${exam.qc.series_failed}`);
-                }
-                if (series.qc1_state == "autopass") {
-                    console.log(`increasing *series_passed* -- state of ${series.series_desc} is ${series.qc1_state}`);
-                    console.log(`previous *series_passed* from ${exam.qc.series_passed}`); 
-                    exam.qc.series_passed++;
-                    console.log(`updated *series_passed* from ${exam.qc.series_passed}`);
+                // // count "fail" / "autopass"                
+                // if (series.qc1_state == "fail") {
+                //     console.log(`increasing *series_failed* -- state of ${series.series_desc} is ${series.qc1_state}`);
+                //     console.log(`previous *series_failed* from ${exam.qc.series_failed}`);                                       
+                //     exam.qc.series_failed++;
+                //     console.log(`updated *series_failed* from ${exam.qc.series_failed}`);
+                // }
+                // if (series.qc1_state == "autopass") {
+                //     console.log(`increasing *series_passed* -- state of ${series.series_desc} is ${series.qc1_state}`);
+                //     console.log(`previous *series_passed* from ${exam.qc.series_passed}`); 
+                //     exam.qc.series_passed++;
+                //     console.log(`updated *series_passed* from ${exam.qc.series_passed}`);
 
-                }
+                // }
                                 
-                exam.qc.qced_series++; 
+                // exam.qc.qced_series++; 
 
-                // count images
-                exam.qc.image_count += series.qc.series_image_count;
-                exam.qc.images_errored += series.qc.errored_images;
-                exam.qc.images_clean += series.qc.clean;
-                exam.qc.images_no_template += series.qc.notemps;
+                // // count images
+                // exam.qc.image_count += series.qc.series_image_count;
+                // exam.qc.images_errored += series.qc.errored_images;
+                // exam.qc.images_clean += series.qc.clean;
+                // exam.qc.images_no_template += series.qc.notemps;
 
-                exam.qc.fields_errored += series.qc.series_fields_errored;
+                // exam.qc.fields_errored += series.qc.series_fields_errored;
                 
                 next(); 
 
@@ -312,6 +342,17 @@ function update_exam(series,t_exam_id,cb) {
         
         function(next){
             console.log(exam.qc);
+            
+            if (series.qc1_state != 'no template' && t_exam_id != null) {
+                exam.qc.series_failed = series_failed;
+                exam.qc.series_passed = series_passed;
+                exam.qc.qced_series = qced_series;
+                exam.qc.image_count = image_count;
+                exam.qc.images_errored = images_errored;
+                exam.qc.images_clean = images_clean;
+                exam.qc.images_no_template = images_no_template;
+                exam.qc.fields_errored = fields_errored;
+            }
 
             db.Exam.findOneAndUpdate({_id: exam._id},{qc:exam.qc},function(err) {
                 if (err) return next(err);
