@@ -130,7 +130,7 @@ function incoming(h, msg_h, info, ack) {
                         var path2tar = dir1+".tar";
                         fs.utimes(path2tar,new Date(),new Date(),function(err) {
                             if(err) return next(err);
-                            qc.series.reset_and_deprecate(h,function(err) {
+                            qc.series.reset_and_deprecate(repeated_header.series_id,function(err) {
                                 if (err) return next(err);
                                 return next()
                             })
@@ -243,14 +243,12 @@ function incoming(h, msg_h, info, ack) {
         //make sure we know about this exam 
         function(next) {
             db.Exam.findOneAndUpdate({
-                StudyInstanceUID: h.StudyInstanceUID, 
+                research_id: research._id, 
+                subject: (h.qc_istemplate?null:h.qc_subject),
+                StudyTimestamp: h.qc_StudyTimestamp
             },
             {
-                //$addToSet: {series:{series_desc:h.qc_series_desc, SeriesNumber: h.SeriesNumber,status:null}},
-                subject: (h.qc_istemplate?null:h.qc_subject),
-                research_id: research._id,
-                istemplate:h.qc_istemplate,
-                StudyTimestamp: h.qc_StudyTimestamp 
+                istemplate:h.qc_istemplate,                 
             },
             {upsert:true, 'new': true}, function(err, _exam) {
                 if(err) return next(err);

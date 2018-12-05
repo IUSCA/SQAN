@@ -403,25 +403,20 @@ exports.isExcluded = function(modality, series_desc) {
 }
 
 
-function reset_and_deprecate(header,cb) {
+function reset_and_deprecate(series_id,cb) {
 
-    db.Exam.findOne({StudyInstanceUID: header.StudyInstanceUID},function(err,exam){
-        if (err) return next(err);
-        // Un-qc the series
-        db.Series.findOneAndUpdate({
-            exam_id: exam._id,
-            series_desc: header.qc_series_desc,
-            SeriesNumber: header.SeriesNumber,
-        }, {$unset:{qc:1},qc1_state:"re-qcing" }, {'new': true}, 
-        function(err, series) {   
+    // Un-qc the series
+    db.Series.findOneAndUpdate({
+        _id: series_id,
+    }, {$unset:{qc:1},qc1_state:"re-qcing" }, {'new': true}, 
+    function(err, series) {   
+        if(err) return cb(err);
+        // deprecate all images in that series
+        db.Image.deleteMany({
+            series_id: series._id,
+        }, function(err) {
             if(err) return cb(err);
-            // deprecate all images in that series
-            db.Image.deleteMany({
-                series_id: series._id,
-            }, function(err) {
-                if(err) return cb(err);
-                return cb();
-            })
+            return cb();
         })
     })
 }
