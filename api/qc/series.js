@@ -214,7 +214,7 @@ function update_exam(series,t_exam_id,cb) {
         function(next){     
             // if there is no template for this series description, then add it to the series_no_template array       
             if (series.qc1_state == 'no template' && t_exam_id == null) {
-                console.log('setting no_template for subject '+ exam.subject + ' and series description '+series.series_desc)
+                //console.log('setting no_template for subject '+ exam.subject + ' and series description '+series.series_desc)
                 if (exam.qc.series_no_template.indexOf(series.series_desc) == -1) {
                     exam.qc.series_no_template.push(series.series_desc);
                 }
@@ -222,7 +222,6 @@ function update_exam(series,t_exam_id,cb) {
                 // count series (for this exam)
                 db.Series.find({'exam_id': exam._id}).count(function(err,ns) {                    
                     if(err) return next(err); 
-                    console.log('counting series after registering no-template')
                     exam.qc.all_series = ns;
                     next();
                 });
@@ -249,9 +248,7 @@ function update_exam(series,t_exam_id,cb) {
 
                 // check if the current series description is in the series_no_template array
                 var notemp_indx = exam.qc.series_no_template.indexOf(series.series_desc);
-                console.log('notemp_indx is '+ notemp_indx)
                 if ( notemp_indx != -1) {
-                    console.log(`removing ${series.series_desc} from notemp_index ${notemp_indx}`)
                     exam.qc.series_no_template.splice(notemp_indx,1);
                 }
 
@@ -275,10 +272,7 @@ function update_exam(series,t_exam_id,cb) {
                     if (exam_series.indexOf(s.series_desc) == -1) {
                         exam_series.push(s.series_desc);
                     }
-                    console.log(typeof s.qc === 'object');
-                    console.log(s.qc !== null);
                     if (typeof s.qc === 'object' && s.qc !== null) {
-                        console.log('Only if series is already qc-ed')
                         if (series.qc1_state == "fail") {
                             series_failed++;
                         }
@@ -309,31 +303,6 @@ function update_exam(series,t_exam_id,cb) {
                     }
                 })
                 exam.qc.series_missing = series_missing;
-
-                // // count "fail" / "autopass"                
-                // if (series.qc1_state == "fail") {
-                //     console.log(`increasing *series_failed* -- state of ${series.series_desc} is ${series.qc1_state}`);
-                //     console.log(`previous *series_failed* from ${exam.qc.series_failed}`);                                       
-                //     exam.qc.series_failed++;
-                //     console.log(`updated *series_failed* from ${exam.qc.series_failed}`);
-                // }
-                // if (series.qc1_state == "autopass") {
-                //     console.log(`increasing *series_passed* -- state of ${series.series_desc} is ${series.qc1_state}`);
-                //     console.log(`previous *series_passed* from ${exam.qc.series_passed}`); 
-                //     exam.qc.series_passed++;
-                //     console.log(`updated *series_passed* from ${exam.qc.series_passed}`);
-
-                // }
-                                
-                // exam.qc.qced_series++; 
-
-                // // count images
-                // exam.qc.image_count += series.qc.series_image_count;
-                // exam.qc.images_errored += series.qc.errored_images;
-                // exam.qc.images_clean += series.qc.clean;
-                // exam.qc.images_no_template += series.qc.notemps;
-
-                // exam.qc.fields_errored += series.qc.series_fields_errored;
                 
                 next(); 
 
@@ -404,7 +373,7 @@ exports.isExcluded = function(modality, series_desc) {
 
 
 function reset_and_deprecate(series_id,cb) {
-
+    console.log("deprecating series "+series_id)
     // Un-qc the series
     db.Series.findOneAndUpdate({
         _id: series_id,
