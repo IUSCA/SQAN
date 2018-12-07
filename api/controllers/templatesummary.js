@@ -58,7 +58,7 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(r
     var template_instance = {
         date: null,
         exam_id: null,
-        details: [],
+        series: [],
         usedInQC:0
     };
 
@@ -88,9 +88,9 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(r
                             usedInQC: usedInQC
                         };
 
-                        template_instance.details.push(tobj);
+                        template_instance.series.push(tobj);
                         
-                        if(template_instance.details.length == templates.length) {
+                        if(template_instance.series.length == templates.length) {
                             res.json(template_instance);
                         }
                     })
