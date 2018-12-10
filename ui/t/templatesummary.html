@@ -3,26 +3,12 @@
     .sel { background-color: #bce65e; }
     .desc { background-color: #d1e6ac; }        
 
+[disabled] {
+  pointer-events: none;
+}
 
-  .full button span {
-    background-color: limegreen;
-    border-radius: 32px;
-    color: black;
-  }
-  .partially button span {
-    background-color: orange;
-    border-radius: 32px;
-    color: black;
-  }
-    /* button {
-    background-color: Transparent;
-    background-repeat:no-repeat;
-    border: none;
-    cursor:pointer;
-    overflow: hidden;
-    outline:none;
-    } */
 </style>
+
 
 <div class="container">
     <div class="row">
@@ -50,71 +36,82 @@
                                 <i ng-hide="showDates!=rowNumber" class="fa fa-minus"></i>
                             </a></td>                
                         </tr>
-                        <tr ng-repeat-end ng-if="showDates==rowNumber" ng-repeat="timestamp in templatebytimestamp">
+                        <tr ng-repeat-end ng-if="showDates==rowNumber">     
                             <td colspan="6">
-                                <div class="card">
-                                    <div class="card-header lighten-1"> 
-                                        <div class="col-sm-7 col-md-7">
-                                            <h5 >
-                                                <span><i class="far fa-clock" aria-hidden="true"></i></span>
-                                                <span>Timestamp:</span>  
-                                                <span>{{timestamp.date | date:'yyyy-MM-dd HH:mm:ss' }}</span>
-                                            </h5>
-                                            <h5>
-                                                <span><i class="fa fa-files-o" aria-hidden="true"></i></span>
-                                                <span>Number of Series: </span>
-                                                <span>{{timestamp.series.length}}</span>
-                                            </h5>
-                                            <h5>
-                                                <span><i class="far fa-check-square" aria-hidden="true"></i></span>
-                                                <span>Series used for QC: </span>
-                                                <span>{{timestamp.usedInQC}}</span>
-                                            </h5>
-                                        </div>
-                                        <div class="col-sm-4 col-md-4">
-                                            <span>
-                                                <button class="uib-btn-primary" ng-disabled="timestamp.usedInQC > 0" data-placement="left" uib-tooltip="Template is used for QC and cannot be deleted" ng-click="deleteTemplate(timestamp)">
-                                                    Delete Template</button> 
-                                                <button class="btn btn-success" ng-disabled="series2delete.length < 1" ng-click="getSelectedSeries(timestamp)">
-                                                        Delete {{series2delete.length}} Selected Series</button>
-                                            </span>
-                                            <span><h5>
-                                                    <button type="button" class="btn btn-info" ng-show="indexShowSeries!=$index" ng-click="getTemplateSeries(timestamp,$index)">
-                                                        Show Series</button>
-                                                    <button ng-show="indexShowSeries==$index" ng-click="getTemplateSeries(timestamp,$index)">
-                                                        Hide Series</button>
-                                            </h5></span> 
-                                            <span>
-                                                <button type="button" class="btn btn-sm btn-info" ng-click="today()">Today</button>
-                                                <button type="button" class="btn btn-sm btn-default" ng-click="setDate(2009, 7, 24)">2009-08-24</button>
-                                                <button type="button" class="btn btn-sm btn-danger" ng-click="clear()">Clear</button>
-                                                <button type="button" class="btn btn-sm btn-default" ng-click="toggleMin()" uib-tooltip="After today restriction">Min date</button>
-                                            </span>
-                                            <span>
-                                                <uib-tabset active="activeJustified" justified="true">
-                                                    <uib-tab index="0" heading="Justified">Justified content</uib-tab>
-                                                    <uib-tab index="1" heading="SJ">Short Labeled Justified content</uib-tab>
-                                                    <uib-tab index="2" heading="Long Justified">Long Labeled Justified content</uib-tab>
-                                                  </uib-tabset>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="card-body" ng-show="indexShowSeries==$index">
-                                        <table class="table table-striped table-hover info" width="80%" cellspacing="0">
-                                            <tr style="background-color:#e2eef5">
-                                                <th class="text-center" ng-repeat="dd in tseriesTable track by $index">{{dd}}</th>
-                                                <th><i class="fa fa-trash fa-lg" aria-hidden="true"></i></th>
-                                                <tr ng-repeat-end style="background-color:#f2f7fa" ng-repeat="dd in templateSeries.series | orderBy: 'SeriesNumber'">              
-                                                    <td class="text-center">{{dd.SeriesNumber}}</td>
-                                                    <td class="text-center" style="word-wrap: break-all;">{{dd.series_desc}}</td>
-                                                    <td class="text-center">{{dd.usedInQC}}</td>
-                                                    <td class="text-center">{{dd.imageCount}}</td>  
-                                                    <td><input type="checkbox" ng-disabled="dd.usedInQC > 0" ng-click="deleteThisSeries(dd)"></td>                                       
-                                                </tr>
-                                            </tr>                                               
-                                        </table>
-                                    </div>
-                                </div>                                    
+                                <uib-tabset active="activeJustified" justified="true">
+                                    <uib-tab ng-repeat="timestamp in templatebytimestamp" index="$index" heading="{{timestamp.date | date:'yyyy-MM-dd HH:mm:ss' }}">
+                                            
+                                        <div class="card">
+
+                                            <div class="card-header lighten-1"> 
+                                                <div class="col-sm-6 col-md-6">
+                                                    <br>
+                                                        <div class="panel panel-default">
+                                                            <div class="panel-heading"> 
+                                                                Template Information
+                                                            </div>
+                                                            <div class="panel-body">
+                                                                <h5 >
+                                                                    <span><i class="far fa-clock" aria-hidden="true"></i></span>
+                                                                    <span>Timestamp:</span>  
+                                                                    <span>{{timestamp.date | date:'yyyy-MM-dd HH:mm:ss' }}</span>
+                                                                </h5>
+                                                                <h5>
+                                                                    <span><i class="fa fa-files-o" aria-hidden="true"></i></span>
+                                                                    <span>Number of Series: </span>
+                                                                    <span>{{timestamp.series.length}}</span>
+                                                                </h5>
+                                                                <h5>
+                                                                    <span><i class="far fa-check-square" aria-hidden="true"></i></span>
+                                                                    <span>Series used for QC: </span>
+                                                                    <span>{{timestamp.usedInQC}}</span>
+                                                                </h5>
+                                                            </div>
+                                                        </div>
+                                                    </br>
+                                                </div>
+
+                                                <div class="col-sm-5 col-md-5">
+                                                    <br>
+                                                    <h5>                                                        
+                                                        <div uib-tooltip="Templates currently being used for QC cannot be deleted">
+                                                            <button type="button" class="btn btn-danger" ng-disabled="timestamp.usedInQC > 0">Delete Template Instance</button>
+                                                        </div>
+                                                    </h5>
+                                                    <h5>
+                                                        <div uib-tooltip="Only selected template series will be deleted">
+                                                            <button type="button" class="btn btn-danger" ng-disabled="indexShowSeries!=$index || series2delete.length < 1" ng-click="getSelectedSeries(timestamp)">Delete {{series2delete.length}} Selected Series</button>
+                                                        </div>
+                                                    </h5>
+                                                    <h5>
+                                                        <button type="button" class="btn btn-info" uib-tooltip="Show table listing all series in this template" ng-show="indexShowSeries!=$index" ng-click="getTemplateSeries(timestamp,$index)">
+                                                            Show Series</button>
+                                                        <button type="button" class="btn btn-info" uib-tooltip="Hide the table" ng-show="indexShowSeries==$index" ng-click="getTemplateSeries(timestamp,$index)">
+                                                            Hide Series</button>
+                                                    </h5>                                                        
+                                                    </br>                                                                                                                    
+                                                </div>
+                                            </div>
+
+                                            <div class="card-body" ng-show="indexShowSeries==$index">
+                                                <table class="table table-striped table-hover info" width="80%" cellspacing="0">
+                                                    <tr style="background-color:#e2eef5">
+                                                        <th class="text-center" ng-repeat="dd in tseriesTable track by $index">{{dd}}</th>
+                                                        <th><i class="fa fa-trash fa-lg" aria-hidden="true"></i></th>
+                                                        <tr ng-repeat-end style="background-color:#f2f7fa" ng-repeat="dd in templateSeries.series | orderBy: 'SeriesNumber'">              
+                                                            <td class="text-center">{{dd.SeriesNumber}}</td>
+                                                            <td class="text-center" style="word-wrap: break-all;">{{dd.series_desc}}</td>
+                                                            <td class="text-center">{{dd.usedInQC}}</td>
+                                                            <td class="text-center">{{dd.imageCount}}</td>  
+                                                            <td><input type="checkbox" ng-disabled="dd.usedInQC > 0" ng-click="deleteThisSeries(dd)"></td>                                       
+                                                        </tr>
+                                                    </tr>                                               
+                                                </table>
+                                            </div>
+
+                                        </div>  
+                                    </uib-tab>
+                                </uib-tabset>                                                                  
                             </td>
                         </tr>
                     </tbody>

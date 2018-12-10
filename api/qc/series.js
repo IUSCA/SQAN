@@ -293,7 +293,7 @@ function update_exam(series,t_exam_id,cb) {
                     }
                 });
 
-                console.log(exam_series);
+                //console.log(exam_series);
 
                 // check if any template series are missing in this exam
                 var series_missing = [];
@@ -310,7 +310,7 @@ function update_exam(series,t_exam_id,cb) {
         },
         
         function(next){
-            console.log(exam.qc);
+            //console.log(exam.qc);
             
             if (series.qc1_state != 'no template' && t_exam_id != null) {
                 exam.qc.series_failed = series_failed;
