@@ -13,6 +13,8 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
         fieldname: $scope.fieldnames[0]        
     };
 
+    $scope.currentResearch = null;
+
     $scope.getTemplateSummary = function() {
         $http.get(appconf.api+'/templatesummary/istemplate').then(function(res) {
             $scope.templates = res.data;
@@ -33,7 +35,10 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
         $scope.indexShowSeries=-1;
 
         if($scope.rowNumber!==index){
-                        
+               
+            $scope.currentResearch = research;
+            console.log($scope.currentResearch);
+
             $scope.templatebytimestamp = [];
             $scope.templatesUsed = [];
 
@@ -49,7 +54,10 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
 
             console.log($scope.templatebytimestamp)
               
-        } else {$scope.rowNumber=-1};      
+        } else {
+            $scope.rowNumber=-1;
+            $scope.currentResearch = null;
+        };      
         console.log('rowNumber is ' + $scope.rowNumber);         
     }   
 
@@ -76,14 +84,60 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
         if (indx == -1) $scope.series2delete.push(templateSeries.template_id);
         if (indx != -1) $scope.series2delete.splice(indx,1);
         console.log($scope.series2delete);
-
-
-        // if (templateSeries.usedInQC == 0) {
-
-
-        // } else if (templateSeries.usedInQC > 0) {
-
-        // }
     }
+
+
+    $scope.deleteSelectedSeries = function(timestamp,index) {
+        console.log(timestamp);
+        console.log($scope.series2delete)
+
+
+        $scope.series2delete.forEach(function(ts,ind1){
+            $http.get(appconf.api+'/templatesummary/deleteselected/'+ts,{}).then(function(res) {
+                console.log(res.data);
+                timestamp.series.forEach(function(ss,ind2){
+                    if (ss.template_id == ts){
+                        $scope.series2delete.splice(ind1,1);
+                        timestamp.series.splice(ind2,1);
+                        return;
+                    }
+                }); 
+            })
+            if ($scope.series2delete.length == 0) {
+                $scope.indexShowSeries = -1;
+                $scope.getTemplateSeries(timestamp,index);
+            }
+        }) 
+        // var ind2splice = [];
+        // $scope.series2delete.forEach(function(ts){
+        //     $http.get(appconf.api+'/templatesummary/deleteselected/'+ts,{}).then(function(res) {
+        //         console.log(res.data);
+        //         timestamp.series.forEach(function(ss,ind){
+        //             if (ss.template_id == ts){
+        //                 ind2splice.push(ind);
+        //                 timestamp.series.splice(ind,1);
+        //                 return;
+        //             }
+        //         }); 
+        //     })
+        //     if (ind2splice.length == $scope.series2delete.length) {
+        //         $scope.ind2splice = [];
+        //         $scope.indexShowSeries = -1;
+        //         $scope.getTemplateSeries(timestamp,index);
+        //     }
+        // })        
+    }
+
+
+    $scope.deleteTemplate = function(texam_id) {
+        console.log(texam_id);
+        // $http.get(appconf.api+'/templatesummary/deleteall/'+texam_id,{}).then(function(res) {
+        //     console.log(res.data) 
+        // })
+    }
+
+
+
+
 
 });

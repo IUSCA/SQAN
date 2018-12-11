@@ -5,12 +5,45 @@ var express = require('express');
 var router = express.Router();
 var winston = require('winston');
 var jwt = require('express-jwt');
+var fs = require('fs');
+var mkdirp = require('mkdirp');
+
 
 //mine
 var config = require('../../config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
-var mongoose = require('mongoose')
+var mongoose = require('mongoose');
+
+
+// move headers from dicom-raw to dicom-deleted
+function moveDeletedHeaders(h,cb){
+
+    logger.info("Moving headers from dicom-raw into dicom-deleted");
+    var origin_dir = config.cleaner.raw_headers;
+    var dest_dir = config.cleaner.deleted_headers;
+    var path = h.headers.qc_iibisid+"/"+h.headers.qc_subject+"/"+h.headers.StudyInstanceUID+"/"+h.headers.qc_series_desc;          
+    var now = new Date();
+    var deleted_dirname = dest_dir+"/"+path+"/" + now.getFullYear() + "-"+ now.getMonth() + "-" + now.getDate()+ "-"+ now.getHours() + "-" + now.getMinutes()
+
+    fs.exists(deleted_dirname, function (exists) {
+        console.log(exists)
+        console.log(deleted_dirname)
+        if(!exists) {
+            console.log("creating directory to migrate headers")
+            mkdirp.sync(deleted_dirname);
+        }
+        fs.rename(origin_dir+"/"+path+"/",deleted_dirname+"/", function(err) {
+            if (err) return cb(err);
+            fs.unlink(origin_dir+"/"+path+".tar",function(err){
+                if (err) return cb(err);
+                return cb();
+            })
+        });
+    });
+}
+
+
 
 router.get('/istemplate', jwt({secret: config.express.jwt.pub}),function(req,res,next) {
     db.Exam.aggregate([
@@ -99,6 +132,109 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(r
         })                
      });
 });
+
+
+
+// delete a template series
+router.get('/deleteselected/:template_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    
+    db.Template.findById(new mongoose.Types.ObjectId(req.params.template_id),function(err,template){
+        if (err) return next(err);
+
+            db.TemplateHeader.findOne({"template_id":template._id,primary_image:null}).exec(function(err,h){
+                if(err) return next(err);
+                // Move files from dicom-raw to dicom-deleted -- this way, if we have to reconstruct the db, we don't re-post deleted files
+                 moveDeletedHeaders(h,function(err){
+                     if (err) return next(err);
+                     db.TemplateHeader.deleteMany({"template_id":template._id},function(err) {
+                        if (err) return next(err);
+    
+                        db.Template.deleteOne({_id:template._id},function(err){
+                            if (err) return next(err);
+                            res.send("template deleted successfully!! -- id: "+template._id+ " series_desc: "+template.series_desc)
+                        })
+                    }) 
+                 })
+
+                // var origin_dir = config.cleaner.raw_headers;
+                // var dest_dir = config.cleaner.deleted_headers;
+                // var path = h.headers.qc_iibisid+"/"+h.headers.qc_subject+"/"+h.headers.StudyInstanceUID+"/"+h.headers.qc_series_desc;          
+                // var now = new Date();
+                // var deleted_dirname = dest_dir+"/"+path+"/" + now.getFullYear() + "-"+ now.getMonth() + "-" + now.getDate()+ "-"+ now.getHours() + "-" + now.getMinutes()
+
+                // fs.exists(deleted_dirname, function (exists) {
+                //     console.log(exists)
+                //     console.log(deleted_dirname)
+                //     if(!exists) {
+                //         console.log("creating directory to migrate headers")
+                //         mkdirp.sync(deleted_dirname);
+                //     }
+                //     fs.rename(origin_dir+"/"+path+"/",deleted_dirname+"/", function(err) {
+                //         if (err) return next(err);
+                //         fs.unlink(origin_dir+"/"+path+".tar",function(err){
+                //             if (err) return next(err);
+                //         })
+                //     });
+                // });
+                
+                // db.TemplateHeader.deleteMany({"template_id":template._id},function(err) {
+                //     if (err) return next(err);
+
+                //     db.Template.deleteOne({_id:template._id},function(err){
+                //         if (err) return next(err);
+                //         res.send("template deleted successfully!! -- id: "+template._id+ " series_desc: "+template.series_desc)
+                //     })
+                // })                
+            })
+        })                         
+})
+
+
+
+// delete a template exam
+router.get('/deleteall/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    
+    db.Template.find({"exam_id":new mongoose.Types.ObjectId(req.params.exam_id)},function(err,templates){
+        if (err) return next(err);
+
+        templates.forEach(function(t){
+
+            db.TemplateHeader.findOne({"template_id":t._id,primary_image:null}).exec(function(err,h){
+                if(err) return next(err);
+
+                // Move files from dicom-raw to dicom-deleted -- this way, if we have to reconstruct the db, we don't re-post deleted files
+                logger.info("Moving headers from dicom-raw into dicom-deleted"); 
+
+                var origin_dir = config.cleaner.raw_headers;
+                var dest_dir = config.cleaner.deleted_headers;
+                var path = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;          
+
+                fs.exists(dest_dir+"/"+path, function (exists) {
+                    if(!exists) mkdirp.sync(dest_dir+"/"+path);
+                    fs.rename(origin_dir+"/"+path,dest_dir+"/"+path, function(err) {
+                        if (err) return next(err);
+                        fs.unlink(origin_dir+"/"+path+".tar",function(err){
+                            if (err) return next(err);
+                        })
+                    });
+                });
+
+                db.TemplateHeader.deleteMany({"template_id":t._id},function(err) {
+                    if (err) return next(err);
+
+                    db.Template.deleteOne({_id:t._id},function(err){
+                        if (err) return next(err);
+                    })
+                })                
+            })
+            db.Exam.deleteOne({_id:new mongoose.Types.ObjectId(req.params.exam_id)},function(err){
+                if (err) return next(err);
+                res.send("template deleted")
+            })
+        })                         
+    })
+})
+
 
 
 module.exports = router;

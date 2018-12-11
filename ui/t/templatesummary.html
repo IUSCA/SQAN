@@ -7,6 +7,15 @@
   pointer-events: none;
 }
 
+button {
+background-color: Transparent;
+background-repeat:no-repeat;
+border: none;
+cursor:pointer;
+overflow: hidden;
+outline:none;
+}
+
 </style>
 
 
@@ -73,22 +82,26 @@
 
                                                 <div class="col-sm-5 col-md-5">
                                                     <br>
-                                                    <h5>                                                        
-                                                        <div uib-tooltip="Templates currently being used for QC cannot be deleted">
-                                                            <button type="button" class="btn btn-danger" ng-disabled="timestamp.usedInQC > 0">Delete Template Instance</button>
-                                                        </div>
-                                                    </h5>
-                                                    <h5>
-                                                        <div uib-tooltip="Only selected template series will be deleted">
-                                                            <button type="button" class="btn btn-danger" ng-disabled="indexShowSeries!=$index || series2delete.length < 1" ng-click="getSelectedSeries(timestamp)">Delete {{series2delete.length}} Selected Series</button>
-                                                        </div>
-                                                    </h5>
-                                                    <h5>
-                                                        <button type="button" class="btn btn-info" uib-tooltip="Show table listing all series in this template" ng-show="indexShowSeries!=$index" ng-click="getTemplateSeries(timestamp,$index)">
-                                                            Show Series</button>
-                                                        <button type="button" class="btn btn-info" uib-tooltip="Hide the table" ng-show="indexShowSeries==$index" ng-click="getTemplateSeries(timestamp,$index)">
-                                                            Hide Series</button>
-                                                    </h5>                                                        
+                                                        <div class="panel panel-default">
+                                                            <div class="panel-heading"> 
+                                                                Action Links
+                                                            </div>
+                                                            <div class="panel-body">                                                                
+                                                                <h5><a href="" style="color:red">  
+                                                                    <span><i class="fa fa-trash fa-sm" aria-hidden="true"></i></span> 
+                                                                    <span><button uib-tooltip="Templates currently being used for QC cannot be deleted" ng-click="deleteTemplate(timestamp.exam_id)">Delete All</button></span>
+                                                                </a></h5>                                                                
+                                                                <h5><a href="" style="color:rgb(219, 141, 77)">
+                                                                    <span><i class="fa fa-trash fa-sm" aria-hidden="true"></i></span>
+                                                                    <span><button uib-tooltip="Only selected template series will be deleted" ng-click="deleteSelectedSeries(timestamp,$index)">Delete {{series2delete.length}} Selected</button></span> 
+                                                                </a></h5>
+                                                                <h5><a href="" style="color:rgb(2, 103, 134)">
+                                                                    <span ng-if="indexShowSeries!=$index"><i class="far fa-eye" aria-hidden="true"></i></span>
+                                                                    <span ng-if="indexShowSeries==$index"><i class="far fa-eye-slash" aria-hidden="true"></i></span>
+                                                                    <span><button uib-tooltip="Show table listing all series in this template" ng-show="indexShowSeries!=$index" ng-click="getTemplateSeries(timestamp,$index)"> Show Series</button></span>                       <span><button uib-tooltip="Hide the table" ng-show="indexShowSeries==$index" ng-click="getTemplateSeries(timestamp,$index)">Hide Series</button></span>
+                                                                </a></h5> 
+                                                            </div>
+                                                        </div>                                                       
                                                     </br>                                                                                                                    
                                                 </div>
                                             </div>
