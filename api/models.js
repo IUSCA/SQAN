@@ -183,6 +183,39 @@ exports.Dataflow = mongoose.model('Dataflow', dataflowSchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+var iibisSchema = mongoose.Schema({
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // keys
+    //
+
+    area_of_study: String,
+    co_pi: String,
+    coordinator_email: String,
+    department: String,
+    email_address: String,
+    end_date: {type: Date},
+    full_title: String,
+    iibis_project_id: String,
+    location: String,
+    modality_or_laboratory: String,
+    mri_scan_time: String,
+    pi_first_name: String,
+    pi_last_name: String,
+    project_coordinator_or_contact: String,
+    project_status: String,
+    research_type: String,
+    short_title: String,
+    start_date: {type: Date},
+    study_type: String,
+    tracer: String
+});
+
+iibisSchema.index({iibis_project_id: 1});
+exports.IIBIS = mongoose.model('IIBIS', iibisSchema, 'iibis');
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 var aclSchema = mongoose.Schema({
     ///////////////////////////////////////////////////////////////////////////////////////////////

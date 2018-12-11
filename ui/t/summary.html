@@ -1,82 +1,87 @@
 <div class="container">
     <div class="row">
-        <h2><i class="fa fa-flask"></i> Research Summary</h2>
+        <div class="col-sm-12">
+            <h2><i class="fa fa-flask"></i> Research Summary</h2>
 
-        <div class="row">
-            <div class="col-sm-5">
-                <form class="form-horizontal">
-                    <div class="form-group">
-                        <label class="col-sm-4 control-label">Select Research</label>
-                        <div class="col-xs-12 col-sm-12">
-                            <ui-select
-                                    ng-model="research.selected"
-                                    ng-change="getSummary()">
-                                <ui-select-match placeholder="Select IIBISID from the list...">{{$select.selected.id}}</ui-select-match>
-                                <ui-select-choices repeat="option in researches | filter: $select.search">
-                                    <div ng-bind-html="trustAsHtml((option.id | highlight: $select.search))"></div>
-                                    <small><span ng-repeat="m in option.studies">{{m.Modality}} | </span></small>
-                                </ui-select-choices>
-                            </ui-select>
+            <div class="row">
+                <div class="col-sm-7">
+                    <div class="row">
+                    <form class="form">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Select Research</label>
+                            <div class="col-xs-12 col-sm-12">
+                                <ui-select
+                                        ng-model="research.selected"
+                                        ng-change="getSummary()">
+                                    <ui-select-match placeholder="Select IIBISID from the list...">{{$select.selected.id}}</ui-select-match>
+                                    <ui-select-choices repeat="option in researches | filter: $select.search">
+                                        <div ng-bind-html="trustAsHtml((option.id | highlight: $select.search))"></div>
+                                        <small><span ng-repeat="m in option.studies">{{m.Modality}} | </span></small>
+                                    </ui-select-choices>
+                                </ui-select>
+                            </div>
                         </div>
-                    </div>
-                </form>
-            </div>
-            <div class="col-sm-7">
-                <div class="panel panel-info">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">{{research_detail.iibis_project_id}} - {{research_detail.short_title}}</h3>
-                    </div>
-                    <div class="panel-body">
-                        <h6><i class="fa fa-fw fa-user"></i> <b>PI</b>: {{research_detail.pi_first_name}} {{research_detail.pi_last_name}} ({{research_detail.email_address}})</h6>
-                        <h6><i class="fa fa-fw fa-calendar"></i> <b>Dates</b>: {{research_detail.start_date | date: 'mediumDate'}} - {{research_detail.end_date | date: 'mediumDate'}}</h6>
-                        <h6><i class="fa fa-fw fa-check"></i> <b>Status</b>: {{research_detail.project_status}}</h6>
-                        <h6><i class="fa fa-fw fa-flask"></i> <b>Study Type</b>: {{research_detail.study_type}}</h6>
-                        <h6><i class="fa fa-fw fa-area-chart"></i> <b>Area of Study</b>: {{research_detail.area_of_study}}</h6>
-                        <h6><i class="fa fa-fw fa-sitemap"></i> <b>Modality/Lab</b>: {{research_detail.modality_or_laboratory}}</h6>
-                        <h6><i class="fa fa-fw fa-ellipsis-v"></i> <b>Full Title</b>: {{research_detail.full_title}}</h6>
+                    </form>
+                    </div><p></p>
+                    <div class="panel">
+                        <!--<div class="panel-heading">-->
+                            <!--<h3 class="panel-title">{{research_detail.iibis_project_id}} - {{research_detail.short_title}}</h3>-->
+                        <!--</div>-->
+                        <div class="panel-body">
+                            <h4>{{research_detail.iibis_project_id}} - {{research_detail.short_title}}</h4>
+                            <h5><i class="fa fa-fw fa-user"></i> <b>PI</b>: {{research_detail.pi_first_name}} {{research_detail.pi_last_name}} ({{research_detail.email_address}})</h5>
+                            <h5><i class="fa fa-fw fa-calendar"></i> <b>Dates</b>: {{research_detail.start_date | date: 'mediumDate'}} - {{research_detail.end_date | date: 'mediumDate'}}</h5>
+                            <h5><i class="fa fa-fw fa-check"></i> <b>Status</b>: {{research_detail.project_status}}</h5>
+                            <h5><i class="fa fa-fw fa-flask"></i> <b>Study Type</b>: {{research_detail.study_type}}</h5>
+                            <h5><i class="fa fa-fw fa-area-chart"></i> <b>Area of Study</b>: {{research_detail.area_of_study}}</h5>
+                            <h5><i class="fa fa-fw fa-sitemap"></i> <b>Modality/Lab</b>: {{research_detail.modality_or_laboratory}}</h5>
+                            <h5><i class="fa fa-fw fa-ellipsis-v"></i> <b>Full Title</b>: {{research_detail.full_title}}</h5>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <p></p>
-        <div class="col-xs-10">
-            <div class="alert alert-warning" ng-show="!subjects.length">
-                <h4><i class="fa fa-question-circle-o fa-2x"></i> No exam records have been received for IIBISID {{research.selected.id}}</h4>
+            <div class="col-xs-10">
+                <div class="text-center" ng-show="loading">
+                    <h4><i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>
+                        <span class="sr-only">Loading...</span></h4>
+                </div>
+                <div class="alert alert-warning" ng-show="!subjects.length && !loading">
+                    <h4><i class="fa fa-info-circle fa-2x"></i> No exam records have been received for IIBISID <b>{{research.selected.id}}</b></h4>
+                </div>
+                <table class="table table-header-rotated table-condensed" ng-show="subjects.length">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th class="rotate-45 text-muted" ng-repeat="sub in subjects"><div style="white-space: nowrap;"><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></th>
+                    </tr>
+                    </thead>
+                    <tbody ng-repeat="(mod, res) in summary">
+                    <tr>
+                        <td colspan="100" style="background-color: #006687; color: white"><h5><b>{{mod}}</b></h5></td>
+                    </tr>
+                    <tr>
+                        <th><span class="pull-right text-muted">Series Descriptions</h6></th>
+                        <td colspan="100"></td>
+                    </tr>
+                    <tr ng-repeat="sd in res.series_desc">
+                        <td><span class="pull-right">{{sd}}</span></td>
+                        <td style="white-space:nowrap" ng-repeat="sub in subjects">
+                              <span style="cursor: pointer" class="color-box"
+                                ng-repeat="exam in res.exams[sub]"
+                                   ng-click="openstudy(exam[sd]._id)"
+                                   ng-init="qcs = exam[sd].qc1_state !== undefined ? exam[sd].qc1_state : 'na' "
+                                   ng-class="{'pass': qcs == 'autopass',
+                                        'fail' : qcs == 'fail',
+                                        'warning' : qcs == 'accept',
+                                        'reject' : qcs == 'reject',
+                                        'na': qcs == 'na'}"
+                                  tooltip-html-unsafe="{{makeTooltip(sub, exam[sd])}}" tooltip-append-to-body="true"></span>
+                        </td>
+                    </tr>
+                    <tr><td colspan="100"></td></tr>
+                    </tbody>
+                </table>
             </div>
-            <table class="table table-header-rotated table-condensed" ng-show="subjects.length">
-                <thead>
-                <tr>
-                    <th></th>
-                    <th class="rotate-45" ng-repeat="sub in subjects"><div><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></th>
-                </tr>
-                </thead>
-                <tbody ng-repeat="(mod, res) in summary">
-                <tr>
-                    <td colspan="100" style="background-color: #006687; color: white"><h5>{{mod}}</h5></td>
-                </tr>
-                <tr>
-                    <td><h6 class="pull-right">Series Descriptions</h6></td>
-                    <td colspan="100"></td>
-                </tr>
-                <tr ng-repeat="sd in res.series_desc">
-                    <th><span class="pull-right">{{sd}}</span></th>
-                    <td
-                        style="cursor: pointer"
-                        ng-click="openstudy(res.subjects[sub][sd]._id)"
-                        ng-repeat="sub in subjects"
-                        ng-init="qcs = res.subjects[sub][sd].qc1_state"
-                        ng-class="{'pass': qcs == 'autopass',
-                                'fail' : qcs == 'fail',
-                                'warning' : qcs == 'accept',
-                                '' : qcs == 'reject'}"
-                        tooltip="Subject: {{sub}}. {{res.subjects[sub][sd].qc.errors[0].msg}}" tooltip-append-to-body="true"
-                    >
-                    </td>
-                </tr>
-                <tr><td colspan="100"></td></tr>
-                </tbody>
-            </table>
         </div>
     </div>
 </div>

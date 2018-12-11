@@ -1,5 +1,5 @@
 app.controller('SummaryController',
-function($scope, appconf, toaster, $http, $window, $sce, serverconf) {
+function($scope, appconf, toaster, $http, $window, $sce, $filter, serverconf) {
     $scope.$parent.active_menu = "rsummary";
     $scope.researches = [];
     $scope.research_detail = {};
@@ -7,6 +7,8 @@ function($scope, appconf, toaster, $http, $window, $sce, serverconf) {
     $scope.research = {
         selected: ''
     };
+
+    $scope.loading = true;
 
     $scope.openstudy = function(id) {
         $window.open("#/series/"+id, "study:"+id);
@@ -40,6 +42,30 @@ function($scope, appconf, toaster, $http, $window, $sce, serverconf) {
         return $sce.trustAsHtml(value);
     };
 
+    $scope.makeTooltip = function(subject, series) {
+        if(series === undefined) {
+            return 'Series not included in this exam';
+        }
+
+        var tooltip = "Subject: "+subject;
+        tooltip += '<br>StudyTime: '+$filter('date')(series.StudyTimestamp, 'short');
+        if(series.qc === undefined) {
+            tooltip += '<br>QC Details not available';
+            return tooltip;
+        }
+        tooltip += '<br>Images: '+series.qc.image_count;
+        if(series.qc.errors.length > 0) {
+            tooltip += '<br>Errors: '+series.qc.errors.length;
+        }
+        if(series.qc.warnings.length > 0) {
+            tooltip += '<br>Warnings: '+series.qc.warnings.length;
+        }
+        if(series.qc.notemps > 0) {
+            tooltip += '<br>Missing Templates: '+series.qc.notemps;
+        }
+        return tooltip;
+    }
+
     $scope.getIIBIS = function() {
         var url = appconf.api+'/iibis/'+$scope.research.selected.id;
         console.log(url);
@@ -51,6 +77,8 @@ function($scope, appconf, toaster, $http, $window, $sce, serverconf) {
     };
 
     $scope.getSummary = function() {
+
+        $scope.loading = true;
         $scope.summary = {};
         $scope.subjects = [];
         $scope.getIIBIS();
@@ -66,11 +94,12 @@ function($scope, appconf, toaster, $http, $window, $sce, serverconf) {
 
                     $scope.summary[label] = res.data;
                     console.log(res.data);
-                    angular.forEach(res.data.subjects, function(v, k){
+                    angular.forEach(res.data.subjects, function(k){
                         if($scope.subjects.indexOf(k) < 0){
                             $scope.subjects.push(k);
                         }
                     });
+                    $scope.loading = false;
                 }, $scope.toast_error);
         });
 

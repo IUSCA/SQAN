@@ -35,26 +35,59 @@ router.get('/', jwt({secret: config.express.jwt.pub}), function(req, res, next) 
 });
 
 router.get('/summary/:id', function(req, res, next) {
-    var subjects = {};
-    db.Series.find({'research_id': req.params.id}, {'series_desc' : 1, 'subject' : 1, 'qc' : 1, 'qc1_state' : 1}).exec(function(err, _series){
+    var subjects = [];
+    var exams = {};
+    var series_desc = [];
+    db.Exam.find({'research_id': req.params.id, 'istemplate' : false}).exec(function(err, _exams){
         if(err) return next(err);
-        db.Series.distinct('subject', {'research_id': req.params.id}).exec(function(err, _subjects){
-            if(err) return next(err);
-            db.Series.distinct('series_desc', {'research_id': req.params.id}).exec(function(err, _seriesDesc){
-                if(err) return next(err);
-                _subjects.forEach(function(sub){
-                    subjects[sub] = {}
-                    _series.forEach(function(ser){
-                        if(ser.subject == sub){
-                            subjects[sub][ser.series_desc] = ser;
-                        }
-                    });
-                });
+        console.log(_exams);
+        // _exams.forEach(function(exam){
+        //     subjects.indexOf(exam.subject) === -1 ? subjects.push(exam.subject) : console.log('subject in array already');
+        //     db.Series.find({exam_id: exam._id}).exec(function(err, _series){
+        //         _series.forEach(function(ser){
+        //             series_desc.indexOf(ser.series_desc) === -1 ? series_desc.push(ser.series_desc) : console.log('series_desc in array already');
+        //         });
+        //         exams[exam.subject] === undefined ? exams[exam.subject] = [_series] : exams[exam.subject].push(_series);
+        //     });
+        // });
 
-                res.json({series_desc: _seriesDesc, subjects: subjects});
+        async.each(_exams, function(exam, callback) {
+            subjects.indexOf(exam.subject) === -1 && subjects.push(exam.subject);
+            db.Series.find({exam_id: exam._id}).exec(function(err, _series){
+                var exam_series = {};
+                _series.forEach(function(ser){
+                    series_desc.indexOf(ser.series_desc) === -1 && series_desc.push(ser.series_desc);
+                    exam_series[ser.series_desc] = ser;
+                });
+                exams[exam.subject] === undefined ? exams[exam.subject] = [exam_series] : exams[exam.subject].push(exam_series);
+                callback();
             });
+        }, function(err) {
+            if(err) return next(err);
+            res.json({series_desc: series_desc, subjects: subjects, exams: exams});
         });
+
+
     });
+
+
+    // db.Exam.distinct('subject', {'research_id': req.params.id}).exec(function(err, _subjects){
+    //     if(err) return next(err);
+    //     db.Series.find()
+    //     db.Series.distinct('series_desc', {'research_id': req.params.id}).exec(function(err, _seriesDesc){
+    //         if(err) return next(err);
+    //         _subjects.forEach(function(sub){
+    //             subjects[sub] = {}
+    //             _series.forEach(function(ser){
+    //                 if(ser.subject == sub){
+    //                     subjects[sub][ser.series_desc] = ser;
+    //                 }
+    //             });
+    //         });
+    //
+    //         res.json({series_desc: _seriesDesc, subjects: subjects, exams: exams});
+    //     });
+    // });
 });
 
 //rerun QC1 on the entire "research"
