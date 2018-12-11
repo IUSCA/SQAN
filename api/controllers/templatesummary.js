@@ -143,7 +143,8 @@ router.get('/deleteselected/:template_id', jwt({secret: config.express.jwt.pub})
 
             db.TemplateHeader.findOne({"template_id":template._id,primary_image:null}).exec(function(err,h){
                 if(err) return next(err);
-                // Move files from dicom-raw to dicom-deleted -- this way, if we have to reconstruct the db, we don't re-post deleted files
+
+                // Move files from dicom-raw to dicom-deleted 
                  moveDeletedHeaders(h,function(err){
                      if (err) return next(err);
                      db.TemplateHeader.deleteMany({"template_id":template._id},function(err) {
@@ -151,7 +152,7 @@ router.get('/deleteselected/:template_id', jwt({secret: config.express.jwt.pub})
     
                         db.Template.deleteOne({_id:template._id},function(err){
                             if (err) return next(err);
-                            res.send("template deleted successfully!! -- id: "+template._id+ " series_desc: "+template.series_desc)
+                            res.send("Template series deleted successfully!! -- id: "+template._id+ " series_desc: "+template.series_desc)
                         })
                     }) 
                  })
@@ -197,44 +198,31 @@ router.get('/deleteall/:exam_id', jwt({secret: config.express.jwt.pub}), functio
     db.Template.find({"exam_id":new mongoose.Types.ObjectId(req.params.exam_id)},function(err,templates){
         if (err) return next(err);
 
-        templates.forEach(function(t){
+        templates.forEach(function(temp){
 
-            db.TemplateHeader.findOne({"template_id":t._id,primary_image:null}).exec(function(err,h){
+            db.TemplateHeader.findOne({"template_id":temp._id,primary_image:null}).exec(function(err,h){
                 if(err) return next(err);
 
-                // Move files from dicom-raw to dicom-deleted -- this way, if we have to reconstruct the db, we don't re-post deleted files
-                logger.info("Moving headers from dicom-raw into dicom-deleted"); 
+                // Move files from dicom-raw to dicom-deleted 
+                 moveDeletedHeaders(h,function(err){
+                     if (err) return next(err);
 
-                var origin_dir = config.cleaner.raw_headers;
-                var dest_dir = config.cleaner.deleted_headers;
-                var path = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;          
-
-                fs.exists(dest_dir+"/"+path, function (exists) {
-                    if(!exists) mkdirp.sync(dest_dir+"/"+path);
-                    fs.rename(origin_dir+"/"+path,dest_dir+"/"+path, function(err) {
+                     db.TemplateHeader.deleteMany({"template_id":temp._id},function(err) {
                         if (err) return next(err);
-                        fs.unlink(origin_dir+"/"+path+".tar",function(err){
-                            if (err) return next(err);
+    
+                        db.Template.deleteOne({_id:temp._id},function(err){
+                            if (err) return next(err);                            
                         })
-                    });
-                });
-
-                db.TemplateHeader.deleteMany({"template_id":t._id},function(err) {
-                    if (err) return next(err);
-
-                    db.Template.deleteOne({_id:t._id},function(err){
-                        if (err) return next(err);
-                    })
-                })                
+                    }) 
+                 })
             })
-            db.Exam.deleteOne({_id:new mongoose.Types.ObjectId(req.params.exam_id)},function(err){
-                if (err) return next(err);
-                res.send("template deleted")
-            })
-        })                         
+        }) 
+        db.Exam.deleteOne({_id:new mongoose.Types.ObjectId(req.params.exam_id)},function(err){
+            if (err) return next(err);
+            res.send("Template exam deleted successfully!!")
+        })
     })
 })
-
 
 
 module.exports = router;

@@ -107,33 +107,19 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
                 $scope.indexShowSeries = -1;
                 $scope.getTemplateSeries(timestamp,index);
             }
-        }) 
-        // var ind2splice = [];
-        // $scope.series2delete.forEach(function(ts){
-        //     $http.get(appconf.api+'/templatesummary/deleteselected/'+ts,{}).then(function(res) {
-        //         console.log(res.data);
-        //         timestamp.series.forEach(function(ss,ind){
-        //             if (ss.template_id == ts){
-        //                 ind2splice.push(ind);
-        //                 timestamp.series.splice(ind,1);
-        //                 return;
-        //             }
-        //         }); 
-        //     })
-        //     if (ind2splice.length == $scope.series2delete.length) {
-        //         $scope.ind2splice = [];
-        //         $scope.indexShowSeries = -1;
-        //         $scope.getTemplateSeries(timestamp,index);
-        //     }
-        // })        
+        })       
     }
 
 
-    $scope.deleteTemplate = function(texam_id) {
+    $scope.deleteTemplate = function(texam_id,index) {
         console.log(texam_id);
-        // $http.get(appconf.api+'/templatesummary/deleteall/'+texam_id,{}).then(function(res) {
-        //     console.log(res.data) 
-        // })
+        $http.get(appconf.api+'/templatesummary/deleteall/'+texam_id,{}).then(function(res) {
+            console.log(res.data) 
+            // var index = $scope.rowNumber;
+            // $scope.rowNumber = -1;
+            // var research = $scope.currentResearch;
+            $scope.templatebytimestamp.splice(index,1);
+        })
     }
 
 
