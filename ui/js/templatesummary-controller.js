@@ -13,8 +13,6 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
         fieldname: $scope.fieldnames[0]        
     };
 
-    $scope.currentResearch = null;
-
     $scope.getTemplateSummary = function() {
         $http.get(appconf.api+'/templatesummary/istemplate').then(function(res) {
             $scope.templates = res.data;
@@ -33,34 +31,24 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
     $scope.templatesByTimestamp = function(research,index){
        
         $scope.indexShowSeries=-1;
-        console.log('rowNumber is ' + $scope.rowNumber+ " and index is " +index);
 
         if($scope.rowNumber!==index){
                
-            $scope.currentResearch = research;
-            console.log($scope.currentResearch);
-
             $scope.templatebytimestamp = [];
             $scope.templatesUsed = [];
+            $scope.rowNumber=index;
 
             research.exam_id.forEach(function(eid,ind) {
-                //console.log(eid);
                 $http.get(appconf.api+'/templatesummary/texams/'+eid,{}).then(function(res) {
-                    //console.log(res.data)
                     $scope.templatebytimestamp.push(res.data);
-                    if ($scope.templatebytimestamp.length == research.exam_id.length) {
-                        $scope.rowNumber=index;
-                        console.log('rowNumber is ' + $scope.rowNumber);
-                    }
+                    //if ($scope.templatebytimestamp.length == research.exam_id.length) {
+                    //    $scope.rowNumber=index;
+                    //}
                 })                
-            })    
+            })               
 
-            //console.log($scope.templatebytimestamp)
-              
         } else {
             $scope.rowNumber=-1;
-            $scope.currentResearch = null;
-            console.log('rowNumber is ' + $scope.rowNumber);
         };      
     }   
 
@@ -118,9 +106,6 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
         console.log(texam_id);
         $http.get(appconf.api+'/templatesummary/deleteall/'+texam_id,{}).then(function(res) {
             console.log(res.data) 
-            // var index = $scope.rowNumber;
-            // $scope.rowNumber = -1;
-            // var research = $scope.currentResearch;
             $scope.templatebytimestamp.splice(index,1);
         })
     }

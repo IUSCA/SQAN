@@ -43,14 +43,14 @@ outline:none;
                         </tr>
                     </thead>
                     <tbody>
-                        <tr ng-repeat-start="templ in templates | filter:sorting.filter | orderBy: sorting.fieldname" ng-click="showDates=$index; templatesByTimestamp(templ,showDates)"> 
+                        <tr ng-repeat-start="templ in templates | filter:sorting.filter | orderBy: sorting.fieldname"  ng-click="templatesByTimestamp(templ,$index)"> 
                             <td ng-repeat="ff in fields" class="text-center">{{templ[ff]}}</td>  
                             <td class="text-center"><a href="">
-                                <i ng-show="showDates!=rowNumber" class="fas fa-angle-right"></i>
-                                <i ng-hide="showDates!=rowNumber" class="fas fa-angle-down"></i>
+                                <i ng-show="$index!=rowNumber" class="fas fa-angle-left"></i>
+                                <i ng-show="$index==rowNumber" class="fas fa-angle-down"></i>
                             </a></td>              
                         </tr>
-                        <tr ng-repeat-end ng-if="showDates==rowNumber">     
+                        <tr ng-repeat-end ng-if="$index==rowNumber">     
                             <td colspan="6">
                                 <uib-tabset type="tabs" active="activeJustified" justified="true">
                                     <uib-tab ng-repeat="timestamp in templatebytimestamp" index="$index" classes="btn-sm" heading="{{timestamp.date | date:'yyyy-MM-dd HH:mm:ss' }}">
