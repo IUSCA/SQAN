@@ -3,8 +3,13 @@
     .sel { background-color: #bce65e; }
     .desc { background-color: #d1e6ac; }        
 
-[disabled] {
+/* [disabled] {
   pointer-events: none;
+} */
+
+button:disabled {
+  cursor: not-allowed;
+  pointer-events: all !important;
 }
 
 button {
@@ -47,8 +52,8 @@ outline:none;
                         </tr>
                         <tr ng-repeat-end ng-if="showDates==rowNumber">     
                             <td colspan="6">
-                                <uib-tabset active="activeJustified" justified="true">
-                                    <uib-tab ng-repeat="timestamp in templatebytimestamp" index="$index" heading="{{timestamp.date | date:'yyyy-MM-dd HH:mm:ss' }}">
+                                <uib-tabset type="tabs" active="activeJustified" justified="true">
+                                    <uib-tab ng-repeat="timestamp in templatebytimestamp" index="$index" classes="btn-sm" heading="{{timestamp.date | date:'yyyy-MM-dd HH:mm:ss' }}">
                                             
                                         <div class="card">
 
@@ -89,11 +94,15 @@ outline:none;
                                                             <div class="panel-body">                                                                
                                                                 <h5><a href="" style="color:red">  
                                                                     <span><i class="fa fa-trash fa-sm" aria-hidden="true"></i></span> 
-                                                                    <span><button uib-tooltip="Templates currently being used for QC cannot be deleted" ng-click="deleteTemplate(timestamp.exam_id,$index)">Delete All</button></span>
+                                                                    <div style="display: inline-block;" uib-tooltip="Templates currently being used for QC cannot be deleted" tooltip-append-to-body="true" tooltip-enable="timestamp.usedInQC>0">
+                                                                        <span><button  ng-disabled="timestamp.usedInQC>0" ng-click="deleteTemplate(timestamp.exam_id,$index)">Delete All</button></span>
+                                                                    </div>
                                                                 </a></h5>                                                                
                                                                 <h5><a href="" style="color:rgb(219, 141, 77)">
                                                                     <span><i class="fa fa-trash fa-sm" aria-hidden="true"></i></span>
-                                                                    <span><button uib-tooltip="Only selected template series will be deleted" ng-click="deleteSelectedSeries(timestamp,$index)">Delete {{series2delete.length}} Selected</button></span> 
+                                                                    <div style="display: inline-block;" uib-tooltip="Only selected template series will be deleted" tooltip-append-to-body="true">
+                                                                        <span><button  ng-disabled="indexShowSeries!=$index" ng-click="deleteSelectedSeries(timestamp,$index)">Delete {{series2delete.length}} Selected</button></span>
+                                                                    </div>                                                                    
                                                                 </a></h5>
                                                                 <h5><a href="" style="color:rgb(2, 103, 134)">
                                                                     <span ng-if="indexShowSeries!=$index"><i class="far fa-eye" aria-hidden="true"></i></span>
