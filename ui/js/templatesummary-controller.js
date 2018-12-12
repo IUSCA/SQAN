@@ -33,6 +33,7 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
     $scope.templatesByTimestamp = function(research,index){
        
         $scope.indexShowSeries=-1;
+        console.log('rowNumber is ' + $scope.rowNumber+ " and index is " +index);
 
         if($scope.rowNumber!==index){
                
@@ -45,20 +46,22 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
             research.exam_id.forEach(function(eid,ind) {
                 //console.log(eid);
                 $http.get(appconf.api+'/templatesummary/texams/'+eid,{}).then(function(res) {
-                    console.log(res.data)
+                    //console.log(res.data)
                     $scope.templatebytimestamp.push(res.data);
-                    if ($scope.templatebytimestamp.length == research.exam_id.length) $scope.rowNumber=index;
-                })
-                
+                    if ($scope.templatebytimestamp.length == research.exam_id.length) {
+                        $scope.rowNumber=index;
+                        console.log('rowNumber is ' + $scope.rowNumber);
+                    }
+                })                
             })    
 
-            console.log($scope.templatebytimestamp)
+            //console.log($scope.templatebytimestamp)
               
         } else {
             $scope.rowNumber=-1;
             $scope.currentResearch = null;
+            console.log('rowNumber is ' + $scope.rowNumber);
         };      
-        console.log('rowNumber is ' + $scope.rowNumber);         
     }   
 
     $scope.getTemplateSeries = function(timestamp,index){

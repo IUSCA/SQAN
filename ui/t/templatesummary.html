@@ -44,11 +44,11 @@ outline:none;
                     </thead>
                     <tbody>
                         <tr ng-repeat-start="templ in templates | filter:sorting.filter | orderBy: sorting.fieldname" ng-click="showDates=$index; templatesByTimestamp(templ,showDates)"> 
-                            <td ng-repeat="ff in fields" class="text-center">{{templ[ff]}}</td>
+                            <td ng-repeat="ff in fields" class="text-center">{{templ[ff]}}</td>  
                             <td class="text-center"><a href="">
-                                <i ng-show="showDates!=rowNumber" class="fa fa-plus"></i>
-                                <i ng-hide="showDates!=rowNumber" class="fa fa-minus"></i>
-                            </a></td>                
+                                <i ng-show="showDates!=rowNumber" class="fas fa-angle-right"></i>
+                                <i ng-hide="showDates!=rowNumber" class="fas fa-angle-down"></i>
+                            </a></td>              
                         </tr>
                         <tr ng-repeat-end ng-if="showDates==rowNumber">     
                             <td colspan="6">
