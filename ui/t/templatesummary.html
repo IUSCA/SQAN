@@ -92,15 +92,13 @@ outline:none;
                                                                 Action Links
                                                             </div>
                                                             <div class="panel-body">                                                                
-                                                                <h5><a href="" style="color:red">  
-                                                                    <span><i class="fa fa-trash fa-sm" aria-hidden="true"></i></span> 
-                                                                    <div style="display: inline-block;" uib-tooltip="Templates currently being used for QC cannot be deleted" tooltip-append-to-body="true" tooltip-enable="timestamp.usedInQC>0">
+                                                                <h5><a href="" style="color:red">                               <div uib-tooltip="Templates currently being used for QC cannot be deleted" tooltip-enable="timestamp.usedInQC>0">
+                                                                        <span><i class="fa fa-trash fa-sm" aria-hidden="true"></i></span>
                                                                         <span><button  ng-disabled="timestamp.usedInQC>0" ng-click="deleteTemplate(timestamp.exam_id,$index)">Delete All</button></span>
                                                                     </div>
                                                                 </a></h5>                                                                
-                                                                <h5><a href="" style="color:rgb(219, 141, 77)">
-                                                                    <span><i class="fa fa-trash fa-sm" aria-hidden="true"></i></span>
-                                                                    <div style="display: inline-block;" uib-tooltip="Only selected template series will be deleted" tooltip-append-to-body="true">
+                                                                <h5><a href="" style="color:rgb(219, 141, 77)">                  <div style="display: inline-block;" uib-tooltip="Only selected template series will be deleted">
+                                                                        <span><i class="fa fa-trash fa-sm" aria-hidden="true"></i></span>
                                                                         <span><button  ng-disabled="indexShowSeries!=$index" ng-click="deleteSelectedSeries(timestamp,$index)">Delete {{series2delete.length}} Selected</button></span>
                                                                     </div>                                                                    
                                                                 </a></h5>
