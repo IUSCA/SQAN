@@ -114,19 +114,21 @@ outline:none;
                                             </div>
 
                                             <div class="card-body" ng-show="indexShowSeries==$index">
-                                                <table class="table table-striped table-hover info" width="80%" cellspacing="0">
-                                                    <tr style="background-color:#e2eef5">
-                                                        <th class="text-center" ng-repeat="dd in tseriesTable track by $index">{{dd}}</th>
-                                                        <th><i class="fa fa-trash fa-lg" aria-hidden="true"></i></th>
-                                                        <tr ng-repeat-end style="background-color:#f2f7fa" ng-repeat="dd in templateSeries.series | orderBy: 'SeriesNumber'">              
-                                                            <td class="text-center">{{dd.SeriesNumber}}</td>
-                                                            <td class="text-center" style="word-wrap: break-all;">{{dd.series_desc}}</td>
-                                                            <td class="text-center">{{dd.usedInQC}}</td>
-                                                            <td class="text-center">{{dd.imageCount}}</td>  
-                                                            <td><input type="checkbox" ng-disabled="dd.usedInQC > 0" ng-click="deleteThisSeries(dd)"></td>                                       
-                                                        </tr>
-                                                    </tr>                                               
-                                                </table>
+                                                <!-- <div class="col-sm-7 col-md-10"> -->
+                                                    <table class="table table-striped table-hover info" width="100%" cellspacing="0">
+                                                        <tr style="background-color:#e2eef5">
+                                                            <th class="text-center" ng-repeat="dd in tseriesTable track by $index">{{dd}}</th>
+                                                            <th><i class="fa fa-trash fa-lg" aria-hidden="true"></i></th>
+                                                            <tr ng-repeat-end style="background-color:#f2f7fa" ng-repeat="dd in templateSeries.series | orderBy: 'SeriesNumber'">              
+                                                                <td class="text-center">{{dd.SeriesNumber}}</td>
+                                                                <td class="text-center" style="word-wrap: break-all;">{{dd.series_desc}}</td>
+                                                                <td class="text-center">{{dd.usedInQC}}</td>
+                                                                <td class="text-center">{{dd.imageCount}}</td>  
+                                                                <td><input type="checkbox" ng-disabled="dd.usedInQC > 0" ng-click="deleteThisSeries(dd)"></td>                                       
+                                                            </tr>
+                                                        </tr>                                               
+                                                    </table>
+                                                <!-- </div> -->
                                             </div>
 
                                         </div>  
