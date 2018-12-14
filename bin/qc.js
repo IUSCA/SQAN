@@ -30,11 +30,30 @@ function run(cb) {
         async.forEach(series,qc_images,function(err) {
             if (err) return cb(err);
 
+            var exams2qc = [];
+            
+            series.forEach(function(ss){
+                if (exams2qc.indexOf(ss.exam_id.toString()) == -1){
+                    exams2qc.push(ss.exam_id.toString());
+                }
+            });
+
+            
+            logger.info(exams2qc.length + " Exams to be updated: "+exams2qc)
+            exams2qc.forEach(function(ee){
+                qc_funcs.exam.qc_exam(ee,function(err){
+                    if (err) return cb(err);
+                    console.log("qc-ed exam "+ee)
+                })
+            })
+            
             logger.info("Batch complete. Sleeping before next batch");
 
             setTimeout(function() {
                 run(cb);
             }, 1000*3);
+
+            //})
         })
     });
 }
@@ -61,7 +80,7 @@ function qc_images(series,next) {
                     if (!template) return next(null,null); 
 
                     find_template_primary(template,function(err,primtemplate) {
-                        if (err) return cb(err);
+                        if (err) return next(err);
                         if (!primtemplate) return next(null,null); // This case should only happen when the tarball for this template set is not "old" enough 
                         
                         // Now find all image headers for this series 
@@ -91,6 +110,29 @@ function qc_images(series,next) {
 }
 
 // ************************** QC functions ********************************//
+
+// function qc_the_exam(series,cb){
+//     // upate the exams documents synchronously
+//     var counter = 0;
+//     var ni = series.length;
+//     var exams2qc = [];
+
+//     series.forEach(function(ss){
+//         if (exams2qc.indexOf(ss.exam_id) == -1){
+//             exams2qc.push(ss.exam_id);
+//             qc_funcs.exam.qc_exam(ss.exam_id,function(err){
+//                 if (err) return cb(err);
+//                 console.log("qc-ed exam "+ss.exam_id)
+//             })
+//         }
+//         counter++;
+//         if(counter === ni) {
+//             return cb()
+//         } 
+//     });
+// }
+
+
 
 function qc_the_series(images,primimage,primtemplate,cb) {
     // qc each image with the corresponding header
@@ -179,11 +221,15 @@ function find_template(series, cb) {
         if(err) return cb(err);
         if(!template) {
             logger.info("couldn't find template for series:"+series._id);
-            series.qc1_state = 'no template';
-            qc_funcs.series.update_exam(series,null,function(err){
-                if (err) console.log(err);
+            if (series.qc1_state == 'no template'){
                 return cb(null);
-            })               
+            } else {
+                series.qc1_state = 'no template';
+                db.Series.findOneAndUpdate({_id: series._id},{qc1_state:series.qc1_state},function(err) {
+                    if (err) return cb(err);
+                    return cb(null);
+                })                 
+            }                        
         } else {
             cb(null,template)
         }
