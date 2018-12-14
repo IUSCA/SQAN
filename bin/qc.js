@@ -30,6 +30,7 @@ function run(cb) {
         async.forEach(series,qc_images,function(err) {
             if (err) return cb(err);
 
+            // update exams reccords 
             var exams2qc = [];
             
             series.forEach(function(ss){
@@ -110,29 +111,6 @@ function qc_images(series,next) {
 }
 
 // ************************** QC functions ********************************//
-
-// function qc_the_exam(series,cb){
-//     // upate the exams documents synchronously
-//     var counter = 0;
-//     var ni = series.length;
-//     var exams2qc = [];
-
-//     series.forEach(function(ss){
-//         if (exams2qc.indexOf(ss.exam_id) == -1){
-//             exams2qc.push(ss.exam_id);
-//             qc_funcs.exam.qc_exam(ss.exam_id,function(err){
-//                 if (err) return cb(err);
-//                 console.log("qc-ed exam "+ss.exam_id)
-//             })
-//         }
-//         counter++;
-//         if(counter === ni) {
-//             return cb()
-//         } 
-//     });
-// }
-
-
 
 function qc_the_series(images,primimage,primtemplate,cb) {
     // qc each image with the corresponding header
