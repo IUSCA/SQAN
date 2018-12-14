@@ -17,7 +17,7 @@ db.init(function(err) {
 
 function qc_exam(exam_id,cb) {
 
-    console.log("function qc_exam -- exam_id "+exam_id)
+    console.log("qc_exam:  exam_id "+exam_id)
    
     var exam = {};
     var template_series = [];
@@ -57,9 +57,9 @@ function qc_exam(exam_id,cb) {
             .sort({"StudyTimestamp":-1})  
             .exec(function(err,texams) {
                 if (err) return next(err);
-                console.log(texams.length + " template exams retrieved for research_id "+exam.research_id);
+                //console.log(texams.length + " template exams retrieved for research_id "+exam.research_id);
                 if (!texams || texams.length == 0) {
-                    console.log("couldn't find template for research_id:"+exam.research_id);
+                    //console.log("couldn't find template for research_id:"+exam.research_id);
                     return next();
                 } else {
                     var texam = texams[0]; // select the template exams with most recent timestamp
@@ -128,8 +128,8 @@ function qc_exam(exam_id,cb) {
         },
 
         function(next){
+
             if (template_series.length == 0) {
-                console.log("function 4 -- there are no templates for this exam")
                 return next() // if there are no templates
             }
             // check if any template series are missing in this exam
@@ -147,12 +147,12 @@ function qc_exam(exam_id,cb) {
             // if nothing changed since last exam qc
             if(typeof exam.qc === 'object' && exam.qc !== null) {
                 if(_.isEqual(exam.qc,qc)) {
-                    console.log("no changes since last exam qc for exam "+exam._id);
+                    //console.log("no changes since last exam qc for exam "+exam._id);
                     return next();
                 }
             } 
 
-            console.log("updating exam qc for exam "+exam._id);                
+            //console.log("updating exam qc for exam "+exam._id);                
             db.Exam.findOneAndUpdate({_id: exam._id},{qc:qc},function(err) {
                 if (err) return next(err);
                 return next();

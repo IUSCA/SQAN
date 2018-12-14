@@ -15,7 +15,7 @@ db.init(function(err) {
 
 function qc_series(series,images,template,cb) {
 
-    console.log("QC-ing series: "+series._id + " -- series description " +series.series_desc);
+    console.log("qc_series: "+series._id + " -- series description " +series.series_desc);
 
     var all_qced = true;
     //var errored_InstanceNumber = [];
