@@ -22,7 +22,12 @@ db.init(function(err) {
 function run(cb) {
     logger.info("querying un-qc-ed series -- "+ new Date());
     // get primary images that are not qc-ed=
-    db.Series.find({qc: {$exists: false}}).limit(config.qc.series_batch_size).exec(function(err, series) { 
+    //db.Series.find({qc: {$exists: false}}).limit(config.qc.series_batch_size).exec(function(err, series) { 
+    db.Series.aggregate([
+        { $sample: {size:config.qc.series_batch_size}},
+        { $match: {qc: {$exists: false}}}
+    ]).exec(function(err,series){
+    
         if(err) return cb(err);
 
         logger.info("Un-qc-ed Series retrieved: "+ series.length);
@@ -53,8 +58,6 @@ function run(cb) {
             setTimeout(function() {
                 run(cb);
             }, 1000*3);
-
-            //})
         })
     });
 }
