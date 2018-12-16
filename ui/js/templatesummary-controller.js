@@ -6,7 +6,7 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
     $scope.fields = ['IIBISID','Modality','StationName','radio_tracer','count'];
     $scope.fieldnames = ['IIBISID','Modality','Station Name','Radio Tracer','# Study Instances'];
     
-    $scope.detailnames = ['Series Number','Series Description','Times used for QC','# Images'];
+    $scope.tseriesTable = ['Series Number','Series Description','Times used for QC','# Images'];
 
     $scope.sorting = {
         filter: '',
@@ -26,45 +26,92 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
     $scope.getTemplateSummary();
 
     $scope.rowNumber = -1;
-    $scope.indexDetails=-1; 
+    $scope.indexShowSeries=-1; 
 
     $scope.templatesByTimestamp = function(research,index){
        
-        $scope.indexDetails=-1;
+        $scope.indexShowSeries=-1;
 
         if($scope.rowNumber!==index){
-                        
+               
             $scope.templatebytimestamp = [];
             $scope.templatesUsed = [];
+            $scope.rowNumber=index;
 
             research.exam_id.forEach(function(eid,ind) {
-                //console.log(eid);
                 $http.get(appconf.api+'/templatesummary/texams/'+eid,{}).then(function(res) {
-                    console.log(res.data)
                     $scope.templatebytimestamp.push(res.data);
-                    if ($scope.templatebytimestamp.length == research.exam_id.length) $scope.rowNumber=index;
-                })
-                
-            })    
+                    //if ($scope.templatebytimestamp.length == research.exam_id.length) {
+                    //    $scope.rowNumber=index;
+                    //}
+                })                
+            })               
 
-            console.log($scope.templatebytimestamp)
-              
-        } else {$scope.rowNumber=-1};      
-        console.log('rowNumber is ' + $scope.rowNumber);         
+        } else {
+            $scope.rowNumber=-1;
+        };      
     }   
 
-    $scope.templateDetails = function(timestamp,index){
+    $scope.getTemplateSeries = function(timestamp,index){
         console.log('index  ' + index)
-        console.log('indexDetails ' + $scope.indexDetails)       
+        console.log('indexShowSeries ' + $scope.indexShowSeries)   
 
-        if($scope.indexDetails!==index){  
-            $scope.indexDetails=index; 
+        $scope.series2delete = [];
+        
+        if($scope.indexShowSeries!==index){  
+            $scope.indexShowSeries=index; 
             console.log(timestamp)           
-            $scope.details = timestamp; 
+            $scope.templateSeries = timestamp; 
+            
         } else {
-            $scope.indexDetails=-1;
-            $scope.details = [];
+            $scope.indexShowSeries=-1;
+            $scope.templateSeries = [];
         }
     } 
+
+    $scope.deleteThisSeries = function(templateSeries){
+        console.log(templateSeries);
+        var indx = $scope.series2delete.indexOf(templateSeries.template_id);
+        if (indx == -1) $scope.series2delete.push(templateSeries.template_id);
+        if (indx != -1) $scope.series2delete.splice(indx,1);
+        console.log($scope.series2delete);
+    }
+
+
+    $scope.deleteSelectedSeries = function(timestamp,index) {
+        console.log(timestamp);
+        console.log($scope.series2delete)
+
+
+        $scope.series2delete.forEach(function(ts,ind1){
+            $http.get(appconf.api+'/templatesummary/deleteselected/'+ts,{}).then(function(res) {
+                console.log(res.data);
+                timestamp.series.forEach(function(ss,ind2){
+                    if (ss.template_id == ts){
+                        $scope.series2delete.splice(ind1,1);
+                        timestamp.series.splice(ind2,1);
+                        return;
+                    }
+                }); 
+            })
+            if ($scope.series2delete.length == 0) {
+                $scope.indexShowSeries = -1;
+                $scope.getTemplateSeries(timestamp,index);
+            }
+        })       
+    }
+
+
+    $scope.deleteTemplate = function(texam_id,index) {
+        console.log(texam_id);
+        $http.get(appconf.api+'/templatesummary/deleteall/'+texam_id,{}).then(function(res) {
+            console.log(res.data) 
+            $scope.templatebytimestamp.splice(index,1);
+        })
+    }
+
+
+
+
 
 });

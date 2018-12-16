@@ -1,6 +1,6 @@
  #!/bin/bash
    
-for iibis in `ls /opt/sca/dicom-backup/dicom-raw |grep 0000-000`;
+for iibis in `ls /opt/sca/dicom-backup/dicom-raw |grep 201`;
 do
      for subj in `ls /opt/sca/dicom-backup/dicom-raw/"${iibis}"/`; 
      do 
