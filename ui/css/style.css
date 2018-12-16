@@ -469,7 +469,7 @@ h3 {
   margin: 0px;
   padding: 0px;
   height: 18px;
-  width: 150px;
+  width: 110px;
 }
 .subject-label {
   line-height: 100%;
@@ -906,4 +906,8 @@ h3 {
 
 .dropdown-menu>li>a {
   padding: 3px 15px;
+}
+
+.tooltip-inner {
+  text-align: left;
 }

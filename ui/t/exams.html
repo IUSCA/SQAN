@@ -56,10 +56,31 @@
                 <!--modality detail-->
                 <h6>
                     {{modality.research.Modality}} / {{modality.research.StationName}}
-                    <small ng-show="modality.research.Modality == 'PT'"> / {{modality.research.radio_tracer}}</small> <em>({{modality.exams.length}})</em>
+                    <small ng-show="modality.research.Modality == 'PT'"> / {{modality.research.radio_tracer}}</small> <em>({{modality.exams.length}})</em><br><br>
+                    <div ng-repeat="exam in modality.exams"
+                         ng-click="select(modality, subject.uid);$event.stopPropagation()"
+                         class="subject-label">
+                        <small style="position: absolute; color: black">{{exam.subject}}</small>
+                        <div class="progress exam-state pull-right"
+                             tooltip-html-unsafe="{{makeTooltip(exam)}}" tooltip-append-to-body="true"
+                             ng-init="total = exam.qc.qced_series + exam.qc.series_missing.length + exam.qc.series_no_template.length">
+                            <div class="progress-bar progress-bar-success" style="height: 20%; width: {{exam.qc.series_passed / total*100}}%"></div>
+                            <div class="progress-bar progress-bar-danger" style="height: 20%; width: {{exam.qc.series_failed / total*100}}%"></div>
+                            <!--<div class="progress-bar progress-bar-warning" style="height: 20%; width: {{exam.qc.warnings / total*100}}%"></div>-->
+                            <div class="progress-bar progress-bar-primary" style="height: 20%; width: {{exam.qc.series_no_template.length / total*100}}%"></div>
+                            <div class="progress-bar progress-bar-info" style="height: 20%; width: {{exam.qc.series_missing.length/ total*100}}%"></div>
+                        </div>
+                    </div>
                 </h6>
             </div><!--subbar-list-item-->
         </div><!--ng-repeat-->
+        <p class="legend" style="position: fixed; bottom: 0px; width: 275px;">
+            <!--<span class="label label-default"></span>-->
+            <span class="label label-success">Pass</span>
+            <span class="label label-danger">Fail</span>
+            <span class="label label-primary">No Templ</span>
+            <span class="label label-info">Missing</span>
+        </p>
     </div>
 </div>
 <div class="subbar-content subbar-contentnew">

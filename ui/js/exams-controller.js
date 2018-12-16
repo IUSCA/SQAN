@@ -1,5 +1,5 @@
 app.controller('ExamsController',
-    function($scope, appconf, toaster, $http, $location, serverconf, $document, $window, $routeParams, $timeout) {
+    function($scope, appconf, toaster, $http, $location, serverconf, $document, $window, $routeParams, $timeout, $filter) {
         $scope.appconf = appconf;
         serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
 
@@ -171,6 +171,23 @@ app.controller('ExamsController',
             if(~modality.toLowerCase().indexOf($scope.research_filter.toLowerCase())) return true;
             return false;
         };
+
+        $scope.makeTooltip = function(exam) {
+
+            var tooltip = "Subject: "+exam.subject;
+            tooltip += '<br>StudyTime: '+$filter('date')(exam.StudyTimestamp, 'short');
+            if(exam.qc === undefined) {
+                tooltip += '<br>QC Details not available';
+                return tooltip;
+            }
+            tooltip += '<br>Series Failed: '+ ((exam.qc.series_failed / exam.qc.qced_series) * 100) + '\%';
+            tooltip += '<br>Images w/Errors: '+ ((exam.qc.images_errored / exam.qc.image_count) * 100) + '\%';
+            tooltip += '<br>Average # of Errors/Image: ' + (exam.qc.fields_errored / exam.qc.image_count);
+            tooltip += '<br>Series Missing: '+exam.qc.series_missing.length;
+            tooltip += '<br>Series w/No Template: '+exam.qc.series_no_template.length;
+            return tooltip;
+        }
+
 
     });
 
