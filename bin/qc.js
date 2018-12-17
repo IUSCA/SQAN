@@ -22,7 +22,12 @@ db.init(function(err) {
 function run(cb) {
     logger.info("querying un-qc-ed series -- "+ new Date());
     // get primary images that are not qc-ed=
-    db.Series.find({qc: {$exists: false}}).limit(config.qc.series_batch_size).exec(function(err, series) { 
+    //db.Series.find({qc: {$exists: false}}).limit(config.qc.series_batch_size).exec(function(err, series) { 
+    db.Series.aggregate([
+        { $sample: {size:config.qc.series_batch_size}},
+        { $match: {qc: {$exists: false}}}
+    ]).exec(function(err,series){
+    
         if(err) return cb(err);
 
         logger.info("Un-qc-ed Series retrieved: "+ series.length);
@@ -30,6 +35,23 @@ function run(cb) {
         async.forEach(series,qc_images,function(err) {
             if (err) return cb(err);
 
+            // update exams reccords 
+            var exams2qc = [];
+            
+            series.forEach(function(ss){
+                if (exams2qc.indexOf(ss.exam_id.toString()) == -1){
+                    exams2qc.push(ss.exam_id.toString());
+                }
+            });
+
+            
+            logger.info(exams2qc.length + " Exams to be updated: "+exams2qc)
+            exams2qc.forEach(function(ee){
+                qc_funcs.exam.qc_exam(ee,function(err){
+                    if (err) return cb(err);
+                })
+            })
+            
             logger.info("Batch complete. Sleeping before next batch");
 
             setTimeout(function() {
@@ -45,15 +67,15 @@ function qc_images(series,next) {
     // find the primary image for this series
     db.Image.findOne({"series_id":series._id, "primary_image":null},function(err,primimage) {
         if (err) return next(err);
-        console.log(`primary image for this series : ${primimage._id}`);
+        //console.log(`primary image for this series : ${primimage._id}`);
 
         // make sure all images in this series have been cleaned and stored
         qc_funcs.instance.check_tarball_mtime(primimage.headers, function(err,mtime) {
             if (err) return next(err);        
-            logger.info("file last modified " +mtime + "seconds ago")
+            //logger.info("file last modified " +mtime + "seconds ago")
 
             if (mtime > config.qc.tarball_age) {  // file has not been modified in the last 2 minutes
-                logger.info("QC-ing batch series_id:" + series.id + " and description " + primimage.headers.qc_series_desc);
+                logger.info("QC-ing series_id:" + series._id + " -- " + primimage.headers.qc_series_desc);
                 
                 // find template for this series
                 find_template(series, function(err,template) {
@@ -61,22 +83,22 @@ function qc_images(series,next) {
                     if (!template) return next(null,null); 
 
                     find_template_primary(template,function(err,primtemplate) {
-                        if (err) return cb(err);
+                        if (err) return next(err);
                         if (!primtemplate) return next(null,null); // This case should only happen when the tarball for this template set is not "old" enough 
                         
                         // Now find all image headers for this series 
                         db.Image.find({$or: [ {primary_image: primimage._id},{_id:primimage._id}]},function(err,images) {
                             if (err) return next(err);
-                            console.log(`number of images for this series : ${images.length}`); 
+                            //console.log(`number of images for this series : ${images.length}`); 
                             
                             qc_the_series(images,primimage,primtemplate,function(err) {
                                 if (err) return next(err);
-                                console.log(images.length + " images have been qc-ed, now aggregating qc for the series "+ primimage.headers.qc_series_desc + " -- " + new Date());
+                                //console.log(images.length + " images have been qc-ed, now aggregating qc for the series "+ primimage.headers.qc_series_desc + " -- " + new Date());
 
                                 qc_funcs.series.qc_series(series,images,template,function(err) {
                                     if (err) return next(err);
 
-                                    logger.info(primimage.headers.qc_series_desc + " Series has been qc-ed")
+                                    console.log(series._id + " Series has been qc-ed")
                                     return next();
                                 });
                             })
@@ -131,7 +153,7 @@ function qc_one_image(image,primimage,primtemplate,cb) {
                     if (err) return next(err);
                     
                     if (templateheader) {
-                        console.log("matching template header "+ templateheader.InstanceNumber+ " with image header " + image.InstanceNumber);
+                        //console.log("matching template header "+ templateheader.InstanceNumber+ " with image header " + image.InstanceNumber);
                         qc_funcs.template.match(image,templateheader,qc); 
                         next()                       
                     }
@@ -155,8 +177,7 @@ function qc_one_image(image,primimage,primtemplate,cb) {
                 qc:qc
             }, {'new': true}, function(err,new_image){
                 if(err) next(err);
-                if (!new_image) console.log("something broke!")
-                //console.log(new_image)
+                if (!new_image) next("something broke!")
                 return next();
             }) 
         }
@@ -178,12 +199,15 @@ function find_template(series, cb) {
     get_template(series, function(err, template) {
         if(err) return cb(err);
         if(!template) {
-            logger.info("couldn't find template for series:"+series._id);
-            series.qc1_state = 'no template';
-            qc_funcs.series.update_exam(series,null,function(err){
-                if (err) console.log(err);
+            if (series.qc1_state == 'no template'){
                 return cb(null);
-            })               
+            } else {
+                series.qc1_state = 'no template';
+                db.Series.findOneAndUpdate({_id: series._id},{qc1_state:series.qc1_state},function(err) {
+                    if (err) return cb(err);
+                    return cb(null);
+                })                 
+            }                        
         } else {
             cb(null,template)
         }
@@ -207,9 +231,9 @@ function get_template(series, cb) {
             .sort({"StudyTimestamp":-1})  //.sort('-date')
             .exec(function(err,texams) {
                 if (err) return cb(err);
-                console.log(texams.length + " template exams retrieved for research_id "+exam.research_id);
+                //console.log(texams.length + " template exams retrieved for research_id "+exam.research_id);
                 if (!texams || texams.length == 0) {
-                    logger.info("couldn't find template for exam:"+series._id+" and research_id:"+exam.research_id);
+                    logger.info("couldn't find any exam templates for series:"+series._id+" and research_id:"+exam.research_id);
                     return cb(null,null);
                 } else {
                     db.Template.findOne({

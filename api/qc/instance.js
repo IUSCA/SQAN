@@ -434,7 +434,7 @@ exports.reconstruct_header = function(_header,_primary_image,cb) {
         }
         cb()
     } else {
-        console.log("image with InstanceNumber" +_header.InstanceNumber + " is a primary -- no reconstruction")
+        //console.log("image with InstanceNumber" +_header.InstanceNumber + " is a primary -- no reconstruction")
         cb();
     }
 }
