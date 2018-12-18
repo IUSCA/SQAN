@@ -13,7 +13,8 @@ app.directive('studynote', function() {
                     else if($scope.study.qc.notemps > 0) $scope.studystate = "notemp";
                     else if($scope.study.qc.warnings.length > 0) $scope.studystate = "warning";
                     else $scope.studystate = "ok";
-                }
+                } //else if ($scope.study.qc1_state == "no template") $scope.studystate = "notemp";
+                    
                 $scope.qc1 = null;
                 if($scope.study.qc1_state) {
                     switch($scope.study.qc1_state) {
@@ -23,6 +24,8 @@ app.directive('studynote', function() {
                         $scope.qc1 = "success"; break;
                     case "reject":
                         $scope.qc1 = "danger"; break;
+                    case "no template":
+                        $scope.qc1 = "info"; break;
                     }
                 }
                 $scope.qc2 = null;
