@@ -16,7 +16,7 @@ var db = require('../models');
 var mongoose = require('mongoose');
 
 
-// move headers from dicom-raw to dicom-deleted
+// move template headers from dicom-raw to dicom-deleted
 function moveDeletedHeaders(h,cb){
 
     logger.info("Moving headers from dicom-raw into dicom-deleted");
@@ -27,7 +27,7 @@ function moveDeletedHeaders(h,cb){
     var deleted_dirname = dest_dir+"/"+path+"/" + now.getFullYear() + "-"+ now.getMonth() + "-" + now.getDate()+ "-"+ now.getHours() + "-" + now.getMinutes()
 
     fs.exists(deleted_dirname, function (exists) {
-        console.log(exists)
+        //console.log(exists)
         console.log(deleted_dirname)
         if(!exists) {
             console.log("creating directory to migrate headers")
@@ -35,9 +35,13 @@ function moveDeletedHeaders(h,cb){
         }
         fs.rename(origin_dir+"/"+path+"/",deleted_dirname+"/", function(err) {
             if (err) return cb(err);
-            fs.unlink(origin_dir+"/"+path+".tar",function(err){
-                if (err) return cb(err);
-                return cb();
+            fs.exists(origin_dir+"/"+path+".tar", function (exists) {
+                if (exists) {
+                    fs.unlink(origin_dir+"/"+path+".tar",function(err){
+                        if (err) return cb(err);
+                        return cb();
+                    })
+                } else cb();                
             })
         });
     });
@@ -155,37 +159,7 @@ router.get('/deleteselected/:template_id', jwt({secret: config.express.jwt.pub})
                             res.send("Template series deleted successfully!! -- id: "+template._id+ " series_desc: "+template.series_desc)
                         })
                     }) 
-                 })
-
-                // var origin_dir = config.cleaner.raw_headers;
-                // var dest_dir = config.cleaner.deleted_headers;
-                // var path = h.headers.qc_iibisid+"/"+h.headers.qc_subject+"/"+h.headers.StudyInstanceUID+"/"+h.headers.qc_series_desc;          
-                // var now = new Date();
-                // var deleted_dirname = dest_dir+"/"+path+"/" + now.getFullYear() + "-"+ now.getMonth() + "-" + now.getDate()+ "-"+ now.getHours() + "-" + now.getMinutes()
-
-                // fs.exists(deleted_dirname, function (exists) {
-                //     console.log(exists)
-                //     console.log(deleted_dirname)
-                //     if(!exists) {
-                //         console.log("creating directory to migrate headers")
-                //         mkdirp.sync(deleted_dirname);
-                //     }
-                //     fs.rename(origin_dir+"/"+path+"/",deleted_dirname+"/", function(err) {
-                //         if (err) return next(err);
-                //         fs.unlink(origin_dir+"/"+path+".tar",function(err){
-                //             if (err) return next(err);
-                //         })
-                //     });
-                // });
-                
-                // db.TemplateHeader.deleteMany({"template_id":template._id},function(err) {
-                //     if (err) return next(err);
-
-                //     db.Template.deleteOne({_id:template._id},function(err){
-                //         if (err) return next(err);
-                //         res.send("template deleted successfully!! -- id: "+template._id+ " series_desc: "+template.series_desc)
-                //     })
-                // })                
+                 })               
             })
         })                         
 })
