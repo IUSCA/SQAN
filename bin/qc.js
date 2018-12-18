@@ -20,12 +20,10 @@ db.init(function(err) {
 });
 
 function run(cb) {
-    logger.info("querying un-qc-ed series -- "+ new Date());
+    //logger.info("querying un-qc-ed series -- "+ new Date());
     // get primary images that are not qc-ed=
-    //db.Series.find({qc: {$exists: false}}).limit(config.qc.series_batch_size).exec(function(err, series) { 
     db.Series.aggregate([
-        { $sample: {size:config.qc.series_batch_size}},
-        { $match: {qc: {$exists: false}}}
+        {$match: {qc: {$exists: false}}},{$sample: {size:config.qc.series_batch_size}}
     ]).exec(function(err,series){
     
         if(err) return cb(err);
@@ -45,7 +43,7 @@ function run(cb) {
             });
 
             
-            logger.info(exams2qc.length + " Exams to be updated: "+exams2qc)
+            logger.info(exams2qc.length + " Exams to be updated"); //: "+exams2qc)
             exams2qc.forEach(function(ee){
                 qc_funcs.exam.qc_exam(ee,function(err){
                     if (err) return cb(err);
@@ -56,7 +54,7 @@ function run(cb) {
 
             setTimeout(function() {
                 run(cb);
-            }, 1000*3);
+            }, 1000*10);
         })
     });
 }
@@ -74,7 +72,7 @@ function qc_images(series,next) {
             if (err) return next(err);        
             //logger.info("file last modified " +mtime + "seconds ago")
 
-            if (mtime > config.qc.tarball_age) {  // file has not been modified in the last 2 minutes
+            if (mtime > config.qc.tarball_age) {  // file has not been recently modified 
                 logger.info("QC-ing series_id:" + series._id + " -- " + primimage.headers.qc_series_desc);
                 
                 // find template for this series

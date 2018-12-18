@@ -17,7 +17,7 @@ db.init(function(err) {
 
 function qc_exam(exam_id,cb) {
 
-    console.log("qc_exam:  exam_id "+exam_id)
+    //console.log("qc_exam:  exam_id "+exam_id)
    
     var exam = {};
     var template_series = [];
@@ -52,7 +52,8 @@ function qc_exam(exam_id,cb) {
         },
             
         function(next) { 
-                        // find the most recent template for this research 
+
+            // find the most recent template for this research 
             db.Exam.find({"research_id":exam.research_id, "istemplate":true})
             .sort({"StudyTimestamp":-1})  
             .exec(function(err,texams) {
