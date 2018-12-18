@@ -54,7 +54,7 @@ function run(cb) {
 
             setTimeout(function() {
                 run(cb);
-            }, 1000*10);
+            }, 1000*60);
         })
     });
 }
