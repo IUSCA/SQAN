@@ -102,7 +102,7 @@ function incoming(h, msg_h, info, ack) {
             }, function(err,repeated_header) {
                 if (err) return next(err);
                 if (repeated_header) {
-                    logger.info("Repeated template header identified -- Please delete previous version before overwriting!!");   
+                    logger.info(h.SOPInstanceUID+ " -- Repeated template header identified -- "+ h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc);   
                     return next("Cannot overwrite template headers as some series may be have been QC-ed with this template");                     
                 } else {
                     next();
@@ -119,14 +119,15 @@ function incoming(h, msg_h, info, ack) {
                 SOPInstanceUID: h.SOPInstanceUID
             }, function(err,repeated_header) {
                 if (err) return next(err);
-                if (repeated_header) {
-                    logger.info("Repeated image header identified -- archiving and deprecating qc state"); 
-                    // ******** AAK - not finished - still need to archive old states somehow...
+                if (repeated_header) { 
+
                     var path = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
-                    var dir1 = config.cleaner.raw_headers+"/"+path;
-                    //var dir2 = config.cleaner.arxive_headers+"/"+path;                    
-                    // copy_to_arxive(dir1,dir2,function(err){
-                    //     if(err) throw err;
+                    logger.info("Repeated image header identified -- archiving and deprecating qc state of series "+ path);
+
+                    // moveDeletedHeaders(h, function(){
+
+                    // })
+                    
                         var path2tar = dir1+".tar";
                         fs.utimes(path2tar,new Date(),new Date(),function(err) {
                             if(err) return next(err);
@@ -476,16 +477,50 @@ function write_to_disk(dir, h, cb) {
     });
 }
 
-function copy_to_arxive(dir1,dir2, cb) {
-    fs.exists(dir2, function (exists) {
-        if(!exists) mkdirp.sync(dir2);
-        ncp(dir1, dir2, function (err) {
-            if (err) return cb(err);
-            console.log('copied files from ' + dir1 + ' to  '+ dir2);
-            rimraf(dir1, function (err) {
-                if(err) return cb(err);
-                cb();
-            });            
-        });
+// move template headers from dicom-raw to dicom-deleted
+function moveDeletedHeaders(h,cb){
+
+    logger.info("Moving headers from dicom-raw into dicom-deleted");
+    var origin_dir = config.cleaner.raw_headers;
+    var dest_dir = config.cleaner.deleted_headers;
+    var path = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;          
+    var now = new Date();
+    var deleted_dirname = dest_dir+"/"+path+"/" + now.getFullYear() + "-"+ now.getMonth() + "-" + now.getDate()+ "-"+ now.getHours() + "-" + now.getMinutes()
+
+    fs.exists(deleted_dirname, function (exists) {
+        console.log("deleted_dirname path exists : "+exists)
+        console.log(deleted_dirname)
+        if(!exists) {
+            console.log("creating directory to migrate headers")
+            mkdirp(deleted_dirname, function(err){
+                if (err) console.log("error in creating delete_directory "+ deleted_dirname+ " : "+err);
+                else {
+                    fs.rename(origin_dir+"/"+path+"/",deleted_dirname+"/", function(err) {
+                        if (err) return cb(err);
+                        fs.exists(origin_dir+"/"+path+".tar", function (exists) {
+                            if (exists) {
+                                fs.unlink(origin_dir+"/"+path+".tar",function(err){
+                                    if (err) return cb(err);
+                                    return cb();
+                                })
+                            } else return cb();                
+                        })
+                    });
+                }
+            });
+        } else {
+            fs.rename(origin_dir+"/"+path+"/",deleted_dirname+"/", function(err) {
+                if (err) return cb(err);
+                fs.exists(origin_dir+"/"+path+".tar", function (exists) {
+                    if (exists) {
+                        fs.unlink(origin_dir+"/"+path+".tar",function(err){
+                            if (err) return cb(err);
+                            return cb();
+                        })
+                    } else return cb();                
+                })
+            });
+        }
+
     });
 }

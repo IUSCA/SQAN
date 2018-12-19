@@ -4,9 +4,11 @@
 const _ = require('underscore'); 
 var async = require('async');
 
-//const config = require('../../config');
+var config = require('../../config');
 const db = require('../models');
 const events = require('../events');
+var fs = require('fs');
+var mkdirp = require('mkdirp');
 
 //connect to db and start processing batch indefinitely
 db.init(function(err) {
@@ -209,5 +211,55 @@ function reset_and_deprecate(series_id,cb) {
     })
 }
 
+
+// move template headers from dicom-raw to dicom-deleted
+function move_deleted_series(h,cb){
+
+    console.log("Moving headers from dicom-raw into dicom-deleted");
+    var origin_dir = config.cleaner.raw_headers;
+    var dest_dir = config.cleaner.deleted_headers;
+    var path = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;          
+    var now = new Date();
+    var deleted_dirname = dest_dir+"/"+path+"/" + now.getFullYear() + "-"+ now.getMonth() + "-" + now.getDate()+ "-"+ now.getHours() + "-" + now.getMinutes()
+
+    fs.exists(deleted_dirname, function (exists) {
+        console.log("deleted_dirname path exists : "+exists)
+        console.log(deleted_dirname)
+        if(!exists) {
+            console.log("creating directory to migrate headers")
+            mkdirp(deleted_dirname, function(err){
+                if (err) console.log("error in creating delete_directory "+ deleted_dirname+ " : "+err);
+                else {
+                    fs.rename(origin_dir+"/"+path+"/",deleted_dirname+"/", function(err) {
+                        if (err) return cb(err);
+                        fs.exists(origin_dir+"/"+path+".tar", function (exists) {
+                            if (exists) {
+                                fs.unlink(origin_dir+"/"+path+".tar",function(err){
+                                    if (err) return cb(err);
+                                    return cb();
+                                })
+                            } else return cb();                
+                        })
+                    });
+                }
+            });
+        } else {
+            fs.rename(origin_dir+"/"+path+"/",deleted_dirname+"/", function(err) {
+                if (err) return cb(err);
+                fs.exists(origin_dir+"/"+path+".tar", function (exists) {
+                    if (exists) {
+                        fs.unlink(origin_dir+"/"+path+".tar",function(err){
+                            if (err) return cb(err);
+                            return cb();
+                        })
+                    } else return cb();                
+                })
+            });
+        }
+
+    });
+}
+
 exports.qc_series = qc_series;
 exports.reset_and_deprecate = reset_and_deprecate;
+exports.move_deleted_series = move_deleted_series;
