@@ -335,6 +335,27 @@ exports.match = function(image, template, qc) {
 }
 
 
+function overwritte_template(template_id,new_event,cb) {
+
+    console.log("overwritting template "+template_id)
+        
+    // Now Un-qc the series
+    db.Template.update({
+        _id: template_id,
+    }, { $push: { events: new_event }}, 
+    function(err) {   
+        if(err) return cb(err);
+        // deprecate all images in that series
+        db.TemplateHeader.deleteMany({
+            template_id: template_id,
+        }, function(err) {
+            if(err) return cb(err);
+            return cb();
+        })
+    })
+}
+
 
 exports.cc = common_customs;
 exports.c = customs;
+exports.overwritte_template = overwritte_template;

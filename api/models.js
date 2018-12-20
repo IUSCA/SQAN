@@ -68,6 +68,13 @@ var templateSchema = mongoose.Schema({
     primary_image: {type: mongoose.Schema.Types.ObjectId, index: true},
     deprecated_by: {type: mongoose.Schema.Types.ObjectId},
     count: Number, //number of images in a given series
+    events: [ mongoose.Schema({
+        service_id: String, //if event was performeed by a system, this is set
+        user_id: String, //if event was performed by a user, this is set to req.user.sub
+        title: String,
+        detail: mongoose.Schema.Types.Mixed,
+        date: {type: Date, default: Date.now},
+    }) ],
     //date: Date, //date when this template is received (probabbly use StudyTimestamp of the template?) //TODO - maybe needed since we have exam collection now?
 });
 templateSchema.index({exam_id: 1, primary_image:1});

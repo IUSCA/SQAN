@@ -195,17 +195,59 @@ exports.isExcluded = function(modality, series_desc) {
 }
 
 
-function unQc_series(series_id,cb) {
+
+function unQc_series(series_id,new_event,cb) {
+
     console.log("deprecating series "+series_id)
-    // Un-qc the series
-    db.Series.findOneAndUpdate({
-        _id: series_id,
-    }, {$unset:{qc:1},qc1_state:"re-qcing" }, {'new': true}, 
-    function(err, series) {   
+
+    // first record previous qc state
+    db.Series.findOne({_id:series_id},function(err,series){
+
+        var detail= {
+            date_qced: null,
+            template_id: null,
+            qc1_state: null,
+        }
+
+        if(typeof series.qc === 'object' && series.qc !== null) {
+            detail.date_qced = series.qc.date;
+            detail.template_id = series.qc.template_id;
+        }
+        if (series.qc1_state) detail.qc1_state = series.qc1_state;
+
+        new_event.detail = detail;
+        
+        // Now Un-qc the series
+        db.Series.update({
+            _id: series._id,
+        }, {$unset:{qc:1},qc1_state:"re-qcing", $push: { events: new_event }}, 
+        function(err) {   
+            if(err) return cb(err);
+            // deprecate all images in that series
+            db.Image.deleteMany({
+                series_id: series._id,
+            }, function(err) {
+                if(err) return cb(err);
+                return cb();
+            })
+        })
+    })
+}
+
+
+function overwritte_template(template_id,new_event,cb) {
+
+    console.log("overwritting template "+template_id)
+        
+    // Now Un-qc the series
+    db.Template.update({
+        _id: template_id,
+    }, { $push: { events: new_event }}, 
+    function(err) {   
         if(err) return cb(err);
         // deprecate all images in that series
-        db.Image.deleteMany({
-            series_id: series._id,
+        db.TemplateHeader.deleteMany({
+            template_id: template_id,
         }, function(err) {
             if(err) return cb(err);
             return cb();
@@ -215,11 +257,10 @@ function unQc_series(series_id,cb) {
 
 
 
-
 // move template headers from dicom-raw to dicom-deleted
 function deprecate_series(h,type,cb){
 
-    console.log("Moving headers from dicom-raw into dicom-deleted");
+    //console.log("Moving headers from dicom-raw into dicom-deleted");
     var path = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;              
     var new_dirname = config.cleaner.deleted_headers+"/"+path+"/";
 
@@ -248,11 +289,11 @@ function deprecate_series(h,type,cb){
 var file_exists = function(path2file){
     try {
         if (fs.existsSync(path2file)) {
-            console.log(path2file+ " exists" );
+            //console.log(path2file+ " exists" );
             return true;
         }
       } catch(err) {
-        console.log(path2file+ " does not exist: "+ err.code);
+        //console.log(path2file+ " does not exist: "+ err.code);
         return false;
       }
 }
@@ -265,6 +306,7 @@ function delete_and_move(path,type,cb) {
     
     if (file_exists(file2rename)){
         console.log("renaming file -- "+file2rename +" ==> " +config.cleaner.deleted_headers+"/"+path+"/"+type+"_"+timestamp+".tar");
+
         fs.rename(file2rename,config.cleaner.deleted_headers+"/"+path+"/"+type+"_"+timestamp+".tar", function(err) {
             if (err) return cb(err);
             console.log("deleting directory -- "+config.cleaner.raw_headers+"/"+path)
@@ -274,7 +316,7 @@ function delete_and_move(path,type,cb) {
             });
         });
     } else {
-        console.log(file2rename+ " does not exist but it shoud.... ");
+        //console.log(file2rename+ " does not exist but it shoud.... ");
         return cb();
     }
 
@@ -284,3 +326,4 @@ exports.file_exists = file_exists;
 exports.qc_series = qc_series;
 exports.unQc_series = unQc_series;
 exports.deprecate_series = deprecate_series;
+exports.overwritte_template = overwritte_template;

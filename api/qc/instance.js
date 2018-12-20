@@ -460,11 +460,11 @@ exports.check_tarball_mtime = function(primimage,cb) {
 var file_exists = function(path2file){
     try {
         if (fs.existsSync(path2file)) {
-            console.log(path2file+ " exists" );
+            //console.log(path2file+ " exists" );
             return true;
         }
       } catch(err) {
-        console.log(path2file+ " does not exist: "+ err.code);
+        //console.log(path2file+ " does not exist: "+ err.code);
         return false;
       }
 }

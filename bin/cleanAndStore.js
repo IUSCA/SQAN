@@ -98,8 +98,41 @@ function incoming(h, msg_h, info, ack) {
             }, function(err,repeated_header) {
                 if (err) return next(err);
                 if (repeated_header) {
-                    logger.info(h.SOPInstanceUID+ " -- Repeated template header identified -- "+ h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc);   
-                    return next("Cannot overwrite template headers as some series may be have been QC-ed with this template");                     
+
+                    var path = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
+
+                    logger.info(h.SOPInstanceUID+ " --Repeated image header identified -- archiving and deprecating qc state of series "+ path); 
+                    
+                    // check if this template is used for QC
+                    db.Template.findOne({_id:repeated_header.template_id},function(err,template){
+                        if (err) return next(err);
+
+                        db.Series.find({"qc.template_id":template._id}).count(function (err, usedInQC) {
+                            if (err) return next(err);
+                            
+                            if (usedInQC == 0) {
+            
+                                qc_func.series.deprecate_series(h, 'overwritten',function(err){
+                                    if (err) return next(err);
+            
+                                    var new_event = {    
+                                        service_id: 'cleanAndStore', //if event was performeed by a system, this is set
+                                        user_id: 'SCA', //if event was performed by a user, this is set to req.user.sub
+                                        title: 'template was overwritten',
+                                        detail: {},
+                                        date: new Date()
+                                    }
+            
+                                    qc_func.series.overwritte_template(repeated_header.series_id,new_event,function(err) {
+                                        if (err) return next(err);
+                                        return next()
+                                    })                                          
+                                })
+                            } else {                                  
+                                return next("Cannot overwrite template -- it is currently used to QC "+usedInQC+ " series"); 
+                            }
+                        })
+                    })                    
                 } else {
                     next();
                 }
@@ -121,19 +154,22 @@ function incoming(h, msg_h, info, ack) {
 
                     logger.info(h.SOPInstanceUID+ " --Repeated image header identified -- archiving and deprecating qc state of series "+ path);
 
-                    // qc_funcs.series.deprecate_series(h,function(err){
+                    qc_func.series.deprecate_series(h, 'overwritten',function(err){
+                        if (err) return next(err);
 
-                    // })
-                    
-                        var path2tar = dir1+".tar";
-                        fs.utimes(path2tar,new Date(),new Date(),function(err) {
-                            if(err) return next(err);
-                            qc_func.series.unQc_series(repeated_header.series_id,function(err) {
-                                if (err) return next(err);
-                                return next()
-                            })
-                        })
-                    //})                    
+                        var new_event = {    
+                            service_id: 'cleanAndStore', //if event was performeed by a system, this is set
+                            user_id: 'SCA', //if event was performed by a user, this is set to req.user.sub
+                            title: 'series was overwritten',
+                            detail: {},
+                            date: new Date()
+                        }
+
+                        qc_func.series.unQc_series(repeated_header.series_id,new_event,function(err) {
+                            if (err) return next(err);
+                            return next()
+                        })                                          
+                    })
                 } else {
                     next();
                 }
