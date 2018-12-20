@@ -443,10 +443,28 @@ exports.reconstruct_header = function(_header,_primary_image,cb) {
 
 exports.check_tarball_mtime = function(primimage,cb) {
     // check for the last modified date on the coresponding tar file
-    var path2tar = config.cleaner.raw_headers+"/"+primimage.qc_iibisid+"/"+primimage.qc_subject+"/"+primimage.StudyInstanceUID+"/"+primimage.qc_series_desc+".tar";          
-    fs.stat(path2tar,function(err,stats){
-        if (err) cb(err); 
-        var mtime = (parseInt((new Date).getTime()) - parseInt(new Date(stats.mtime).getTime()))/1000;
-        cb(null,mtime);
-    });
+    var path2tar = config.cleaner.raw_headers+"/"+primimage.qc_iibisid+"/"+primimage.qc_subject+"/"+primimage.StudyInstanceUID+"/"+primimage.qc_series_desc+".tar"; 
+    
+    if(file_exists(path2tar)){
+        fs.stat(path2tar,function(err,stats){
+            if (err) cb(err); 
+            var mtime = (parseInt((new Date).getTime()) - parseInt(new Date(stats.mtime).getTime()))/1000;
+            cb(null,mtime);
+        });
+    } else{
+        cb(null,0);
+    }    
+}
+
+
+var file_exists = function(path2file){
+    try {
+        if (fs.existsSync(path2file)) {
+            console.log(path2file+ " exists" );
+            return true;
+        }
+      } catch(err) {
+        console.log(path2file+ " does not exist: "+ err.code);
+        return false;
+      }
 }

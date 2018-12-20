@@ -126,7 +126,7 @@ var seriesSchema = mongoose.Schema({
         service_id: String, //if event was performeed by a system, this is set
         user_id: String, //if event was performed by a user, this is set to req.user.sub
         title: String,
-        detail: String,
+        detail: mongoose.Schema.Types.Mixed,
         date: {type: Date, default: Date.now},
     }) ],
 

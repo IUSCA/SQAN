@@ -9,16 +9,12 @@ var amqp = require('amqp');
 var winston = require('winston');
 var async = require('async');
 var mkdirp = require('mkdirp');
-var ncp = require('ncp').ncp;
-var rimraf = require('rimraf');
-var touch = require("touch")
- 
 
 //mine
 var config = require('../config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../api/models');
-var qc = require('../api/qc');
+var qc_func = require('../api/qc');
 
 //to-be-initizalied
 var conn = null;
@@ -76,7 +72,7 @@ function incoming(h, msg_h, info, ack) {
                 //parse some special fields
                 //if these fields fails to set, rest of the behavior is undefined.
                 //according to john, however, iibisid and subject should always be found
-                var meta = qc.instance.parseMeta(h);
+                var meta = qc_func.instance.parseMeta(h);
                 h.qc_iibisid = meta.iibisid;
                 h.qc_subject = meta.subject;
                 h.qc_istemplate = meta.template;
@@ -84,7 +80,7 @@ function incoming(h, msg_h, info, ack) {
                 //h.qc_series_desc_version = meta.series_desc_version;
 
                 //construct esindex
-                var esindex = qc.instance.composeESIndex(h);
+                var esindex = qc_func.instance.composeESIndex(h);
                 logger.info(h.qc_iibisid+" subject:"+h.qc_subject+" esindex:"+esindex+" "+h.SOPInstanceUID);
                 h.qc_esindex = esindex;
                 next();
@@ -122,16 +118,17 @@ function incoming(h, msg_h, info, ack) {
                 if (repeated_header) { 
 
                     var path = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
-                    logger.info("Repeated image header identified -- archiving and deprecating qc state of series "+ path);
 
-                    // moveDeletedHeaders(h, function(){
+                    logger.info(h.SOPInstanceUID+ " --Repeated image header identified -- archiving and deprecating qc state of series "+ path);
+
+                    // qc_funcs.series.deprecate_series(h,function(err){
 
                     // })
                     
                         var path2tar = dir1+".tar";
                         fs.utimes(path2tar,new Date(),new Date(),function(err) {
                             if(err) return next(err);
-                            qc.series.reset_and_deprecate(repeated_header.series_id,function(err) {
+                            qc_func.series.unQc_series(repeated_header.series_id,function(err) {
                                 if (err) return next(err);
                                 return next()
                             })
@@ -167,7 +164,7 @@ function incoming(h, msg_h, info, ack) {
 
         function(next) {
             try {       
-                qc.instance.clean(h);                 
+                qc_func.instance.clean(h);                 
                 console.log('cleaned image: '+h.SOPInstanceUID)
                 next();
             } catch(err) {
@@ -288,7 +285,7 @@ function incoming(h, msg_h, info, ack) {
                             headers: h
                         }, function(err,primary_template) {
                             if (err) return next(err);
-                            var deprecated_by = deprecatedByTemplate(template);
+                            var deprecated_by = template_deprecatedBy(template);
                             console.log("derprecated_by " + deprecated_by)
                             // finally, insert primary_template._id into the template document  
                             db.Template.updateOne({_id: template._id}, 
@@ -302,7 +299,7 @@ function incoming(h, msg_h, info, ack) {
                         })                                
                     } else {
                         //var echonumber = h.EchoNumbers;
-                        qc.instance.compare_with_primary(_primary_template.headers,h,function(){
+                        qc_func.instance.compare_with_primary(_primary_template.headers,h,function(){
                             db.TemplateHeader.create({
                                 template_id: template._id,
                                 SOPInstanceUID: h.SOPInstanceUID,
@@ -329,7 +326,7 @@ function incoming(h, msg_h, info, ack) {
                 exam_id: exam._id,
                 series_desc: h.qc_series_desc,
                 SeriesNumber: h.SeriesNumber,
-                isexcluded: qc.series.isExcluded(h.Modality, h.qc_series_desc)
+                isexcluded: qc_func.series.isExcluded(h.Modality, h.qc_series_desc)
             }, {}, {upsert: true, 'new': true}, 
             function(err, _series) {   
                 if(err) return next(err);
@@ -350,7 +347,7 @@ function incoming(h, msg_h, info, ack) {
                             headers: h
                         }, function(err,primary_image) {
                             if (err) return next(err);
-                            var deprecated_by = deprecatedBySeries(series);
+                            var deprecated_by = series_deprecatedBy(series);
                             // finally, insert primary_image._id into the series document  
                             db.Series.updateOne({_id: series._id}, 
                             {
@@ -375,7 +372,7 @@ function incoming(h, msg_h, info, ack) {
                             }
                             // Finally, insert the image in the database
                             //var echonumber = h.EchoNumbers;
-                            qc.instance.compare_with_primary(_primary_image.headers,h,function(){
+                            qc_func.instance.compare_with_primary(_primary_image.headers,h,function(){
                                 db.Image.create({
                                     series_id: series._id,
                                     SOPInstanceUID: h.SOPInstanceUID,
@@ -412,7 +409,7 @@ function incoming(h, msg_h, info, ack) {
     });
 }
 
-var deprecatedBySeries = function(series) {    
+var series_deprecatedBy = function(series) {    
     db.Series.update({
         exam_id: series.exam_id,
         series_desc: series.series_desc,
@@ -437,7 +434,7 @@ var deprecatedBySeries = function(series) {
     }); 
 }
 
-var deprecatedByTemplate = function(template) {    
+var template_deprecatedBy = function(template) {    
     db.Template.update({
         exam_id: template.exam_id,
         series_desc: template.series_desc,
@@ -469,58 +466,9 @@ function write_to_tar(path2tar, path2file, cb) {
 }
 
 
-function write_to_disk(dir, h, cb) {
-    fs.exists(dir, function (exists) {
-        //if(!exists) fs.mkdirSync(dir);
-        if(!exists) mkdirp.sync(dir);
-        fs.writeFile(dir+"/"+h.SOPInstanceUID+".json", JSON.stringify(h,null,4), cb);
-    });
+function write_to_disk(dir, h, cb) {    
+
+    if(!qc_func.series.file_exists(dir)) mkdirp.sync(dir);
+    fs.writeFile(dir+"/"+h.SOPInstanceUID+".json", JSON.stringify(h,null,4), cb);
 }
 
-// move template headers from dicom-raw to dicom-deleted
-function moveDeletedHeaders(h,cb){
-
-    logger.info("Moving headers from dicom-raw into dicom-deleted");
-    var origin_dir = config.cleaner.raw_headers;
-    var dest_dir = config.cleaner.deleted_headers;
-    var path = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;          
-    var now = new Date();
-    var deleted_dirname = dest_dir+"/"+path+"/" + now.getFullYear() + "-"+ now.getMonth() + "-" + now.getDate()+ "-"+ now.getHours() + "-" + now.getMinutes()
-
-    fs.exists(deleted_dirname, function (exists) {
-        console.log("deleted_dirname path exists : "+exists)
-        console.log(deleted_dirname)
-        if(!exists) {
-            console.log("creating directory to migrate headers")
-            mkdirp(deleted_dirname, function(err){
-                if (err) console.log("error in creating delete_directory "+ deleted_dirname+ " : "+err);
-                else {
-                    fs.rename(origin_dir+"/"+path+"/",deleted_dirname+"/", function(err) {
-                        if (err) return cb(err);
-                        fs.exists(origin_dir+"/"+path+".tar", function (exists) {
-                            if (exists) {
-                                fs.unlink(origin_dir+"/"+path+".tar",function(err){
-                                    if (err) return cb(err);
-                                    return cb();
-                                })
-                            } else return cb();                
-                        })
-                    });
-                }
-            });
-        } else {
-            fs.rename(origin_dir+"/"+path+"/",deleted_dirname+"/", function(err) {
-                if (err) return cb(err);
-                fs.exists(origin_dir+"/"+path+".tar", function (exists) {
-                    if (exists) {
-                        fs.unlink(origin_dir+"/"+path+".tar",function(err){
-                            if (err) return cb(err);
-                            return cb();
-                        })
-                    } else return cb();                
-                })
-            });
-        }
-
-    });
-}

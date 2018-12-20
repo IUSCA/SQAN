@@ -9,6 +9,8 @@ const db = require('../models');
 const events = require('../events');
 var fs = require('fs');
 var mkdirp = require('mkdirp');
+var rimraf = require('rimraf');
+
 
 //connect to db and start processing batch indefinitely
 db.init(function(err) {
@@ -193,7 +195,7 @@ exports.isExcluded = function(modality, series_desc) {
 }
 
 
-function reset_and_deprecate(series_id,cb) {
+function unQc_series(series_id,cb) {
     console.log("deprecating series "+series_id)
     // Un-qc the series
     db.Series.findOneAndUpdate({
@@ -212,54 +214,73 @@ function reset_and_deprecate(series_id,cb) {
 }
 
 
+
+
 // move template headers from dicom-raw to dicom-deleted
-function move_deleted_series(h,cb){
+function deprecate_series(h,type,cb){
 
     console.log("Moving headers from dicom-raw into dicom-deleted");
-    var origin_dir = config.cleaner.raw_headers;
-    var dest_dir = config.cleaner.deleted_headers;
-    var path = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;          
-    var now = new Date();
-    var deleted_dirname = dest_dir+"/"+path+"/" + now.getFullYear() + "-"+ now.getMonth() + "-" + now.getDate()+ "-"+ now.getHours() + "-" + now.getMinutes()
+    var path = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;              
+    var new_dirname = config.cleaner.deleted_headers+"/"+path+"/";
 
-    fs.exists(deleted_dirname, function (exists) {
-        console.log("deleted_dirname path exists : "+exists)
-        console.log(deleted_dirname)
-        if(!exists) {
-            console.log("creating directory to migrate headers")
-            mkdirp(deleted_dirname, function(err){
-                if (err) console.log("error in creating delete_directory "+ deleted_dirname+ " : "+err);
-                else {
-                    fs.rename(origin_dir+"/"+path+"/",deleted_dirname+"/", function(err) {
-                        if (err) return cb(err);
-                        fs.exists(origin_dir+"/"+path+".tar", function (exists) {
-                            if (exists) {
-                                fs.unlink(origin_dir+"/"+path+".tar",function(err){
-                                    if (err) return cb(err);
-                                    return cb();
-                                })
-                            } else return cb();                
-                        })
-                    });
-                }
-            });
-        } else {
-            fs.rename(origin_dir+"/"+path+"/",deleted_dirname+"/", function(err) {
-                if (err) return cb(err);
-                fs.exists(origin_dir+"/"+path+".tar", function (exists) {
-                    if (exists) {
-                        fs.unlink(origin_dir+"/"+path+".tar",function(err){
-                            if (err) return cb(err);
-                            return cb();
-                        })
-                    } else return cb();                
+    if (!file_exists(new_dirname)){
+        console.log("creating directory to migrate headers -- "+new_dirname);
+        mkdirp(new_dirname, function(err){
+            if (err) {
+                console.log("error in creating new_directory "+ path+ " : "+err);
+                return cb(err);
+            } else {
+                delete_and_move(path,type,function(err){
+                    if (err) return cb(err);
+                    else return cb();
                 })
-            });
-        }
-
-    });
+            }
+        });
+    } else {
+        delete_and_move(path,type,function(err){
+            if (err) return cb(err);
+            else return cb();
+        })
+    }
 }
 
+
+var file_exists = function(path2file){
+    try {
+        if (fs.existsSync(path2file)) {
+            console.log(path2file+ " exists" );
+            return true;
+        }
+      } catch(err) {
+        console.log(path2file+ " does not exist: "+ err.code);
+        return false;
+      }
+}
+
+function delete_and_move(path,type,cb) {
+
+    var now = new Date();
+    var timestamp = now.getFullYear() + "-"+ now.getMonth() + "-" + now.getDate()+ "-"+ now.getHours() + "-" + now.getMinutes();
+    var file2rename = config.cleaner.raw_headers+"/"+path+".tar";
+    
+    if (file_exists(file2rename)){
+        console.log("renaming file -- "+file2rename +" ==> " +config.cleaner.deleted_headers+"/"+path+"/"+type+"_"+timestamp+".tar");
+        fs.rename(file2rename,config.cleaner.deleted_headers+"/"+path+"/"+type+"_"+timestamp+".tar", function(err) {
+            if (err) return cb(err);
+            console.log("deleting directory -- "+config.cleaner.raw_headers+"/"+path)
+            rimraf(config.cleaner.raw_headers+"/"+path, function (err) { 
+                if (err) return cb(err);
+                return cb();
+            });
+        });
+    } else {
+        console.log(file2rename+ " does not exist but it shoud.... ");
+        return cb();
+    }
+
+}
+
+exports.file_exists = file_exists;
 exports.qc_series = qc_series;
-exports.reset_and_deprecate = reset_and_deprecate;
-exports.move_deleted_series = move_deleted_series;
+exports.unQc_series = unQc_series;
+exports.deprecate_series = deprecate_series;

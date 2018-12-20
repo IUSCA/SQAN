@@ -5,14 +5,11 @@ var express = require('express');
 var router = express.Router();
 var winston = require('winston');
 var jwt = require('express-jwt');
-var fs = require('fs');
-var mkdirp = require('mkdirp');
 
 
 //mine
 var config = require('../../config');
 const qc_funcs = require('../qc');
-var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
 var mongoose = require('mongoose');
 
@@ -118,7 +115,7 @@ router.get('/deleteselected/:template_id', jwt({secret: config.express.jwt.pub})
                 if(err) return next(err);
 
                 // Move files from dicom-raw to dicom-deleted 
-                qc_funcs.series.move_deleted_series(h.headers,function(err){
+                qc_funcs.series.deprecate_series(h.headers,'deleted',function(err){
                      if (err) return next(err);
                      db.TemplateHeader.deleteMany({"template_id":template._id},function(err) {
                         if (err) return next(err);
@@ -149,7 +146,7 @@ router.get('/deleteall/:exam_id', jwt({secret: config.express.jwt.pub}), functio
                 if(err) return next(err);
 
                 // Move files from dicom-raw to dicom-deleted 
-                qc_funcs.series.move_deleted_series(h.headers,function(err){
+                qc_funcs.series.deprecate_series(h.headers,'deleted',function(err){
                      if (err) return next(err);
 
                      db.TemplateHeader.deleteMany({"template_id":temp._id},function(err) {
