@@ -303,7 +303,7 @@ function delete_and_move(path,type,cb) {
     var now = new Date();
     var timestamp = now.getFullYear() + "-"+ now.getMonth() + "-" + now.getDate()+ "-"+ now.getHours() + "-" + now.getMinutes();
     var file2rename = config.cleaner.raw_headers+"/"+path+".tar";
-    
+
     if (file_exists(file2rename)){
         console.log("renaming file -- "+file2rename +" ==> " +config.cleaner.deleted_headers+"/"+path+"/"+type+"_"+timestamp+".tar");
 
