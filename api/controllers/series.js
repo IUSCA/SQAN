@@ -379,64 +379,76 @@ router.get('/id/:series_id', jwt({secret: config.express.jwt.pub}), function(req
     .exec(function(err, series) {
         if(err) return next(err);
         if(!series) return res.status(404).json({message: "no such series:"+req.params.series_id});
-
+        
         //make sure user has access to this series
-        db.Acl.can(req.user, 'view', series.IIBISID, function(can) {
-            if(!can) return res.status(401).json({message: "you are not authorized to view this IIBISID:"+series.IIBISID});
-            db.Acl.can(req.user, 'qc', series.IIBISID, function(canqc) {
-                var ret = {
-                    canqc: canqc,
-                    series: series,
-                };
-
-                //load research detail
-                db.Research.findById(series.research_id).exec(function(err, research) {
-                    if(err) return next(err);
-                    ret.research = research;
-
-                    //load all template exams available for this research
-                    db.Exam.find({research_id: research._id, istemplate: true}).exec(function(err, exams) {
-                        if(err) return next(err);
-                        ret.template_exams = exams;
-
-                        //load image details
-                        db.Image.find().lean()
-                        .where('series_id').equals(series._id)
-                        .sort('headers.InstanceNumber')
-                        .select({qc: 1, 'headers.InstanceNumber': 1, 'headers.AcquisitionNumber': 1})
-                        .exec(function(err, _images) {
+        db.Exam.findOne().lean()
+        .where('_id').equals(series.exam_id)
+        .select({_id: 1,'research_id':1})
+        .exec(function(err, exam) {
+            if(err) return next(err);
+            console.log(exam);
+            //load research detail
+            db.Research.findById(exam.research_id).exec(function(err, research) {
+                if(err) return next(err);
+                //db.Acl.can(req.user, 'view', research.IIBISID, function(can) { 
+                    //console.log("user can view: " +can)           
+                    //if(!can) return res.status(401).json({message: "you are not authorized to view this research: "+research.IIBISID});
+                    //db.Acl.can(req.user, 'qc', research.IIBISID, function(canqc) {
+                        //console.log("user can qc: "+ canqc);
+                        var ret = {
+                            canqc: true, //canqc,
+                            series: series,
+                            research: research,
+                        };
+                        //load all template exams available for this research
+                        db.Exam.find({research_id: research._id, istemplate: true}).exec(function(err, exams) {
                             if(err) return next(err);
-                            
-                            //don't return the qc.. just return counts of errors / warnings
-                            ret.images = [];
-                            _images.forEach(function(_image) {
-                                var image = { 
-                                    _id: _image._id, 
-                                    inum: _image.headers.InstanceNumber,
-                                    anum: _image.headers.AcquisitionNumber,
-                                };
-                                if(_image.qc) {
-                                    image.errors = 0;
-                                    image.warnings = 0;
-                                    if(_image.qc.errors) image.errors = _image.qc.errors.length;
-                                    if(_image.qc.warnings) image.warnings = _image.qc.warnings.length;
-                                    image.notemp = _image.qc.notemp;
-                                }
-                                ret.images.push(image);
-                            });
+                            ret.template_exams = exams;
 
-                            //load template used to QC
-                            if(series.qc) {
-                                db.Template.findById(series.qc.template_id).exec(function(err, template) {
-                                    ret.qc_template = template;
-                                    res.json(ret);
+                            //load image details
+                            db.Image.find().lean()
+                            .where('series_id').equals(series._id)
+                            .sort('headers.InstanceNumber')
+                            .select({qc: 1, 'headers.InstanceNumber': 1})//, 'headers.AcquisitionNumber': 1})
+                            .exec(function(err, _images) {
+                                if(err) return next(err);
+                                
+                                //don't return the qc.. just return counts of errors / warnings
+                                ret.images = [];
+                                _images.forEach(function(_image) {
+                                    var image = { 
+                                        _id: _image._id, 
+                                        inum: _image.headers.InstanceNumber,
+                                        //anum: _image.headers.AcquisitionNumber,
+                                    };
+                                    if(_image.qc) {
+                                        image.errors = 0;
+                                        image.warnings = 0;
+                                        if(_image.qc.errors) image.errors = _image.qc.errors.length;
+                                        if(_image.qc.warnings) image.warnings = _image.qc.warnings.length;
+                                        image.notemp = _image.qc.notemp;
+                                    }
+                                    ret.images.push(image);
                                 });
-                            } else res.json(ret);
-                        }); 
-                    });
-                });
+
+                                //load template used to QC
+                                if(series.qc) {
+                                    db.Template.findById(series.qc.template_id).exec(function(err, template) {
+                                        ret.qc_template = template;
+                                        console.log(ret);
+                                        res.json(ret);
+                                    });
+                                } else {
+                                    console.log(ret);
+                                    res.json(ret);
+                                }
+                            }); 
+                        });
+                    //});
+                //});
             });
-        });
+        })
+
     });
 });
 

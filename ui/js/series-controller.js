@@ -15,6 +15,7 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
         $http.get(appconf.api+'/series/id/'+$routeParams.seriesid)
         .then(function(res) {
             $scope.data = res.data;
+            console.log($scope.data);
             if($scope.data.images) {
                 $scope.data.images.forEach(computeColor);
             }
