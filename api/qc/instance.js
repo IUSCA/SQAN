@@ -452,7 +452,7 @@ exports.check_tarball_mtime = function(primimage,cb) {
             cb(null,mtime);
         });
     } else{
-        cb(null,0);
+        cb(null,-1);
     }    
 }
 

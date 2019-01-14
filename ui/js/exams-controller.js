@@ -5,8 +5,24 @@ app.controller('ExamsController',
 
         $scope.selected = null;
         $scope.selected_modality = null;
-        $scope.$parent.active_menu = "exams"
+        $scope.$parent.active_menu = "exams"+$routeParams.level;
         $scope.view_mode = "tall";
+        $scope.qc_title = 'Exams';
+        $scope.qc_text = 'exams';
+        switch($routeParams.level) {
+            case "all":
+                break;
+            case "1":
+                pending = 'qc1';
+                $scope.qc_title = 'QC1 Pending';
+                $scope.qc_text = 'QC1 pending exams';
+                break;
+            case "2":
+                pending = 'qc2';
+                $scope.qc_title = 'QC2 Pending';
+                $scope.qc_text = 'QC2 pending exams';
+                break;
+        };
         $scope.show_deprecated = true;
         $scope.serieses_count = 0;
         $scope.modalities = {
@@ -29,12 +45,14 @@ app.controller('ExamsController',
         };
 
         $scope.select = function(modality, subjectuid) {
-            console.log(modality)
+            console.log(modality);
+            console.log(subjectuid);
 
             var where = {};
             var research = modality.research;
 
             where.research_id = research._id;
+
             switch($scope.search.recentrange) {
                 case "all":
                     break;
@@ -70,12 +88,16 @@ app.controller('ExamsController',
                     function handle_scroll() {
                         if (!subjectuid) return;
                         console.log("handling scroll " + subjectuid);
-                        var pos = $('#' + subjectuid.replace(/\./g, '\\.')).position();
+                        var pos = $('#' + research._id + '_' + subjectuid.replace(/\./g, '\\.')).position();
                         if (pos) {
-                            window.scrollTo(0, pos.top - 85);
+                            window.scroll({
+                                top: pos.top - 85,
+                                left: 0,
+                                behavior: 'smooth'
+                            });
                         } else {
                             //item not loaded yet.. wait
-                            $timeout(handle_scroll, 1000, false);
+                            $timeout(handle_scroll, 100, false);
                         }
                     }
 
@@ -92,6 +114,18 @@ app.controller('ExamsController',
         //construct query
 
         function load(where) {
+            var pending = null;
+            switch($routeParams.level) {
+                case "all":
+                    break;
+                case "1":
+                    pending = 'qc1';
+                    break;
+                case "2":
+                    pending = 'qc2';
+                    break;
+            };
+
             var sortby = {};
             switch($scope.search.sort) {
                 case "dateup":
@@ -113,7 +147,8 @@ app.controller('ExamsController',
                     skip: 0,
                     limit: 5000000,
                     where: where,
-                    sort: sortby
+                    sort: sortby,
+                    pending: pending
                 }
             })
                 .then(function (res) {
