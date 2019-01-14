@@ -117,7 +117,7 @@ exports.Handler = mongoose.model('Handler', handlerSchema);
 var seriesSchema = mongoose.Schema({
     ///////////////////////////////////////////////////////////////////////////
 
-    exam_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    exam_id: {type: mongoose.Schema.Types.ObjectId, index: true, ref: 'Exam'},
     series_desc: {type: String}, //original SeriesDescription minut anything after ^
     SeriesNumber: {type: Number}, //some study has repeated series
     deprecated_by: {type: mongoose.Schema.Types.ObjectId},
@@ -153,7 +153,7 @@ var imageSchema = mongoose.Schema({
     
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    series_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    series_id: {type: mongoose.Schema.Types.ObjectId, index: true, ref: 'Series'},
     SOPInstanceUID : {type: String, index: true},
 
     InstanceNumber: {type: Number},

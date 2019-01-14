@@ -58,12 +58,12 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         controller: 'TemplateController',
         requiresLogin: true
     })
-    .when('/qc/:level/:researchid?/:subjectid?', {
-        templateUrl: 't/qc.html',
-        controller: 'QCController',
-        requiresLogin: true
-    })
-    .when('/exams', {
+    // .when('/qc/:level/:researchid?/:subjectid?', {
+    //     templateUrl: 't/qc.html',
+    //     controller: 'QCController',
+    //     requiresLogin: true
+    // })
+    .when('/exams/:level?', {
         templateUrl: 't/exams.html',
         controller: 'ExamsController',
         requiresLogin: true

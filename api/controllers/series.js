@@ -217,6 +217,7 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
     //lookup iibisids that user has access to (TODO - refactor this to aclSchema statics?)
     
     var where = JSON.parse(req.query.where);
+    console.log(where);
     var r_id = where.research_id;
     console.log(r_id);
     var timerange = where.StudyTimestamp ? where.StudyTimestamp : null;
@@ -244,7 +245,7 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
             function(next) {
                 var query = db.Exam.find().lean()
                 query.where('research_id', r_id);
-                query.where('istemplate', false)                
+                query.where('istemplate', false);
                 query.sort({StudyTimestamp: -1});
 
                 query.exec(function(err, _exams) {
@@ -453,13 +454,20 @@ router.get('/id/:series_id', jwt({secret: config.express.jwt.pub}), function(req
 });
 
 router.post('/comment/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    db.Series.findById(req.params.series_id).exec(function(err, series) {
+    db.Series.findById(req.params.series_id)
+        .populate({
+            path: 'exam_id',
+            populate: {
+                path: 'research_id'
+            }
+        })
+        .exec(function(err, series) {
         if(err) return next(err);
         if(!series) return res.status(404).json({message: "can't find specified series"});
         //make sure user has access to this series
-        db.Acl.can(req.user, 'view', series.IIBISID, function(can) {
+        db.Acl.can(req.user, 'view', series.exam_id.research_id.IIBISID, function(can) {
         //db.Acl.canAccessIIBISID(req.user, series.IIBISID, function(can) {
-            if(!can) return res.status(401).json({message: "you are not authorized to view this IIBISID:"+series.IIBISID});
+            if(!can) return res.status(401).json({message: "you are not authorized to view this IIBISID:"+series.exam_id.research_id.IIBISID});
             if(!series.comments) series.comments = [];
             var comment = {
                 user_id: req.user.sub,
@@ -476,13 +484,20 @@ router.post('/comment/:series_id', jwt({secret: config.express.jwt.pub}), functi
 });
 
 router.post('/qcstate/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    db.Series.findById(req.params.series_id).exec(function(err, series) {
+    db.Series.findById(req.params.series_id)
+        .populate({
+            path: 'exam_id',
+            populate: {
+                path: 'research_id'
+            }
+        })
+        .exec(function(err, series) {
         if(err) return next(err);
         if(!series) return res.status(404).json({message: "can't find specified series"});
         //make sure user has access to this series
-        db.Acl.can(req.user, 'qc', series.IIBISID, function(can) {
+        db.Acl.can(req.user, 'qc', series.exam_id.research_id.IIBISID, function(can) {
         //db.Acl.canAccessIIBISID(req.user, series.IIBISID, function(can) {
-            if(!can) return res.status(401).json({message: "you are not authorized to QC this IIBISID:"+series.IIBISID});
+            if(!can) return res.status(401).json({message: "you are not authorized to QC this IIBISID:"+series.exam_id.research_id.IIBISID});
             var event = {
                 user_id: req.user.sub,
                 title: "Updated QC "+req.body.level+" state to "+req.body.state,
@@ -504,13 +519,20 @@ router.post('/qcstate/:series_id', jwt({secret: config.express.jwt.pub}), functi
 //change template and invalidate QC
 //TODO I haven't implemented unsetting of template yet..
 router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    db.Series.findById(req.params.series_id).exec(function(err, series) {
+    db.Series.findById(req.params.series_id)
+        .populate({
+            path: 'exam_id',
+            populate: {
+                path: 'research_id'
+            }
+        })
+        .exec(function(err, series) {
         if(err) return next(err);
         if(!series) return res.status(404).json({message: "can't find specified series"});
         //make sure user has access to this series
-        db.Acl.can(req.user, 'qc', series.IIBISID, function(can) {
+        db.Acl.can(req.user, 'qc', series.exam_id.research_id.IIBISID, function(can) {
         //db.Acl.canAccessIIBISID(req.user, series.IIBISID, function(can) {
-            if(!can) return res.status(401).json({message: "you are not authorized to QC this IIBISID:"+series.IIBISID});
+            if(!can) return res.status(401).json({message: "you are not authorized to QC this IIBISID:"+series.exam_id.research_id.IIBISID});
             //make sure template_id belongs to this series (don't let user pick someone else's template)
             db.Exam.findById(req.body.exam_id).exec(function(err, exam) {
                 if(err) return next(err);
@@ -540,7 +562,14 @@ router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), funct
 });
 
 router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    db.Series.findById(req.params.series_id, function(err, series) {
+    db.Series.findById(req.params.series_id)
+        .populate({
+            path: 'exam_id',
+            populate: {
+                path: 'research_id'
+            }
+        })
+        .exec(function(err, series) {
         if(err) return next(err);
         if(!series) return res.status(404).json({message: "can't find specified series"});
         //make sure user has access to this research
@@ -550,8 +579,8 @@ router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub}), function(
             date: new Date(), //should be set by default, but UI needs this right away
             detail: "",
         };
-        db.Acl.can(req.user, 'qc', series.IIBISID, function(can) {
-            if(!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:"+series.IIBISID});
+        db.Acl.can(req.user, 'qc', series.exam_id.research_id.IIBISID, function(can) {
+            if(!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:"+series.exam_id.research_id.IIBISID});
             series.qc = undefined;
             series.events.push(event);
             events.series(series);
@@ -568,12 +597,14 @@ router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub}), function(
 });
 
 router.post('/reqcbyexamid/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    db.Exam.findById(req.params.exam_id, function(err, exam) {
+    db.Exam.findById(req.params.exam_id)
+        .populate('research_id')
+        .exec(function(err, exam) {
         if(err) return next(err);
         if(!exam) return res.status(404).json({message: "can't find specified exam"});
         //make sure user has access to this research
-        db.Acl.can(req.user, 'qc', exam.IIBISID, function(can) {
-            if(!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:"+exam.IIBISID});
+        db.Acl.can(req.user, 'qc', exam.research_id.IIBISID, function(can) {
+            if(!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:"+exam.research_id.IIBISID});
             //find all serieses user specified
             db.Series.find({exam_id: req.params.exam_id}).exec(function(err, serieses) {
                 if(err) return next(err);

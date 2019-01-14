@@ -51,8 +51,20 @@
                 <table class="table table-header-rotated table-condensed" ng-show="subjects.length">
                     <thead>
                     <tr>
-                        <th></th>
-                        <th class="rotate-45 text-muted" ng-repeat="sub in subjects"><div style="white-space: nowrap;"><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></th>
+                        <th><div class="row">
+                            <div class="input-group" style="width:250px;">
+                                <span class="input-group-addon input-sm"><i class="fa fa-fw fa-user"></i></span>
+                                <input type="text" class="form-control input-sm" ng-model="subfilter" placeholder="subject...">
+                            </div>
+                            </div>
+                            <div class="row">
+                            <div class="input-group" style="width:250px;">
+                                <span class="input-group-addon input-sm"><i class="fa fa-fw fa-list-alt"></i></span>
+                                <input type="text" class="form-control input-sm" ng-model="seriesfilter" placeholder="series...">
+                            </div>
+                            </div>
+                        </th>
+                        <th class="rotate-45 text-muted" ng-repeat="sub in subjects | filter:subfilter"><div style="white-space: nowrap;"><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></th>
                     </tr>
                     </thead>
                     <tbody ng-repeat="(mod, res) in summary">
@@ -60,12 +72,12 @@
                         <td colspan="100" style="background-color: #006687; color: white"><h5><b>{{mod}}</b></h5></td>
                     </tr>
                     <tr>
-                        <th><span class="pull-right text-muted">Series Descriptions</h6></th>
+                        <th><h6 class="pull-right text-muted">Series Descriptions</h6></th>
                         <td colspan="100"></td>
                     </tr>
-                    <tr ng-repeat="sd in res.series_desc">
-                        <td><span class="pull-right">{{sd}}</span></td>
-                        <td style="white-space:nowrap" ng-repeat="sub in subjects">
+                    <tr ng-repeat="sd in res.series_desc | filter:seriesfilter">
+                        <td><span class="pull-right">{{sd}}&nbsp;&nbsp;</span></td>
+                        <td style="white-space:nowrap" ng-repeat="sub in subjects | filter:subfilter">
                               <span style="cursor: pointer" class="color-box"
                                 ng-repeat="exam in res.exams[sub]"
                                    ng-click="openstudy(exam[sd]._id)"
@@ -78,7 +90,7 @@
                                   tooltip-html-unsafe="{{makeTooltip(sub, exam[sd])}}" tooltip-append-to-body="true"></span>
                         </td>
                     </tr>
-                    <tr><td colspan="100"></td></tr>
+                    <tr><td colspan="100"> </td></tr>
                     </tbody>
                 </table>
             </div>

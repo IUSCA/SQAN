@@ -1,9 +1,9 @@
 <div class="subbar subbarnew">
     <div style="padding: 0px 15px; margin-bottom: 10px">
         <div>
-            <h2>Exams</h2>
-            <p class="help-block" ng-if="search.recentrange != 'all'">Showing exams taken in last {{search.recentrange}} days</p>
-            <p class="help-block" ng-if="search.recentrange == 'all'">Showing all exams</p>
+            <h2>{{qc_title}}</h2>
+            <p class="help-block" ng-if="search.recentrange != 'all'">Showing {{qc_text}} taken in last {{search.recentrange}} days</p>
+            <p class="help-block" ng-if="search.recentrange == 'all'">Showing all {{qc_text}}</p>
         </div>
 
         <input type="text" class="form-control" ng-model="research_filter" placeholder="Filter">
@@ -58,7 +58,7 @@
                     {{modality.research.Modality}} / {{modality.research.StationName}}
                     <small ng-show="modality.research.Modality == 'PT'"> / {{modality.research.radio_tracer}}</small> <em>({{modality.exams.length}})</em><br><br>
                     <div ng-repeat="exam in modality.exams"
-                         ng-click="select(modality, subject.uid);$event.stopPropagation()"
+                         ng-click="select(modality, exam.subject);$event.stopPropagation()"
                          class="subject-label">
                         <small style="position: absolute; color: black">{{exam.subject}}</small>
                         <div class="progress exam-state pull-right"
@@ -104,7 +104,7 @@
         <div style="margin-top: 65px;">
             <div ng-repeat="(subject, subject_detail) in selected.subjects"
                  class="subject"
-                 id="{{subject_detail.uid}}">
+                 id="{{selected._detail._id + '_' + subject}}">
                 <h4>
                     <b>{{subject}}</b>
                     <!-- <span class="text-muted">Subject</span> -->

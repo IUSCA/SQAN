@@ -7,6 +7,8 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, serverconf) {
     $scope.research = {
         selected: ''
     };
+    $scope.subfilter = '';
+    $scope.seriesfilter = '';
 
     $scope.loading = true;
 
@@ -81,6 +83,8 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, serverconf) {
         $scope.loading = true;
         $scope.summary = {};
         $scope.subjects = [];
+        $scope.subfilter = '';
+        $scope.seriesfilter = '';
         $scope.getIIBIS();
         angular.forEach($scope.research.selected.studies, function(s){
             console.log(s);

@@ -47,6 +47,7 @@ function run(cb) {
             exams2qc.forEach(function(ee){
                 qc_funcs.exam.qc_exam(ee,function(err){
                     if (err) return cb(err);
+                    //console.log('Done with exam: ', ee);
                 })
             })
             
@@ -54,7 +55,7 @@ function run(cb) {
 
             setTimeout(function() {
                 run(cb);
-            }, 1000*60);
+            }, 1000*3);
         })
     });
 }
@@ -65,14 +66,14 @@ function qc_images(series,next) {
     // find the primary image for this series
     db.Image.findOne({"series_id":series._id, "primary_image":null},function(err,primimage) {
         if (err) return next(err);
-        //console.log(`primary image for this series : ${primimage._id}`);
+        console.log(`primary image for this series : ${primimage._id}`);
 
         // make sure all images in this series have been cleaned and stored
         qc_funcs.instance.check_tarball_mtime(primimage.headers, function(err,mtime) {
             if (err) return next(err);        
-            //logger.info("file last modified " +mtime + "seconds ago")
+            // logger.info("file last modified " +mtime + "seconds ago")
 
-            if (mtime > config.qc.tarball_age) {  // file has not been recently modified 
+            if (mtime > config.qc.tarball_age || mtime < 0) {  // file has not been recently modified or does not exist
                 logger.info("QC-ing series_id:" + series._id + " -- " + primimage.headers.qc_series_desc);
                 
                 // find template for this series
