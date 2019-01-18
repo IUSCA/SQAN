@@ -10,6 +10,8 @@ const events = require('../events');
 var fs = require('fs');
 var mkdirp = require('mkdirp');
 var rimraf = require('rimraf');
+var tar = require('tar');
+
 
 
 //connect to db and start processing batch indefinitely
@@ -298,6 +300,7 @@ var file_exists = function(path2file){
       }
 }
 
+
 function delete_and_move(path,type,cb) {
 
     var now = new Date();
@@ -309,17 +312,17 @@ function delete_and_move(path,type,cb) {
 
         fs.rename(file2rename,config.cleaner.deleted_headers+"/"+path+"/"+type+"_"+timestamp+".tar", function(err) {
             if (err) return cb(err);
-            console.log("deleting directory -- "+config.cleaner.raw_headers+"/"+path)
-            rimraf(config.cleaner.raw_headers+"/"+path, function (err) { 
+            console.log("deleting files in directory -- "+config.cleaner.raw_headers+"/"+path)
+            rimraf(config.cleaner.raw_headers+"/"+path+"/*", function (err) { 
                 if (err) return cb(err);
-                return cb();
+                tar.c({file: file2rename},['/dev/null']
+                    ).then(cb);
             });
         });
     } else {
         //console.log(file2rename+ " does not exist but it shoud.... ");
         return cb();
     }
-
 }
 
 exports.file_exists = file_exists;
