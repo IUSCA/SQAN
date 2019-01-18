@@ -8,7 +8,8 @@
             <tr><th width="30%"><span class="text-muted">Series Description</span></th>
                 <th ng-repeat="(exam_id, exam) in $ctrl.modality.exams[$ctrl.subject]">
                     <time>{{exam.StudyTimestamp|date:'short':'+0400'}} <small>(EST)</small></time> &nbsp;
-                    <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc(exam_id)">ReQC</button>
+                    <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc(exam_id)">ReQC all series</button>
+                    <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc(exam_id)">ReQC failed series</button>                    
                 </th>
             </tr>
         </thead>

@@ -269,7 +269,8 @@
                         <time class="pull-right text-muted">{{event.date|date:'short'}}</time>
                         <b>{{user.fullname}}</b>
                         <p ng-if="event.title">{{event.title}}</p>
-                        <p ng-if="event.detail"><i>{{event.detail}}</i></p>
+                        <p ng-if="event.detail"><i>Details:</i></p>
+                        <!-- <p ng-repeat="d in event.detail">{{d}}</p>  -->
                     </div>
                 </div>
             </div>
