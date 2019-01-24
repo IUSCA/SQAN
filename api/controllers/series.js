@@ -594,7 +594,7 @@ router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub}), function(
                 if(err) return next(err);
                 db.Series.update({_id: series._id}, {$push: { events: event }, qc1_state:"re-qcing", $unset: {qc: 1}}, function(err){
                     if(err) next(err);
-                    res.json({message: "Re-running QC on "+affected.length+" images from series "+series._id, event:event});
+                    res.json({message: "Re-running QC on "+affected.nModified+" images from series "+series._id, event:event});
                 });
             });
         });
@@ -619,7 +619,7 @@ router.post('/reqcallseries/:exam_id', jwt({secret: config.express.jwt.pub}), fu
                     db.Image.update({series_id: series._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
                         if(err) return next(err);
 
-                        total_modified += affected.length;
+                        total_modified += affected.nModified;
                         events.series(series);
                         // add event to each series
                         var detail = {
@@ -663,7 +663,7 @@ router.post('/reqcerroredseries/:exam_id', jwt({secret: config.express.jwt.pub})
                     db.Image.update({series_id: series._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
                         if(err) return next(err);
 
-                        total_modified += affected.length;
+                        total_modified += affected.nModified;
                         events.series(series);
                         // add event to each series
                         var detail = {

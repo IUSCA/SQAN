@@ -223,7 +223,23 @@ app.controller('ExamsController',
             return tooltip;
         }
 
+        $scope.reqcallexams = function(research_id) {
+            console.log("reQC research with id "+research_id)
+            $http.post(appconf.api+'/research/reqcall/'+research_id) //{_id:$scope.selected._detail._id})
+                .then(function(res) {
+                    toaster.success(res.data.message);
+                }, $scope.toast_error);
+        }
+
+        $scope.reqcfailedexams = function(research_id) {
+            console.log("reQC research with id "+research_id)
+            $http.post(appconf.api+'/research/reqcfailed/'+research_id) //{_id:$scope.selected._detail._id})
+                .then(function(res) {
+                    toaster.success(res.data.message);
+                }, $scope.toast_error);
+        }
 
     });
 
 
+    
