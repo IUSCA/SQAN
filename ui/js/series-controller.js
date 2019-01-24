@@ -149,7 +149,6 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
         }, $scope.toast_error);
     }
     $scope.reqc = function() {  
-        console.log("inside IU series-controller")      
         $scope.image_detail = null;
         $scope.active_image = null;
         $http.post(appconf.api+'/series/reqc/'+$routeParams.seriesid)
