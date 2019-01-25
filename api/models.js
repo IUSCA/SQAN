@@ -62,7 +62,7 @@ var templateSchema = mongoose.Schema({
     ///////////////////////////////////////////////////////////////////////////
 
     //research_id: {type: mongoose.Schema.Types.ObjectId, index: true},
-    exam_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    exam_id: {type: mongoose.Schema.Types.ObjectId, index: true, ref: 'Exam'},
     series_desc: {type: String}, //original SeriesDescription minut anything after ^
     SeriesNumber: {type: Number},
     primary_image: {type: mongoose.Schema.Types.ObjectId, index: true},
@@ -163,7 +163,7 @@ var imageSchema = mongoose.Schema({
     headers: mongoose.Schema.Types.Mixed, 
 
     qc: mongoose.Schema.Types.Mixed,
-    primary_image:  {type: mongoose.Schema.Types.ObjectId, index: true}
+    primary_image:  {type: mongoose.Schema.Types.ObjectId, index: true, ref: 'Image'}
 });
 imageSchema.index({series_id: 1, SOPInstanceUID: 1, primary_image:1});
 exports.Image = mongoose.model('Image', imageSchema);

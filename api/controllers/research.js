@@ -53,7 +53,7 @@ router.get('/summary/:id', function(req, res, next) {
 
         async.each(_exams, function(exam, callback) {
             subjects.indexOf(exam.subject) === -1 && subjects.push(exam.subject);
-            db.Series.find({exam_id: exam._id}).exec(function(err, _series){
+            db.Series.find({exam_id: exam._id}).populate('exam_id').exec(function(err, _series){
                 var exam_series = {};
                 _series.forEach(function(ser){
                     series_desc.indexOf(ser.series_desc) === -1 && series_desc.push(ser.series_desc);
@@ -122,6 +122,85 @@ router.post('/reqc', jwt({secret: config.express.jwt.pub}), function(req, res, n
     });
 });
 
+
+//get research detail, exams and series for a given research
+router.get('/:id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+
+    console.log('in new API');
+    db.Research.findById(req.params.id).lean().exec(function(err, research) {
+
+        //make sure user has access to this IIBISID
+        db.Acl.can(req.user, 'view', research.IIBISID, function(can) {
+            //db.Acl.canAccessIIBISID(req.user, image.IIBISID, function(can) {
+            if(!can) return res.status(401).json({message: "you are not authorized to access IIBISID: "+research.IIBISID});
+            //get all exams in this research
+
+            research['exams'] = {};
+            research['templates'] = {};
+            console.log(research);
+            async.series([
+
+                //get subject exams
+                function(next) {
+                    var query = db.Exam.find().lean()
+                    query.where('research_id', research._id);
+                    query.where('istemplate', false);
+                    query.sort({StudyTimestamp: -1});
+
+                    query.exec(function(err, _exams) {
+                        if(err) return next(err);
+                        async.each(_exams, function(exam, callback) {
+                            console.log("looking up exam "+exam._id);
+                            var query = db.Series.find().lean();
+                            query.where('exam_id', exam._id);
+                            query.sort({SeriesNumber: 1});
+                            query.exec(function(err, exam_series) {
+                                if(err) return next(err);
+                                exam['series'] = exam_series;
+                                callback();
+                            });
+                        }, function(err) {
+                            console.log('done getting series');
+                            if(err) return next(err);
+                            research.exams = _exams;
+                            next();
+                        });
+                    });
+                },
+
+                //get template exams
+                function(next) {
+                    var query = db.Exam.find().lean()
+                    query.where('research_id', research._id);
+                    query.where('istemplate', true);
+                    query.sort({StudyTimestamp: -1});
+
+                    query.exec(function(err, _exams) {
+                        if(err) return next(err);
+                        async.each(_exams, function(exam, callback) {
+                            var query = db.Template.find().lean();
+                            query.where('exam_id', exam._id);
+                            query.sort({SeriesNumber: 1});
+                            query.exec(function(err, exam_series) {
+                                if(err) return next(err);
+                                exam['series'] = exam_series;
+                                callback();
+                            });
+                        }, function(err) {
+                            if(err) return next(err);
+                            research.templates = _exams;
+                            next();
+                        });
+                    });
+                }
+            ], function(err) {
+                if(err) return next(err);
+                res.json(research);
+            });
+
+        });
+    });
+});
 
 module.exports = router;
 

@@ -66,48 +66,61 @@ app.controller('ExamsController',
             var modality_id = research.Modality+"."+research.StationName+"."+research.radio_tracer;
 
             //console.log(where);
-            
-            $http.get(appconf.api+'/series/query', {params: {
+
+            $http.get(appconf.api+'/research/'+research._id, {params: {
                     skip: 0,
                     limit: 5000000,
                     where: where,
                 }})
                 .then(function(res) {
-                    console.log('back from API!!')
+                    console.log('new API response:');
                     console.log(res.data);
-                    $scope.selected = res.data[research.IIBISID][modality_id];
-
-                    window.scrollTo(0, 0);
-
-                    // var url = "/qcnew/" + $routeParams.level + "/" + modality.research._id;
-                    // if (subjectuid) url += "/" + subjectuid;
-                    // $location.update_path(url);
-
-                    handle_scroll();
-
-                    function handle_scroll() {
-                        if (!subjectuid) return;
-                        console.log("handling scroll " + subjectuid);
-                        var pos = $('#' + research._id + '_' + subjectuid.replace(/\./g, '\\.')).position();
-                        if (pos) {
-                            window.scroll({
-                                top: pos.top - 85,
-                                left: 0,
-                                behavior: 'smooth'
-                            });
-                        } else {
-                            //item not loaded yet.. wait
-                            $timeout(handle_scroll, 100, false);
-                        }
-                    }
-
-                    $scope.event_bind({
-                        ex: "dicom.series",
-                        key: research._id + ".#"
-                    });
+                    $scope.selected = res.data;
                 }, function(err) {
-                    console.log(err);
+                    console.log('new API err: '+err);
                 });
+            
+            // $http.get(appconf.api+'/series/query', {params: {
+            //         skip: 0,
+            //         limit: 5000000,
+            //         where: where,
+            //     }})
+            //     .then(function(res) {
+            //         console.log('back from API!!')
+            //         console.log(res.data);
+            //         $scope.selected = res.data[research.IIBISID][modality_id];
+            //
+            //         window.scrollTo(0, 0);
+            //
+            //         // var url = "/qcnew/" + $routeParams.level + "/" + modality.research._id;
+            //         // if (subjectuid) url += "/" + subjectuid;
+            //         // $location.update_path(url);
+            //
+            //         handle_scroll();
+            //
+            //         function handle_scroll() {
+            //             if (!subjectuid) return;
+            //             console.log("handling scroll " + subjectuid);
+            //             var pos = $('#' + research._id + '_' + subjectuid.replace(/\./g, '\\.')).position();
+            //             if (pos) {
+            //                 window.scroll({
+            //                     top: pos.top - 85,
+            //                     left: 0,
+            //                     behavior: 'smooth'
+            //                 });
+            //             } else {
+            //                 //item not loaded yet.. wait
+            //                 $timeout(handle_scroll, 100, false);
+            //             }
+            //         }
+            //
+            //         $scope.event_bind({
+            //             ex: "dicom.series",
+            //             key: research._id + ".#"
+            //         });
+            //     }, function(err) {
+            //         console.log(err);
+            //     });
         };
 
 
@@ -194,16 +207,19 @@ app.controller('ExamsController',
         $scope.show_iibis = function(iibisid, researches) {
             for(var research_id in researches){
                 var research = researches[research_id];
-                if($scope.show_modality(iibisid, research.research.Modality)) return true;
+                if($scope.show_modality(iibisid, research.research.Modality, research.exams)) return true;
             }
             return false;
         };
 
-        $scope.show_modality = function(iibisid, modality) {
+        $scope.show_modality = function(iibisid, modality, exams) {
             if(!$scope.modalities[modality].display) return false;
             if(!$scope.research_filter) return true;
             if(~iibisid.toLowerCase().indexOf($scope.research_filter.toLowerCase())) return true;
             if(~modality.toLowerCase().indexOf($scope.research_filter.toLowerCase())) return true;
+            for(var exam in exams) {
+                if(~exams[exam].subject.toLowerCase().indexOf($scope.research_filter.toLowerCase())) return true;
+            }
             return false;
         };
 
@@ -221,7 +237,20 @@ app.controller('ExamsController',
             tooltip += '<br>Series Missing: '+exam.qc.series_missing.length;
             tooltip += '<br>Series w/No Template: '+exam.qc.series_no_template.length;
             return tooltip;
-        }
+        };
+
+        $scope.templateLookup = function(t_id) {
+            for(var template of $scope.selected.templates) {
+                for(var series of template.series) {
+                    if(series._id == t_id) {
+                        return {
+                            StudyTimestamp: template.StudyTimestamp,
+                            series_desc: series.series_desc,
+                            SeriesNumber: series.SeriesNumber};
+                    }
+                }
+            }
+        };
 
 
     });

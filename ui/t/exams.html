@@ -49,7 +49,7 @@
             <div class="subbar-list-header"><small class="text-muted">{{$index + 1}}. </small> {{iibisid}}</div>
             <div class="subbar-list-item"
                  ng-repeat="modality in research"
-                 ng-show="show_modality(iibisid, modality.research.Modality)"
+                 ng-show="show_modality(iibisid, modality.research.Modality, modality.exams)"
                  ng-class="{'active': modality == selected_modality}"
                  ng-click="select(modality)">
 
@@ -62,7 +62,7 @@
                          class="subject-label">
                         <small style="position: absolute; color: black">{{exam.subject}}</small>
                         <div class="progress exam-state pull-right"
-                             tooltip-html-unsafe="{{makeTooltip(exam)}}" tooltip-append-to-body="true"
+                             uib-tooltip-html="makeTooltip(exam)" tooltip-append-to-body="true"
                              ng-init="total = exam.qc.qced_series + exam.qc.series_missing.length + exam.qc.series_no_template.length">
                             <div class="progress-bar progress-bar-success" style="height: 20%; width: {{exam.qc.series_passed / total*100}}%"></div>
                             <div class="progress-bar progress-bar-danger" style="height: 20%; width: {{exam.qc.series_failed / total*100}}%"></div>
@@ -94,28 +94,28 @@
                 <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="reqc()">ReQC all</button>
             </h2>
             <h3>
-                Modality: <b>{{selected._detail.Modality}}</b>
-                StationName: <b>{{selected._detail.StationName}}</b>
-                <small ng-show="selected._detail.Modality == 'PT'">
-                    RadioTracer: <b>{{selected._detail.radio_tracer}}</b>
+                Modality: <b>{{selected.Modality}}</b>
+                StationName: <b>{{selected.StationName}}</b>
+                <small ng-show="selected.Modality == 'PT'">
+                    RadioTracer: <b>{{selected.radio_tracer}}</b>
                 </small>
             </h3>
         </div>
         <div style="margin-top: 65px;">
-            <div ng-repeat="(subject, subject_detail) in selected.subjects"
+            <div ng-repeat="exam in selected.exams"
                  class="subject"
-                 id="{{selected._detail._id + '_' + subject}}">
+                 id="{{exam._id}}">
                 <h4>
-                    <b>{{subject}}</b>
+                    <b>{{exam.subject}}</b>
                     <!-- <span class="text-muted">Subject</span> -->
                 </h4>
-                <exams subject="subject" modality="selected" mode="view_mode" deprecated="show_deprecated"></exams>
+                <exams exam="exam" mode="view_mode" template-lookup="templateLookup(t_id)" deprecated="show_deprecated"></exams>
             </div>
             <div class="template">
                 <h4>
                     <b>Templates</b>
                 </h4>
-                <templates templates="selected.templates" times="selected.templates_times"></templates>
+                <templates templates="selected.templates"></templates>
             </div>
         </div>
     </div>
