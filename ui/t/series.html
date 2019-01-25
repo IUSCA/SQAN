@@ -266,7 +266,7 @@
                 <div class="row">
                     <div class="col-md-2"><i class="fa fa-server"></i></div>
                     <div class="col-md-10">
-                        <time class="pull-right text-muted">{{data.series.create_date |date:'short'}}</time>
+                        <time class="pull-right text-muted">{{data.date_received |date:'short'}}</time>
                         Data Recieved by SCA
                     </div>
                 </div>
@@ -280,7 +280,7 @@
                     </div>
                 </div>
             </div>
-            <div class="activity" ng-repeat="event in data.series.events" ng-init="user = users[event.user_id]">
+            <div class="activity" ng-repeat="event in data.series.events | filter:{title: '!Received'}" ng-init="user = users[event.user_id]">
                 <div class="row">
                     <div class="col-md-2"><img gravatar-src="user.email" gravatar-size="32"></img></div>
                     <div class="col-md-10">

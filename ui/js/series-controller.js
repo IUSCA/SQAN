@@ -20,7 +20,6 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
         $http.get(appconf.api+'/series/id/'+$routeParams.seriesid)
         .then(function(res) {
             $scope.data = res.data;
-            console.log($scope.data);
             if($scope.data.images) {
                 $scope.data.images.forEach(computeColor);
             }
@@ -28,10 +27,18 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
             res.data.templates.forEach(function(template) {
                 if(template._id == res.data.series.qc.template_id) $scope.data.template = template;
             });
+            // get date received by SCA
+            res.data.series.events.forEach(function(e){
+                if(e.title == "Received") {
+                    console.log(e);
+                    $scope.data.date_received = e.date;
+                }
+            })
             //reload if qc is not yet loaded
             if(!res.data.series.qc) {
                 $timeout(load_series, 1000);
             }
+            console.log($scope.data);
         }, $scope.toast_error);
     }
     
