@@ -377,81 +377,126 @@ router.get('/byresearchid/:research_id', jwt({secret: config.express.jwt.pub}), 
 router.get('/id/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     //first load the series
     db.Series.findById(req.params.series_id)
-    .exec(function(err, series) {
-        if(err) return next(err);
-        if(!series) return res.status(404).json({message: "no such series:"+req.params.series_id});
-        
-        //make sure user has access to this series
-        db.Exam.findOne().lean()
-        .where('_id').equals(series.exam_id)
-        .select({_id: 1,'research_id':1})
-        .exec(function(err, exam) {
-            if(err) return next(err);
-            console.log(exam);
-            //load research detail
-            db.Research.findById(exam.research_id).exec(function(err, research) {
-                if(err) return next(err);
-                //db.Acl.can(req.user, 'view', research.IIBISID, function(can) { 
-                    //console.log("user can view: " +can)           
-                    //if(!can) return res.status(401).json({message: "you are not authorized to view this research: "+research.IIBISID});
-                    //db.Acl.can(req.user, 'qc', research.IIBISID, function(canqc) {
-                        //console.log("user can qc: "+ canqc);
-                        var ret = {
-                            canqc: true, //canqc,
-                            series: series,
-                            research: research,
-                        };
-                        //load all template exams available for this research
-                        db.Exam.find({research_id: research._id, istemplate: true}).exec(function(err, exams) {
-                            if(err) return next(err);
-                            ret.template_exams = exams;
+    .populate({
+        path: 'exam_id',
+        populate: {
+            path: 'research_id'
+        }
+    })
+    .exec(function (err, series) {
+        if (err) return next(err);
+        if (!series) return res.status(404).json({message: "no such series:" + req.params.series_id});
+        db.Acl.can(req.user, 'view', series.exam_id.research_id.IIBISID, function (can) {
+            if (!can) return res.status(401).json({message: "you are not authorized to access this IIBISID:" + series.exam_id.research_id.IIBISID});
 
-                            //load image details
-                            db.Image.find().lean()
+            var ret = {
+                canqc: false,
+                series: series
+            }
+
+            db.Acl.can(req.user, 'qc', series.exam_id.research_id.IIBISID, function (can) {
+                if (can) ret.canqc = true;
+
+                db.Exam.find({
+                    research_id: series.exam_id.research_id._id,
+                    istemplate: true
+                }).exec(function (err, t_exams) {
+                    if (err) return next(err);
+                    var t_ids = t_exams.map(function(doc) { return doc._id; });
+                    db.Template.find({
+                        exam_id: {$in : t_ids},
+                        series_desc: series.series_desc
+                    }).populate('exam_id').exec(function (err, templates) {
+                        ret.templates = templates;
+                        db.Image.find().lean()
                             .where('series_id').equals(series._id)
                             .sort('headers.InstanceNumber')
                             .select({qc: 1, 'headers.InstanceNumber': 1})//, 'headers.AcquisitionNumber': 1})
-                            .exec(function(err, _images) {
-                                if(err) return next(err);
-                                
-                                //don't return the qc.. just return counts of errors / warnings
-                                ret.images = [];
-                                _images.forEach(function(_image) {
-                                    var image = { 
-                                        _id: _image._id, 
-                                        inum: _image.headers.InstanceNumber,
-                                        //anum: _image.headers.AcquisitionNumber,
-                                    };
-                                    if(_image.qc) {
-                                        image.errors = 0;
-                                        image.warnings = 0;
-                                        if(_image.qc.errors) image.errors = _image.qc.errors.length;
-                                        if(_image.qc.warnings) image.warnings = _image.qc.warnings.length;
-                                        image.notemp = _image.qc.notemp;
-                                    }
-                                    ret.images.push(image);
-                                });
-
-                                //load template used to QC
-                                if(series.qc) {
-                                    db.Template.findById(series.qc.template_id).exec(function(err, template) {
-                                        ret.qc_template = template;
-                                        console.log(ret);
-                                        res.json(ret);
-                                    });
-                                } else {
-                                    console.log(ret);
-                                    res.json(ret);
-                                }
-                            }); 
-                        });
-                    //});
-                //});
-            });
+                            .exec(function (err, _images) {
+                                if (err) return next(err)
+                                ret.images = _images;
+                                res.json(ret);
+                            })
+                    })
+                })
+            })
         })
-
-    });
+    })
 });
+        
+//         //make sure user has access to this series
+//         db.Exam.findOne().lean()
+//         .where('_id').equals(series.exam_id)
+//         .select({_id: 1,'research_id':1})
+//         .exec(function(err, exam) {
+//             if(err) return next(err);
+//             console.log(exam);
+//             //load research detail
+//             db.Research.findById(exam.research_id).exec(function(err, research) {
+//                 if(err) return next(err);
+//
+//
+//                 //db.Acl.can(req.user, 'view', research.IIBISID, function(can) {
+//                     //console.log("user can view: " +can)
+//                     //if(!can) return res.status(401).json({message: "you are not authorized to view this research: "+research.IIBISID});
+//                     //db.Acl.can(req.user, 'qc', research.IIBISID, function(canqc) {
+//                         //console.log("user can qc: "+ canqc);
+//                         var ret = {
+//                             canqc: true, //canqc,
+//                             series: series,
+//                             research: research,
+//                         };
+//                         //load all template exams available for this research
+//                         db.Exam.find({research_id: research._id, istemplate: true}).exec(function(err, exams) {
+//                             if(err) return next(err);
+//                             ret.template_exams = exams;
+//
+//                             //load image details
+//                             db.Image.find().lean()
+//                             .where('series_id').equals(series._id)
+//                             .sort('headers.InstanceNumber')
+//                             .select({qc: 1, 'headers.InstanceNumber': 1})//, 'headers.AcquisitionNumber': 1})
+//                             .exec(function(err, _images) {
+//                                 if(err) return next(err);
+//
+//                                 //don't return the qc.. just return counts of errors / warnings
+//                                 ret.images = [];
+//                                 _images.forEach(function(_image) {
+//                                     var image = {
+//                                         _id: _image._id,
+//                                         inum: _image.headers.InstanceNumber,
+//                                         //anum: _image.headers.AcquisitionNumber,
+//                                     };
+//                                     if(_image.qc) {
+//                                         image.errors = 0;
+//                                         image.warnings = 0;
+//                                         if(_image.qc.errors) image.errors = _image.qc.errors.length;
+//                                         if(_image.qc.warnings) image.warnings = _image.qc.warnings.length;
+//                                         image.notemp = _image.qc.notemp;
+//                                     }
+//                                     ret.images.push(image);
+//                                 });
+//
+//                                 //load template used to QC
+//                                 if(series.qc) {
+//                                     db.Template.findById(series.qc.template_id).exec(function(err, template) {
+//                                         ret.qc_template = template;
+//                                         console.log(ret);
+//                                         res.json(ret);
+//                                     });
+//                                 } else {
+//                                     console.log(ret);
+//                                     res.json(ret);
+//                                 }
+//                             });
+//                         });
+//                     //});
+//                 //});
+//             });
+//         })
+//
+//     });
+// });
 
 router.post('/comment/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     db.Series.findById(req.params.series_id)

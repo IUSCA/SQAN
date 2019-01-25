@@ -50,84 +50,84 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
         document.location = url;
     }
 
-    if($scope.user) {
-        $scope.serieses = {}; //make it easier to lookup series that needs to be updated
-        
-        //list of all event binds that user has requested so far
-        $scope.event_binds = [];
-        
-        //start event streaming
-        $scope.event = new ReconnectingWebSocket("wss:"+window.location.hostname+appconf.event_api+"/subscribe?jwt="+jwt);
-        $scope.event.onopen = function(e) {
-            console.log("eventws connection opened - binding:"+$scope.event_binds.length);
-            $scope.event_binds.forEach(function(bind) {
-                $scope.event.send(JSON.stringify({bind: bind}));
-            });
-        }
-        $scope.event.onmessage = function(evt) {
-            var data = JSON.parse(evt.data);
-            //parse routing key
-            var key = data.dinfo.routingKey;
-            var keytokens = key.split(".");
-            var research_id = keytokens[0];
-            var exam_id = keytokens[1];
-            var series_id = keytokens[2];
-
-            //update the series 
-            var series = $scope.serieses[series_id];
-            if(!series) return; //RECENT UI doesn't load all series
-            $scope.$apply(function() {
-                series.qc = null; //could be missing
-                for(var key in data.msg) series[key] = data.msg[key]; //update the rest
-                //console.log("update for "+key);
-                //console.log(JSON.stringify(series));
-                $scope.count($scope.org);  //TODO recount the entire thing is too expensive? maybe use $timeout?
-            });
-            
-            /*
-            //assume it's series.. look for research that this information belongs to
-            for(var iibisid in $scope.org) {
-                for(var modality_id in $scope.org[iibisid]) {
-                    var modality = $scope.org[iibisid][modality_id];
-                    if(modality._detail._id == research_id) {
-                        //found modality that update belongs to.. now find the series.
-                        for(var 
-                        //console.log("belongs to this");
-                        //console.dir(modality);
-                    }
-                } 
-            } 
-            */
-        }
-        /*
-        $scope.event.onmessage = function(json) {
-            var e = JSON.parse(json.data);
-            console.dir(e);
-            if(e.msg) {
-                var task = e.msg;
-                $scope.$broadcast("task_updated", task);
-            } else {
-                console.log("unknown message from eventws");
-                console.dir(e);
-            }
-        }
-        */
-        /*
-        $scope.event.onclose = function(e) {
-            console.log("eventws connection closed - should auto reconnect");
-        }
-        */
-
-        $scope.event_bind = function(bind) {
-            if(!$scope.event) return; //not initialized
-            console.log("binding to "+bind.ex+"/"+bind.key);
-            $scope.event_binds.push(bind); //to rebind on reconnect
-            //if not connected yet, onopen should take care of it
-            if($scope.event.readyState == 1) {
-                $scope.event.send(JSON.stringify({bind: bind}));
-            }
-        }
-    } 
+    // if($scope.user) {
+    //     $scope.serieses = {}; //make it easier to lookup series that needs to be updated
+    //
+    //     //list of all event binds that user has requested so far
+    //     $scope.event_binds = [];
+    //
+    //     //start event streaming
+    //     $scope.event = new ReconnectingWebSocket("wss:"+window.location.hostname+appconf.event_api+"/subscribe?jwt="+jwt);
+    //     $scope.event.onopen = function(e) {
+    //         console.log("eventws connection opened - binding:"+$scope.event_binds.length);
+    //         $scope.event_binds.forEach(function(bind) {
+    //             $scope.event.send(JSON.stringify({bind: bind}));
+    //         });
+    //     }
+    //     $scope.event.onmessage = function(evt) {
+    //         var data = JSON.parse(evt.data);
+    //         //parse routing key
+    //         var key = data.dinfo.routingKey;
+    //         var keytokens = key.split(".");
+    //         var research_id = keytokens[0];
+    //         var exam_id = keytokens[1];
+    //         var series_id = keytokens[2];
+    //
+    //         //update the series
+    //         var series = $scope.serieses[series_id];
+    //         if(!series) return; //RECENT UI doesn't load all series
+    //         $scope.$apply(function() {
+    //             series.qc = null; //could be missing
+    //             for(var key in data.msg) series[key] = data.msg[key]; //update the rest
+    //             //console.log("update for "+key);
+    //             //console.log(JSON.stringify(series));
+    //             $scope.count($scope.org);  //TODO recount the entire thing is too expensive? maybe use $timeout?
+    //         });
+    //
+    //         /*
+    //         //assume it's series.. look for research that this information belongs to
+    //         for(var iibisid in $scope.org) {
+    //             for(var modality_id in $scope.org[iibisid]) {
+    //                 var modality = $scope.org[iibisid][modality_id];
+    //                 if(modality._detail._id == research_id) {
+    //                     //found modality that update belongs to.. now find the series.
+    //                     for(var
+    //                     //console.log("belongs to this");
+    //                     //console.dir(modality);
+    //                 }
+    //             }
+    //         }
+    //         */
+    //     }
+    //     /*
+    //     $scope.event.onmessage = function(json) {
+    //         var e = JSON.parse(json.data);
+    //         console.dir(e);
+    //         if(e.msg) {
+    //             var task = e.msg;
+    //             $scope.$broadcast("task_updated", task);
+    //         } else {
+    //             console.log("unknown message from eventws");
+    //             console.dir(e);
+    //         }
+    //     }
+    //     */
+    //     /*
+    //     $scope.event.onclose = function(e) {
+    //         console.log("eventws connection closed - should auto reconnect");
+    //     }
+    //     */
+    //
+    //     $scope.event_bind = function(bind) {
+    //         if(!$scope.event) return; //not initialized
+    //         console.log("binding to "+bind.ex+"/"+bind.key);
+    //         $scope.event_binds.push(bind); //to rebind on reconnect
+    //         //if not connected yet, onopen should take care of it
+    //         if($scope.event.readyState == 1) {
+    //             $scope.event.send(JSON.stringify({bind: bind}));
+    //         }
+    //     }
+    // }
     
     $scope.count = function(org) {
         //do some extra processing for each subject

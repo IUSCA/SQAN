@@ -5,6 +5,7 @@ var app = angular.module('app', [
     'ngRoute',
     'ngCookies',
     'ngAnimate',
+    'ngSanitize',
     'ngLocationUpdate',
     'toaster',
     'angular-loading-bar',
@@ -16,7 +17,8 @@ var app = angular.module('app', [
     'sca-product-raw',
     'ui.gravatar',
     'angular.filter',
-    'gg.editableText'
+    'gg.editableText',
+    'ngCsv'
 ]);
 
 //show loading bar at the page top

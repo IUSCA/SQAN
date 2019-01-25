@@ -13,19 +13,19 @@ app.directive('studynote', function() {
                     else if($scope.study.qc.notemps > 0) $scope.studystate = "notemp";
                     else if($scope.study.qc.warnings.length > 0) $scope.studystate = "warning";
                     else $scope.studystate = "ok";
-                } //else if ($scope.study.qc1_state == "no template") $scope.studystate = "notemp";
+                } else if ($scope.study.qc1_state == "no template") $scope.studystate = "notemp";
                     
                 $scope.qc1 = null;
                 if($scope.study.qc1_state) {
                     switch($scope.study.qc1_state) {
                     case "accept":
                         $scope.qc1 = "warning"; break;
-                    case "autopass":
-                        $scope.qc1 = "success"; break;
+                    // case "autopass":
+                    //     $scope.qc1 = "success"; break;
                     case "reject":
                         $scope.qc1 = "danger"; break;
-                    case "no template":
-                        $scope.qc1 = "info"; break;
+                    // case "no template":
+                    //     $scope.qc1 = "info"; break;
                     }
                 }
                 $scope.qc2 = null;
@@ -108,12 +108,12 @@ function(appconf, $http, jwtHelper, $sce, toaster) {
 app.component('exams', {
     templateUrl: 't/components/exams.html',
     bindings: {
-        modality: '<',
+        exam: "=",
         mode: '<', //view mode ('wide' / 'tall')
         deprecated: '=',
-        subject: '<', //subject to show
+        templateLookup: '&'
     },
-    controller: function(appconf, $window, $http, toaster, $interval) { 
+    controller: function(appconf, $window, $http, toaster, $interval) {
         var $ctrl = this;
 
         this.openstudy = function(id) {
@@ -150,7 +150,8 @@ app.component('exams', {
 
 app.component('templates', {
     templateUrl: 't/components/templates.html',
-    controller: function($window) { 
+    controller: function($window) {
+        var $ctrl = this;
         console.log("init templates");
         this.opentemplate = function(id) {
             $window.open("#/template/"+id, "template:"+id);
@@ -160,7 +161,7 @@ app.component('templates', {
         }
     },
     bindings: {
-        templates: '<', //[time] = template
+        templates: '=', //[time] = template
         times: '<', //list of timestamps to show
     },
 });

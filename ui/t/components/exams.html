@@ -34,11 +34,11 @@
                     </div>
                 </td>
             </tr>
-            <tr ng-repeat="series_desc in $ctrl.modality.subjects[$ctrl.subject].missing_serieses | uniqueSeriesDesc">
+            <tr ng-repeat="series_desc in $ctrl.modality.exams[$ctrl.subject].qc.series_missing | uniqueSeriesDesc">
                 <td class="text-muted">{{series_desc}}</td>
                 <td ng-repeat="(exam_id, exam) in $ctrl.modality.exams[$ctrl.subject]" style="padding: 0px;">
                     <div class="missing clickable"
-                        ng-repeat="template in $ctrl.modality.subjects[$ctrl.subject].missing_serieses[exam.StudyTimestamp][series_desc] | orderBy:'-SeriesNumber'" 
+                        ng-repeat="template in $ctrl.modality.exams[$ctrl.subject].qc.series_missing[exam.StudyTimestamp][series_desc] | orderBy:'-SeriesNumber'"
                         ng-click="$ctrl.opentemplate(template._id)">
                         <span class="label label-info">Missing</span> 
                         <span class="text-muted">(#{{template.SeriesNumber}})</span>
@@ -51,10 +51,10 @@
     </div><!--end of wide view-->
 
     <!-- tall view-->
-    <div ng-if="$ctrl.mode == 'tall'" ng-repeat="(exam_id, exam) in $ctrl.modality.exams[$ctrl.subject]" class="subject-tall">
+    <div ng-if="$ctrl.mode == 'tall'" class="subject-tall">
         <p>
-            <time style="position: relative; top: 5px"><b>{{exam.StudyTimestamp|date:'short':'+0400'}} <small>(EST)</small></b></time> &nbsp;
-            <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc_all(exam_id)">ReQC all series</button>
+            <time style="position: relative; top: 5px"><b>{{$ctrl.exam.StudyTimestamp|date:'short':'+0400'}} <small>(EST)</small></b></time> &nbsp;
+            <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc($ctrl.exam._id)">ReQC</button>
             <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc_failed(exam_id)">ReQC failed series</button>            
         </p>
 
@@ -78,19 +78,18 @@
         <table class="table table-condensed" style="margin-bottom: 0px;">
         <thead><tr class="text-muted"><th width="30%">Series Description</th><th width="30%">Status</th><th>Template Used</th></tr></thead>
         <tbody>
-            <tr ng-repeat="series_group in $ctrl.modality.subjects[$ctrl.subject].serieses | toArray:true | orderBy:'min_SeriesNumber'" 
-                ng-init="series_desc = series_group.$key" 
-                ng-if="series_group.exams[exam_id]">
-                <td>{{series_desc}}</td>
+            {{exam}}
+            <tr ng-repeat="s in $ctrl.exam.series">
+                <td>{{s.series_desc}}</td>
                 <td style="padding: 0px;">
                     <div class="text-muted excluded" 
-                        ng-if="series_group._isexcluded" 
-                        ng-click="series_group._isexcluded = false">Excluded</div>
+                        ng-if="s._isexcluded"
+                        ng-click="s._isexcluded = false">Excluded</div>
                     <div class="slide-down"
-                        ng-if="!series_group._isexcluded">
-                        <div class="studies" style="display: inline-block;" ng-repeat="series in series_group.exams[exam_id]">
-                            <div ng-if="!series.deprecated_by || $ctrl.deprecated">
-                                <studynote ng-click="$ctrl.openstudy(series._id)" study="series">
+                        ng-if="!s._isexcluded">
+                        <div class="studies" style="display: inline-block;">
+                            <div ng-if="!s.deprecated_by || $ctrl.deprecated">
+                                <studynote ng-click="$ctrl.openstudy(s._id)" study="s"></studynote>
                             </div>
                             <!--<div ng-if="series.deprecated_by" class="studynote" ng-click="$ctrl.openstudy(series._id)">-->
                                 <!--<span class="text-muted">#{{series.SeriesNumber}}</span>-->
@@ -110,10 +109,10 @@
                         </div>
                     </div>
                     -->
-                    <div ng-repeat="series in series_group.exams[exam_id] | limitTo:1">
+                    <div>
                         <!--search for series.qc.template_id-->
-                        <div ng-repeat="template in $ctrl.modality.templates|findTemplate:series.qc.template_id" class="studynote">
-                            {{template.date | date:'short'}}
+                        <div ng-init="template = $ctrl.templateLookup({t_id: s.qc.template_id})" class="studynote">                            
+                            {{template.StudyTimestamp | date:'short'}}
                             <span class="text-muted">{{template.series_desc}}</span>
                             <span class="text-muted">(#{{template.SeriesNumber}})</span>
                         </div>
@@ -122,7 +121,7 @@
             </tr>
 
             <!--missing series -->
-            <tr ng-repeat="(series_desc, templates) in $ctrl.modality.subjects[$ctrl.subject].missing_serieses[exam.StudyTimestamp]">
+            <tr ng-repeat="series_desc in $ctrl.exam.qc.series_missing">
                 <td class="text-muted">{{series_desc}}</td>
                 <td style="padding: 0px;">
                     <div class="missing clickable" 

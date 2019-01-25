@@ -48,6 +48,8 @@
                 <div class="alert alert-warning" ng-show="!subjects.length && !loading">
                     <h4><i class="fa fa-info-circle fa-2x"></i> No exam records have been received for IIBISID <b>{{research.selected.id}}</b></h4>
                 </div>
+                <button class="btn btn-xs btn-info" ng-csv="export" filename="{{research_detail.iibis_project_id}}.csv" ng-if="subjects.length"><i class="fa fa-fw fa-download"></i> (csv)</button>
+                <a class="btn btn-xs btn-info" role="button" ng-href="data:text/json;charset=utf-8,{{exportJSON}}" download="{{research_detail.iibis_project_id}}.json" ng-if="subjects.length" ><i class="fa fa-fw fa-download"></i> (json)</a>
                 <table class="table table-header-rotated table-condensed" ng-show="subjects.length">
                     <thead>
                     <tr>
@@ -87,7 +89,7 @@
                                         'warning' : qcs == 'accept',
                                         'reject' : qcs == 'reject',
                                         'na': qcs == 'na'}"
-                                  tooltip-html-unsafe="{{makeTooltip(sub, exam[sd])}}" tooltip-append-to-body="true"></span>
+                                  uib-tooltip-html="makeTooltip(sub, exam[sd])" tooltip-append-to-body="true"></span>
                         </td>
                     </tr>
                     <tr><td colspan="100"> </td></tr>

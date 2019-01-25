@@ -1,10 +1,11 @@
-<div class="alert alert-danger qcalert" role="alert" ng-switch="error.type">
-    <div ng-switch-when="template_count_mismatch">
-        <strong>{{error.msg}}</strong> | Study contains <b>{{error.c}}</b> images - it should be <b>{{error.tc}}</b>
-    </div>
-    <div ng-switch-when="qc_error">
-        <strong>{{error.msg}}</strong> | Error Rate: <b>{{error.per * 100 | number}}%</b>
-    </div>
+<div class="alert alert-danger qcalert" role="alert">
+    <strong>error.msg</strong>
+    <!--<div ng-switch-when="template_count_mismatch">-->
+        <!--<strong>{{error.msg}}</strong> | Study contains <b>{{error.c}}</b> images - it should be <b>{{error.tc}}</b>-->
+    <!--</div>-->
+    <!--<div ng-switch-when="qc_error">-->
+        <!--<strong>{{error.msg}}</strong> | Error Rate: <b>{{error.per * 100 | number}}%</b>-->
+    <!--</div>-->
     <!-- moved out 
     <div ng-switch-when="template_mismatch">
         <b>{{error.k}}</b><br>
@@ -15,8 +16,8 @@
         <pre>{{error.tv|json}}</pre>
     </div>
     -->
-    <div ng-switch-default>
-        <strong>{{error.type}}</strong>
-        <pre>{{error}}</pre>
-    </div>
+    <!--<div ng-switch-default>-->
+        <!--<strong>{{error.type}}</strong>-->
+        <!--<pre>{{error}}</pre>-->
+    <!--</div>-->
 </div>

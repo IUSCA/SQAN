@@ -1,5 +1,5 @@
 app.controller('SummaryController',
-function($scope, appconf, toaster, $http, $window, $sce, $filter, serverconf) {
+function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf) {
     $scope.$parent.active_menu = "rsummary";
     $scope.researches = [];
     $scope.research_detail = {};
@@ -50,17 +50,14 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, serverconf) {
         }
 
         var tooltip = "Subject: "+subject;
-        tooltip += '<br>StudyTime: '+$filter('date')(series.StudyTimestamp, 'short');
+        tooltip += '<br>StudyTime: '+$filter('date')(series.exam_id.StudyTimestamp, 'short','+0400');
         if(series.qc === undefined) {
             tooltip += '<br>QC Details not available';
             return tooltip;
         }
-        tooltip += '<br>Images: '+series.qc.image_count;
+        tooltip += '<br>Images: '+series.qc.series_image_count;
         if(series.qc.errors.length > 0) {
-            tooltip += '<br>Errors: '+series.qc.errors.length;
-        }
-        if(series.qc.warnings.length > 0) {
-            tooltip += '<br>Warnings: '+series.qc.warnings.length;
+            tooltip += '<br>Errors: '+series.qc.series_fields_errored;
         }
         if(series.qc.notemps > 0) {
             tooltip += '<br>Missing Templates: '+series.qc.notemps;
@@ -77,6 +74,8 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, serverconf) {
                 $scope.research_detail = res.data[0];
             }, $scope.toast_error);
     };
+
+    $scope.exportJSON = "";
 
     $scope.getSummary = function() {
 
@@ -98,17 +97,54 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, serverconf) {
 
                     $scope.summary[label] = res.data;
                     console.log(res.data);
-                    angular.forEach(res.data.subjects, function(k){
+                    res.data.subjects.forEach(function(k){
                         if($scope.subjects.indexOf(k) < 0){
                             $scope.subjects.push(k);
                         }
                     });
                     $scope.loading = false;
+                    $scope.exportJSON = encodeURIComponent(JSON.stringify($scope.export()));
+
                 }, $scope.toast_error);
         });
 
         console.dir($scope.subjects);
 
+    };
+
+
+
+    $scope.export = function() {
+        var data = [{"modality":"modality","series":"series"}];
+        console.log($scope.summary);
+        var mods = Object.keys($scope.summary);
+        mods.forEach(function(mod){
+            var res = $scope.summary[mod];
+            res.series_desc.forEach(function(sd){
+                var row = {"modality":mod,"series":sd};
+                $scope.subjects.forEach(function(sub){
+                    var exams = res.exams[sub];
+                    if(exams == undefined) return;
+                    exams.forEach(function(ex){
+                        var s = ex[sd];
+                        if(data[0][sub] == undefined) {
+                            data[0][sub] = sub;
+                        }
+                        var qc1 = 'na';
+                        if(s !== undefined && s.qc1_state !== undefined) qc1 = s.qc1_state;
+                        if(row[sub] !== undefined) {
+                            row[sub] = row[sub] + ',' + qc1;
+                        } else {
+                            row[sub] = qc1;
+                        }
+
+                    });
+                });
+                data.push(row);
+            });
+        })
+        console.log(data);
+        return data;
     };
 
 });

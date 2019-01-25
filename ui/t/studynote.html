@@ -1,4 +1,4 @@
-<div class="studynote" style="position: relative;" ng-class="{deprecated : study.deprecated_by}">
+<div class="studynote" style="position: relative;" ng-class="{deprecated : study.deprecated_by}">    
     <div style="display: inline" ng-switch="studystate" title="Physical state of protocol QC">
         <span class="label label-info" ng-switch-when="na">QCing&nbsp;&nbsp;<i class="fa fa-spinner fa-spin"></i></span>
         <span class="label label-primary" ng-switch-when="notemp">NoTemp: {{::study.qc.notemps}}</span>
