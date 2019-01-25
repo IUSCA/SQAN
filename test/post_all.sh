@@ -1,6 +1,6 @@
  #!/bin/bash
    
-for iibis in `ls /opt/sca/dicom-backup/dicom-raw`;
+for iibis in `ls /opt/sca/dicom-backup/dicom-raw |grep 2018-002`;
 do
      for subj in `ls /opt/sca/dicom-backup/dicom-raw/"${iibis}"/`; 
      do 
@@ -9,7 +9,7 @@ do
          do  
             #ls -lat /opt/sca/dicom-raw/"${iibis}"/"${subj}"/"${sdir}";
             find /opt/sca/dicom-backup/dicom-raw/"${iibis}"/"${subj}"/"${sdir}" -iname "*.json" | node /opt/sca/rady-qc/bin/post.js;
-            sleep 60s
+            sleep 30s
          done
      done
 done

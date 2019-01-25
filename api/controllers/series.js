@@ -607,6 +607,7 @@ router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), funct
 });
 
 router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    console.log("INSIDE SERIES CONTROLLER")
     db.Series.findById(req.params.series_id)
         .populate({
             path: 'exam_id',
@@ -615,33 +616,38 @@ router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub}), function(
             }
         })
         .exec(function(err, series) {
-        if(err) return next(err);
+        if(err) return next(err + " THIS IS THE ERROR");
         if(!series) return res.status(404).json({message: "can't find specified series"});
-        //make sure user has access to this research
+        console.log("INSIDE SERIES CONTROLLER -- CREATING EVENT OBJECT")   
+        var detail = {
+            qc1_state:series.qc1_state,
+            template_id: series.qc ? series.qc.template_id : undefined,
+        }
         var event = {
             user_id: req.user.sub,
             title: "Series-level ReQC",
             date: new Date(), //should be set by default, but UI needs this right away
-            detail: "",
-        };
+            detail: detail,
+        };       
+        //make sure user has access to this research 
         db.Acl.can(req.user, 'qc', series.exam_id.research_id.IIBISID, function(can) {
             if(!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:"+series.exam_id.research_id.IIBISID});
-            series.qc = undefined;
-            series.events.push(event);
             events.series(series);
-            series.save(function(err) {
-                if(err) next(err);
-                //also invalidate image QC.
-                db.Image.update({series_id: series._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
-                    if(err) return next(err);
-                    res.json({message: "Re-running QC on "+affected.nModified+" images."});
+            console.log(event);
+            //also invalidate image QC.
+            db.Image.update({series_id: series._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
+                if(err) return next(err);
+                db.Series.update({_id: series._id}, {$push: { events: event }, qc1_state:"re-qcing", $unset: {qc: 1}}, function(err){
+                    if(err) next(err);
+                    res.json({message: "Re-running QC on "+affected.nModified+" images from series "+series._id, event:event});
                 });
             });
         });
     });
 });
 
-router.post('/reqcbyexamid/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.post('/reqcallseries/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    console.log("Exam-level ReQC all");
     db.Exam.findById(req.params.exam_id)
         .populate('research_id')
         .exec(function(err, exam) {
@@ -655,20 +661,73 @@ router.post('/reqcbyexamid/:exam_id', jwt({secret: config.express.jwt.pub}), fun
                 if(err) return next(err);
                 var total_modified = 0;
                 async.forEach(serieses, function(series, next_series) {
-                    //do unset
-                    series.qc = undefined;
-                    events.series(series);
-                    series.save(function(err) {
-                        if(err) next(err);
-                        //also invalidate image QC.
-                        db.Image.update({series_id: series._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
-                            if(err) return next(err);
-                            total_modified += affected.nModified;
+                    db.Image.update({series_id: series._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
+                        if(err) return next(err);
+
+                        total_modified += affected.nModified;
+                        events.series(series);
+                        // add event to each series
+                        var detail = {
+                            qc1_state:series.qc1_state,
+                            template_id: series.qc ? series.qc.template_id : undefined,
+                        }
+                        var event = {
+                            user_id: req.user.sub,
+                            title: "Exam-level ReQC all series",
+                            date: new Date(), //should be set by default, but UI needs this right away
+                            detail: detail,
+                        }; 
+                        db.Series.update({_id: series._id}, {$push: { events: event }, qc1_state:"re-qcing", $unset: {qc: 1}}, function(err){
+                            if(err) next(err);
                             next_series();
                         });
                     });
                 }, function(err) {
-                    res.json({message: "Re-running QC on "+total_modified+" images."});
+                    res.json({message: "Re-running QC on "+serieses.length+ " series and "  +total_modified+" images "});
+                });
+            });
+        });
+    });
+});
+
+router.post('/reqcerroredseries/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    console.log("Exam-level ReQC errored series");
+    db.Exam.findById(req.params.exam_id)
+        .populate('research_id')
+        .exec(function(err, exam) {
+        if(err) return next(err);
+        if(!exam) return res.status(404).json({message: "can't find specified exam"});
+        //make sure user has access to this research
+        db.Acl.can(req.user, 'qc', exam.research_id.IIBISID, function(can) {
+            if(!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:"+exam.research_id.IIBISID});
+            //find all serieses user specified
+            db.Series.find({exam_id: req.params.exam_id,qc1_state:{$ne:"autopass"}}).exec(function(err, serieses) {
+                if(err) return next(err);
+                var total_modified = 0;
+                async.forEach(serieses, function(series, next_series) {
+                    db.Image.update({series_id: series._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
+                        if(err) return next(err);
+
+                        total_modified += affected.nModified;
+                        events.series(series);
+                        // add event to each series
+                        var detail = {
+                            qc1_state:series.qc1_state,
+                            template_id: series.qc ? series.qc.template_id : undefined,
+                        }
+                        var event = {
+                            user_id: req.user.sub,
+                            title: "Exam-level ReQC errored series",
+                            date: new Date(), //should be set by default, but UI needs this right away
+                            detail: detail,
+                        }; 
+                        db.Series.update({_id: series._id}, {$push: { events: event }, qc1_state:"re-qcing", $unset: {qc: 1}}, function(err){
+                            if(err) next(err);
+                            next_series();
+                        });
+                    });
+                }, function(err) {
+                    res.json({message: "Re-running QC on "+serieses.length+ " errored series and "  +total_modified+" images "});
                 });
             });
         });

@@ -122,8 +122,9 @@ app.component('exams', {
         this.opentemplate = function(id) {
             $window.open("#/template/"+id);
         }
-        this.reqc = function(exam_id) {
-            $http.post(appconf.api+'/series/reqcbyexamid/'+exam_id)
+        this.reqc_all = function(exam_id) {
+            console.log("reQC all series")
+            $http.post(appconf.api+'/series/reqcallseries/'+exam_id)
             .then(function(res) {
                 //$scope.$emit("exam_invalidated", {exam_id: exam_id});
                 toaster.success(res.data.message);
@@ -132,8 +133,20 @@ app.component('exams', {
                 else toaster.error(res.statusText);
             });
         }
+        this.reqc_failed = function(exam_id) {
+            console.log("reQC errored series")
+            $http.post(appconf.api+'/series/reqcerroredseries/'+exam_id)
+            .then(function(res) {
+                //$scope.$emit("exam_invalidated", {exam_id: exam_id});
+                toaster.success(res.data.message);
+            }, function(res) {
+                if(res.data && res.data.message) toaster.error(res.data.message);
+                else toaster.error(res.statusText);
+            });
+        }        
     },
 });
+
 
 app.component('templates', {
     templateUrl: 't/components/templates.html',

@@ -178,11 +178,12 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
             toaster.success(res.data.message);
         }, $scope.toast_error);
     }
-    $scope.reqc = function() {
+    $scope.reqc = function() {  
         $scope.image_detail = null;
         $scope.active_image = null;
         $http.post(appconf.api+'/series/reqc/'+$routeParams.seriesid)
         .then(function(res) {
+            console.log(res)
             load_series();
             toaster.success(res.data.message);
         }, $scope.toast_error);
