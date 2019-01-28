@@ -81,12 +81,7 @@ function reorg(data) {
         return modality;
     }
     
-    
-    // //for easy exam lookup
-    // var exams = {};
-    // data.subject_exams.forEach(function(exam) {
-    //     exams[exam._id] = exam;  
-    // });
+
 
     //organize exams
     data.subject_exams.forEach(function(exam) {
@@ -151,62 +146,6 @@ function reorg(data) {
     });
 
 
-    // //TODO - I should probably look for missing series when I do qc_series
-    // //find missing series
-    // for(var research_id in org) {
-    //     var modalities = org[research_id];
-    //     for(var modality_id in modalities) {
-    //         var modality = modalities[modality_id];
-    //         for(var subject_id in modality.subjects) {
-    //             var subject = modality.subjects[subject_id];
-
-    //             //contruct unique id to be used by anchor
-    //             subject.uid = research_id+modality_id+subject_id;
-                
-    //             ///////////////////////////////////////////////////////////////////////
-    //             //
-    //             // finding missing
-    //             //
-    //             // first.. find latest template timestamp
-    //             var latest = null;
-    //             modality.templates_times.forEach(function(time) {   
-    //                 if(latest == null || latest < time) latest = time;
-    //             });
-    //             // then create list of teamplate_series_desc that all exam should have
-    //             var template_series_descs = {};
-    //             for(var template_series_desc in modality.templates) {
-    //                 var templates = modality.templates[template_series_desc][latest];
-    //                 if(templates) template_series_descs[template_series_desc] = templates;
-    //             }
-    //             // finally find *missing* subject for each exam times (for this subject) using the latest set of template (tmeplate_series_descs)
-    //             for(var exam_id in modality.exams[subject_id]) {
-    //                 var time = modality.exams[subject_id][exam_id].StudyTimestamp.toISOString(); //TODO not exactly sure why I need to convert to ISO string
-    //                 subject.missing_serieses[time] = {};
-    //                 for(var template_series_desc in template_series_descs) {
-    //                     var found = false;
-    //                     for(var series_desc in subject.all_serieses) {
-    //                         if(subject.all_serieses[series_desc].exams[exam_id] == undefined) continue; //wrong time
-
-    //                         //truncate number at the end of template name
-    //                         var tdesc = template_series_desc.replace(/\d+$/, '');
-
-    //                         if(series_desc.startsWith(tdesc)) {
-    //                             found = true;
-    //                             break;
-    //                         }
-    //                     }
-    //                     if(!found) {
-    //                         subject.missing_serieses[time][template_series_desc] = template_series_descs[template_series_desc];
-    //                         subject.missing++;
-    //                         //console.log(subject.uid + " missing "+template_series_desc + " "+subject.missing);
-    //                     }
-    //                 }
-    //             };
-    //             //
-    //             ///////////////////////////////////////////////////////////////////////
-    //         }
-    //     }
-    // }
 
     console.log(org);
     return org;
@@ -331,48 +270,7 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
     });
 });
 
-/*
-//return all serieses that belongs to a given research_id
-//TODO deprecate this in favor of /series/query?
-router.get('/byresearchid/:research_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    db.Research.findById(req.params.research_id).exec(function(err, research) {
-        if(err) return next(err);
-        //make sure user has access to this research/IIBISID
-        //console.log(JSON.stringify(research, null, 4));
-        db.Acl.can(req.user, 'view', research.IIBISID, function(can) {
-            if(err) return next(err);
-            db.Series.find({research_id: research._id})
-            .sort('series_desc subject SeriesNumber') //mongoose does case-sensitive sorting - maybe I should try sorting it on ui..
-            .exec(function(err, _serieses) {
-                if(err) return next(err);
-                var serieses = JSON.parse(JSON.stringify(_serieses)); //objectify
 
-                //find all exams
-                var eids = [];
-                _serieses.forEach(function(series) { eids.push(series.exam_id); });
-                //then load all exams referenced
-                db.Exam.find().lean()
-                .where('_id')
-                .in(eids)
-                .exec(function(err, exams) {
-                    if(err) return cb(err);
-
-                    db.Template.find({research_id: research._id})
-                    .sort('series_desc SeriesNumber') //mongoose does case-sensitive sorting - maybe I should try sorting it on ui..
-                    .exec(function(err, templates) {
-                        if(err) return next(err);
-                        res.json({
-                            exams: exams, 
-                            serieses: serieses, 
-                            templates: templates, 
-                            researches: [research]});
-                    });
-                });
-            });
-        });
-    });
-});
-*/
 
 router.get('/id/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     //first load the series
@@ -423,80 +321,7 @@ router.get('/id/:series_id', jwt({secret: config.express.jwt.pub}), function(req
         })
     })
 });
-        
-//         //make sure user has access to this series
-//         db.Exam.findOne().lean()
-//         .where('_id').equals(series.exam_id)
-//         .select({_id: 1,'research_id':1})
-//         .exec(function(err, exam) {
-//             if(err) return next(err);
-//             console.log(exam);
-//             //load research detail
-//             db.Research.findById(exam.research_id).exec(function(err, research) {
-//                 if(err) return next(err);
-//
-//
-//                 //db.Acl.can(req.user, 'view', research.IIBISID, function(can) {
-//                     //console.log("user can view: " +can)
-//                     //if(!can) return res.status(401).json({message: "you are not authorized to view this research: "+research.IIBISID});
-//                     //db.Acl.can(req.user, 'qc', research.IIBISID, function(canqc) {
-//                         //console.log("user can qc: "+ canqc);
-//                         var ret = {
-//                             canqc: true, //canqc,
-//                             series: series,
-//                             research: research,
-//                         };
-//                         //load all template exams available for this research
-//                         db.Exam.find({research_id: research._id, istemplate: true}).exec(function(err, exams) {
-//                             if(err) return next(err);
-//                             ret.template_exams = exams;
-//
-//                             //load image details
-//                             db.Image.find().lean()
-//                             .where('series_id').equals(series._id)
-//                             .sort('headers.InstanceNumber')
-//                             .select({qc: 1, 'headers.InstanceNumber': 1})//, 'headers.AcquisitionNumber': 1})
-//                             .exec(function(err, _images) {
-//                                 if(err) return next(err);
-//
-//                                 //don't return the qc.. just return counts of errors / warnings
-//                                 ret.images = [];
-//                                 _images.forEach(function(_image) {
-//                                     var image = {
-//                                         _id: _image._id,
-//                                         inum: _image.headers.InstanceNumber,
-//                                         //anum: _image.headers.AcquisitionNumber,
-//                                     };
-//                                     if(_image.qc) {
-//                                         image.errors = 0;
-//                                         image.warnings = 0;
-//                                         if(_image.qc.errors) image.errors = _image.qc.errors.length;
-//                                         if(_image.qc.warnings) image.warnings = _image.qc.warnings.length;
-//                                         image.notemp = _image.qc.notemp;
-//                                     }
-//                                     ret.images.push(image);
-//                                 });
-//
-//                                 //load template used to QC
-//                                 if(series.qc) {
-//                                     db.Template.findById(series.qc.template_id).exec(function(err, template) {
-//                                         ret.qc_template = template;
-//                                         console.log(ret);
-//                                         res.json(ret);
-//                                     });
-//                                 } else {
-//                                     console.log(ret);
-//                                     res.json(ret);
-//                                 }
-//                             });
-//                         });
-//                     //});
-//                 //});
-//             });
-//         })
-//
-//     });
-// });
+
 
 router.post('/comment/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     db.Series.findById(req.params.series_id)
@@ -621,6 +446,7 @@ router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub}), function(
         console.log("INSIDE SERIES CONTROLLER -- CREATING EVENT OBJECT")   
         var detail = {
             qc1_state:series.qc1_state,
+            date_qced: series.qc ? series.qc.date : undefined,
             template_id: series.qc ? series.qc.template_id : undefined,
         }
         var event = {
@@ -669,11 +495,12 @@ router.post('/reqcallseries/:exam_id', jwt({secret: config.express.jwt.pub}), fu
                         // add event to each series
                         var detail = {
                             qc1_state:series.qc1_state,
+                            date_qced: series.qc ? series.qc.date : undefined,
                             template_id: series.qc ? series.qc.template_id : undefined,
                         }
                         var event = {
                             user_id: req.user.sub,
-                            title: "Exam-level ReQC all series",
+                            title: "Exam-level ReQC all",
                             date: new Date(), //should be set by default, but UI needs this right away
                             detail: detail,
                         }; 
@@ -713,11 +540,12 @@ router.post('/reqcerroredseries/:exam_id', jwt({secret: config.express.jwt.pub})
                         // add event to each series
                         var detail = {
                             qc1_state:series.qc1_state,
+                            date_qced: series.qc ? series.qc.date : undefined,
                             template_id: series.qc ? series.qc.template_id : undefined,
                         }
                         var event = {
                             user_id: req.user.sub,
-                            title: "Exam-level ReQC errored series",
+                            title: "Exam-level ReQC failures",
                             date: new Date(), //should be set by default, but UI needs this right away
                             detail: detail,
                         }; 

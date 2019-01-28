@@ -79,48 +79,6 @@ app.controller('ExamsController',
                 }, function(err) {
                     console.log('new API err: '+err);
                 });
-            
-            // $http.get(appconf.api+'/series/query', {params: {
-            //         skip: 0,
-            //         limit: 5000000,
-            //         where: where,
-            //     }})
-            //     .then(function(res) {
-            //         console.log('back from API!!')
-            //         console.log(res.data);
-            //         $scope.selected = res.data[research.IIBISID][modality_id];
-            //
-            //         window.scrollTo(0, 0);
-            //
-            //         // var url = "/qcnew/" + $routeParams.level + "/" + modality.research._id;
-            //         // if (subjectuid) url += "/" + subjectuid;
-            //         // $location.update_path(url);
-            //
-            //         handle_scroll();
-            //
-            //         function handle_scroll() {
-            //             if (!subjectuid) return;
-            //             console.log("handling scroll " + subjectuid);
-            //             var pos = $('#' + research._id + '_' + subjectuid.replace(/\./g, '\\.')).position();
-            //             if (pos) {
-            //                 window.scroll({
-            //                     top: pos.top - 85,
-            //                     left: 0,
-            //                     behavior: 'smooth'
-            //                 });
-            //             } else {
-            //                 //item not loaded yet.. wait
-            //                 $timeout(handle_scroll, 100, false);
-            //             }
-            //         }
-            //
-            //         $scope.event_bind({
-            //             ex: "dicom.series",
-            //             key: research._id + ".#"
-            //         });
-            //     }, function(err) {
-            //         console.log(err);
-            //     });
         };
 
 
@@ -252,7 +210,24 @@ app.controller('ExamsController',
             }
         };
 
-        $scope.reqcallexams = function(research_id) {
+
+        $scope.QCalert = function(research_id,qc_type) {            
+            var r = confirm("You are about to ReQC all series in this IIBISID! "+research_id);
+            if (r == true) {
+                if (qc_type=="all") {
+                    console.log("ReQc-ing all!");
+                    reqcallexams(research_id);
+                }
+                else if (qc_type=="failures"){
+                    console.log("ReQc-ing failures!");
+                    reqcfailedexams(research_id);
+                }
+            } else {
+              console.log("ReQc canceled")
+            }
+        }
+
+        reqcallexams = function(research_id) {
             console.log("reQC research with id "+research_id)
             $http.post(appconf.api+'/research/reqcall/'+research_id) //{_id:$scope.selected._detail._id})
                 .then(function(res) {
@@ -260,7 +235,7 @@ app.controller('ExamsController',
                 }, $scope.toast_error);
         }
 
-        $scope.reqcfailedexams = function(research_id) {
+        reqcfailedexams = function(research_id) {
             console.log("reQC research with id "+research_id)
             $http.post(appconf.api+'/research/reqcfailed/'+research_id) //{_id:$scope.selected._detail._id})
                 .then(function(res) {

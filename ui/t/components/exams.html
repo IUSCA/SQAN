@@ -54,8 +54,8 @@
     <div ng-if="$ctrl.mode == 'tall'" class="subject-tall">
         <p>
             <time style="position: relative; top: 5px"><b>{{$ctrl.exam.StudyTimestamp|date:'short':'+0400'}} <small>(EST)</small></b></time> &nbsp;
-            <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc($ctrl.exam._id)">ReQC</button>
-            <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc_failed(exam_id)">ReQC failed series</button>            
+            <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc($ctrl.exam._id)" uib-tooltip="ReQC all series in this exam">ReQC</button>
+            <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc_failed(exam_id)" uib-tooltip="ReQC only series that have not passed QC">ReQC failed series</button>            
         </p>
 
         <!--

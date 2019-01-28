@@ -43,15 +43,6 @@ router.get('/summary/:id', function(req, res, next) {
     db.Exam.find({'research_id': req.params.id, 'istemplate' : false}).exec(function(err, _exams){
         if(err) return next(err);
         console.log(_exams);
-        // _exams.forEach(function(exam){
-        //     subjects.indexOf(exam.subject) === -1 ? subjects.push(exam.subject) : console.log('subject in array already');
-        //     db.Series.find({exam_id: exam._id}).exec(function(err, _series){
-        //         _series.forEach(function(ser){
-        //             series_desc.indexOf(ser.series_desc) === -1 ? series_desc.push(ser.series_desc) : console.log('series_desc in array already');
-        //         });
-        //         exams[exam.subject] === undefined ? exams[exam.subject] = [_series] : exams[exam.subject].push(_series);
-        //     });
-        // });
 
         async.each(_exams, function(exam, callback) {
             subjects.indexOf(exam.subject) === -1 && subjects.push(exam.subject);
@@ -73,23 +64,6 @@ router.get('/summary/:id', function(req, res, next) {
     });
 
 
-    // db.Exam.distinct('subject', {'research_id': req.params.id}).exec(function(err, _subjects){
-    //     if(err) return next(err);
-    //     db.Series.find()
-    //     db.Series.distinct('series_desc', {'research_id': req.params.id}).exec(function(err, _seriesDesc){
-    //         if(err) return next(err);
-    //         _subjects.forEach(function(sub){
-    //             subjects[sub] = {}
-    //             _series.forEach(function(ser){
-    //                 if(ser.subject == sub){
-    //                     subjects[sub][ser.series_desc] = ser;
-    //                 }
-    //             });
-    //         });
-    //
-    //         res.json({series_desc: _seriesDesc, subjects: subjects, exams: exams});
-    //     });
-    // });
 });
 
 //rerun QC1 on the entire "research"
@@ -121,11 +95,12 @@ router.post('/reqcall/:research_id', jwt({secret: config.express.jwt.pub}), func
                                 // add event to each series
                                 var detail = {
                                     qc1_state:series.qc1_state,
+                                    date_qced:  series.qc ? series.qc.date : undefined,
                                     template_id: series.qc ? series.qc.template_id : undefined,
                                 }
                                 var event = {
                                     user_id: req.user.sub,
-                                    title: "Research-level ReQC all series",
+                                    title: "Research-level ReQC all",
                                     date: new Date(), //should be set by default, but UI needs this right away
                                     detail: detail,
                                 }; 
@@ -139,6 +114,64 @@ router.post('/reqcall/:research_id', jwt({secret: config.express.jwt.pub}), func
 
                 }, function(err) {
                     res.json({message: "Re-running QC on "+exams.length+ " exams"}); 
+                })
+            });
+
+        });
+    })
+
+});
+
+//rerun QC1 on the entire "research"
+router.post('/reqcfailed/:research_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+
+    console.log("ReQCing research id "+req.params.research_id)
+    db.Research.findById(req.params.research_id)
+    .exec(function(err, research) {
+        if(err) return next(err);
+        if(!research) return res.status(404).json({message: "can't find specified research"});
+        //make sure user has access to this research
+        db.Acl.can(req.user, 'qc', research.IIBISID, function(can) {
+            if(!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:"+research.IIBISID});
+            
+            db.Exam.find({research_id:research._id})  //new mongoose.Types.ObjectId(req.params.research_id))
+            .exec(function(err, exams) {
+                if(err) return next(err);
+                if(!exams) return res.status(404).json({message: "can't find specified exams"});
+                
+                var qced_series = 0;
+                async.forEach(exams,function(exam,next_exam){
+                    
+                    //find all serieses user specified
+                    db.Series.find({exam_id: exam._id, qc1_state:{$ne:"autopass"}}).exec(function(err, serieses) {
+                        if(err) return next_exam(err);
+                        qced_series = qced_series+serieses.length;
+                        serieses.forEach(function(series) {
+                            db.Image.update({series_id: series._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
+                                if(err) return next_exam(err);
+                                //events.series(series);
+                                // add event to each series
+                                var detail = {
+                                    qc1_state:series.qc1_state,
+                                    date_qced: series.qc ? series.qc.date : undefined,
+                                    template_id: series.qc ? series.qc.template_id : undefined,
+                                }
+                                var event = {
+                                    user_id: req.user.sub,
+                                    title: "Research-level ReQC failures",
+                                    date: new Date(), //should be set by default, but UI needs this right away
+                                    detail: detail,
+                                }; 
+                                db.Series.update({_id: series._id}, {$push: { events: event }, qc1_state:"re-qcing", $unset: {qc: 1}}, function(err){
+                                    if(err) return next_exam(err);
+                                });
+                            });
+                        });
+                        next_exam()
+                    });
+
+                }, function(err) {
+                    res.json({message: "Re-running QC on "+qced_series+ " series with QC1 state failed"}); 
                 })
             });
 
@@ -227,59 +260,5 @@ router.get('/:id', jwt({secret: config.express.jwt.pub}), function(req, res, nex
     });
 });
 
-//rerun QC1 on the entire "research"
-router.post('/reqcfailed/:research_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-
-    console.log("ReQCing research id "+req.params.research_id)
-    db.Research.findById(req.params.research_id)
-    .exec(function(err, research) {
-        if(err) return next(err);
-        if(!research) return res.status(404).json({message: "can't find specified research"});
-        //make sure user has access to this research
-        db.Acl.can(req.user, 'qc', research.IIBISID, function(can) {
-            if(!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:"+research.IIBISID});
-            
-            db.Exam.find({research_id:research._id})  //new mongoose.Types.ObjectId(req.params.research_id))
-            .exec(function(err, exams) {
-                if(err) return next(err);
-                if(!exams) return res.status(404).json({message: "can't find specified exams"});
-                
-                async.forEach(exams,function(exam,next_exam){
-                    
-                    //find all serieses user specified
-                    db.Series.find({exam_id: exam._id, qc1_state:{$ne:"autopass"}}).exec(function(err, serieses) {
-                        if(err) return next_exam(err);
-                        serieses.forEach(function(series) {
-                            db.Image.update({series_id: series._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
-                                if(err) return next_exam(err);
-                                //events.series(series);
-                                // add event to each series
-                                var detail = {
-                                    qc1_state:series.qc1_state,
-                                    template_id: series.qc ? series.qc.template_id : undefined,
-                                }
-                                var event = {
-                                    user_id: req.user.sub,
-                                    title: "Research-level ReQC all failed series",
-                                    date: new Date(), //should be set by default, but UI needs this right away
-                                    detail: detail,
-                                }; 
-                                db.Series.update({_id: series._id}, {$push: { events: event }, qc1_state:"re-qcing", $unset: {qc: 1}}, function(err){
-                                    if(err) return next_exam(err);
-                                });
-                            });
-                        });
-                        next_exam()
-                    });
-
-                }, function(err) {
-                    res.json({message: "Re-running QC on "+exams.length+ " exams"}); 
-                })
-            });
-
-        });
-    })
-
-});
 
 module.exports = router;

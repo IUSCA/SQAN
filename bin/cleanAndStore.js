@@ -117,7 +117,7 @@ function incoming(h, msg_h, info, ack) {
             
                                     var new_event = {    
                                         service_id: 'cleanAndStore', //if event was performeed by a system, this is set
-                                        user_id: 'SCA', //if event was performed by a user, this is set to req.user.sub
+                                        user_id: '1', //if event was performed by a user, this is set to req.user.sub
                                         title: 'Overwritten',
                                         date: new Date()
                                     }
@@ -158,7 +158,7 @@ function incoming(h, msg_h, info, ack) {
 
                         var new_event = {    
                             service_id: 'cleanAndStore', //if event was performeed by a system, this is set
-                            user_id: 'SCA', //if event was performed by a user, this is set to req.user.sub
+                            user_id: '1', //if event was performed by a user, this is set to req.user.sub
                             title: 'Overwritten',
                             detail: {},
                             date: new Date()
