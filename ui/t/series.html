@@ -280,7 +280,7 @@
                     </div>
                 </div>
             </div>
-            <div class="activity" ng-repeat="event in data.series.events | filter:{title: '!Received'}" ng-init="user = users[event.user_id]">
+            <div class="activity" ng-repeat="event in data.series.events | filter:{title: '!Received'}">
                 <div class="row">
                     <div class="col-md-2">
                             <i class="fa fa-user" aria-hidden="true"></i>
@@ -288,7 +288,7 @@
                     </div>
                     <div class="col-md-10">
                         <time class="pull-right text-muted">{{event.date|date:'short'}}</time>
-                        <b>{{user.fullname}}</b>                        
+                        <b>{{event.username}}</b>                        
                         <p ng-if="event.title">{{event.title}}</p>
                         <!-- <p ng-if="event.detail"><i>Details:</i></p> -->
                         <p ng-if="event.detail.qc1_state"><span>Previous QC1 state: </span><span>{{event.detail.qc1_state}}</span> </p> 

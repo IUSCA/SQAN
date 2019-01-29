@@ -211,16 +211,22 @@ app.controller('ExamsController',
         };
 
 
-        $scope.QCalert = function(research_id,qc_type) {            
-            var r = confirm("You are about to ReQC all series in this IIBISID! "+research_id);
+        $scope.QCalert = function(research,qc_type) {  
+            var alert = `You are about to ReQC ${qc_type} series under 
+            IIBISID: ${research.IIBISID}
+            Modality: ${research.Modality}
+            Station Name: ${research.StationName}`;
+            if (research.radio_tracer) {alert = `${alert}
+            Radio tracer: ${research.radio_tracer}`};                                 
+            var r = confirm(alert);
             if (r == true) {
                 if (qc_type=="all") {
                     console.log("ReQc-ing all!");
-                    reqcallexams(research_id);
+                    reqcallexams(research._id);
                 }
-                else if (qc_type=="failures"){
+                else if (qc_type=="failed"){
                     console.log("ReQc-ing failures!");
-                    reqcfailedexams(research_id);
+                    reqcfailedexams(research._id);
                 }
             } else {
               console.log("ReQc canceled")

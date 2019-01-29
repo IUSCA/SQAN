@@ -117,8 +117,7 @@ function incoming(h, msg_h, info, ack) {
             
                                     var new_event = {    
                                         service_id: 'cleanAndStore', //if event was performeed by a system, this is set
-                                        user_id: '1', //if event was performed by a user, this is set to req.user.sub
-                                        title: 'Overwritten',
+                                        title: 'Series Overwritten',
                                         date: new Date()
                                     }
             
@@ -158,8 +157,7 @@ function incoming(h, msg_h, info, ack) {
 
                         var new_event = {    
                             service_id: 'cleanAndStore', //if event was performeed by a system, this is set
-                            user_id: '1', //if event was performed by a user, this is set to req.user.sub
-                            title: 'Overwritten',
+                            title: 'Series Overwritten',
                             detail: {},
                             date: new Date()
                         }
@@ -325,7 +323,6 @@ function incoming(h, msg_h, info, ack) {
                             // finally, insert primary_template._id into the template document and add a "created" event
                             var event = {    
                                 service_id: 'cleanAndStore', //if event was performeed by a system, this is set
-                                user_id: 'SCA', //if event was performed by a user, this is set to req.user.sub
                                 title: 'Received', // This is the date in which the template document was first created in the database                                
                                 date: new Date()
                             }
@@ -393,7 +390,6 @@ function incoming(h, msg_h, info, ack) {
                             // finally, insert primary_image._id into the series document  
                             var event = {    
                                 service_id: 'cleanAndStore', //if event was performeed by a system, this is set
-                                user_id: 'SCA', //if event was performed by a user, this is set to req.user.sub
                                 title: 'Received', // This is the date in which the template document was first created in the database                                
                                 date: new Date()
                             }

@@ -28,11 +28,14 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
                 if(template._id == res.data.series.qc.template_id) $scope.data.template = template;
             });
             // get date received by SCA
-            res.data.series.events.forEach(function(e){
+            res.data.series.events.forEach(function(e,index){
                 if(e.title == "Received") {
                     console.log(e);
                     $scope.data.date_received = e.date;
                 }
+                if ($scope.users[e.user_id]) {
+                    $scope.data.series.events[index].username = $scope.users[e.user_id].fullname;                    
+                } else $scope.data.series.events[index].username = "RADY-SCA";               
             })
             //reload if qc is not yet loaded
             if(!res.data.series.qc) {

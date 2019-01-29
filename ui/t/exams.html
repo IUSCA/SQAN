@@ -90,10 +90,10 @@
             <h2 class="pull-right" style="position: relative; left: -15px;">
                 <viewmode-toggler mode="view_mode" deprecated="show_deprecated"></viewmode-toggler>
             </h2>
-            <h2> <b>{{selected._detail.IIBISID}}</b>
-                <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="QCalert(selected._id,'all')" tooltip-placement="right-bottom" uib-tooltip="ReQC all series in all exams in this IIBISID">ReQC all exams</button>
-                <!-- <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="reqcallexams(selected._detail._id)" tooltip-placement="right-bottom" uib-tooltip="ReQC all series in all exams in this IIBISID">ReQC all exams</button> -->
-                <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="QCalert(selected._id,'failures')" tooltip-placement="right-bottom" uib-tooltip="ReQC all series that have failed QC1 in this IIBISID">ReQC failures</button>
+            <h2> <b>{{selected.IIBISID}}</b>
+                <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="QCalert(selected,'all')" tooltip-placement="right-bottom" uib-tooltip="ReQC all series in all exams in this IIBISID">ReQC all exams</button>
+
+                <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="QCalert(selected,'failed')" tooltip-placement="right-bottom" uib-tooltip="ReQC all series that have failed QC1 in this IIBISID">ReQC failures</button>
             </h2>
             <h3>
                 Modality: <b>{{selected.Modality}}</b>

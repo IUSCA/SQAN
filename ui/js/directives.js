@@ -61,49 +61,6 @@ app.directive('qcwarning', function() {
     } 
 });
 
-/*
-app.factory('menu', ['appconf', '$http', 'jwtHelper', '$sce', 'toaster',
-function(appconf, $http, jwtHelper, $sce, toaster) {
-    var jwt = localStorage.getItem(appconf.jwt_id);
-    var menu = {
-        header: {
-            //label: appconf.title,
-            //icon: $sce.trustAsHtml("<img src=\""+appconf.icon_url+"\">"),
-            //url: "#/",
-        },
-        //top: scaMenu,
-        user: null, //to-be-loaded
-        //_profile: null, //to-be-loaded
-    };
-
-    var jwt = localStorage.getItem(appconf.jwt_id);
-    if(jwt) {
-        var expdate = jwtHelper.getTokenExpirationDate(jwt);
-        var ttl = expdate - Date.now();
-        if(ttl < 0) {
-            toaster.error("Your login session has expired. Please re-sign in");
-            localStorage.removeItem(appconf.jwt_id);
-        } else {
-            //menu.user = jwtHelper.decodeToken(jwt);
-            if(ttl < 3600*1000) {
-                //jwt expring in less than an hour! refresh!
-                console.log("jwt expiring in an hour.. refreshing first");
-                $http({
-                    url: appconf.auth_api+'/refresh',
-                    //skipAuthorization: true,  //prevent infinite recursion
-                    //headers: {'Authorization': 'Bearer '+jwt},
-                    method: 'POST'
-                }).then(function(response) {
-                    var jwt = response.data.jwt;
-                    localStorage.setItem(appconf.jwt_id, jwt);
-                    //menu.user = jwtHelper.decodeToken(jwt);
-                });
-            }
-        }
-    }
-    return menu;
-}]);
-*/
 
 app.component('exams', {
     templateUrl: 't/components/exams.html',
@@ -122,6 +79,30 @@ app.component('exams', {
         this.opentemplate = function(id) {
             $window.open("#/template/"+id);
         }
+
+        this.qcalert = function(exam,qc_type) {   
+            date = new Date(exam.StudyTimestamp);
+            var StudyTimestamp = (date.getMonth()+1)+'/' + date.getDate() + '/'+date.getFullYear();
+            //var StudyTimestamp = date.getFullYear()+'-' + (date.getMonth()+1) + '-'+date.getDate();
+            var alert = `You are about to ReQC ${qc_type} series for 
+            Subject: ${exam.subject}
+            Study Timestamp: ${StudyTimestamp}`                                
+            var r = confirm(alert);         
+
+            if (r == true) {
+                if (qc_type=="all") {
+                    console.log("ReQc-ing all!");
+                    this.reqc_all(exam_id);
+                }
+                else if (qc_type=="failed"){
+                    console.log("ReQc-ing failures!");
+                    this.reqc_failed(exam_id);
+                }
+            } else {
+              console.log("ReQc canceled")
+            }
+        }
+
         this.reqc_all = function(exam_id) {
             console.log("reQC all series")
             $http.post(appconf.api+'/series/reqcallseries/'+exam_id)
