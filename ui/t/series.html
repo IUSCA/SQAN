@@ -64,14 +64,14 @@
                         <div class="col-sm-10">{{data.series.exam_id.subject}}</div>
                     </div>
                 </li>
-                <li class="list-group-item" ng-if="data.qc_template">
+                <li class="list-group-item" ng-if="data.template">
                     <div class="row">
                         <div class="col-sm-2">Template Used</div>
                         <div class="col-sm-10">
-                            <div class="studynote" ng-click="opentemplate(data.qc_template._id)">
-                                <b>{{data.qc_template.series_desc}}</b> 
-                                {{data.qc_template.date | date:'medium'}} 
-                                <span class="text-muted">(#{{data.qc_template.SeriesNumber}})</span>
+                            <div class="studynote" ng-click="opentemplate(data.template._id)">
+                                <b>{{data.template.series_desc}}</b> 
+                                {{data.template.exam_id.StudyTimestamp | date:'medium'}} 
+                                <span class="text-muted">(#{{data.template.SeriesNumber}})</span>
                             </div>
                         </div>
                     </div>
@@ -280,7 +280,7 @@
                     </div>
                 </div>
             </div>
-            <div class="activity" ng-repeat="event in data.series.events | filter:{title: '!Received'}">
+            <div class="activity" ng-repeat="event in data.series.events | filter:{title: '!Received'} | orderBy: 'date':1">
                 <div class="row">
                     <div class="col-md-2">
                             <i class="fa fa-user" aria-hidden="true"></i>
@@ -290,7 +290,6 @@
                         <time class="pull-right text-muted">{{event.date|date:'short'}}</time>
                         <b>{{event.username}}</b>                        
                         <p ng-if="event.title">{{event.title}}</p>
-                        <!-- <p ng-if="event.detail"><i>Details:</i></p> -->
                         <p ng-if="event.detail.qc1_state"><span>Previous QC1 state: </span><span>{{event.detail.qc1_state}}</span> </p> 
                         <p ng-if="event.detail.date_qced"><span>Previous QC1 date: </span><time >{{event.detail.date_qced |date:'short'}}</time></p>
                     </div>
