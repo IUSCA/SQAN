@@ -389,7 +389,6 @@ router.post('/qcstate/:series_id', jwt({secret: config.express.jwt.pub}), functi
  
 
 router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    console.log("INSIDE API/SERIES/ change template")
     db.Series.findById(req.params.series_id)
         .populate({
             path: 'exam_id',

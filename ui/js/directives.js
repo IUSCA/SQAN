@@ -84,7 +84,7 @@ app.component('exams', {
             date = new Date(exam.StudyTimestamp);
             var StudyTimestamp = (date.getMonth()+1)+'/' + date.getDate() + '/'+date.getFullYear();
             //var StudyTimestamp = date.getFullYear()+'-' + (date.getMonth()+1) + '-'+date.getDate();
-            var alert = `You are about to ReQC ${qc_type} series for 
+            var alert = `Please confirm that you want to ReQC ${qc_type} series for 
             Subject: ${exam.subject}
             Study Timestamp: ${StudyTimestamp}`                                
             var r = confirm(alert);         

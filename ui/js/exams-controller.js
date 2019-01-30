@@ -212,7 +212,7 @@ app.controller('ExamsController',
 
 
         $scope.QCalert = function(research,qc_type) {  
-            var alert = `You are about to ReQC ${qc_type} series under 
+            var alert = `Please confirm that you want to ReQC ${qc_type} series under 
             IIBISID: ${research.IIBISID}
             Modality: ${research.Modality}
             Station Name: ${research.StationName}`;
