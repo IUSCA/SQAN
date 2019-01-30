@@ -121,6 +121,7 @@ var seriesSchema = mongoose.Schema({
     series_desc: {type: String}, //original SeriesDescription minut anything after ^
     SeriesNumber: {type: Number}, //some study has repeated series
     deprecated_by: {type: mongoose.Schema.Types.ObjectId},
+    override_template_id: {type: mongoose.Schema.Types.ObjectId, index: true},  // template_id to use for qc 
 
     isexcluded: Boolean,
     primary_image: {type: mongoose.Schema.Types.ObjectId, index: true},

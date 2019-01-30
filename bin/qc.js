@@ -21,7 +21,7 @@ db.init(function(err) {
 
 function run(cb) {
     //logger.info("querying un-qc-ed series -- "+ new Date());
-    // get primary images that are not qc-ed=
+    // get primary images that are not qc-ed
     db.Series.aggregate([
         {$match: {qc: {$exists: false}}},{$sample: {size:config.qc.series_batch_size}}
     ]).exec(function(err,series){
@@ -191,62 +191,75 @@ function qc_one_image(image,primimage,primtemplate,cb) {
     });
 }
 
-
-// ************************** Template functions ********************************//
 function find_template(series, cb) {
 
-    get_template(series, function(err, template) {
-        if(err) return cb(err);
-        if(!template) {
-            if (series.qc1_state == 'no template'){
-                return cb(null);
-            } else {
-                series.qc1_state = 'no template';
-                db.Series.findOneAndUpdate({_id: series._id},{qc1_state:series.qc1_state},function(err) {
-                    if (err) return cb(err);
-                    return cb(null);
-                })                 
-            }                        
-        } else {
-            cb(null,template)
-        }
-    })
+    if (series.override_template_id) {
+        get_override_template(series,cb)
+
+    } else {
+        get_mostrecent_template(series,cb)
+    }
 }
 
 
+function get_override_template(series,cb) {
+    db.Template.findOne({
+        _id: series.override_template_id,
+        series_desc: series.series_desc,
+    },function(err,template) {
+        if (err) return cb(err);
+        update_qc1(series,template,cb)
+    }) 
+}
 
-function get_template(series, cb) {
+
+function get_mostrecent_template(series, cb) {
     //find the research_id by looking in the exam doc
     db.Exam
-        .findById(series.exam_id, 'research_id')
-        .exec(function(err, exam) {
-        if(err) return cb(err);
-        if(!exam) {
-            logger.info("couldn't find such exam: "+series.exam_id);
-            return cb(null);
-        }
-                
-        db.Exam.find({"research_id":exam.research_id, "istemplate":true})
-            .sort({"StudyTimestamp":-1})  //.sort('-date')
-            .exec(function(err,texams) {
-                if (err) return cb(err);
-                //console.log(texams.length + " template exams retrieved for research_id "+exam.research_id);
-                if (!texams || texams.length == 0) {
-                    logger.info("couldn't find any exam templates for series:"+series._id+" and research_id:"+exam.research_id);
-                    return cb(null,null);
-                } else {
-                    db.Template.findOne({
-                        exam_id: texams[0]._id,
-                        series_desc: series.series_desc,
-                        deprecated_by: null
-                    },function(err,temp) {
-                        if (err) return cb(err);
-                        return cb(null,temp)        
-                    }) 
-                }                                      
-            })
-        });
+    .findById(series.exam_id, 'research_id')
+    .exec(function(err, exam) {
+    if(err) return cb(err);
+    if(!exam) {
+        logger.info("couldn't find such exam: "+series.exam_id);
+        return cb(null);
     }
+    db.Exam.find({"research_id":exam.research_id, "istemplate":true})
+        .sort({"StudyTimestamp":-1})  //.sort('-date')
+        .exec(function(err,texams) {
+            if (err) return cb(err);
+            //console.log(texams.length + " template exams retrieved for research_id "+exam.research_id);
+            if (!texams || texams.length == 0) {
+                logger.info("couldn't find any exam templates for series:"+series._id+" and research_id:"+exam.research_id);
+                return update_qc1(series,null,cb);
+            } else {
+                db.Template.findOne({
+                    exam_id: texams[0]._id,
+                    series_desc: series.series_desc,
+                    deprecated_by: null
+                },function(err,temp) {
+                    if (err) return cb(err);
+                    return update_qc1(series,temp,cb);        
+                }) 
+            }                                      
+        })
+    });
+}
+
+function update_qc1(series,template,cb){
+    if(!template) {
+        if (series.qc1_state == 'no template'){
+            return cb(null);
+        } else {
+            series.qc1_state = 'no template';
+            db.Series.findOneAndUpdate({_id: series._id},{qc1_state:series.qc1_state},function(err) {
+                if (err) return cb(err);
+                return cb(null);
+            })                 
+        }                        
+    } else {
+        cb(null,template)
+    } 
+}
 
 
 

@@ -180,16 +180,26 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
         }, $scope.toast_error);
     }
 
-    $scope.select_template = function(item,model) {
+    $scope.select_template = function(item) {
         console.log(item);
-        $scope.image_detail = null;
-        $scope.active_image = null;
-        $http.post(appconf.api+'/series/template/'+$routeParams.seriesid, {exam_id: item.exam_id._id})
-        .then(function(res) {
-            load_series();
-            toaster.success(res.data.message);
-        }, $scope.toast_error);
+
+        var alert = `You are about to override the default template for this series; this action will result in ReQCing this series only with the selected template.`
+                                
+        var r = confirm(alert);
+        if (r == true) {
+            console.log("ReQc-ing series!");
+            $scope.image_detail = null;
+            $scope.active_image = null;
+            $http.post(appconf.api+'/series/template/'+$routeParams.seriesid, {template_id: item._id})
+            .then(function(res) {
+                load_series();
+                toaster.success(res.data.message);
+            }, $scope.toast_error);
+        } else {
+            console.log("ReQc canceled")
+        }
     }
+
     $scope.reqc = function() {  
         $scope.image_detail = null;
         $scope.active_image = null;

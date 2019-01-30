@@ -162,11 +162,8 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
     var timerange = where.StudyTimestamp ? where.StudyTimestamp : null;
 
     profile.isUserAllowed(req.user,'view', r_id, function(err, isallowed) {
-        console.log('isAllowed '+isallowed)
         if (err) return res.status(404).json({message:"there was an error during authorization - please contact SCA team"})
         if(!isallowed) return res.status(401).json({message: "you are not authorized to view this study"});               
-
-        console.log('inside series controller in api!!')
         
         //load various raw records
         var serieses = null;
@@ -192,8 +189,6 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
                     _exams.forEach(function(subject_exams) {
                         eids.push(subject_exams._id);
                     });
-                    console.log(subject_exams);
-                    console.log(eids);
                     next(err);
                 });
             },
@@ -206,7 +201,6 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
                 query.sort({SeriesNumber: 1});
                 query.exec(function(err, _serieses) {
                     serieses = _serieses;
-                    console.log(serieses);
                     next(err);
                 });
             },
@@ -218,7 +212,6 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
                 db.Research.findById(r_id).lean()
                 .exec(function(err, _research) {
                     research = _research;
-                    console.log(research);
                     next(err);
                 });
             },
@@ -236,7 +229,6 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
                     template_exams.forEach(function(te) {
                         teids.push(te._id);
                     });
-                    console.log(template_exams);
                     next(err);
                 });
             },
@@ -249,7 +241,6 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
                 query.sort({SeriesNumber: 1});
                 query.exec(function(err, _templates) {
                     templates = _templates;
-                    console.log(templates);
                     next(err);
                 });
             },
@@ -395,59 +386,66 @@ router.post('/qcstate/:series_id', jwt({secret: config.express.jwt.pub}), functi
         });
     });
 });
+ 
 
-//change template and invalidate QC
-// **************************** AAK : this will require seme reworking of the qc service. Need to add a template_exam_id to the series schema; then, in the qc process, before we look for the most recent template exam, we need to verify that a template is not specified in the template_exam_id field, and use that exam to qc. Not sure if this will be easy... 
+router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    console.log("INSIDE API/SERIES/ change template")
+    db.Series.findById(req.params.series_id)
+        .populate({
+            path: 'exam_id',
+            populate: {
+                path: 'research_id'
+            }
+        })
+        .exec(function(err, series) {
+        if(err) return next(err);
+        if(!series) return res.status(404).json({message: "can't find specified series"});
+        //make sure user has access to this series
+        db.Acl.can(req.user, 'qc', series.exam_id.research_id.IIBISID, function(can) {
+            if(!can) return res.status(401).json({message: "you are not authorized to QC this IIBISID:"+series.exam_id.research_id.IIBISID});
 
-// router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-//     db.Series.findById(req.params.series_id)
-//         .populate({
-//             path: 'exam_id',
-//             populate: {
-//                 path: 'research_id'
-//             }
-//         })
-//         .exec(function(err, series) {
-//         if(err) return next(err);
-//         if(!series) return res.status(404).json({message: "can't find specified series"});
-//         //make sure user has access to this series
-//         db.Acl.can(req.user, 'qc', series.exam_id.research_id.IIBISID, function(can) {
-//         //db.Acl.canAccessIIBISID(req.user, series.IIBISID, function(can) {
-//             if(!can) return res.status(401).json({message: "you are not authorized to QC this IIBISID:"+series.exam_id.research_id.IIBISID});
-//             //make sure template_id belongs to this series (don't let user pick someone else's template)
-//             db.Exam.findById(req.body.exam_id).exec(function(err, exam) {
-//                 if(err) return next(err);
-//                 if(!exam.research_id.equals(series.exam_id.research_id)) return next("invalid template_id");
-//                 series.template_exam_id = exam._id;
-//                 //series.qc = undefined; //invalidate series qc
-//                 var detail = {
-//                     qc1_state:series.qc1_state,
-//                     date_qced: series.qc ? series.qc.date : undefined,
-//                     template_id: series.qc ? series.qc.template_id : undefined,
-//                     comment:"Re-QCing with template: "+exam.date.toString(),
-//                 }
+            db.Template.findById(req.body.template_id).exec(function(err, template) {
+                if(err) return next(err);
+                if(!template) return res.status(404).json({message: "can't find specified template"});
 
-//                 var event = {
-//                     user_id: req.user.sub,
-//                     title: "Template override",
-//                     date: new Date(), //should be set by default, but UI needs this right away
-//                     detail:detail,
-//                 };
-//                 series.events.push(event);
-//                 //events.series(series);
-//                 series.save(function(err) {
-//                     if(err) return(err);
-//                     //invalidate image QC.
-//                     db.Image.update({series_id: series._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
-//                         if(err) return next(err);
-//                         console.dir(affected);
-//                         res.json({message: "Template updated. Re-running QC on "+affected.nModified+" images."});
-//                     });
-//                 });
-//             });
-//         });
-//     });
-// });
+                db.Exam.findById(template.exam_id)
+                .populate('research_id')
+                .exec(function(err,texam){
+                    if(err) return next(err);
+                    console.log(texam);
+                    // make sure this template and subject series belong to the same research
+                    if(!series.exam_id.research_id.equals(texam.research_id)) return next("invalid template_id");
+
+                    var override_template_id = template._id;
+
+                    var detail = {
+                        qc1_state:series.qc1_state,
+                        date_qced: series.qc ? series.qc.date : undefined,
+                        template_id: series.qc ? series.qc.template_id : undefined,
+                        comment:"Re-QCing with template: "+texam.StudyTimestamp.toString()+" and Series Number "+template.SeriesNumber,
+                    }
+    
+                    var event = {
+                        user_id: req.user.sub,
+                        title: "Template override",
+                        date: new Date(), //should be set by default, but UI needs this right away
+                        detail:detail,
+                    };
+
+                    db.Image.update({series_id: series._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
+                        if(err) return next(err);
+                        db.Series.update({_id: series._id}, {$push: { events: event }, qc1_state:"re-qcing", override_template_id:override_template_id, $unset: {qc: 1}}, function(err){
+                            if(err) next(err);
+                            res.json({message: "Template updated. Re-running QC on "+affected.nModified+" images from series "+series.series_desc, event:event});
+                        });
+                    });
+
+                })
+
+            });
+        });
+    });
+});
 
 router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     db.Series.findById(req.params.series_id)
@@ -481,7 +479,7 @@ router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub}), function(
                 if(err) return next(err);
                 db.Series.update({_id: series._id}, {$push: { events: event }, qc1_state:"re-qcing", $unset: {qc: 1}}, function(err){
                     if(err) next(err);
-                    res.json({message: "Re-running QC on "+affected.nModified+" images from series "+series._id, event:event});
+                    res.json({message: "Re-running QC on "+affected.nModified+" images from series "+series.series_desc, event:event});
                 });
             });
         });
