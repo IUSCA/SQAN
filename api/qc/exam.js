@@ -13,7 +13,7 @@ db.init(function(err) {
     if(err) throw err;
 });
 
-
+// *** AAK: The exam-level qc is always performed agains the series belonging to the most recent template exam. If a subset of a subject's series have been qc-ed against template series belonging to an older template exam (i.e. in the case that a template is overriden by a user), the exam qc will still be performed only against series of the most recent template.
 
 function qc_exam(exam_id,cb) {
 
@@ -146,6 +146,7 @@ function qc_exam(exam_id,cb) {
         
         function(next){            
             // if nothing changed since last exam qc
+            // AAK -- not sure this check is needed, we could just do the db update anyway. Is checking for equality more efficiet than unnecesarily updating the DB or not?
             if(typeof exam.qc === 'object' && exam.qc !== null) {
                 if(_.isEqual(exam.qc,qc)) {
                     //console.log("no changes since last exam qc for exam "+exam._id);
