@@ -92,11 +92,11 @@ app.component('exams', {
             if (r == true) {
                 if (qc_type=="all") {
                     console.log("ReQc-ing all!");
-                    this.reqc_all(exam_id);
+                    this.reqc_all(exam._id);
                 }
                 else if (qc_type=="failed"){
                     console.log("ReQc-ing failures!");
-                    this.reqc_failed(exam_id);
+                    this.reqc_failed(exam._id);
                 }
             } else {
               console.log("ReQc canceled")

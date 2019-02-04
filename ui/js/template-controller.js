@@ -14,6 +14,17 @@ function($scope, appconf, toaster, $http, $location, serverconf, $routeParams) {
         $http.get(appconf.api+'/template/inst/'+template._id)
         .then(function(res) {
             $scope.image_detail = res.data;
+            $scope.image_headers = {};            
+            if($scope.image_detail.primary_image !== null) {
+                $scope.image_headers = $scope.image_detail.primary_image.headers;
+                angular.forEach(res.data.headers, function(value, key) {
+                    $scope.image_headers[key] = value;
+                });
+                console.log($scope.image_headers)
+            } else {
+                $scope.image_headers = res.data.headers;
+                console.log($scope.image_headers)
+            }
         }, $scope.toast_error);
     }
 });

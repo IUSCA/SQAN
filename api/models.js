@@ -84,13 +84,13 @@ exports.Template = mongoose.model('Template', templateSchema);
 
 var templateHeaderSchema = mongoose.Schema({
 
-    template_id: {type: mongoose.Schema.Types.ObjectId, index: true}, 
+    template_id: {type: mongoose.Schema.Types.ObjectId, index: true, ref: 'Template'}, 
     InstanceNumber: {type: Number},
     //EchoNumbers: {type: Number},
     SOPInstanceUID : {type: String, index: true},
     
     headers: mongoose.Schema.Types.Mixed, 
-    primary_image: {type: mongoose.Schema.Types.ObjectId, index: true}
+    primary_image: {type: mongoose.Schema.Types.ObjectId, index: true,  ref: 'TemplateHeader'}
 });
 templateHeaderSchema.index({template_id: 1, SOPInstanceUID: 1, primary_image: 1});
 exports.TemplateHeader = mongoose.model('TemplateHeader', templateHeaderSchema);
