@@ -118,7 +118,7 @@ var seriesSchema = mongoose.Schema({
     ///////////////////////////////////////////////////////////////////////////
 
     exam_id: {type: mongoose.Schema.Types.ObjectId, index: true, ref: 'Exam'},
-    series_desc: {type: String}, //original SeriesDescription minut anything after ^
+    series_desc: {type: String, index: true}, //original SeriesDescription minut anything after ^
     SeriesNumber: {type: Number}, //some study has repeated series
     deprecated_by: {type: mongoose.Schema.Types.ObjectId},
 
@@ -144,7 +144,7 @@ var seriesSchema = mongoose.Schema({
     }) ],
 }, {strict: false});
 
-seriesSchema.index({exam_id: 1, primary_image:1});
+seriesSchema.index({exam_id: 1, primary_image:1, series_desc: 1});
 exports.Series = mongoose.model('Series', seriesSchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -228,40 +228,88 @@ var aclSchema = mongoose.Schema({
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //key
     //SOPInstanceUID: String,
-    key: {type: String, index: true},
+    // key: {type: String, index: true},
+    IIBISID: {type: String, index: true},
+    qc: {
+        users: [Number],
+        groups: [Number]
+    },
+    view: {
+        users: [Number],
+        groups: [Number]
+    }
     //
     //////////////////////////////////////////////////////////////////////////////////////////////
-    value: mongoose.Schema.Types.Mixed, 
+    // value: mongoose.Schema.Types.Mixed,
 });
 
 //return true if user can do action on iibisid
 aclSchema.statics.can = function(user, action, iibisid, cb) {
 
-    this.getCan(user, action, function(err, iibisids) {
-        cb(~iibisids.indexOf(iibisid));
+    this.findOne({IIBISID: iibisid}, function(err, acl) {
+        if(err) return cb(err);
+        var _acl = acl[action];
+        if(_acl) {
+            for (var gid in user.gids) {
+                if (_acl.groups.indexOf(gid)) {
+                    cb(true);
+                    return;
+                }
+            }
+            if(~_acl.users.indexOf(user.sub)) {
+                cb(true);
+                return;
+            }
+            cb(false);
+            return;
+        }
     });
-}
+    // this.getCan(user, action, function(err, iibisids) {
+    //     cb(~iibisids.indexOf(iibisid));
+    // });
+};
 
 //get all iibisids that user has access to
 aclSchema.statics.getCan = function(user, action, cb) {
-    this.findOne({key: 'iibisid'}, function(err, acl) {
+    var iibisids = [];
+    this.find({}, function(err, acls){
         if(err) return cb(err);
-        var iibisids = [];
-        if(acl) for(var iibisid in acl.value) {
-            var _acl = acl.value[iibisid][action];
+        if(acls) for(let acl of acls) {
+            var _acl = acl[action];
             if(_acl) {
-                //if(acl.value[iibisid][action].groups) {
+                console.log(_acl.groups);
                 var inter = _acl.groups.filter(function(gid) {
                     return ~user.gids.indexOf(gid);
                 });
                 if(~_acl.users.indexOf(user.sub) || inter.length > 0) {
-                    iibisids.push(iibisid);
+                    iibisids.push(acl.IIBISID);
                 }
             }
-        } 
+        }
         cb(null, iibisids);
     });
-}
+};
+
+//get all iibisids that user has access to
+// aclSchema.statics.getCan = function(user, action, cb) {
+//     this.findOne({key: 'iibisid'}, function(err, acl) {
+//         if(err) return cb(err);
+//         var iibisids = [];
+//         if(acl) for(var iibisid in acl.value) {
+//             var _acl = acl.value[iibisid][action];
+//             if(_acl) {
+//                 //if(acl.value[iibisid][action].groups) {
+//                 var inter = _acl.groups.filter(function(gid) {
+//                     return ~user.gids.indexOf(gid);
+//                 });
+//                 if(~_acl.users.indexOf(user.sub) || inter.length > 0) {
+//                     iibisids.push(iibisid);
+//                 }
+//             }
+//         }
+//         cb(null, iibisids);
+//     });
+// }
 
 
 ///////

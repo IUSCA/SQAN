@@ -71,7 +71,7 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
             console.log(err);
             return next(err);
         }
-        //console.log(researchids);
+        console.log(researchids);
 
         var query = db.Exam.find().populate('research_id');
         query.where('research_id').in(researchids);

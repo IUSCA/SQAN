@@ -925,3 +925,19 @@ pre {
   white-space: -o-pre-wrap;    /* Opera 7 */
   word-wrap: break-word;       /* Internet Explorer 5.5+ */
 }
+
+.center-parent {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+}
+.center-child {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.fa-8x {
+  font-size: 8em;
+}
