@@ -152,9 +152,8 @@ function incoming(tags, cb) {
                                     if (err) return next(err);
 
                                     var new_event = {
-                                        service_id: 'cleanAndStore', //if event was performeed by a system, this is set
-                                        user_id: 'SCA', //if event was performed by a user, this is set to req.user.sub
-                                        title: 'template was overwritten',
+                                        service_id: 'incoming', //if event was performeed by a system, this is set
+                                        title: 'Template Overwritten',
                                         detail: {},
                                         date: new Date()
                                     }
@@ -194,9 +193,8 @@ function incoming(tags, cb) {
                         if (err) return next(err);
 
                         var new_event = {
-                            service_id: 'cleanAndStore', //if event was performeed by a system, this is set
-                            user_id: 'SCA', //if event was performed by a user, this is set to req.user.sub
-                            title: 'series was overwritten',
+                            service_id: 'incoming', //if event was performeed by a system, this is set
+                            title: 'Series Overwritten',
                             detail: {},
                             date: new Date()
                         }
@@ -363,11 +361,17 @@ function incoming(tags, cb) {
                                 if (err) return next(err);
                                 var deprecated_by = template_deprecatedBy(template);
                                 console.log("deprecated_by " + deprecated_by)
-                                // finally, insert primary_template._id into the template document
+                                // finally, insert primary_template._id into the template document and add a "created" event
+                                var event = {
+                                    service_id: 'incoming', //if event was performeed by a system, this is set
+                                    title: 'Received', // This is the date in which the template document was first created in the database
+                                    date: new Date()
+                                }
                                 db.Template.updateOne({_id: template._id},
                                     {
                                         primary_image:primary_template._id,
-                                        deprecated_by: deprecated_by !== "undefined"? deprecated_by : null
+                                        deprecated_by: deprecated_by !== "undefined"? deprecated_by : null,
+                                        $push: { events: event },
                                     }, function(err) {
                                         if (err) return next(err);
                                         return next();
@@ -424,10 +428,16 @@ function incoming(tags, cb) {
                                 if (err) return next(err);
                                 var deprecated_by = series_deprecatedBy(series);
                                 // finally, insert primary_image._id into the series document
+                                var event = {
+                                    service_id: 'incoming', //if event was performeed by a system, this is set
+                                    title: 'Received', // This is the date in which the template document was first created in the database
+                                    date: new Date()
+                                }
                                 db.Series.updateOne({_id: series._id},
                                     {
                                         primary_image:primary_image._id,
-                                        deprecated_by: deprecated_by !== "undefined"? deprecated_by : null
+                                        deprecated_by: deprecated_by !== "undefined"? deprecated_by : null,
+                                        $push: { events: event },
                                     }, function(err) {
                                         if (err) return next(err);
                                         return next();

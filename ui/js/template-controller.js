@@ -7,6 +7,7 @@ function($scope, appconf, toaster, $http, $location, serverconf, $routeParams) {
     $http.get(appconf.api+'/template/head/'+$routeParams.templateid)
     .then(function(res) {
         $scope.data = res.data;
+        console.log($scope.data);
     }, $scope.toast_error);
 
     $scope.load_template = function(template) {

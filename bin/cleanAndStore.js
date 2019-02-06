@@ -120,17 +120,17 @@ function incoming(h, msg_h, info, ack) {
                                         title: 'Series Overwritten',
                                         date: new Date()
                                     }
-            
+
                                     qc_func.series.overwritte_template(repeated_header.series_id,new_event,function(err) {
                                         if (err) return next(err);
                                         return next()
-                                    })                                          
+                                    })
                                 })
-                            } else {                                  
-                                return next("Cannot overwrite template -- it is currently used to QC "+usedInQC+ " series"); 
+                            } else {
+                                return next("Cannot overwrite template -- it is currently used to QC "+usedInQC+ " series");
                             }
                         })
-                    })                    
+                    })
                 } else {
                     next();
                 }
@@ -141,12 +141,12 @@ function incoming(h, msg_h, info, ack) {
         // Make sure this header is not in the databse already
         function(next) {
             if(h.qc_istemplate) return next();
-            
+
             db.Image.findOne({
                 SOPInstanceUID: h.SOPInstanceUID
             }, function(err,repeated_header) {
                 if (err) return next(err);
-                if (repeated_header) { 
+                if (repeated_header) {
 
                     var path = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
 
@@ -155,7 +155,7 @@ function incoming(h, msg_h, info, ack) {
                     qc_func.series.deprecate_series(h, 'overwritten',function(err){
                         if (err) return next(err);
 
-                        var new_event = {    
+                        var new_event = {
                             service_id: 'cleanAndStore', //if event was performeed by a system, this is set
                             title: 'Series Overwritten',
                             detail: {},
@@ -165,7 +165,7 @@ function incoming(h, msg_h, info, ack) {
                         qc_func.series.unQc_series(repeated_header.series_id,new_event,function(err) {
                             if (err) return next(err);
                             return next()
-                        })                                          
+                        })
                     })
                 } else {
                     next();
@@ -178,26 +178,26 @@ function incoming(h, msg_h, info, ack) {
             var path = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
             write_to_disk(path, h, function(err) {
                 if(err) throw err; //let's kill the app - to alert the operator of this critical issue
-                //logger.debug("wrote to raw_headers");                
-                next();
-            });
-        },
-
-        function(next) {  
-            var path = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;          
-            var path2tar = path+".tar"
-            var path2file = path+"/"+h.SOPInstanceUID+".json"
-             logger.debug("tarball -- storing file>> "+ path2file);
-            write_to_tar(path2tar,path2file, function(err) {
-                if(err) throw err; //let's kill the app - to alert the operator of this critical issue
-                //logger.debug("wrote to tar");                
+                //logger.debug("wrote to raw_headers");
                 next();
             });
         },
 
         function(next) {
-            try {       
-                qc_func.instance.clean(h);                 
+            var path = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
+            var path2tar = path+".tar"
+            var path2file = path+"/"+h.SOPInstanceUID+".json"
+             logger.debug("tarball -- storing file>> "+ path2file);
+            write_to_tar(path2tar,path2file, function(err) {
+                if(err) throw err; //let's kill the app - to alert the operator of this critical issue
+                //logger.debug("wrote to tar");
+                next();
+            });
+        },
+
+        function(next) {
+            try {
+                qc_func.instance.clean(h);
                 console.log('cleaned image: '+h.SOPInstanceUID)
                 next();
             } catch(err) {
@@ -217,9 +217,9 @@ function incoming(h, msg_h, info, ack) {
                 if(h.SeriesNumber > 100) {
                     return next("image SeriesNumber is >100:"+h.SeriesNumber);
                 }
-            } 
+            }
             next();
-        },    
+        },
 
         //set the default ACL for new IIBISids
         function(next) {
@@ -257,29 +257,29 @@ function incoming(h, msg_h, info, ack) {
             var radio_tracer = null;
             if(h.RadiopharmaceuticalInformationSequence && h.RadiopharmaceuticalInformationSequence.length > 0) {
                 //AAK - h.RadiopharmaceuticalInformationSequence is an array with a single entry. Can there be more than 1 entry? - for now just pick the first one
-                radio_tracer = h.RadiopharmaceuticalInformationSequence[0].Radiopharmaceutical;                
+                radio_tracer = h.RadiopharmaceuticalInformationSequence[0].Radiopharmaceutical;
             }
             db.Research.findOneAndUpdate({
                 IIBISID: h.qc_iibisid,
                 Modality: h.Modality,
-                StationName: h.StationName, 
-                radio_tracer: radio_tracer                               
+                StationName: h.StationName,
+                radio_tracer: radio_tracer
             }, {}, {upsert:true, 'new': true}, function(err, _research) {
                 if(err) return next(err);
                 research = _research;
                 next();
             });
         },
-        
-        //make sure we know about this exam 
+
+        //make sure we know about this exam
         function(next) {
             db.Exam.findOneAndUpdate({
-                research_id: research._id, 
+                research_id: research._id,
                 subject: (h.qc_istemplate?null:h.qc_subject),
                 StudyTimestamp: h.qc_StudyTimestamp
             },
             {
-                istemplate:h.qc_istemplate,                 
+                istemplate:h.qc_istemplate,
             },
             {upsert:true, 'new': true}, function(err, _exam) {
                 if(err) return next(err);
@@ -287,7 +287,7 @@ function incoming(h, msg_h, info, ack) {
                 next();
             });
         },
-        
+
         //make sure we know about this template and insert template header
         function(next) {
             if(!h.qc_istemplate) return next();  //if not a template then skip
@@ -296,16 +296,16 @@ function incoming(h, msg_h, info, ack) {
             db.Template.findOneAndUpdate({
                 exam_id: exam._id,
                 series_desc: h.qc_series_desc,
-                SeriesNumber: h.SeriesNumber,   
-            }, {}, {upsert:true, 'new': true}, 
+                SeriesNumber: h.SeriesNumber,
+            }, {}, {upsert:true, 'new': true},
             function(err, _template) {
                 if(err) return next(err);
-                template = _template; 
+                template = _template;
 
                 // Check if a primary image already exists for this series
                 db.TemplateHeader.findOne({
                     template_id: template._id,
-                    primary_image: null,                               
+                    primary_image: null,
                 }, function(err, _primary_template) {
                     if (err) return next(err);
                     if (!_primary_template) {
@@ -321,21 +321,21 @@ function incoming(h, msg_h, info, ack) {
                             var deprecated_by = template_deprecatedBy(template);
                             console.log("derprecated_by " + deprecated_by)
                             // finally, insert primary_template._id into the template document and add a "created" event
-                            var event = {    
+                            var event = {
                                 service_id: 'cleanAndStore', //if event was performeed by a system, this is set
-                                title: 'Received', // This is the date in which the template document was first created in the database                                
+                                title: 'Received', // This is the date in which the template document was first created in the database
                                 date: new Date()
                             }
-                            db.Template.updateOne({_id: template._id}, 
+                            db.Template.updateOne({_id: template._id},
                             {
                                 primary_image:primary_template._id,
                                 deprecated_by: deprecated_by !== "undefined"? deprecated_by : null,
                                 $push: { events: event },
                             }, function(err) {
-                                if (err) return next(err);  
-                                return next();                              
+                                if (err) return next(err);
+                                return next();
                             });
-                        })                                
+                        })
                     } else {
                         //var echonumber = h.EchoNumbers;
                         qc_func.instance.compare_with_primary(_primary_template.headers,h,function(){
@@ -343,38 +343,38 @@ function incoming(h, msg_h, info, ack) {
                                 template_id: template._id,
                                 SOPInstanceUID: h.SOPInstanceUID,
                                 InstanceNumber: h.InstanceNumber,
-                                //EchoNumbers: echonumber !== undefined ? echonumber : null,                           
+                                //EchoNumbers: echonumber !== undefined ? echonumber : null,
                                 primary_image: _primary_template._id,
                                 headers:h
                             }, function(err) {
                                 if(err) return next(err);
                                 return next();
                             });
-                        }); 
+                        });
                     }
                 })
             })
         },
-        
+
         //make sure we know about this series
         function(next) {
             if(h.qc_istemplate) return next();  //if it's template then skip
-            
+
             console.log("Inserting series!!! h.qc_istemplate "+ h.qc_istemplate)
             db.Series.findOneAndUpdate({
                 exam_id: exam._id,
                 series_desc: h.qc_series_desc,
                 SeriesNumber: h.SeriesNumber,
                 isexcluded: qc_func.series.isExcluded(h.Modality, h.qc_series_desc)
-            }, {}, {upsert: true, 'new': true}, 
-            function(err, _series) {   
+            }, {}, {upsert: true, 'new': true},
+            function(err, _series) {
                 if(err) return next(err);
-                series = _series;  
+                series = _series;
 
                 // Check if a primary image already exists for this series
                 db.Image.findOne({
                     series_id: series._id,
-                    primary_image: null,                               
+                    primary_image: null,
                 }, function(err, _primary_image) {
                     if (err) return next(err);
                     if (!_primary_image) {
@@ -387,8 +387,8 @@ function incoming(h, msg_h, info, ack) {
                         }, function(err,primary_image) {
                             if (err) return next(err);
                             var deprecated_by = series_deprecatedBy(series);
-                            // finally, insert primary_image._id into the series document  
-                            var event = {    
+                            // finally, insert primary_image._id into the series document
+                            var event = {
                                 service_id: 'cleanAndStore', //if event was performeed by a system, this is set
                                 title: 'Received', // This is the date in which the template document was first created in the database                                
                                 date: new Date()
