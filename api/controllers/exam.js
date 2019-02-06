@@ -119,6 +119,7 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
                     org[_exam.research_id.IIBISID] = org[_exam.research_id.IIBISID] || {};
                     org[_exam.research_id.IIBISID][research] = org[_exam.research_id.IIBISID][research] || {research : _exam.research_id, exams: []};
                     org[_exam.research_id.IIBISID][research].exams.push({
+                        _id: _exam._id,
                         subject: _exam.subject,
                         StudyTimestamp: _exam.StudyTimestamp,
                         qc: _exam.qc

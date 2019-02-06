@@ -44,9 +44,9 @@ app.controller('ExamsController',
             'iibis': 'IIBISID'
         };
 
-        $scope.select = function(modality, subjectuid) {
+        $scope.select = function(modality, exam) {
             console.log(modality);
-            console.log(subjectuid);
+            console.log(exam);
 
             var where = {};
             var research = modality.research;
@@ -76,6 +76,23 @@ app.controller('ExamsController',
                     console.log('new API response:');
                     console.log(res.data);
                     $scope.selected = res.data;
+                    handle_scroll();
+
+                    function handle_scroll() {
+                        if (!exam) return;
+                        console.log("handling scroll " + exam._id);
+                        var pos = $('#' + exam._id).position();
+                        if (pos) {
+                            window.scroll({
+                                top: pos.top - 85,
+                                left: 0,
+                                behavior: 'smooth'
+                            });
+                        } else {
+                            //item not loaded yet.. wait
+                            $timeout(handle_scroll, 100, false);
+                        }
+                    }
                 }, function(err) {
                     console.log('new API err: '+err);
                 });

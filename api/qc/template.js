@@ -194,8 +194,7 @@ var customs = {
     }, common_customs)
 };
 
-//MY - Why were we checking set on skipped QC items?
-// function skip(k, v, tv, qc) {check_set(k, v, tv, qc)}
+
 function skip(k, v, tv, qc) {}
 
 function check_set(k, v, tv, qc) {
@@ -338,7 +337,7 @@ exports.match = function(image, template, qc) {
 
 function overwritte_template(template_id,new_event,cb) {
 
-    console.log("overwritting template "+template_id)
+    console.log("overwriting template "+template_id)
         
     // Now Un-qc the series
     db.Template.update({

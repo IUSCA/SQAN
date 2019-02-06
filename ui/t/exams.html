@@ -58,7 +58,7 @@
                     {{modality.research.Modality}} / {{modality.research.StationName}}
                     <small ng-show="modality.research.Modality == 'PT'"> / {{modality.research.radio_tracer}}</small> <em>({{modality.exams.length}})</em><br><br>
                     <div ng-repeat="exam in modality.exams"
-                         ng-click="select(modality, exam.subject);$event.stopPropagation()"
+                         ng-click="select(modality, exam);$event.stopPropagation()"
                          class="subject-label">
                         <small style="position: absolute; color: black">{{exam.subject}}</small>
                         <div class="progress exam-state pull-right"
@@ -115,7 +115,7 @@
             </div>
             <div class="template">
                 <h4>
-                    <b>Templates</b>
+                    <b><i class="fa fa-files-o" aria-hidden="true"></i> Templates</b>
                 </h4>
                 <templates templates="selected.templates"></templates>
             </div>

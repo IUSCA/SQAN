@@ -9,9 +9,9 @@ app.directive('studynote', function() {
                 if(!$scope.study) return; //study not loaded yet?
                 $scope.studystate = "na";
                 if($scope.study.qc) {
-                    if($scope.study.qc.errors.length > 0) $scope.studystate = "error";
+                    if($scope.study.qc.errors && $scope.study.qc.errors.length > 0) $scope.studystate = "error";
                     else if($scope.study.qc.notemps > 0) $scope.studystate = "notemp";
-                    else if($scope.study.qc.warnings.length > 0) $scope.studystate = "warning";
+                    else if($scope.study.qc.warnings && $scope.study.qc.warnings.length > 0) $scope.studystate = "warning";
                     else $scope.studystate = "ok";
                 } else if ($scope.study.qc1_state == "no template") $scope.studystate = "notemp";
                     
