@@ -78,6 +78,7 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
     }
 
     $scope.load_image = function(image) {
+        console.log(image);
         if($scope.active_image == image) {
             $scope.image_detail = null;
             $scope.active_image = null;

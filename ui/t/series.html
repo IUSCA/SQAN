@@ -131,7 +131,7 @@
                                         <li style="background-color: {{::image.color}};" 
                                             ng-repeat="image in data.images" 
                                             ng-class="{active: active_image == image}" 
-                                            ng-click="load_image(image)" title="{{image.anum}}-{{image.inum}}">
+                                            ng-click="load_image(image)" title="#{{image.headers.InstanceNumber}}">
                                         </li>
                                     </ul>
                                 </div>
