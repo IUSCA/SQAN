@@ -65,7 +65,7 @@ function process_instance(change, next) {
       ResourceType: 'Instance',
       Seq: 110 }
     */
-    var tagurl = config.orthanc.url+change.Path+'/simplified-tags';
+    var tagurl = config.orthanc.url+change.Path+'/tags';
     logger.info("loading (seq:"+change.Seq+"):"+tagurl);
     request({ url: tagurl, json: true }, function(err, res, json){
         if(err) {
@@ -82,22 +82,28 @@ function process_instance(change, next) {
 }
 
 //here is the main business logic
-function incoming(h, cb) {
+function incoming(tags, cb) {
     var research = null;
     var exam = null;
     var series = null;
     var template = null;
     var aq = null;
+    var h = {};
 
     async.series([
+
+        //process tags into key/value pairs for database
+        function(next) {
+            async.each(tags, function(tag, _cb) {
+                h[tag.Name] = tag.Value;
+                _cb();
+            }, function(err) {
+                next(err);
+            });
+        },
+
         function(next) {
             try {
-                console.time('meta_func');
-                // AAK -- this should be removed once we are ready to deploy
-                //debug - remove qc_ fields... it shouldn't be there, but there are.. maybe I've corrupted the data?
-                for(var k in h) {
-                    if(k.indexOf("qc_") === 0) delete h[k];
-                }
 
                 //parse some special fields
                 //if these fields fails to set, rest of the behavior is undefined.
@@ -113,7 +119,6 @@ function incoming(h, cb) {
                 var esindex = qc_func.instance.composeESIndex(h);
                 logger.info(h.qc_iibisid+" subject:"+h.qc_subject+" esindex:"+esindex+" "+h.SOPInstanceUID);
                 h.qc_esindex = esindex;
-                console.timeEnd('meta_func');
                 next();
             } catch(err) {
                 next(err);
@@ -175,7 +180,6 @@ function incoming(h, cb) {
         function(next) {
             if(h.qc_istemplate) return next();
 
-            console.time('Dupe_lookup');
             db.Image.findOne({
                 SOPInstanceUID: h.SOPInstanceUID
             }, function(err,repeated_header) {
@@ -199,12 +203,10 @@ function incoming(h, cb) {
 
                         qc_func.series.unQc_series(repeated_header.series_id,new_event,function(err) {
                             if (err) return next(err);
-                            console.timeEnd('Dupe_lookup');
                             return next()
                         })
                     })
-                } else {
-                    console.timeEnd('Dupe_lookup');
+                } else {;
                     next();
                 }
             });
@@ -212,36 +214,24 @@ function incoming(h, cb) {
 
 
         function(next) {
-            console.time('write_to_disk');
             var path = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
-            write_to_disk(path, h, function(err) {
-                if(err) throw err; //let's kill the app - to alert the operator of this critical issue
-                //logger.debug("wrote to raw_headers");
-                console.timeEnd('write_to_disk');
-                next();
-            });
-        },
-
-        function(next) {
-            console.time('write_to_tar');
-            var path = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
-            var path2tar = path+".tar"
             var path2file = path+"/"+h.SOPInstanceUID+".json"
-            // logger.debug("tarball -- storing file>> "+ path2file);
-            write_to_tar(path2tar,path2file, function(err) {
+            //write full header to disk, not simplified tags
+            write_to_disk(path, path2file, tags, function(err) {
                 if(err) throw err; //let's kill the app - to alert the operator of this critical issue
-                //logger.debug("wrote to tar");
-                console.timeEnd('write_to_tar');
-                next();
+                var path2tar = path+".tar"
+                write_to_tar(path2tar, path2file, function(err) {
+                    if(err) throw err; //let's kill the app - to alert the operator of this critical issue
+                    next();
+                });
             });
         },
 
+
         function(next) {
-            console.time('clean');
             try {
                 qc_func.instance.clean(h);
                 console.log('cleaned image: '+h.SOPInstanceUID)
-                console.timeEnd('clean');
                 next();
             } catch(err) {
                 next(err);
@@ -266,16 +256,12 @@ function incoming(h, cb) {
 
         //set the default ACL for new IIBISids
         function(next) {
-            console.time('ACL');
             db.Acl.findOne({IIBISID: h.qc_iibisid}, function(err, acl) {
-                console.time('ACL-if');
                 var update = false;
                 if (err) {
-                    console.log('error looking up ACLs');
                     return next();
                 }
                 if (!acl) {
-                    console.log('ACL not found, creating!');
                     acl = {
                         IIBISID: h.qc_iibisid
                     }
@@ -298,47 +284,19 @@ function incoming(h, cb) {
                     }
                 }
 
-                console.timeEnd('ACL-if');
                 if(update) {
-                    console.time('ACL-insert');
                     db.Acl.findOneAndUpdate({IIBISID: h.qc_iibisid}, acl, {upsert: true}, function (err, doc) {
                         if (err) console.log('error updating ACLs');
-                        console.timeEnd('ACL-insert');
-                        console.timeEnd('ACL');
                         return next();
                     });
                 } else {
-                    console.log('No ACL update needed');
                     return next();
                 }
-
-                // else if (typeof acl.value[h.qc_iibisid] === 'undefined') {
-                //     acl.value[h.qc_iibisid] = {};
-                //     for( let a of config.acl.actions) {
-                //         acl.value[h.qc_iibisid][a] = { users : [], groups : config.acl.default_groups}
-                //     }
-                // } else {
-                //     for( let a of config.acl.actions) {
-                //         if(acl.value[h.qc_iibisid][a].groups.indexOf(config.acl.default_groups[0]) < 0){
-                //             acl.value[h.qc_iibisid][a].groups = acl.value[h.qc_iibisid][a].groups.concat(config.acl.default_groups);
-                //             //console.log(acl.value[h.qc_iibisid][a].groups);
-                //         }
-                //     }
-                // }
-                // console.timeEnd('ACL-if');
-                // console.time('ACL-insert');
-                // db.Acl.findOneAndUpdate({IIBISID: h.qc_iibisid}, {value: acl.value}, {upsert: true}, function (err, doc) {
-                //     if (err) console.log('error updating ACLs');
-                //     console.timeEnd('ACL-insert');
-                //     console.timeEnd('ACL');
-                //     return next();
-                // });
             });
         },
 
         //make sure we know about this research
         function(next) {
-            console.time('research');
             //TODO radio_tracer should always be set for CT.. right? Should I validate?
             var radio_tracer = null;
             if(h.RadiopharmaceuticalInformationSequence && h.RadiopharmaceuticalInformationSequence.length > 0) {
@@ -353,14 +311,12 @@ function incoming(h, cb) {
             }, {}, {upsert:true, 'new': true}, function(err, _research) {
                 if(err) return next(err);
                 research = _research;
-                console.timeEnd('research');
                 next();
             });
         },
 
         //make sure we know about this exam
         function(next) {
-            console.time('exam');
             db.Exam.findOneAndUpdate({
                     research_id: research._id,
                     subject: (h.qc_istemplate?null:h.qc_subject),
@@ -372,7 +328,6 @@ function incoming(h, cb) {
                 {upsert:true, 'new': true}, function(err, _exam) {
                     if(err) return next(err);
                     exam = _exam;
-                    console.timeEnd('exam');
                     next();
                 });
         },
@@ -381,7 +336,6 @@ function incoming(h, cb) {
         function(next) {
             if(!h.qc_istemplate) return next();  //if not a template then skip
 
-            console.log("Inserting template!!! h.qc_istemplate "+ h.qc_istemplate)
             db.Template.findOneAndUpdate({
                     exam_id: exam._id,
                     series_desc: h.qc_series_desc,
@@ -408,7 +362,7 @@ function incoming(h, cb) {
                             }, function(err,primary_template) {
                                 if (err) return next(err);
                                 var deprecated_by = template_deprecatedBy(template);
-                                console.log("derprecated_by " + deprecated_by)
+                                console.log("deprecated_by " + deprecated_by)
                                 // finally, insert primary_template._id into the template document
                                 db.Template.updateOne({_id: template._id},
                                     {
@@ -443,9 +397,6 @@ function incoming(h, cb) {
         function(next) {
             if(h.qc_istemplate) return next();  //if it's template then skip
 
-            console.time('image_insert');
-            //console.log("Inserting series!!! h.qc_istemplate "+ h.qc_istemplate)
-            console.time('image_insert_series');
             db.Series.findOneAndUpdate({
                     exam_id: exam._id,
                     series_desc: h.qc_series_desc,
@@ -453,18 +404,15 @@ function incoming(h, cb) {
                     isexcluded: qc_func.series.isExcluded(h.Modality, h.qc_series_desc)
                 }, {}, {upsert: true, 'new': true},
                 function(err, _series) {
-                    console.timeEnd('image_insert_series');
                     if(err) return next(err);
                     series = _series;
 
                     // Check if a primary image already exists for this series
-                    console.time('imagePrimary');
                     db.Image.findOne({
                         series_id: series._id,
                         primary_image: null,
                     }, function(err, _primary_image) {
                         if (err) return next(err);
-                        console.timeEnd('imagePrimary');
                         if (!_primary_image) {
                             db.Image.create({
                                 series_id: series._id,
@@ -482,31 +430,16 @@ function incoming(h, cb) {
                                         deprecated_by: deprecated_by !== "undefined"? deprecated_by : null
                                     }, function(err) {
                                         if (err) return next(err);
-                                        console.timeEnd('image_insert');
                                         return next();
                                     });
                             })
                         } else {
                             // Check if series has been QC-ed already (i.e. if this is a new image for an existing series)
-                            console.time('checkQC');
-                            series.qc = undefined;
-                            series.save();
-                            console.timeEnd('checkQC');
+                            if(series.qc !== undefined) {
+                                series.qc = undefined;
+                                series.save();
+                            }
 
-                            // db.Series.find({_id: series._id, qc: {$exists: true}}).exec(function(err,qced_series) {
-                            //     if (err) return next(err);
-                            //     if (qced_series) {  // remove embedded qc objects from series and from all images in the series
-                            //         db.Series.update({_id:series._id}, {$unset:{qc:1}},{multi:false}, function(err) {
-                            //             if (err) return next(err);
-                            //             db.Image.update({series_id:series._id}, {$unset:{qc:1}},{multi:true}, function(err) {
-                            //                 console.timeEnd('checkQC');
-                            //                 if (err) return next(err);
-                            //             })
-                            //         })
-                            //     }
-                                // Finally, insert the image in the database
-                                //var echonumber = h.EchoNumbers;
-                            console.time('compare_and_insert');
                             qc_func.instance.compare_with_primary(_primary_image.headers,h,function(){
                                 db.Image.create({
                                     series_id: series._id,
@@ -517,8 +450,6 @@ function incoming(h, cb) {
                                     headers:h
                                 }, function(err) {
                                     if(err) return next(err);
-                                    console.timeEnd('compare_and_insert');
-                                    console.timeEnd('image_insert');
                                     return next();
                                 });
                             });
@@ -529,6 +460,7 @@ function incoming(h, cb) {
 
 
     ], function(err) {
+
         //all done
         if(err) {
             logger.error(err);
@@ -602,9 +534,9 @@ function write_to_tar(path2tar, path2file, cb) {
 }
 
 
-function write_to_disk(dir, h, cb) {
+function write_to_disk(dir, filepath, h, cb) {
 
     if(!qc_func.series.file_exists(dir)) mkdirp.sync(dir);
-    fs.writeFile(dir+"/"+h.SOPInstanceUID+".json", JSON.stringify(h,null,4), cb);
+    fs.writeFile(filepath, JSON.stringify(h), cb);
 }
 

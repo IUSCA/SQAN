@@ -64,7 +64,6 @@ function run(cb) {
 function qc_images(series,next) {
 
     // find the primary image for this series
-    console.time('series_qc');
     db.Image.findOne({"series_id":series._id, "primary_image":null},function(err,primimage) {
         if (err) return next(err);
         console.log(`primary image for this series : ${primimage._id}`);
@@ -82,31 +81,23 @@ function qc_images(series,next) {
                     if (err) return next(err);
                     if (!template) return next(null,null);
 
-                    console.time('findPrimTemplate');
                     find_template_primary(template,function(err,primtemplate) {
                         if (err) return next(err);
                         if (!primtemplate) return next(null,null); // This case should only happen when the tarball for this template set is not "old" enough 
-                        console.timeEnd('findPrimTemplate');
+
                         // Now find all image headers for this series
-                        console.time('findImages');
                         db.Image.find({series_id: series._id},function(err,images) {
                         // db.Image.find({$or: [ {primary_image: primimage._id},{_id:primimage._id}]},function(err,images) {
                             if (err) return next(err);
-                            //console.log(`number of images for this series : ${images.length}`); 
-                            console.timeEnd('findImages');
-                            console.time('doQC');
+                            //console.log(`number of images for this series : ${images.length}`);
                             qc_the_series(images,primimage,primtemplate,function(err) {
                                 if (err) return next(err);
-                                console.timeEnd('doQC');
                                 //console.log(images.length + " images have been qc-ed, now aggregating qc for the series "+ primimage.headers.qc_series_desc + " -- " + new Date());
 
-                                console.time('qcStats');
                                 qc_funcs.series.qc_series(series,images,template,function(err) {
                                     if (err) return next(err);
-                                    console.timeEnd('qcStats');
 
                                     console.log(series._id + " Series has been qc-ed")
-                                    console.timeEnd('series_qc');
                                     return next();
                                 });
                             })
@@ -147,9 +138,7 @@ function qc_one_image(image,primimage,primtemplate,cb) {
     async.series([
 
         function(next) {
-            console.time('reconstruct');
             qc_funcs.instance.reconstruct_header(image,primimage,next);
-            console.timeEnd('reconstruct');
         },
 
         function(next) {
@@ -159,29 +148,28 @@ function qc_one_image(image,primimage,primtemplate,cb) {
                     
                     if (templateheader) {
                         //console.log("matching template header "+ templateheader.InstanceNumber+ " with image header " + image.InstanceNumber);
-                        console.time('actualQC');
+                        console.time('doQC');
                         qc_funcs.template.match(image,templateheader,qc);
-                        console.timeEnd('actualQC');
+                        console.timeEnd('doQC');
                         next()                       
                     }
                     else {
+                        console.log("No template");
                         qc.notemp = true;
                         next()
                     }  // template header is missing for this instance number                                  
                 })
             } else {
-                console.time('actualQC');
+                console.time('doQC');
                 qc_funcs.template.match(image,primtemplate,qc);
-                console.timeEnd('actualQC');
+                console.timeEnd('doQC');
                 next()
             } 
         },
 
         function(next) {
             image.qc = qc;
-            console.time('save');
             image.save();
-            console.timeEnd('save');
             next();
 
             // db.Image.findOneAndUpdate({
@@ -209,25 +197,19 @@ function qc_one_image(image,primimage,primtemplate,cb) {
 // ************************** Template functions ********************************//
 function find_template(series, cb) {
 
-    console.time('findTemplate');
-
     get_template(series, function(err, template) {
         if(err) return cb(err);
         if(!template) {
             if (series.qc1_state == 'no template'){
-                console.timeEnd('findTemplate');
                 return cb(null);
             } else {
                 series.qc1_state = 'no template';
                 db.Series.findOneAndUpdate({_id: series._id},{qc1_state:series.qc1_state},function(err) {
                     if (err) return cb(err);
-                    console.timeEnd('findTemplate');
                     return cb(null);
                 })                 
             }                        
         } else {
-            console.timeEnd('findTemplate');
-            console.log('found template');
             cb(null,template)
         }
     })

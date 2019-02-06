@@ -421,7 +421,7 @@ exports.compare_with_primary = function(primaryImg,h,cb) {
 }
 
 exports.reconstruct_header = function(_header,_primary_image,cb) {
-
+    
     if (_header.SOPInstanceUID !== _primary_image.SOPInstanceUID) { //image is not primary image
         for (var k in _primary_image.headers) {     
             let v = _primary_image.headers[k]; 

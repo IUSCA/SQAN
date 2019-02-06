@@ -194,8 +194,9 @@ var customs = {
     }, common_customs)
 };
 
-
-function skip(k, v, tv, qc) {check_set(k, v, tv, qc)}
+//MY - Why were we checking set on skipped QC items?
+// function skip(k, v, tv, qc) {check_set(k, v, tv, qc)}
+function skip(k, v, tv, qc) {}
 
 function check_set(k, v, tv, qc) {
     //raise error if the field is missing
