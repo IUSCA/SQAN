@@ -57,14 +57,14 @@
                                 </ul>
                             </div>
                             <ul class="list-group">
-                                <li class="list-group-item" ng-if="!image_detail">
+                                <li class="list-group-item" ng-if="!image_headers">
                                     <span class="text-muted">(Click an image to see details)</span>
                                 </li>
-                                <li class="list-group-item" ng-if="image_detail">
-                                    Aq#{{image_detail.headers.AcquisitionNumber}} - Inst#{{image_detail.InstanceNumber}}
+                                <li class="list-group-item" ng-if="image_headers">
+                                    Aq#{{image_headers.AcquisitionNumber}} - Inst#{{image_headers.InstanceNumber}}
                                 </li>
-                                <table class="table table-condensed table-imageheader" ng-if="image_detail">
-                                    <tr ng-repeat="(k,v) in image_detail.headers">
+                                <table class="table table-condensed table-imageheader" ng-if="image_headers">
+                                    <tr ng-repeat="(k,v) in image_headers">
                                         <th>{{k}}</th>
                                         <td>
                                             <pre>{{v|json}}</pre>

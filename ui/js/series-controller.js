@@ -20,7 +20,6 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
         $http.get(appconf.api+'/series/id/'+$routeParams.seriesid)
         .then(function(res) {
             $scope.data = res.data;
-            console.log($scope.data);
             if($scope.data.images) {
                 $scope.data.images.forEach(computeColor);
             }
@@ -28,10 +27,21 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
             res.data.templates.forEach(function(template) {
                 if(template._id == res.data.series.qc.template_id) $scope.data.template = template;
             });
+            // get date received by SCA
+            res.data.series.events.forEach(function(e,index){
+                if(e.title == "Received") {
+                    console.log(e);
+                    $scope.data.date_received = e.date;
+                }
+                if ($scope.users[e.user_id]) {
+                    $scope.data.series.events[index].username = $scope.users[e.user_id].fullname;                    
+                } else $scope.data.series.events[index].username = "RADY-SCA";               
+            })
             //reload if qc is not yet loaded
             if(!res.data.series.qc) {
                 $timeout(load_series, 1000);
             }
+            console.log($scope.data);
         }, $scope.toast_error);
     }
     
@@ -169,15 +179,27 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
             toaster.success(res.data.message);
         }, $scope.toast_error);
     }
+
     $scope.select_template = function(item) {
-        $scope.image_detail = null;
-        $scope.active_image = null;
-        $http.post(appconf.api+'/series/template/'+$routeParams.seriesid, {exam_id: item._id})
-        .then(function(res) {
-            load_series();
-            toaster.success(res.data.message);
-        }, $scope.toast_error);
+        console.log(item);
+
+        var alert = `You are about to override the default template for this series; this action will result in ReQCing this series only with the selected template.`
+                                
+        var r = confirm(alert);
+        if (r == true) {
+            console.log("ReQc-ing series!");
+            $scope.image_detail = null;
+            $scope.active_image = null;
+            $http.post(appconf.api+'/series/template/'+$routeParams.seriesid, {template_id: item._id})
+            .then(function(res) {
+                load_series();
+                toaster.success(res.data.message);
+            }, $scope.toast_error);
+        } else {
+            console.log("ReQc canceled")
+        }
     }
+
     $scope.reqc = function() {  
         $scope.image_detail = null;
         $scope.active_image = null;
