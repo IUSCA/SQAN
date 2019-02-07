@@ -2,8 +2,8 @@
 pm2 delete rady-api
 pm2 start api/dicom.js --name="rady-api" --output /opt/sca/tmp/.pm2/logs/rady-api.out --error /opt/sca/tmp/.pm2/logs/rady-api.err
 
-pm2 delete cleanAndStore
-pm2 start bin/cleanAndStore.js --name="cleanAndStore" --output /opt/sca/tmp/.pm2/logs/cleanAndStore.out --error /opt/sca/tmp/.pm2/logs/cleanAndStore.err
+pm2 delete incoming
+pm2 start bin/incoming.js --name="incoming" --output /opt/sca/tmp/.pm2/logs/incoming.out --error /opt/sca/tmp/.pm2/logs/incoming.err
 #pm2 logs cleanAndStore
 
 pm2 delete orthanc2incomingQ
