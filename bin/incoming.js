@@ -25,47 +25,58 @@ db.init(function(err) {
     if(err) throw err; //will crash
     
     console.log("printing process args")
-    process.argv.forEach((val, index) => {
-        console.log(`${index}: ${val}`);
-    });
+    process.argv.forEach((val, index) => {console.log(`${index}: ${val}`);});
 
-    var path = process.argv.slice(2).toString();
-    if (path && file_exists(path)) {        
-        console.log("filename " +path)
-        // check if this is a JSON file
-        var json = validateJSON(path)                            
-        if (json) {
-            incoming(json,function(){
-                console.log(path +" --> processed!!")
-            });
-        }
-        // check if this is a directory or a tarball
-        else {
-            filewalker(path, function(err, files){
-                if(err){
-                    throw err;
-                }  
-                async.eachSeries(files, function(f, next) {                  
-                    var jsoni = validateJSON(f.toString());
-                    if (jsoni) {                            
-                        incoming(jsoni,function(){
-                            console.log(f +" --> processed!!");
-                            next();
-                        });
-                    } else {
-                        next();
-                    }                    
+    var fpath = process.argv.slice(2).toString();
+    if (fpath && file_exists(fpath)) {        
+        console.log("filename " +fpath);
+        
+        filewalker2(fpath, function(err, files){
+            if(err) throw err;  
+            
+            
 
-                }, function(err) {
-                    if(err) throw err;
-                    logger.debug("processed "+files.length+ " files");
-                    process.exit(0);
-                });
-            });
-        } 
+                    tar.t({
+                        file: fpath,
+                        onentry: entry => {
+                            console.log(entry.path)
+                        }
+                      },{},function(){console.log("we are done")})
+
+
+
+            // async.eachSeries(files, function(f, next) {                  
+            //     var jsoni = validateJSON(f.toString());
+            //     if (jsoni) {                            
+            //         incoming(jsoni,function(){
+            //             console.log(f +" --> processed!!");
+            //             next();
+            //         });
+            //     } else if (path.extname(fpath).toString() == '.tar') {
+            //         console.log("This is a tarball");
+
+            //         tar.t({
+            //             file: '/opt/sca/dicom-raw/0000-00001/10535/1.2.840.113654.2.70.1.218994277904826445469048034977430734773/localizer.tar',
+            //             onentry: entry => {
+            //                 console.log("hello")
+            //             }
+            //           },{},function(){console.log("we are done")})
+
+            //         next()
+            //     } else {
+            //         console.log("No JSON file found")
+            //         next();
+            //     }                    
+
+            // }, function(err) {
+            //     if(err) throw err;
+            //     logger.debug("processed "+files.length+ " files");
+            //     process.exit(0);
+            // });
+        });
     } 
-    else if (path && !file_exists(path)){
-        console.log("Path not found --> "+ path);
+    else if (fpath && !file_exists(fpath)){
+        console.log("Path not found --> "+ fpath);
         process.exit(0);
     }
     else {
@@ -120,6 +131,39 @@ function filewalker(dir, done) {
             });
         });
     });
+};
+
+function filewalker2(dir, done) {
+    let results = [];
+    fs.stat(dir, function(err, stat){
+        // If directory,
+        if (stat && stat.isDirectory()) {
+            fs.readdir(dir, function(err, list) {
+                if (err) return done(err);
+                var pending = list.length;
+                if (!pending) return done(null, results);
+                list.forEach(function(file){
+                    file = path.resolve(dir, file);
+                    fs.stat(file, function(err, stat){
+                        // If directory, execute a recursive call
+                        if (stat && stat.isDirectory()) {
+                            filewalker(file, function(err, res){
+                                results = results.concat(res);
+                                if (!--pending) done(null, results);
+                            });
+                        } else {
+                            results.push(file);
+                            if (!--pending) done(null, results);
+                        }
+                    });
+                });
+            });
+        } else {
+            results.push(dir);
+            done(null, results);
+        }
+    });
+
 };
 
 
@@ -253,9 +297,9 @@ function incoming(tags, cb) {
                 if (err) return next(err);
                 if (repeated_header) {
 
-                    var path = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
+                    var fpath = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
 
-                    logger.info(h.SOPInstanceUID+ " --Repeated image header identified -- archiving and deprecating qc state of series "+ path);
+                    logger.info(h.SOPInstanceUID+ " --Repeated image header identified -- archiving and deprecating qc state of series "+ fpath);
 
                     // check if this template is used for QC
                     db.Template.findOne({_id:repeated_header.template_id},function(err,template){
@@ -303,9 +347,9 @@ function incoming(tags, cb) {
                 if (err) return next(err);
                 if (repeated_header) {
 
-                    var path = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
+                    var fpath = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
 
-                    logger.info(h.SOPInstanceUID+ " --Repeated image header identified -- archiving and deprecating qc state of series "+ path);
+                    logger.info(h.SOPInstanceUID+ " --Repeated image header identified -- archiving and deprecating qc state of series "+ fpath);
 
                     qc_func.series.deprecate_series(h, 'overwritten',function(err){
                         if (err) return next(err);
@@ -330,12 +374,12 @@ function incoming(tags, cb) {
 
 
         function(next) {
-            var path = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
-            var path2file = path+"/"+h.SOPInstanceUID+".json"
+            var fpath = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
+            var path2file = fpath+"/"+h.SOPInstanceUID+".json"
             //write full header to disk, not simplified tags
-            write_to_disk(path, path2file, tags, function(err) {
+            write_to_disk(fpath, path2file, tags, function(err) {
                 if(err) throw err; //let's kill the app - to alert the operator of this critical issue
-                var path2tar = path+".tar"
+                var path2tar = fpath+".tar"
                 write_to_tar(path2tar, path2file, function(err) {
                     if(err) throw err; //let's kill the app - to alert the operator of this critical issue
                     next();
