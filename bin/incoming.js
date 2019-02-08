@@ -194,17 +194,17 @@ function incoming(tags, cb) {
     async.series([
 
         function(next) {
-            for (var key in tags) {
-                if (tags.hasOwnProperty(key) && tags[key].Name == undefined) {
-                    isHeader = true;
-                    h = tags;
-                    console.log("is header: "+ isHeader)
-                    return next();
-                } else {
-                    isHeader = false;
-                    console.log("is header: "+ isHeader)
-                    return next();
-                }
+            var testag = tags[Object.keys(tags)[0]];
+            console.log(testag);
+            if (testag.Name == undefined) {
+                isHeader = true;
+                h = tags;
+                console.log("is header: "+ isHeader)
+                return next();
+            } else {
+                isHeader = false;
+                console.log("is header: "+ isHeader)
+                return next();
             }
         },
 
