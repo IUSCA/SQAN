@@ -2,6 +2,7 @@
 
 //node
 var fs = require('fs');
+const path = require('path');
 var request = require("request");
 var tar = require('tar');
 
@@ -9,6 +10,8 @@ var tar = require('tar');
 var winston = require('winston');
 var async = require('async');
 var mkdirp = require('mkdirp');
+var split = require('split');
+
 
 //mine
 var config = require('../config');
@@ -16,14 +19,111 @@ var logger = new winston.Logger(config.logger.winston);
 var db = require('../api/models');
 var qc_func = require('../api/qc');
 
+
 //connect to db and start process loop
 db.init(function(err) {
     if(err) throw err; //will crash
-    process(0)
+    
+    console.log("printing process args")
+    process.argv.forEach((val, index) => {
+        console.log(`${index}: ${val}`);
+    });
+
+    var path = process.argv.slice(2).toString();
+    if (path) {        
+        console.log("filename " +path)
+        // check if this is a JSON file
+        var json = validateJSON(path)                            
+        if (json) {
+            incoming(json,function(){
+                console.log(path +" --> processed!!")
+                //process.exit(0); 
+            });
+        }
+        // check if this is a directory or a tarball
+        else if (file_exists(path)) {
+            filewalker(path, function(err, files){
+                if(err){
+                    throw err;
+                }  
+                async.eachSeries(files, function(f, next) {                  
+                    var jsoni = validateJSON(f.toString());
+                    if (jsoni) {                            
+                        incoming(jsoni,function(){
+                            console.log(f +" --> processed!!");
+                            next();
+                        });
+                    } else {
+                        next();
+                    }                    
+
+                }, function(err) {
+                    if(err) throw err;
+                    logger.debug("processed "+files.length+ " files");
+                });
+            });
+        } else {
+            console.log("Path not found --> "+ path);
+            //process.exit(-1);
+        } 
+    } 
+    else {
+        console.log("Running in batch mode");
+        process0(0)
+    }
+   
 });
 
 
-function process(since) {
+function validateJSON(filePath) {
+     try {
+        var json = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        //console.log(json);
+        return json;
+    } catch(e) {
+        return null;
+    }
+}
+
+var file_exists = function(filePath){
+    try {
+        if (fs.existsSync(filePath)) {
+            return true;
+        }
+      } catch(err) {
+        //console.log(path2file+ " does not exist: "+ err.code);
+        return false;
+      }
+}
+
+
+function filewalker(dir, done) {
+    let results = [];
+    fs.readdir(dir, function(err, list) {
+        if (err) return done(err);
+        var pending = list.length;
+        if (!pending) return done(null, results);
+        list.forEach(function(file){
+            file = path.resolve(dir, file);
+            fs.stat(file, function(err, stat){
+                // If directory, execute a recursive call
+                if (stat && stat.isDirectory()) {
+                    filewalker(file, function(err, res){
+                        results = results.concat(res);
+                        if (!--pending) done(null, results);
+                    });
+                } else {
+                    results.push(file);
+                    if (!--pending) done(null, results);
+                }
+            });
+        });
+    });
+};
+
+
+
+function process0(since) {
     logger.info("processing "+config.orthanc.url+'/changes?since='+since+'&limit=1000');
     request({ url: config.orthanc.url+'/changes?since='+since+'&limit=300', json: true }, function(error, response, json) {
         if (!error && response.statusCode === 200) {
@@ -43,8 +143,8 @@ function process(since) {
                 }, function(err) {
                     if(err) throw err;
                     logger.debug("last:"+json.Last);
-                    if(json.Done) setTimeout(function() { process(json.Last)}, 1000*3);
-                    else setTimeout(function() {process(json.Last)}, 0);
+                    if(json.Done) setTimeout(function() { process0(json.Last)}, 1000*3);
+                    else setTimeout(function() {process0(json.Last)}, 0);
                 });
             }
         } else {
@@ -89,11 +189,29 @@ function incoming(tags, cb) {
     var template = null;
     var aq = null;
     var h = {};
+    var isHeader;
 
     async.series([
 
-        //process tags into key/value pairs for database
         function(next) {
+            for (var key in tags) {
+                if (tags.hasOwnProperty(key) && tags[key].Name == undefined) {
+                    isHeader = true;
+                    h = tags;
+                    console.log("is header: "+ isHeader)
+                    return next();
+                } else {
+                    isHeader = false;
+                    console.log("is header: "+ isHeader)
+                    return next();
+                }
+            }
+        },
+
+        //process tags into key/value pairs for database
+        function(next) {  
+            if (isHeader) return next();
+            console.log("Parsing tags into header h")
             async.each(tags, function(tag, _cb) {
                 h[tag.Name] = tag.Value;
                 _cb();
@@ -104,7 +222,6 @@ function incoming(tags, cb) {
 
         function(next) {
             try {
-
                 //parse some special fields
                 //if these fields fails to set, rest of the behavior is undefined.
                 //according to john, however, iibisid and subject should always be found
