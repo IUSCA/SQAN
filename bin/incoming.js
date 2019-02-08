@@ -30,18 +30,17 @@ db.init(function(err) {
     });
 
     var path = process.argv.slice(2).toString();
-    if (path) {        
+    if (path && file_exists(path)) {        
         console.log("filename " +path)
         // check if this is a JSON file
         var json = validateJSON(path)                            
         if (json) {
             incoming(json,function(){
                 console.log(path +" --> processed!!")
-                //process.exit(0); 
             });
         }
         // check if this is a directory or a tarball
-        else if (file_exists(path)) {
+        else {
             filewalker(path, function(err, files){
                 if(err){
                     throw err;
@@ -60,13 +59,15 @@ db.init(function(err) {
                 }, function(err) {
                     if(err) throw err;
                     logger.debug("processed "+files.length+ " files");
+                    process.exit(0);
                 });
             });
-        } else {
-            console.log("Path not found --> "+ path);
-            //process.exit(-1);
         } 
     } 
+    else if (path && !file_exists(path)){
+        console.log("Path not found --> "+ path);
+        process.exit(0);
+    }
     else {
         console.log("Running in batch mode");
         process0(0)
