@@ -76,7 +76,7 @@ var templateSchema = mongoose.Schema({
         date: {type: Date, default: Date.now},
     }) ],
     //date: Date, //date when this template is received (probabbly use StudyTimestamp of the template?) //TODO - maybe needed since we have exam collection now?
-});
+}, {timestamps: {createdAt: 'createdAt', updatedAt: 'updatedAt'}});
 templateSchema.index({exam_id: 1, primary_image:1});
 exports.Template = mongoose.model('Template', templateSchema);
 
@@ -143,7 +143,7 @@ var seriesSchema = mongoose.Schema({
         comment: String,
         date: {type: Date, default: Date.now},
     }) ],
-}, {strict: false});
+}, {timestamps: {createdAt: 'createdAt', updatedAt: 'updatedAt'}, strict: false});
 
 seriesSchema.index({exam_id: 1, primary_image:1, series_desc: 1});
 exports.Series = mongoose.model('Series', seriesSchema);
