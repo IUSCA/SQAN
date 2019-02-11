@@ -44,17 +44,17 @@ db.init(function(err) {
         else if (path.extname(fpath).toString() == '.tar') {
             console.log("file is a tarball ")        
             extracttarball(fpath,function(files){
-                // gotoIncoming(files,function(){
-                //     console.log("done processing "+ fpath);
+                gotoIncoming(files)//,function(){
+                    //console.log("done processing "+ fpath);
+               // })
+                // files.forEach(function(f){
+                //     var jsoni = validateJSON(f.toString());
+                //     if (jsoni) {                            
+                //         incoming(jsoni,function(){
+                //             console.log(fpath +" --> processed!!");
+                //         });
+                //     }
                 // })
-                files.forEach(function(f){
-                    var jsoni = validateJSON(f.toString());
-                    if (jsoni) {                            
-                        incoming(jsoni,function(){
-                            console.log(fpath +" --> processed!!");
-                        });
-                    }
-                })
 
             })
         }
@@ -63,9 +63,9 @@ db.init(function(err) {
             filewalker(fpath, function(err, files){
                 if(err) throw err;  
                 console.log(files)
-                gotoIncoming(files,function(){
-                    console.log("done processing "+ fpath);
-                })
+                gotoIncoming(files); //,function(){
+                    //console.log("done processing "+ fpath);
+               // })
             });
         }
     } 
@@ -103,21 +103,30 @@ function extracttarball(path2tar,cb){
     })
 }
 
-function gotoIncoming(filename,cb){             
+function gotoIncoming(filename){             
 
-    async.eachSeries(filename, function(f, next) {                  
+    filename.forEach(function(f){
         var jsoni = validateJSON(f.toString());
         if (jsoni) {                            
             incoming(jsoni,function(){
                 console.log(f +" --> processed!!");
-                next();
+                //next();
             });
-        }              
-    }, function(err) {
-        if(err) throw err;
-        logger.debug("processed "+filename.length+ " files");
-        cb()
-    });
+        } 
+    })
+    // async.eachSeries(filename, function(f, next) {                  
+    //     var jsoni = validateJSON(f.toString());
+    //     if (jsoni) {                            
+    //         incoming(jsoni,function(){
+    //             console.log(f +" --> processed!!");
+    //             next();
+    //         });
+    //     }              
+    // }, function(err) {
+    //     if(err) throw err;
+    //     logger.debug("processed "+filename.length+ " files");
+    //     cb()
+    // });
 }
 
 
