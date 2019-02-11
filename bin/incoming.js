@@ -38,21 +38,44 @@ db.init(function(err) {
                 console.log("File is a tarbal")
                 listtarball(files,function(){
                     console.log(files);
+                    files.forEach(function(f){
+                        var jsoni = validateJSON(f.toString());
+                        if (jsoni) {                            
+                            incoming(jsoni,function(){
+                                console.log(f +" --> processed!!");
+                            });
+                        }
+                    })
+                    // async.eachSeries(files, function(f, next) {                  
+                    //     var jsoni = validateJSON(f.toString());
+                    //     if (jsoni) {                            
+                    //         incoming(jsoni,function(){
+                    //             console.log(f +" --> processed!!");
+                    //             next();
+                    //         });
+                    //     }              
+                    // }, function(err) {
+                    //     if(err) throw err;
+                    //     logger.debug("processed "+files.length+ " files");
+                    //     process.exit(0);
+                    // });
                 })
-            } 
-            async.eachSeries(files, function(f, next) {                  
-                var jsoni = validateJSON(f.toString());
-                if (jsoni) {                            
-                    incoming(jsoni,function(){
-                        console.log(f +" --> processed!!");
-                        next();
-                    });
-                }              
-            }, function(err) {
-                if(err) throw err;
-                logger.debug("processed "+files.length+ " files");
-                process.exit(0);
-            });
+            } else {
+                async.eachSeries(files, function(f, next) {                  
+                    var jsoni = validateJSON(f.toString());
+                    if (jsoni) {                            
+                        incoming(jsoni,function(){
+                            console.log(f +" --> processed!!");
+                            next();
+                        });
+                    }              
+                }, function(err) {
+                    if(err) throw err;
+                    logger.debug("processed "+files.length+ " files");
+                    process.exit(0);
+                });
+            }
+
         });
     } 
     else if (fpath && !file_exists(fpath)){
@@ -70,6 +93,7 @@ db.init(function(err) {
 var listtarball = function(files,cb){
     tar.t({
         file: files[0],
+        //sync: true,
         onentry: entry => {
             console.log(entry.path);
             files.push("/"+entry.path);
