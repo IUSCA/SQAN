@@ -33,46 +33,26 @@ db.init(function(err) {
         
         filewalker2(fpath, function(err, files){
             if(err) throw err;  
-            
-            
-
-                    tar.t({
-                        file: fpath,
-                        onentry: entry => {
-                            console.log(entry.path)
-                        }
-                      },{},function(){console.log("we are done")})
-
-
-
-            // async.eachSeries(files, function(f, next) {                  
-            //     var jsoni = validateJSON(f.toString());
-            //     if (jsoni) {                            
-            //         incoming(jsoni,function(){
-            //             console.log(f +" --> processed!!");
-            //             next();
-            //         });
-            //     } else if (path.extname(fpath).toString() == '.tar') {
-            //         console.log("This is a tarball");
-
-            //         tar.t({
-            //             file: '/opt/sca/dicom-raw/0000-00001/10535/1.2.840.113654.2.70.1.218994277904826445469048034977430734773/localizer.tar',
-            //             onentry: entry => {
-            //                 console.log("hello")
-            //             }
-            //           },{},function(){console.log("we are done")})
-
-            //         next()
-            //     } else {
-            //         console.log("No JSON file found")
-            //         next();
-            //     }                    
-
-            // }, function(err) {
-            //     if(err) throw err;
-            //     logger.debug("processed "+files.length+ " files");
-            //     process.exit(0);
-            // });
+            console.log(files)
+            if (files.length == 1 && path.extname(files[0]).toString() == '.tar') {
+                console.log("File is a tarbal")
+                listtarball(files,function(){
+                    console.log(files);
+                })
+            } 
+            async.eachSeries(files, function(f, next) {                  
+                var jsoni = validateJSON(f.toString());
+                if (jsoni) {                            
+                    incoming(jsoni,function(){
+                        console.log(f +" --> processed!!");
+                        next();
+                    });
+                }              
+            }, function(err) {
+                if(err) throw err;
+                logger.debug("processed "+files.length+ " files");
+                process.exit(0);
+            });
         });
     } 
     else if (fpath && !file_exists(fpath)){
@@ -86,6 +66,16 @@ db.init(function(err) {
    
 });
 
+
+var listtarball = function(files,cb){
+    tar.t({
+        file: files[0],
+        onentry: entry => {
+            console.log(entry.path);
+            files.push("/"+entry.path);
+        }
+      },{},cb)
+}
 
 function validateJSON(filePath) {
      try {
