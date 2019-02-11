@@ -44,18 +44,7 @@ db.init(function(err) {
         else if (path.extname(fpath).toString() == '.tar') {
             console.log("file is a tarball ")        
             extracttarball(fpath,function(files){
-                gotoIncoming(files)//,function(){
-                    //console.log("done processing "+ fpath);
-               // })
-                // files.forEach(function(f){
-                //     var jsoni = validateJSON(f.toString());
-                //     if (jsoni) {                            
-                //         incoming(jsoni,function(){
-                //             console.log(fpath +" --> processed!!");
-                //         });
-                //     }
-                // })
-
+                gotoIncoming(files)
             })
         }
         else {
@@ -63,9 +52,7 @@ db.init(function(err) {
             filewalker(fpath, function(err, files){
                 if(err) throw err;  
                 console.log(files)
-                gotoIncoming(files); //,function(){
-                    //console.log("done processing "+ fpath);
-               // })
+                gotoIncoming(files);
             });
         }
     } 
@@ -79,102 +66,6 @@ db.init(function(err) {
     }
    
 });
-
-
-function extracttarball(path2tar,cb){
-    // var pathobj = path.parse(path2tar);
-    // console.log("dir " +pathobj.dir);
-    // console.log("base " +pathobj.base);
-    // console.log("ext "+pathobj.ext); 
-    // console.log("name " + pathobj.name)
-
-    var extr = [];
-    tar.x({
-        file: path2tar,
-        cwd: "/",
-        onentry: entry => {
-            console.log(entry.path);
-            extr.push("/"+entry.path);
-        }
-    }).then(function(){
-        //console.log("files extracted to -- " +pathobj.dir+"/"+pathobj.name+"/");
-        console.log(extr);
-        cb(extr)
-    })
-}
-
-function gotoIncoming(filename){             
-
-    filename.forEach(function(f){
-        var jsoni = validateJSON(f.toString());
-        if (jsoni) {                            
-            incoming(jsoni,function(){
-                console.log(f +" --> processed!!");
-                //next();
-            });
-        } 
-    })
-    // async.eachSeries(filename, function(f, next) {                  
-    //     var jsoni = validateJSON(f.toString());
-    //     if (jsoni) {                            
-    //         incoming(jsoni,function(){
-    //             console.log(f +" --> processed!!");
-    //             next();
-    //         });
-    //     }              
-    // }, function(err) {
-    //     if(err) throw err;
-    //     logger.debug("processed "+filename.length+ " files");
-    //     cb()
-    // });
-}
-
-
-function validateJSON(filePath) {
-     try {
-        var json = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-        //console.log(json);
-        return json;
-    } catch(e) {
-        return null;
-    }
-}
-
-var file_exists = function(filePath){
-    try {
-        if (fs.existsSync(filePath)) {
-            return true;
-        }
-      } catch(err) {
-        return false;
-      }
-}
-
-
-function filewalker(dir, done) {
-    let results = [];
-    fs.readdir(dir, function(err, list) {
-        if (err) return done(err);
-        var pending = list.length;
-        if (!pending) return done(null, results);
-        list.forEach(function(file){
-            file = path.resolve(dir, file);
-            fs.stat(file, function(err, stat){
-                // If directory, execute a recursive call
-                if (stat && stat.isDirectory()) {
-                    filewalker(file, function(err, res){
-                        results = results.concat(res);
-                        if (!--pending) done(null, results);
-                    });
-                } else {
-                    results.push(file);
-                    if (!--pending) done(null, results);
-                }
-            });
-        });
-    });
-};
-
 
 
 function process0(since) {
@@ -721,3 +612,88 @@ function write_to_disk(dir, filepath, h, cb) {
     fs.writeFile(filepath, JSON.stringify(h), cb);
 }
 
+function extracttarball(path2tar,cb){
+    var extr = [];
+    tar.x({
+        file: path2tar,
+        cwd: "/",
+        onentry: entry => {
+            console.log(entry.path);
+            extr.push("/"+entry.path);
+        }
+    }).then(function(){
+        console.log(extr);
+        cb(extr)
+    })
+}
+
+function gotoIncoming(filename){             
+
+    filename.forEach(function(f){
+        var jsoni = validateJSON(f.toString());
+        if (jsoni) {                            
+            incoming(jsoni,function(){
+                console.log(f +" --> processed!!");
+            });
+        } 
+    })
+    // async.eachSeries(filename, function(f, next) {                  
+    //     var jsoni = validateJSON(f.toString());
+    //     if (jsoni) {                            
+    //         incoming(jsoni,function(){
+    //             console.log(f +" --> processed!!");
+    //             next();
+    //         });
+    //     }              
+    // }, function(err) {
+    //     if(err) throw err;
+    //     logger.debug("processed "+filename.length+ " files");
+    //     cb()
+    // });
+}
+
+
+function validateJSON(filePath) {
+     try {
+        var json = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        //console.log(json);
+        return json;
+    } catch(e) {
+        return null;
+    }
+}
+
+var file_exists = function(filePath){
+    try {
+        if (fs.existsSync(filePath)) {
+            return true;
+        }
+      } catch(err) {
+        return false;
+      }
+}
+
+
+function filewalker(dir, done) {
+    let results = [];
+    fs.readdir(dir, function(err, list) {
+        if (err) return done(err);
+        var pending = list.length;
+        if (!pending) return done(null, results);
+        list.forEach(function(file){
+            file = path.resolve(dir, file);
+            fs.stat(file, function(err, stat){
+                // If directory, execute a recursive call
+                if (stat && stat.isDirectory()) {
+                    filewalker(file, function(err, res){
+                        results = results.concat(res);
+                        if (!--pending) done(null, results);
+                    });
+                } else {
+                    results.push(file);
+                    if (!--pending) done(null, results);
+                }
+            });
+        });
+    });
+};
