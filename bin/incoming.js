@@ -197,9 +197,8 @@ function incoming(tags, cb) {
                 if (err) return next(err);
                 if (repeated_header) {
 
-                    var fpath = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
 
-                    logger.info(h.SOPInstanceUID+ " --Repeated image header identified -- archiving and deprecating qc state of series "+ fpath);
+                    logger.info(h.SOPInstanceUID+ " --Repeated image header identified -- archiving and deprecating qc state of series");
 
                     // check if this template is used for QC
                     db.Template.findOne({_id:repeated_header.template_id},function(err,template){
@@ -247,25 +246,26 @@ function incoming(tags, cb) {
                 if (err) return next(err);
                 if (repeated_header) {
 
-                    var fpath = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
+                    logger.info(h.SOPInstanceUID+ " --Repeated image header identified -- archiving and deprecating qc state");
 
-                    logger.info(h.SOPInstanceUID+ " --Repeated image header identified -- archiving and deprecating qc state of series "+ fpath);
+                    var new_event = {
+                        service_id: 'incoming', //if event was performeed by a system, this is set
+                        title: 'Series Overwritten',
+                        detail: {},
+                        date: new Date()
+                    }
 
-                    qc_func.series.deprecate_series(h, 'overwritten',function(err){
+                    qc_func.series.unQc_series(repeated_header.series_id,new_event,function(err) {
                         if (err) return next(err);
 
-                        var new_event = {
-                            service_id: 'incoming', //if event was performeed by a system, this is set
-                            title: 'Series Overwritten',
-                            detail: {},
-                            date: new Date()
-                        }
-
-                        qc_func.series.unQc_series(repeated_header.series_id,new_event,function(err) {
+                        if (fpath) return next();
+                            
+                        qc_func.series.deprecate_series(h, 'overwritten',function(err){
                             if (err) return next(err);
-                            return next()
+                                return next()
                         })
                     })
+
                 } else {;
                     next();
                 }
@@ -274,12 +274,13 @@ function incoming(tags, cb) {
 
 
         function(next) {
-            var fpath = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
-            var path2file = fpath+"/"+h.SOPInstanceUID+".json"
+            if (fpath) return next();
+            var newpath = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
+            var path2file = newpath+"/"+h.SOPInstanceUID+".json"
             //write full header to disk, not simplified tags
-            write_to_disk(fpath, path2file, tags, function(err) {
+            write_to_disk(newpath, path2file, tags, function(err) {
                 if(err) throw err; //let's kill the app - to alert the operator of this critical issue
-                var path2tar = fpath+".tar"
+                var path2tar = newpath+".tar"
                 write_to_tar(path2tar, path2file, function(err) {
                     if(err) throw err; //let's kill the app - to alert the operator of this critical issue
                     next();
@@ -637,6 +638,7 @@ function gotoIncoming(filename){
             });
         } 
     })
+
     // async.eachSeries(filename, function(f, next) {                  
     //     var jsoni = validateJSON(f.toString());
     //     if (jsoni) {                            
