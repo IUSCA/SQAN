@@ -2,6 +2,7 @@
 
 //node
 var fs = require('fs');
+const path = require('path');
 var request = require("request");
 var tar = require('tar');
 
@@ -9,6 +10,8 @@ var tar = require('tar');
 var winston = require('winston');
 var async = require('async');
 var mkdirp = require('mkdirp');
+var split = require('split');
+
 
 //mine
 var config = require('../config');
@@ -16,14 +19,56 @@ var logger = new winston.Logger(config.logger.winston);
 var db = require('../api/models');
 var qc_func = require('../api/qc');
 
+
 //connect to db and start process loop
 db.init(function(err) {
     if(err) throw err; //will crash
-    process(0)
+    
+    console.log("printing process args")
+    process.argv.forEach((val, index) => {console.log(`${index}: ${val}`);});
+
+    var fpath = process.argv.slice(2).toString();
+    
+    if (fpath && file_exists(fpath)) {        
+        console.log("filename " +fpath);
+        // check if fpath is a file or a directory
+        if (path.extname(fpath).toString().toLowerCase() == '.json') {
+            console.log("file is JSON ")
+            var jsoni = validateJSON(fpath.toString());
+            if (jsoni) {                            
+                incoming(jsoni,function(){
+                    console.log(fpath +" --> processed!!");
+                });
+            }
+        }
+        else if (path.extname(fpath).toString() == '.tar') {
+            console.log("file is a tarball ")        
+            extracttarball(fpath,function(files){
+                gotoIncoming(files)
+            })
+        }
+        else {
+            console.log("this is a directory ")
+            filewalker(fpath, function(err, files){
+                if(err) throw err;  
+                console.log(files)
+                gotoIncoming(files);
+            });
+        }
+    } 
+    else if (fpath && !file_exists(fpath)){
+        console.log("Path not found --> "+ fpath);
+        process.exit(0);
+    }
+    else {
+        console.log("Running in batch mode");
+        process0(0)
+    }
+   
 });
 
 
-function process(since) {
+function process0(since) {
     logger.info("processing "+config.orthanc.url+'/changes?since='+since+'&limit=1000');
     request({ url: config.orthanc.url+'/changes?since='+since+'&limit=300', json: true }, function(error, response, json) {
         if (!error && response.statusCode === 200) {
@@ -43,8 +88,8 @@ function process(since) {
                 }, function(err) {
                     if(err) throw err;
                     logger.debug("last:"+json.Last);
-                    if(json.Done) setTimeout(function() { process(json.Last)}, 1000*3);
-                    else setTimeout(function() {process(json.Last)}, 0);
+                    if(json.Done) setTimeout(function() { process0(json.Last)}, 1000*3);
+                    else setTimeout(function() {process0(json.Last)}, 0);
                 });
             }
         } else {
@@ -89,11 +134,29 @@ function incoming(tags, cb) {
     var template = null;
     var aq = null;
     var h = {};
+    var isHeader;
 
     async.series([
 
-        //process tags into key/value pairs for database
         function(next) {
+            var testag = tags[Object.keys(tags)[0]];
+            console.log(testag);
+            if (testag.Name == undefined) {
+                isHeader = true;
+                h = tags;
+                console.log("is header: "+ isHeader)
+                return next();
+            } else {
+                isHeader = false;
+                console.log("is header: "+ isHeader)
+                return next();
+            }
+        },
+
+        //process tags into key/value pairs for database
+        function(next) {  
+            if (isHeader) return next();
+            console.log("Parsing tags into header h")
             async.each(tags, function(tag, _cb) {
                 h[tag.Name] = tag.Value;
                 _cb();
@@ -104,7 +167,6 @@ function incoming(tags, cb) {
 
         function(next) {
             try {
-
                 //parse some special fields
                 //if these fields fails to set, rest of the behavior is undefined.
                 //according to john, however, iibisid and subject should always be found
@@ -135,9 +197,9 @@ function incoming(tags, cb) {
                 if (err) return next(err);
                 if (repeated_header) {
 
-                    var path = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
+                    var fpath = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
 
-                    logger.info(h.SOPInstanceUID+ " --Repeated image header identified -- archiving and deprecating qc state of series "+ path);
+                    logger.info(h.SOPInstanceUID+ " --Repeated image header identified -- archiving and deprecating qc state of series "+ fpath);
 
                     // check if this template is used for QC
                     db.Template.findOne({_id:repeated_header.template_id},function(err,template){
@@ -185,9 +247,9 @@ function incoming(tags, cb) {
                 if (err) return next(err);
                 if (repeated_header) {
 
-                    var path = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
+                    var fpath = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
 
-                    logger.info(h.SOPInstanceUID+ " --Repeated image header identified -- archiving and deprecating qc state of series "+ path);
+                    logger.info(h.SOPInstanceUID+ " --Repeated image header identified -- archiving and deprecating qc state of series "+ fpath);
 
                     qc_func.series.deprecate_series(h, 'overwritten',function(err){
                         if (err) return next(err);
@@ -212,12 +274,12 @@ function incoming(tags, cb) {
 
 
         function(next) {
-            var path = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
-            var path2file = path+"/"+h.SOPInstanceUID+".json"
+            var fpath = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
+            var path2file = fpath+"/"+h.SOPInstanceUID+".json"
             //write full header to disk, not simplified tags
-            write_to_disk(path, path2file, tags, function(err) {
+            write_to_disk(fpath, path2file, tags, function(err) {
                 if(err) throw err; //let's kill the app - to alert the operator of this critical issue
-                var path2tar = path+".tar"
+                var path2tar = fpath+".tar"
                 write_to_tar(path2tar, path2file, function(err) {
                     if(err) throw err; //let's kill the app - to alert the operator of this critical issue
                     next();
@@ -550,3 +612,88 @@ function write_to_disk(dir, filepath, h, cb) {
     fs.writeFile(filepath, JSON.stringify(h), cb);
 }
 
+function extracttarball(path2tar,cb){
+    var extr = [];
+    tar.x({
+        file: path2tar,
+        cwd: "/",
+        onentry: entry => {
+            console.log(entry.path);
+            extr.push("/"+entry.path);
+        }
+    }).then(function(){
+        console.log(extr);
+        cb(extr)
+    })
+}
+
+function gotoIncoming(filename){             
+
+    filename.forEach(function(f){
+        var jsoni = validateJSON(f.toString());
+        if (jsoni) {                            
+            incoming(jsoni,function(){
+                console.log(f +" --> processed!!");
+            });
+        } 
+    })
+    // async.eachSeries(filename, function(f, next) {                  
+    //     var jsoni = validateJSON(f.toString());
+    //     if (jsoni) {                            
+    //         incoming(jsoni,function(){
+    //             console.log(f +" --> processed!!");
+    //             next();
+    //         });
+    //     }              
+    // }, function(err) {
+    //     if(err) throw err;
+    //     logger.debug("processed "+filename.length+ " files");
+    //     cb()
+    // });
+}
+
+
+function validateJSON(filePath) {
+     try {
+        var json = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        //console.log(json);
+        return json;
+    } catch(e) {
+        return null;
+    }
+}
+
+var file_exists = function(filePath){
+    try {
+        if (fs.existsSync(filePath)) {
+            return true;
+        }
+      } catch(err) {
+        return false;
+      }
+}
+
+
+function filewalker(dir, done) {
+    let results = [];
+    fs.readdir(dir, function(err, list) {
+        if (err) return done(err);
+        var pending = list.length;
+        if (!pending) return done(null, results);
+        list.forEach(function(file){
+            file = path.resolve(dir, file);
+            fs.stat(file, function(err, stat){
+                // If directory, execute a recursive call
+                if (stat && stat.isDirectory()) {
+                    filewalker(file, function(err, res){
+                        results = results.concat(res);
+                        if (!--pending) done(null, results);
+                    });
+                } else {
+                    results.push(file);
+                    if (!--pending) done(null, results);
+                }
+            });
+        });
+    });
+};
