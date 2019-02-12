@@ -70,6 +70,8 @@ function convertTypes(h) {
         "dBdt",
         "p_Bvalue",
         "p_ImaRelTablePosition",
+        "p_ImaAbsTablePosition",
+        "p_TablePositionOrigin",
         "p_RealDwellTime",
         "p_FMRIStimulInfo"
     ].forEach(function(f) {

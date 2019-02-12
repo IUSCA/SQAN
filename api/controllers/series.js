@@ -475,11 +475,13 @@ router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub}), function(
             console.log(event);
             //also invalidate image QC.
             db.Image.update({series_id: series._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
+                console.log(affected);
                 if(err) return next(err);
-                db.Series.update({_id: series._id}, {$push: { events: event }, qc1_state:"re-qcing", $unset: {qc: 1}}, function(err){
-                    if(err) next(err);
-                    res.json({message: "Re-running QC on "+affected.nModified+" images from series "+series.series_desc, event:event});
-                });
+                series.events.push(event);
+                series.qc = undefined;
+                series.qc1_state = "re-qcing";
+                series.save();
+                res.json({message: "Re-running QC on "+affected.nModified+" images from series "+series.series_desc, event:event});
             });
         });
     });

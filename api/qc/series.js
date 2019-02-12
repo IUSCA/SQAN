@@ -6,7 +6,7 @@ var async = require('async');
 
 var config = require('../../config');
 const db = require('../models');
-const events = require('../events');
+// const events = require('../events');
 var fs = require('fs');
 var mkdirp = require('mkdirp');
 var rimraf = require('rimraf');
@@ -151,7 +151,7 @@ function qc_series(series,images,template,cb) {
     
             series.qc1_state = (qc.errors.length > 0 ? "fail" : "autopass");
             series.qc = qc;
-            events.series(series);
+            // events.series(series);
             db.Series.update({_id: series._id}, {qc: qc, qc1_state: series.qc1_state}, function(err) {
                 if (err) {
                     console.log(err);

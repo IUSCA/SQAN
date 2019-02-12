@@ -6,7 +6,7 @@ var async = require('async');
 
 //const config = require('../../config');
 const db = require('../models');
-const events = require('../events');
+// const events = require('../events');
 
 //connect to db and start processing batch indefinitely
 db.init(function(err) {

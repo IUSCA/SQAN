@@ -67,7 +67,7 @@ var common_customs = {
     "TimeOfLastCalibration": skip,
     "ReferringPhysicianName": skip,
 
-    "Unknown Tag & Data": skip,
+    "Unknown Tag & Data": skip
 }
 
 //custom QC logics specific to each modality
@@ -208,6 +208,16 @@ function check_set(k, v, tv, qc) {
 
 //just compare v v.s. tv and raise error if they don't match
 function check_equal(k, v, tv, qc) {
+    if(v !== null && v.constructor === Array && tv.constructor === Array && v.length == tv.length) {
+        v.forEach(function(av, idx) {
+            check_percent_diff(k, av, tv[idx], qc, 'errors', 0.1);
+        });
+        return;
+    } else if(v !== null && (v.constructor === Array || tv.constructor === Array)){
+        qc.errors.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "template and value do not match in type or length"});
+        return;
+    }
+
     if(typeof v === 'number') {
         //sundar (Regarding ranges, for example: we can use color green for +/-  for target 0.01% difference. Color Yellow for 10% difference, and color Red beyond.)
         if(v == 0 && tv == 0) {
@@ -283,7 +293,7 @@ exports.match = function(image, template, qc) {
     var template_mismatch = 0;
     var not_set = 0;
 
-    console.log("QC-ing image " + image.InstanceNumber + " with template " + template.InstanceNumber);
+    // console.log("QC-ing image " + image.InstanceNumber + " with template " + template.InstanceNumber);
 
     //find exclusion list
     var cus = customs[image.headers.Modality];

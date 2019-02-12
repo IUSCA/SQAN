@@ -24,7 +24,10 @@ function run(cb) {
     // get primary images that are not qc-ed
     db.Series.aggregate([
         {$match: {
-            qc: {$exists: false},
+            $and: [
+                {qc: {$exists: false}},
+                {qc1_state: {$ne: 'no template'}}
+            ],
             updatedAt: {$lt: new Date(new Date().getTime() - 1000 * 30)} //wait for 30 seconds since last update
         }},{$sample: {size:config.qc.series_batch_size}}
     ]).exec(function(err,series){
@@ -45,16 +48,20 @@ function run(cb) {
                 }
             });
 
-            
-            logger.info(exams2qc.length + " Exams to be updated"); //: "+exams2qc)
+
+            if(exams2qc.length > 0) {
+                logger.info(exams2qc.length + " Exams to be updated"); //: "+exams2qc)
+            }
             exams2qc.forEach(function(ee){
                 qc_funcs.exam.qc_exam(ee,function(err){
                     if (err) return cb(err);
                     //console.log('Done with exam: ', ee);
                 })
             })
-            
-            logger.info("Batch complete. Sleeping before next batch");
+
+            if(exams2qc.length > 0) {
+                logger.info("Batch complete. Sleeping before next batch");
+            }
 
             setTimeout(function() {
                 run(cb);

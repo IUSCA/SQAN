@@ -36,7 +36,7 @@ db.init(function(err) {
             console.log("file is JSON ")
             var jsoni = validateJSON(fpath.toString());
             if (jsoni) {                            
-                incoming(jsoni,function(){
+                incoming(jsoni, true, function(){
                     console.log(fpath +" --> processed!!");
                 });
             }
@@ -117,7 +117,7 @@ function process_instance(change, next) {
             logger.error(err);
             next(err);
         } else {
-            incoming(json, function(){
+            incoming(json, false, function(){
                 request.del(config.orthanc.url+change.Path).on('response', function(res) {
                     next();
                 });
@@ -127,7 +127,7 @@ function process_instance(change, next) {
 }
 
 //here is the main business logic
-function incoming(tags, cb) {
+function incoming(tags, fromFile, cb) {
     var research = null;
     var exam = null;
     var series = null;
@@ -140,15 +140,12 @@ function incoming(tags, cb) {
 
         function(next) {
             var testag = tags[Object.keys(tags)[0]];
-            console.log(testag);
             if (testag.Name == undefined) {
                 isHeader = true;
                 h = tags;
-                console.log("is header: "+ isHeader)
                 return next();
             } else {
                 isHeader = false;
-                console.log("is header: "+ isHeader)
                 return next();
             }
         },
@@ -219,7 +216,7 @@ function incoming(tags, cb) {
                                         date: new Date()
                                     }
 
-                                    qc_func.series.overwritte_template(repeated_header.series_id,new_event,function(err) {
+                                    qc_func.series.overwritte_template(repeated_header.template_id,new_event,function(err) {
                                         if (err) return next(err);
                                         return next()
                                     })
@@ -258,7 +255,7 @@ function incoming(tags, cb) {
                     qc_func.series.unQc_series(repeated_header.series_id,new_event,function(err) {
                         if (err) return next(err);
 
-                        if (fpath) return next();
+                        if (fromFile) return next();
                             
                         qc_func.series.deprecate_series(h, 'overwritten',function(err){
                             if (err) return next(err);
@@ -274,7 +271,7 @@ function incoming(tags, cb) {
 
 
         function(next) {
-            if (fpath) return next();
+            if (fromFile) return next();
             var newpath = config.cleaner.raw_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
             var path2file = newpath+"/"+h.SOPInstanceUID+".json"
             //write full header to disk, not simplified tags
@@ -423,7 +420,7 @@ function incoming(tags, cb) {
                             }, function(err,primary_template) {
                                 if (err) return next(err);
                                 var deprecated_by = template_deprecatedBy(template);
-                                console.log("deprecated_by " + deprecated_by)
+                                // console.log("deprecated_by " + deprecated_by)
                                 // finally, insert primary_template._id into the template document and add a "created" event
                                 var event = {
                                     service_id: 'incoming', //if event was performeed by a system, this is set
@@ -628,30 +625,23 @@ function extracttarball(path2tar,cb){
     })
 }
 
-function gotoIncoming(filename){             
+function gotoIncoming(filelist){
 
-    filename.forEach(function(f){
+    async.eachSeries(filelist, function(f, next) {
+
         var jsoni = validateJSON(f.toString());
-        if (jsoni) {                            
-            incoming(jsoni,function(){
-                console.log(f +" --> processed!!");
+        if (jsoni) {
+            incoming(jsoni, true, function(){
+                // console.log(f +" --> processed!!");
+                next();
             });
-        } 
-    })
-
-    // async.eachSeries(filename, function(f, next) {                  
-    //     var jsoni = validateJSON(f.toString());
-    //     if (jsoni) {                            
-    //         incoming(jsoni,function(){
-    //             console.log(f +" --> processed!!");
-    //             next();
-    //         });
-    //     }              
-    // }, function(err) {
-    //     if(err) throw err;
-    //     logger.debug("processed "+filename.length+ " files");
-    //     cb()
-    // });
+        } else {
+            next();
+        }
+    }, function(err) {
+        if(err) throw err;
+        logger.info("processed "+filelist.length+ " files");
+    });
 }
 
 

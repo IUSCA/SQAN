@@ -25,22 +25,31 @@ function($scope, appconf, toaster, $http, serverconf, groups) {
 
         $http.get(appconf.api+'/acl/iibisid')
         .then(function(res) {
-            $scope.acl = res.data;
+            console.log(res.data);
+            $scope.acl = {};
             $scope._acl = {};
+            res.data.forEach(function(iibis){
+                $scope.acl[iibis.IIBISID] = {
+                    qc: iibis.qc,
+                    view: iibis.view
+                }
+            });
+
             $scope.iibisids.forEach(function(id) {
+                console.log(id);
                 //deal with case where acl is not set at all..
                 if($scope.acl[id] == undefined) {
                     $scope.acl[id] = {
                         view: {groups: []},
                         qc: {groups: []},
-                    }; 
-                } 
-    
+                    };
+                }
+
                 $scope._acl[id] = {
                     view: {groups: []},
                     qc: {groups: []},
                 };
-                
+
                 //convert group id to object
                 for(var action in $scope.acl[id]) {
                     var acl = $scope.acl[id][action];

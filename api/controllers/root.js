@@ -36,18 +36,27 @@ router.get('/config', jwt({secret: config.express.jwt.pub, credentialsRequired: 
 
 router.get('/acl/:key', jwt({secret: config.express.jwt.pub/*, credentialsRequired: false*/}), function(req, res, next) {
     if(!~req.user.scopes.dicom.indexOf('admin')) return next(new Error("admin only"));
-    db.Acl.findOne({key: req.params.key}, function(err, acl) {
+    db.Acl.find({}, function(err, acl) {
         if(err) return next(err);
         if(!acl) return res.json({});
-        res.json(acl.value);
+        res.json(acl);
     });
 });
 
 router.put('/acl/:key', jwt({secret: config.express.jwt.pub/*, credentialsRequired: false*/}), function(req, res, next) {
     if(!~req.user.scopes.dicom.indexOf('admin')) return next(new Error("admin only"));
-    db.Acl.findOneAndUpdate({key: req.params.key}, {value: req.body}, {upsert:true}, function(err, doc){
+    var update_cnt = 0;
+    async.eachOf(req.body, function(acl, iibisid, callback) {
+        console.log(iibisid);
+        console.log(acl);
+        db.Acl.findOneAndUpdate({IIBISID: iibisid}, acl, {upsert:true}, function(err, doc){
+            if (err) return next(err);
+            update_cnt++;
+            callback()
+        });
+    }, function(err) {
         if (err) return next(err);
-        res.json({status: "ok", acl: doc});
+        res.json({status: "ok", msg: update_cnt + " ACLs updated"});
     });
 });
 
