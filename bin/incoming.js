@@ -67,10 +67,17 @@ db.init(function(err) {
    
 });
 
+var process_loop = 0;
+
 
 function process0(since) {
-    logger.info("processing "+config.orthanc.url+'/changes?since='+since+'&limit=1000');
-    request({ url: config.orthanc.url+'/changes?since='+since+'&limit=300', json: true }, function(error, response, json) {
+    var url = config.orthanc.url+'/changes?since='+since+'&limit=1000';
+    process_loop++;
+    if(process_loop > 9) {
+        logger.info("processing "+url);
+        process_loop = 0;
+    }
+    request({ url: url, json: true }, function(error, response, json) {
         if (!error && response.statusCode === 200) {
             if(json.Changes) {
                 async.eachSeries(json.Changes, function(change, next) {
@@ -87,7 +94,7 @@ function process0(since) {
                     }
                 }, function(err) {
                     if(err) throw err;
-                    logger.debug("last:"+json.Last);
+                    // logger.debug("last:"+json.Last);
                     if(json.Done) setTimeout(function() { process0(json.Last)}, 1000*3);
                     else setTimeout(function() {process0(json.Last)}, 0);
                 });
@@ -111,7 +118,7 @@ function process_instance(change, next) {
       Seq: 110 }
     */
     var tagurl = config.orthanc.url+change.Path+'/tags';
-    logger.info("loading (seq:"+change.Seq+"):"+tagurl);
+    // logger.info("loading (seq:"+change.Seq+"):"+tagurl);
     request({ url: tagurl, json: true }, function(err, res, json){
         if(err) {
             logger.error(err);
@@ -153,7 +160,6 @@ function incoming(tags, fromFile, cb) {
         //process tags into key/value pairs for database
         function(next) {  
             if (isHeader) return next();
-            console.log("Parsing tags into header h")
             async.each(tags, function(tag, _cb) {
                 h[tag.Name] = tag.Value;
                 _cb();
@@ -289,7 +295,6 @@ function incoming(tags, fromFile, cb) {
         function(next) {
             try {
                 qc_func.instance.clean(h);
-                console.log('cleaned image: '+h.SOPInstanceUID)
                 next();
             } catch(err) {
                 next(err);
