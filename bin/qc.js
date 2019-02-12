@@ -23,7 +23,10 @@ function run(cb) {
     //logger.info("querying un-qc-ed series -- "+ new Date());
     // get primary images that are not qc-ed
     db.Series.aggregate([
-        {$match: {qc: {$exists: false}}},{$sample: {size:config.qc.series_batch_size}}
+        {$match: {
+            qc: {$exists: false},
+            updatedAt: {$lt: new Date(new Date().getTime() - 1000 * 30)} //wait for 30 seconds since last update
+        }},{$sample: {size:config.qc.series_batch_size}}
     ]).exec(function(err,series){
     
         if(err) return cb(err);
@@ -67,47 +70,35 @@ function qc_images(series,next) {
     db.Image.findOne({"series_id":series._id, "primary_image":null},function(err,primimage) {
         if (err) return next(err);
         console.log(`primary image for this series : ${primimage._id}`);
-
-        // make sure all images in this series have been cleaned and stored
-        qc_funcs.instance.check_tarball_mtime(primimage.headers, function(err,mtime) {
-            if (err) return next(err);        
-            logger.info("file last modified " +mtime + "seconds ago")
-
-            if (mtime > config.qc.tarball_age || mtime < 0) {  // file has not been recently modified or does not exist
-                logger.info("QC-ing series_id:" + series._id + " -- " + primimage.headers.qc_series_desc);
                 
-                // find template for this series
-                find_template(series, function(err,template) {
+        // find template for this series
+        find_template(series, function(err,template) {
+            if (err) return next(err);
+            if (!template) return next(null,null);
+
+            find_template_primary(template,function(err,primtemplate) {
+                if (err) return next(err);
+                if (!primtemplate) return next(null,null); // This case should only happen when the tarball for this template set is not "old" enough
+
+                // Now find all image headers for this series
+                db.Image.find({series_id: series._id},function(err,images) {
+                // db.Image.find({$or: [ {primary_image: primimage._id},{_id:primimage._id}]},function(err,images) {
                     if (err) return next(err);
-                    if (!template) return next(null,null);
-
-                    find_template_primary(template,function(err,primtemplate) {
+                    //console.log(`number of images for this series : ${images.length}`);
+                    qc_the_series(images,primimage,primtemplate,function(err) {
                         if (err) return next(err);
-                        if (!primtemplate) return next(null,null); // This case should only happen when the tarball for this template set is not "old" enough 
+                        //console.log(images.length + " images have been qc-ed, now aggregating qc for the series "+ primimage.headers.qc_series_desc + " -- " + new Date());
 
-                        // Now find all image headers for this series
-                        db.Image.find({series_id: series._id},function(err,images) {
-                        // db.Image.find({$or: [ {primary_image: primimage._id},{_id:primimage._id}]},function(err,images) {
+                        qc_funcs.series.qc_series(series,images,template,function(err) {
                             if (err) return next(err);
-                            //console.log(`number of images for this series : ${images.length}`);
-                            qc_the_series(images,primimage,primtemplate,function(err) {
-                                if (err) return next(err);
-                                //console.log(images.length + " images have been qc-ed, now aggregating qc for the series "+ primimage.headers.qc_series_desc + " -- " + new Date());
 
-                                qc_funcs.series.qc_series(series,images,template,function(err) {
-                                    if (err) return next(err);
-
-                                    console.log(series._id + " Series has been qc-ed")
-                                    return next();
-                                });
-                            })
-                        }); 
-                    })
-                })
-            } else { // tarball was recently modified; do not qc this series
-                return next();
-            }
-        })
+                            console.log(series._id + " Series has been qc-ed")
+                            return next();
+                        });
+                    });
+                });
+            });
+        });
     });
 }
 
@@ -148,9 +139,7 @@ function qc_one_image(image,primimage,primtemplate,cb) {
                     
                     if (templateheader) {
                         //console.log("matching template header "+ templateheader.InstanceNumber+ " with image header " + image.InstanceNumber);
-                        console.time('doQC');
                         qc_funcs.template.match(image,templateheader,qc);
-                        console.timeEnd('doQC');
                         next()                       
                     }
                     else {
@@ -160,9 +149,7 @@ function qc_one_image(image,primimage,primtemplate,cb) {
                     }  // template header is missing for this instance number                                  
                 })
             } else {
-                console.time('doQC');
                 qc_funcs.template.match(image,primtemplate,qc);
-                console.timeEnd('doQC');
                 next()
             } 
         },
@@ -237,7 +224,8 @@ function get_mostrecent_template(series, cb) {
                 db.Template.findOne({
                     exam_id: texams[0]._id,
                     series_desc: series.series_desc,
-                    deprecated_by: null
+                    deprecated_by: null,
+                    updatedAt: {$lt: new Date(new Date().getTime() - 1000 * 30)}
                 },function(err,temp) {
                     if (err) return cb(err);
                     return update_qc1(series,temp,cb);        
@@ -272,15 +260,16 @@ function find_template_primary(template,cb) {
         primary_image: null,
     },function(err,primtemplate) {
         if(err) return cb(err);
+        cb(null,primtemplate);
         // make sure all template images have been cleaned and stored
-        qc_funcs.instance.check_tarball_mtime(primtemplate.headers, function(err,mtime) {
-            if(err) return cb(err);
-            if (mtime > config.qc.tarball_age || mtime < 0 ) {
-                cb(null,primtemplate);
-            } else {
-                cb(null,null);
-            }
-        })        
+        // qc_funcs.instance.check_tarball_mtime(primtemplate.headers, function(err,mtime) {
+        //     if(err) return cb(err);
+        //     if (mtime > config.qc.tarball_age || mtime < 0 ) {
+        //         cb(null,primtemplate);
+        //     } else {
+        //         cb(null,null);
+        //     }
+        // })
     })
 }
 

@@ -68,6 +68,10 @@ function convertTypes(h) {
         "WindowCenter",
         "WindowWidth",
         "dBdt",
+        "p_Bvalue",
+        "p_ImaRelTablePosition",
+        "p_RealDwellTime",
+        "p_FMRIStimulInfo"
     ].forEach(function(f) {
         if(h[f] === "") {
             //console.log("unsetting "+f+" of value "+h[f]);
@@ -96,6 +100,26 @@ function convertTypes(h) {
         "TriggerTime",
         "PercentPhaseFieldOfView",
         "PercentSampling",
+        "p_SliceMeasurementDuration",
+        "p_DiffusionGradientDirection",
+        "p_SlicePositionPCS",
+        "p_TimeAfterStart",
+        "p_SliceResolution",
+        "p_VoxelThickness",
+        "p_VoxelPhaseFOV",
+        "p_VoxelReadoutFOV",
+        "p_VoxelPositionSag",
+        "p_VoxelPositionCor",
+        "p_VoxelPositionTra",
+        "p_VoxelNormalSag",
+        "p_VoxelNormalCor",
+        "p_VoxelNormalTra",
+        "p_VoxelInPlaneRot",
+        "p_FMRIStimulLevel",
+        "p_RBMocoTrans",
+        "p_RBMocoRot",
+        "p_Bmatrix",
+        "p_BandwidthPerPixelPhaseEncode"
     ].forEach(function(f) {
         if(h[f] === "") { 
             //console.log("unsetting "+f+" of value "+h[f]);
