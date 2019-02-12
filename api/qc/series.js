@@ -200,7 +200,7 @@ exports.isExcluded = function(modality, series_desc) {
 
 function unQc_series(series_id,new_event,cb) {
 
-    console.log("deprecating series "+series_id)
+    // console.log("deprecating series "+series_id)
 
     // first record previous qc state
     db.Series.findOne({_id:series_id},function(err,series){

@@ -85,9 +85,11 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
             return;
         }
         $scope.active_image = image;
+        console.log()
         $http.get(appconf.api+'/image/'+image._id)
         .then(function(res) {
             $scope.image_detail = res.data;
+            console.log(res.data);
 
             //move any issues with specifc k to image_errors/warnings
             $scope.image_errors = {};
@@ -114,13 +116,12 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
                         });
                     } else if(error.k) {
                         $scope.image_errors[error.k] = error;
-                        if(!$scope.image_headers[error.k]) $scope.image_headers[error.k] = undefined; //so that I can display *missing*
+                        if(error.type == 'not_set') $scope.image_headers[error.k] = undefined; //so that I can display *missing*
                     } else $scope.other_errors.push(error);
                 });
                 res.data.qc.warnings.forEach(function(warning) {
                     if(warning.k) {
                         $scope.image_warnings[warning.k] = warning;
-                        if(!$scope.image_headers[warning.k]) $scope.image_headers[warning.k] = undefined; //so that I can display *missing*
                     }
                     else $scope.other_warnings.push(warning);
                 });

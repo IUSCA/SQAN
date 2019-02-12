@@ -67,7 +67,12 @@ var common_customs = {
     "TimeOfLastCalibration": skip,
     "ReferringPhysicianName": skip,
 
-    "Unknown Tag & Data": skip
+    "Unknown Tag & Data": skip,
+    "p_CoilString": skip,
+    "p_SlicePosition": skip,
+    "p_SlicePositionPCS": skip,
+    "p_ImaRelTablePosition": skip,
+    "p_RelTablePosition": skip
 }
 
 //custom QC logics specific to each modality

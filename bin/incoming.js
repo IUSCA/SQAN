@@ -23,45 +23,41 @@ var qc_func = require('../api/qc');
 //connect to db and start process loop
 db.init(function(err) {
     if(err) throw err; //will crash
-    
-    console.log("printing process args")
-    process.argv.forEach((val, index) => {console.log(`${index}: ${val}`);});
+
+    // process.argv.forEach((val, index) => {console.log(`${index}: ${val}`);});
 
     var fpath = process.argv.slice(2).toString();
     
-    if (fpath && file_exists(fpath)) {        
-        console.log("filename " +fpath);
+    if (fpath && file_exists(fpath)) {
+        logger.info("Running in file mode, will exit when processing is complete.");
         // check if fpath is a file or a directory
         if (path.extname(fpath).toString().toLowerCase() == '.json') {
-            console.log("file is JSON ")
             var jsoni = validateJSON(fpath.toString());
             if (jsoni) {                            
                 incoming(jsoni, true, function(){
-                    console.log(fpath +" --> processed!!");
+                    logger.info("Processing complete");
+                    process.exit(0);
                 });
             }
         }
         else if (path.extname(fpath).toString() == '.tar') {
-            console.log("file is a tarball ")        
             extracttarball(fpath,function(files){
                 gotoIncoming(files)
             })
         }
         else {
-            console.log("this is a directory ")
             filewalker(fpath, function(err, files){
-                if(err) throw err;  
-                console.log(files)
+                if(err) throw err;
                 gotoIncoming(files);
             });
         }
     } 
     else if (fpath && !file_exists(fpath)){
-        console.log("Path not found --> "+ fpath);
+        logger.error("Path not found --> "+ fpath);
         process.exit(0);
     }
     else {
-        console.log("Running in batch mode");
+        logger.info("Running in batch mode");
         process0(0)
     }
    
@@ -201,7 +197,8 @@ function incoming(tags, fromFile, cb) {
                 if (repeated_header) {
 
 
-                    logger.info(h.SOPInstanceUID+ " --Repeated image header identified -- archiving and deprecating qc state of series");
+                    logger.info(h.SOPInstanceUID+ " --Repeated template header identified");
+                    logger.info("Archiving and deprecating qc state of qc-ed series");
 
                     // check if this template is used for QC
                     db.Template.findOne({_id:repeated_header.template_id},function(err,template){
@@ -249,7 +246,8 @@ function incoming(tags, fromFile, cb) {
                 if (err) return next(err);
                 if (repeated_header) {
 
-                    logger.info(h.SOPInstanceUID+ " --Repeated image header identified -- archiving and deprecating qc state");
+                    logger.info(h.SOPInstanceUID+ " --Repeated image header identified");
+                    logger.info("Archiving and deprecating qc state of series");
 
                     var new_event = {
                         service_id: 'incoming', //if event was performeed by a system, this is set
@@ -621,11 +619,9 @@ function extracttarball(path2tar,cb){
         file: path2tar,
         cwd: "/",
         onentry: entry => {
-            console.log(entry.path);
             extr.push("/"+entry.path);
         }
     }).then(function(){
-        console.log(extr);
         cb(extr)
     })
 }
@@ -646,6 +642,7 @@ function gotoIncoming(filelist){
     }, function(err) {
         if(err) throw err;
         logger.info("processed "+filelist.length+ " files");
+        process.exit(0);
     });
 }
 

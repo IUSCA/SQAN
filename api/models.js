@@ -15,7 +15,6 @@ exports.init = function(cb) {
         useMongoClient: true
     }, function(err) {
         if(err) return cb(err);
-        console.log("connected to mongo");
         cb();
     });
 }
