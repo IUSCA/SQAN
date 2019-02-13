@@ -3,81 +3,160 @@
     .sel { background-color: #bce65e; }
     .desc { background-color: #d1e6ac; }        
 
-    button {
-    background-color: Transparent;
-    background-repeat:no-repeat;
-    border: none;
-    cursor:pointer;
-    overflow: hidden;
-    outline:none;
-    }
+/* [disabled] {
+  pointer-events: none;
+} */
+
+button:disabled {
+  cursor: not-allowed;
+  pointer-events: all !important;
+}
+
+button {
+background-color: Transparent;
+background-repeat:no-repeat;
+border: none;
+cursor:pointer;
+overflow: hidden;
+outline:none;
+}
+
 </style>
+
 
 <div class="container">
     <div class="row">
-        <div class="col-sm-12 col-offset-1">
+        <div class="col-sm-11 col-offset-1">
             <h4>Template Summary Table</h4>
 
-            <div class="panel-body">
-                <div class="card">
-                    <div class="row">
-                        <div class="col-xs-6 col-sm-4 col-md-2">
-                            <input class="form-control" type="text" placeholder="filter..." ng-model="sorting.filter">
-                        </div>
-                    </div>
-                    <br><br>
-                    <div class="row col-sm-8 col-md-10">
-                        <table class="table table-striped table-hover info" width="100%" cellspacing="0">
-                            <thead>
-                                <tr>
-                                    <th class="text-center" ng-repeat="fieldname in fieldnames"><span ng-click="sorting.fieldname = fieldname">{{fieldname}}</span><i class="fa fa-fw fa-arrow-up" ng-show="sorting.fieldname == fieldname"></i></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr ng-repeat-start="templ in templates | filter:sorting.filter | orderBy: sorting.fieldname"> 
-                                    <td ng-repeat="ff in fields" class="text-center">{{templ[ff]}}</td>
-                                    <td class="text-center"><a href=""><i ng-show="showDates!=rowNumber" class="fa fa-plus" ng-click="showDates=$index; templatesByTimestamp(templ,showDates)"></i><i ng-hide="showDates!=rowNumber" class="fa fa-minus" ng-click="templatesByTimestamp(templ,showDates)"></i></a></td>                
-                                </tr>
-                                <tr ng-repeat-end ng-if="rowNumber==showDates" ng-repeat="timestamp in templatebytimestamp">
-                                    <td colspan="6">
-                                        <div class="card">
-                                            <div class="card-header lighten-1"> 
-                                                <p>
-                                                    <h5 class="text-center">Timestamp:  {{timestamp.date | date:'yyyy-MM-dd HH:mm:ss' }}</h5>
-                                                    <h5 class="text-center">{{timestamp.details.length}} templates uploaded - {{templatesUsed[$index]}} templates used for QC</h5>
-                                                </p>
-                                                <p><h5 class="text-center">
-                                                    <a href="">
-                                                        <button ng-show="indexDetails != $index || showDetails==false" ng-click="templateDetails(timestamp,$index)">
-                                                            <b >Show Details</b></button>
-                                                        <button ng-show="indexDetails === $index && showDetails==true" ng-click="templateDetails(timestamp,$index)">
-                                                            <b>Hide Details</b></button>
-                                                    </a>
-                                                </h5></p>        
-                                            </div>
-                                            <div class="card-body" ng-show="indexDetails === $index && showDetails==true && rowNumber==showDates">
-                                                <table class="table table-striped table-hover info" width="80%" cellspacing="0" ng-show="indexDetails === $index && showDetails==true && rowNumber==showDates">
-                                                    <tr ng-show="indexDetails === $index && showDetails==true && rowNumber==showDates" style="background-color:#e2eef5">
-                                                        <th class="text-center" ng-repeat="dd in detailnames track by $index">{{dd}}</th>
-                                                        <th><i class="fa fa-trash fa-lg" aria-hidden="true"></i></th>
-                                                        <tr ng-repeat-end style="background-color:#f2f7fa" ng-if="showDetails==true && rowNumber==showDates" ng-repeat="dd in details.details | orderBy: 'SeriesNumber'">              
-                                                            <td class="text-center">{{dd.SeriesNumber}}</td>
-                                                            <td class="text-center" style="word-wrap: break-all;">{{dd.series_desc}}</td>
-                                                            <td class="text-center">{{dd.usedInQC}}</td>
-                                                            <td class="text-center">{{dd.imageCount}}</td>  
-                                                            <td><input type="checkbox" ng-click="deleteSeriesTemplate(dd)"></td>                                                      
-                                                        </tr>
-                                                    </tr>                                               
-                                                </table>
-                                            </div>
-                                        </div>                                    
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>                    
+            <div class="row">
+                <div class="col-xs-6 col-sm-4 col-md-2">
+                    <input class="form-control" type="text" placeholder="filter..." ng-model="sorting.filter">
                 </div>
-            </div>                            
+            </div>
+            <br><br>
+            <div class="row">
+                <table class="table table-striped table-hover table-bordered info" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th class="text-center" ng-repeat="fieldname in fieldnames"><span ng-click="sorting.fieldname = fieldname">{{fieldname}}</span><i class="fa fa-fw fa-arrow-up" ng-show="sorting.fieldname == fieldname"></i></th>
+                            <th> View </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat-start="templ in templates | filter:sorting.filter | orderBy: sorting.fieldname"  ng-click="templatesByTimestamp(templ,$index)" style="cursor: pointer;">
+                            <td ng-repeat="ff in fields" class="text-center">{{templ[ff]}}</td>  
+                            <td class="text-center"><a href="">
+                                <i ng-show="$index!=rowNumber" class="fa fa-angle-left"></i>
+                                <i ng-show="$index==rowNumber" class="fa fa-angle-down"></i>
+                            </a></td>              
+                        </tr>
+                        <tr ng-repeat-end ng-if="$index==rowNumber">     
+                            <td colspan="6">
+                                <uib-tabset type="tabs" active="activePill" type="pills">
+                                    <uib-tab ng-repeat="timestamp in templatebytimestamp" index="$index" heading="{{timestamp.date | date:'yyyy-MM-dd HH:mm:ss' }}">
+                                            
+                                        <div class="card">
+
+                                            <div class="card-header lighten-1"> 
+                                                <div class="col-sm-6 col-md-6">
+                                                    <br>
+                                                        <div class="panel panel-default">
+                                                            <div class="panel-heading"> 
+                                                                Template Information
+                                                            </div>
+                                                            <div class="panel-body">
+                                                                <h5 >
+                                                                    <span><i class="fa fa-clock-o" aria-hidden="true"></i></span>
+                                                                    <span>Timestamp:</span>  
+                                                                    <span>{{timestamp.date | date:'yyyy-MM-dd HH:mm:ss' }}</span>
+                                                                </h5>
+                                                                <h5>
+                                                                    <span><i class="fa fa-files-o" aria-hidden="true"></i></span>
+                                                                    <span>Number of Series: </span>
+                                                                    <span>{{timestamp.series.length}}</span>
+                                                                </h5>
+                                                                <h5>
+                                                                    <span><i class="fa fa-check-square" aria-hidden="true"></i></span>
+                                                                    <span>Series used for QC: </span>
+                                                                    <span>{{timestamp.usedInQC}}</span>
+                                                                </h5>
+                                                            </div>
+                                                        </div>
+                                                    </br>
+                                                </div>
+                                                <div class="col-sm-2"></div>
+                                                <div class="col-sm-4">
+                                                    <br>
+                                                        <div class="panel panel-default">
+                                                            <div class="panel-heading"> 
+                                                                Action Links
+                                                            </div>
+                                                            <div class="panel-body">
+                                                                <div
+                                                                    uib-tooltip="Templates currently being used for QC cannot be deleted"
+                                                                    tooltip-enable="timestamp.usedInQC>0"
+                                                                    class="text-danger"
+                                                                    ng-class="{'faded': timestamp.usedInQC>0}"
+                                                                    style="cursor:pointer;"
+                                                                    ng-click="timestamp.usedInQC>0 || deleteTemplate(timestamp.exam_id,$index)">
+                                                                    <h5>
+                                                                        <i class="fa fa-trash fa-sm" aria-hidden="true"></i>
+                                                                        Delete All Series
+                                                                    </h5>
+                                                                </div>
+                                                                <div
+                                                                    uib-tooltip="Only selected template series will be deleted"
+                                                                    class="text-warning"
+                                                                    style="cursor:pointer;"
+                                                                    ng-class="{'faded': !(series2delete.length > 0)}"
+                                                                    ng-click="deleteSelectedSeries(timestamp,$index)">
+                                                                    <h5>
+                                                                        <i class="fa fa-trash fa-sm" aria-hidden="true"></i>
+                                                                        Delete {{series2delete.length}} Selected Series
+                                                                    </h5>
+                                                                </div>
+                                                                <div
+                                                                    class="text-info"
+                                                                    style="cursor:pointer;"
+                                                                    ng-click="getTemplateSeries(timestamp,$index)">
+                                                                    <h5>
+                                                                        <span uib-tooltip="Show table listing all series in this template" ng-if="indexShowSeries!=$index"><i class="fa fa-eye" aria-hidden="true"></i> Show Series</span>
+                                                                        <span uib-tooltip="Hide the table" ng-if="indexShowSeries==$index"><i class="fa fa-eye-slash" aria-hidden="true"></i> Hide Series</span>
+                                                                    </h5>
+                                                                </div>
+                                                            </div>
+                                                        </div>                                                       
+                                                    </br>                                                                                                                    
+                                                </div>
+                                            </div>
+
+                                            <div class="card-body" ng-show="indexShowSeries==$index">
+                                                <!-- <div class="col-sm-7 col-md-10"> -->
+                                                    <table class="table table-striped table-hover info" width="100%" cellspacing="0">
+                                                        <tr style="background-color:#e2eef5">
+                                                            <th class="text-center" ng-repeat="dd in tseriesTable track by $index">{{dd}}</th>
+                                                            <th><i class="fa fa-trash fa-lg" aria-hidden="true"></i></th>
+                                                            <tr ng-repeat-end style="background-color:#f2f7fa" ng-repeat="dd in templateSeries.series | orderBy: 'SeriesNumber'">              
+                                                                <td class="text-center">{{dd.SeriesNumber}}</td>
+                                                                <td class="text-center" style="word-wrap: break-all;">{{dd.series_desc}}</td>
+                                                                <td class="text-center">{{dd.usedInQC}}</td>
+                                                                <td class="text-center">{{dd.imageCount}}</td>  
+                                                                <td><input type="checkbox" ng-disabled="dd.usedInQC > 0" ng-click="deleteThisSeries(dd)"></td>                                       
+                                                            </tr>
+                                                        </tr>                                               
+                                                    </table>
+                                                <!-- </div> -->
+                                            </div>
+
+                                        </div>  
+                                    </uib-tab>
+                                </uib-tabset>                                                                  
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>                    
         </div>
     </div>  
 </div>
@@ -86,93 +165,6 @@
 
 
 
-
-
-
-
-
-
-
-<!-- <style>
-    table { border-collapse: collapse; }
-    .sel { background-color: #bce65e; }
-    .desc { background-color: #d1e6ac; }        
-
-    button {
-    background-color: Transparent;
-    background-repeat:no-repeat;
-    border: none;
-    cursor:pointer;
-    overflow: hidden;
-    outline:none;
-    }
-</style>
-
-<div class="container">
-
-    <div class="row">
-        <div class="col-sm-20 col-offset-1">
-            <h4>Template Summary Table</h4>
-
-            <div class="panel-body">
-                <div class="card">
-                    <div class="row">
-                        <div class="col-xs-6 col-sm-4 col-md-2">
-                            <input class="form-control" type="text" placeholder="filter..." ng-model="sorting.filter">
-                        </div>
-                    </div>
-                    <br><br>
-                    <table class="table table-striped table-hover info" width="100%" cellspacing="0">
-                        <thead>
-                            <tr>
-                                <th class="text-center" ng-repeat="fieldname in fieldnames"><span ng-click="sorting.fieldname = fieldname">{{fieldname}}</span><i class="fa fa-fw fa-arrow-up" ng-show="sorting.fieldname == fieldname"></i></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr ng-repeat-start="templ in templates | filter:sorting.filter | orderBy: sorting.fieldname"> 
-                                <td class="text-center">{{templ[fields[0]][0]}}</td>
-                                <td class="text-center">{{templ[fields[1]][0]}}</td>
-                                <td class="text-center">{{templ[fields[2]][0]}}</td>
-                                <td class="text-center">{{templ[fields[3]]}}</td>
-                                <td class="text-center"><a href=""><i ng-show="showDates!=rowNumber" class="fa fa-plus" ng-click="showDates=$index; templatesByTimestamp(templ,showDates)"></i><i ng-hide="showDates!=rowNumber" class="fa fa-minus" ng-click="templatesByTimestamp(templ,showDates)"></i></a></td>                
-                            </tr>
-                            <tr ng-repeat-end ng-if="rowNumber==showDates" ng-repeat="timestamp in templatebytimestamp">
-                                <td colspan="6">
-                                    <div class="card">
-                                        <div class="card-header lighten-1"> 
-                                            <p><h5 class="text-center">Timestamp:  {{timestamp.date | date:'yyyy-MM-dd HH:mm:ss' }}</h5></p>
-                                            <p><h5 class="text-center">
-                                                <a href="">
-                                                    <button ng-show="indexDetails != $index || showDetails==false" ng-click="templateDetails(timestamp,$index)">
-                                                        <b >Show {{timestamp.template_id.length}} templates</b></button>
-                                                    <button ng-show="indexDetails === $index && showDetails==true" ng-click="templateDetails(timestamp,$index)">
-                                                        <b>Hide {{timestamp.template_id.length}} templates</b></button>
-                                                </a>
-                                            </h5></p>        
-                                        </div>
-                                        <div class="card-body" ng-show="indexDetails === $index && showDetails==true && rowNumber==showDates">
-                                            <table class="table table-striped table-hover info" width="100%" cellspacing="0" ng-show="indexDetails === $index && showDetails==true && rowNumber==showDates">
-                                                <tr ng-show="indexDetails === $index && showDetails==true && rowNumber==showDates" style="background-color:#e2eef5">
-                                                    <th class="text-center" ng-repeat="dd in detailnames track by $index">{{dd}}</th>
-                                                    <tr ng-repeat-end colspan="6" style="background-color:#f2f7fa" ng-if="showDetails==true && rowNumber==showDates" ng-repeat="ii in details.SeriesNumber">                                  
-                                                        <td class="text-center">{{ii}}</td>
-                                                        <td style="word-wrap: break-all;" class="text-left" >{{details.series_desc[$index]}}</td>
-                                                        <td class="text-center">{{details.usedInQC[$index]}}</td>
-                                                        <td class="text-center">{{details.imageCount[$index]}}</td>                                                        
-                                                    </tr>
-                                                </tr>                                               
-                                            </table>
-                                        </div>
-                                    </div>                                    
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>                            
-        </div>
-    </div>  
-</div> -->
 
 
 

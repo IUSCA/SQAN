@@ -1,18 +1,14 @@
+#!/usr/bin/env bash
 
 pm2 delete rady-api
-pm2 start api/dicom.js --name="rady-api" --watch --ignore-watch="\.log \.git \.sh bin ui"
+pm2 start api/dicom.js --name="rady-api" --output /opt/sca/var/log/rady-api.out \
+ --error /opt/sca/var/log/rady-api.err --watch --ignore-watch="\.log \.git \.sh bin ui"
 
-pm2 delete cleanAndStore
-pm2 start bin/cleanAndStore.js --watch --ignore-watch="\.log$ \.css$ \.less$ \.sh$ ui"
-#pm2 logs cleanAndStore
+pm2 delete rady-incoming
+pm2 start bin/incoming.js --name="rady-incoming"  --output /opt/sca/var/log/rady-incoming.out  \
+ --error /opt/sca/var/log/rady-incoming.err
 
-pm2 delete orthanc2incomingQ
-pm2 start bin/orthanc2incomingQ.js --watch --ignore-watch="\.git \.log$ \.css$ \.less$ \.sh$ ui"
-
-pm2 delete qc
-pm2 start bin/qc.js --watch --ignore-watch="\.log$ \.sh$ ui \.git"
-
-pm2 delete qc_series
-pm2 start bin/qc_series.js --watch --ignore-watch="\.log$ \.sh$ ui \.git"
+pm2 delete rady-qc
+pm2 start bin/qc.js --name="rady-qc"  --output /opt/sca/var/log/rady-qc.out --error /opt/sca/var/log/rady-qc.err
 
 pm2 save

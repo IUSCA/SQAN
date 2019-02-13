@@ -5,6 +5,7 @@ var app = angular.module('app', [
     'ngRoute',
     'ngCookies',
     'ngAnimate',
+    'ngSanitize',
     'ngLocationUpdate',
     'toaster',
     'angular-loading-bar',
@@ -16,7 +17,8 @@ var app = angular.module('app', [
     'sca-product-raw',
     'ui.gravatar',
     'angular.filter',
-    'gg.editableText'
+    'gg.editableText',
+    'ngCsv'
 ]);
 
 //show loading bar at the page top
@@ -58,12 +60,12 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         controller: 'TemplateController',
         requiresLogin: true
     })
-    .when('/qc/:level/:researchid?/:subjectid?', {
-        templateUrl: 't/qc.html',
-        controller: 'QCController',
-        requiresLogin: true
-    })
-    .when('/exams', {
+    // .when('/qc/:level/:researchid?/:subjectid?', {
+    //     templateUrl: 't/qc.html',
+    //     controller: 'QCController',
+    //     requiresLogin: true
+    // })
+    .when('/exams/:level?', {
         templateUrl: 't/exams.html',
         controller: 'ExamsController',
         requiresLogin: true
@@ -110,6 +112,10 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         }
     });
 });
+
+app.config(['$locationProvider', function($locationProvider) {
+    $locationProvider.hashPrefix('');
+}]);
 
 //configure httpProvider to send jwt unless skipAuthorization is set in config (not tested yet..)
 app.config(['appconf', '$httpProvider', 'jwtInterceptorProvider', 

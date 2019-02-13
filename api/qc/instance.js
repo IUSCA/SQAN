@@ -1,5 +1,10 @@
 'use strict';
 
+//node
+var fs = require('fs');
+
+var config = require('../../config');
+
 //hide some fields, or problematic values on some fields
 function maskFields(h) {
 
@@ -63,6 +68,12 @@ function convertTypes(h) {
         "WindowCenter",
         "WindowWidth",
         "dBdt",
+        "p_Bvalue",
+        "p_ImaRelTablePosition",
+        "p_ImaAbsTablePosition",
+        "p_TablePositionOrigin",
+        "p_RealDwellTime",
+        "p_FMRIStimulInfo"
     ].forEach(function(f) {
         if(h[f] === "") {
             //console.log("unsetting "+f+" of value "+h[f]);
@@ -91,6 +102,26 @@ function convertTypes(h) {
         "TriggerTime",
         "PercentPhaseFieldOfView",
         "PercentSampling",
+        "p_SliceMeasurementDuration",
+        "p_DiffusionGradientDirection",
+        "p_SlicePositionPCS",
+        "p_TimeAfterStart",
+        "p_SliceResolution",
+        "p_VoxelThickness",
+        "p_VoxelPhaseFOV",
+        "p_VoxelReadoutFOV",
+        "p_VoxelPositionSag",
+        "p_VoxelPositionCor",
+        "p_VoxelPositionTra",
+        "p_VoxelNormalSag",
+        "p_VoxelNormalCor",
+        "p_VoxelNormalTra",
+        "p_VoxelInPlaneRot",
+        "p_FMRIStimulLevel",
+        "p_RBMocoTrans",
+        "p_RBMocoRot",
+        "p_Bmatrix",
+        "p_BandwidthPerPixelPhaseEncode"
     ].forEach(function(f) {
         if(h[f] === "") { 
             //console.log("unsetting "+f+" of value "+h[f]);
@@ -101,78 +132,78 @@ function convertTypes(h) {
     });
 }
 
-function splitFields(h) {
-    /*
-    if(h.Modality != "PT") {
-        h.WindowCenterWidthExplanation = convertToArray(h.WindowCenterWidthExplanation);
-    }
-    */
-    //split WindowCenter into min/max if array
-    if(h.WindowCenter && h.WindowCenter.constructor === Array) {
-    //if(h.Modality == "CT") {
-        h.qc_WindowCenterMin = h.WindowCenter[0];
-        h.qc_WindowCenterMax = h.WindowCenter[1];
-        //delete h.WindowCenter;
-    }
+// function splitFields(h) {
+//     /*
+//     if(h.Modality != "PT") {
+//         h.WindowCenterWidthExplanation = convertToArray(h.WindowCenterWidthExplanation);
+//     }
+//     */
+//     //split WindowCenter into min/max if array
+//     if(h.WindowCenter && h.WindowCenter.constructor === Array) {
+//     //if(h.Modality == "CT") {
+//         h.qc_WindowCenterMin = h.WindowCenter[0];
+//         h.qc_WindowCenterMax = h.WindowCenter[1];
+//         //delete h.WindowCenter;
+//     }
 
-    if(h.WindowWidth && h.WindowWidth.constructor === Array) {
-        h.qc_WindowWidthMin = h.WindowWidth[0];
-        h.qc_WindowWidthMax = h.WindowWidth[1];
-        //delete h.WindowWidth;
-    }
+//     if(h.WindowWidth && h.WindowWidth.constructor === Array) {
+//         h.qc_WindowWidthMin = h.WindowWidth[0];
+//         h.qc_WindowWidthMax = h.WindowWidth[1];
+//         //delete h.WindowWidth;
+//     }
     
-    //for PixelSpacing / ImagePositionPatient, ImageOrientationPatient fields
-    //http://nipy.org/nibabel/dicom/dicom_orientation.html
+//     //for PixelSpacing / ImagePositionPatient, ImageOrientationPatient fields
+//     //http://nipy.org/nibabel/dicom/dicom_orientation.html
 
-    if(h.PixelSpacing && h.PixelSpacing.constructor === Array) {
-        h.qc_PixelSpacingMin = h.PixelSpacing[0];
-        h.qc_PixelSpacingMax = h.PixelSpacing[1];
-        //delete h.PixelSpacing;
-    }
-}
+//     if(h.PixelSpacing && h.PixelSpacing.constructor === Array) {
+//         h.qc_PixelSpacingMin = h.PixelSpacing[0];
+//         h.qc_PixelSpacingMax = h.PixelSpacing[1];
+//         //delete h.PixelSpacing;
+//     }
+// }
 
 function mergeFields(h) {
-    var timestamp = toTimestamp(h.AcquisitionDate, h.AcquisitionTime, h.Timezone);
-    if(timestamp) {
-        h.qc_AcquisitionTimestamp = timestamp;
-        //delete h.AcquisitionDate;
-        //delete h.AcquisitionTime;
-    }
+    // var timestamp = toTimestamp(h.AcquisitionDate, h.AcquisitionTime, h.Timezone);
+    // if(timestamp) {
+    //     h.qc_AcquisitionTimestamp = timestamp;
+    //     //delete h.AcquisitionDate;
+    //     //delete h.AcquisitionTime;
+    // }
 
-    timestamp = toTimestamp(h.StudyDate, h.StudyTime, h.Timezone);
+    var timestamp = toTimestamp(h.StudyDate, h.StudyTime, h.Timezone);
     if(timestamp) {
         h.qc_StudyTimestamp = timestamp;
         //delete h.StudyDate;
         //delete h.StudyTime;
     }
 
-    timestamp = toTimestamp(h.SeriesDate, h.SeriesTime, h.Timezone);
-    if(timestamp) {
-        h.qc_SeriesTimestamp = timestamp;
-        //delete h.SeriesDate;
-        //delete h.SeriesTime;
-    }
+    // timestamp = toTimestamp(h.SeriesDate, h.SeriesTime, h.Timezone);
+    // if(timestamp) {
+    //     h.qc_SeriesTimestamp = timestamp;
+    //     //delete h.SeriesDate;
+    //     //delete h.SeriesTime;
+    // }
 
-    timestamp = toTimestamp(h.ContentDate, h.ContentTime, h.Timezone);
-    if(timestamp) {
-        h.qc_ContentTimestamp = timestamp;
-        //delete h.ContentDate;
-        //delete h.ContentTime;
-    }
+    // timestamp = toTimestamp(h.ContentDate, h.ContentTime, h.Timezone);
+    // if(timestamp) {
+    //     h.qc_ContentTimestamp = timestamp;
+    //     //delete h.ContentDate;
+    //     //delete h.ContentTime;
+    // }
 
-    timestamp = toTimestamp(h.InstanceCreationDate, h.InstanceCreationTime, h.Timezone);
-    if(timestamp) {
-        h.qc_InstanceCreationTimestamp = timestamp;
-        //delete h.InstanceCreationDate;
-        //delete h.InstanceCreationTime;
-    }
+    // timestamp = toTimestamp(h.InstanceCreationDate, h.InstanceCreationTime, h.Timezone);
+    // if(timestamp) {
+    //     h.qc_InstanceCreationTimestamp = timestamp;
+    //     //delete h.InstanceCreationDate;
+    //     //delete h.InstanceCreationTime;
+    // }
 
-    timestamp = toTimestamp(h.PerformedProcedureStepStartDate, h.PerformedProcedureStepStartTime, h.Timezone);
-    if(timestamp) {
-        h.qc_PerformedProcedureStepStartTimestamp = timestamp;
-        //delete h.PerformedProcedureStepStartDate;
-        //delete h.PerformedProcedureStepStartTime;
-    }
+    // timestamp = toTimestamp(h.PerformedProcedureStepStartDate, h.PerformedProcedureStepStartTime, h.Timezone);
+    // if(timestamp) {
+    //     h.qc_PerformedProcedureStepStartTimestamp = timestamp;
+    //     //delete h.PerformedProcedureStepStartDate;
+    //     //delete h.PerformedProcedureStepStartTime;
+    // }
 }
 
 function parseFields(h) {
@@ -269,6 +300,46 @@ function convertToFloat(v, f) {
     }
 }
 
+
+function isObject (value) {
+    return value && typeof value === 'object' && value.constructor === Object;
+}
+
+var isEqual = function (field1, field2) {
+
+	var type = Object.prototype.toString.call(field1);
+	if (type !== Object.prototype.toString.call(field2)) return false;
+
+	var len1 = type === '[object Array]' ? field1.length : Object.keys(field1).length;
+	var len2 = type === '[object Array]' ? field2.length : Object.keys(field2).length;
+	if (len1 !== len2) return false;
+
+	var compare = function (item1, item2) {
+		var itemType = Object.prototype.toString.call(item1);
+
+		if (['[object Array]', '[object Object]'].indexOf(itemType) >= 0) {
+			if (!isEqual(item1, item2)) return false;
+		}
+		else {
+            if (itemType !== Object.prototype.toString.call(item2)) return false;
+            if (item1 !== item2) return false;
+		}
+    };
+    
+	if (type === '[object Array]') {
+		for (var i = 0; i < len1; i++) {
+			if (compare(field1[i], field2[i]) === false) return false;
+		}
+	} else {
+		for (var key in field1) {
+			if (field1.hasOwnProperty(key)) {
+				if (compare(field1[key], field2[key]) === false) return false;
+			}
+		}
+	}
+	return true;
+
+};
 /*
 function convertToArray(v) {
     //ImageType: 'ORIGINAL\\PRIMARY\\M\\ND\\MOSAIC',
@@ -307,8 +378,17 @@ exports.parseMeta = function(h) {
     //more on this again
     if(h.SeriesDescription) {
         var ts = h.SeriesDescription.split("^");
-        meta.series_desc = ts[0];
-        meta.series_desc_version = ts[1];
+        meta.series_desc = ts[0]; //.replace(/\d+$/, '');  // remove trailing numbers
+        //meta.series_desc_version = ts[1];
+    }
+
+    if(h.Modality == "MR") {
+        var sd  = meta.series_desc.toLowerCase();
+        if(sd.indexOf("gre_fieldmap") > -1 && h.ImageType.indexOf("\\M\\") > -1) {
+            //console.log(h.ImageType.indexOf("\\M\\"));
+            //console.log(h.ImageType)
+        meta.series_desc += "_M"; // this is a magnitude template so we label it as such
+        }
     }
 
     return meta;
@@ -337,9 +417,80 @@ exports.composeESIndex = function(h) {
 //function to run during clean up
 exports.clean = function(h) {
     convertTypes(h); //"2.34" => 2.34
-    splitFields(h); 
+    //splitFields(h); 
     mergeFields(h); //date+time => timestamp
     parseFields(h); //PatientAge -> qc_PatientAge
     maskFields(h);
 }
 
+
+exports.compare_with_primary = function(primaryImg,h,cb) {
+
+    for (var k in primaryImg) {     
+        let v = primaryImg[k];  
+        if (h.hasOwnProperty(k) && h[k] !== undefined) {
+            if (['qc_istemplate'].indexOf(k) < 0) { 
+                if (!Array.isArray(v) && !isObject(v) && h[k] === v) {  
+                    //console.log('deleting field: '+k +' -- ' + h[k]);
+                    delete h[k]
+                } 
+                else if (Array.isArray(v) || isObject(v)) {
+                    if (isEqual(v,h[k]) == true) delete h[k];
+                }
+            }  
+        } else {//if (!h[k]) {
+            h[k] = "not_set"; // label fields that are not in the primary
+        }
+   
+    }
+    cb();
+}
+
+exports.reconstruct_header = function(_header,_primary_image,cb) {
+    
+    if (_header.SOPInstanceUID !== _primary_image.SOPInstanceUID) { //image is not primary image
+        for (var k in _primary_image.headers) {     
+            let v = _primary_image.headers[k]; 
+            if (!_header.headers[k]) {                      
+                _header.headers[k] = v;
+            } 
+            if (_header.headers[k] == "not_set") {
+               delete _header.headers[k];                                
+            }            
+        }
+        cb()
+    } else {
+        //console.log("image with InstanceNumber" +_header.InstanceNumber + " is a primary -- no reconstruction")
+        cb();
+    }
+}
+
+
+
+exports.check_tarball_mtime = function(primimage,cb) {
+    // check for the last modified date on the coresponding tar file
+    var path2tar = config.cleaner.raw_headers+"/"+primimage.qc_iibisid+"/"+primimage.qc_subject+"/"+primimage.StudyInstanceUID+"/"+primimage.qc_series_desc+".tar"; 
+    
+    if(file_exists(path2tar)){
+        fs.stat(path2tar,function(err,stats){
+            if (err) cb(err); 
+            var mtime = (parseInt((new Date).getTime()) - parseInt(new Date(stats.mtime).getTime()))/1000;
+            cb(null,mtime);
+        });
+    } else{
+        cb(null,-1);
+    }    
+}
+
+
+var file_exists = function(path2file){
+    try {
+        if (fs.existsSync(path2file)) {
+            //console.log(path2file+ " exists" );
+            return true;
+        }
+      } catch(err) {
+        //console.log(path2file+ " does not exist: "+ err.code);
+        return false;
+      }
+}

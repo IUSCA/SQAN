@@ -6,40 +6,44 @@ var router = express.Router();
 var winston = require('winston');
 var jwt = require('express-jwt');
 
+
 //mine
 var config = require('../../config');
-var logger = new winston.Logger(config.logger.winston);
+const qc_funcs = require('../qc');
 var db = require('../models');
-var mongoose = require('mongoose')
+var mongoose = require('mongoose');
+
+
 
 router.get('/istemplate', jwt({secret: config.express.jwt.pub}),function(req,res,next) {
-    db.Template.aggregate([
-        {$group: {
-            _id:"$research_id",
-            IIBISID:{$addToSet:"$IIBISID"},
-            Modality:{$addToSet:"$Modality"},
-            date: {$addToSet:"$date"},
-            series_desc: {$push: "$series_desc"}
+    db.Exam.aggregate([
+        {$match: {
+            istemplate:true
             }
-        },{$lookup: {
-                from:"researches",
-                localField:"_id",
-                foreignField:"_id",
-                as:"fromResearch"
-                }
-        },{ $project: {
-                IIBISID: 1,
-                Modality: 1,
-                date: 1,
-                seroes_desc: 1,
-                count: { $size: "$date" },
-                StationName: "$fromResearch.StationName",
-                radio_tracer: "$fromResearch.radio_tracer"
-                }
-        },{$unwind:"$IIBISID"},
-        {$unwind:"$Modality"},
-        {$unwind:"$StationName"},
-        {$unwind:"$radio_tracer"}
+         },{$group: {
+             _id:"$research_id",
+             StudyTimestamp: {$addToSet:"$StudyTimestamp"},
+             exam_id: {$addToSet:"$_id"},
+             }
+         },{$lookup: {
+                 from:"researches",
+                 localField:"_id",
+                 foreignField:"_id",
+                 as:"fromResearch"
+                 }
+         },{ $project: {
+                 StudyTimestamp: 1, 
+                 exam_id:1,
+                 count: { $size: "$exam_id" },       
+                 IIBISID: "$fromResearch.IIBISID",
+                 Modality: "$fromResearch.Modality",
+                 StationName: "$fromResearch.StationName",
+                 radio_tracer: "$fromResearch.radio_tracer"
+                 }
+         },{$unwind:"$IIBISID"},
+         {$unwind:"$Modality"},
+         {$unwind:"$StationName"},
+         {$unwind:"$radio_tracer"}
         ], function (err, data) {
              if (err) {
                  next(err);
@@ -52,69 +56,119 @@ router.get('/istemplate', jwt({secret: config.express.jwt.pub}),function(req,res
 
 
 // search template's by research_id and group them by exam_id:
-router.get('/examids/:research_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    console.log(req.params.research_id)
-    db.Template.aggregate([    
-        {$match: {"research_id": new mongoose.Types.ObjectId(req.params.research_id)} },
-	    {$group:{
-		    _id:"$exam_id",
-		    date:{$addToSet:"$date"},
-		    template_id:{$push: "$_id"},
-            series_desc:{$push:"$series_desc"},
-            SeriesNumber:{$push:"$SeriesNumber"}            
-		    }
-        },{$unwind:"$date"}//,
-        //{$sort:{"date":1}}
-    ],
-    function (err, data) {
-        if (err) return next(err);
-        if (!data) {
-            return res.status(404).json({message: "no such research_id:" + req.params.research_id});
-        } else {
-            res.json(data);
-            //res.json({status: "ok"});
-            console.log(`retrieved ${data.length} templates with the matching research_id ...`);
-        }
-    });
-});
+router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+        
+    var template_instance = {
+        date: null,
+        exam_id: null,
+        series: [],
+        usedInQC:0
+    };
 
-// for each template_id, search series and count times used for QC
-// router.get('/series/:template_id', check_jwt, function(req, res, next) {
-router.get('/series/:template_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    console.log('in controler series_qc'+req.params.template_id);
-    db.Series.aggregate([
-        {$match: {"qc.template_id": new mongoose.Types.ObjectId(req.params.template_id)} },
-        {$count:"usedInQC"}
-    ],
-    function (err, data) {
+    db.Exam.findById(new mongoose.Types.ObjectId(req.params.exam_id), function(err,texam) {
         if (err) return next(err);
-        if (!data) {
-            return res.status(404).json({message: "no such research_id:" + req.params.research_id});
-        } else {
-            res.json(data);
-            //res.json({status: "ok"});
-            console.log(`retrieved ${data.length} templates with the matching template_id ...`);
-        }
-   });
-});
+        template_instance.date = texam.StudyTimestamp;
+        template_instance.exam_id = texam._id;
 
-//search template QC by research
-// router.get('/imagecount/:template_id', check_jwt, function(req, res, next) {
-router.get('/imagecount/:template_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    console.log('in controler template_details'+req.params.template_id);
-    db.TemplateHeader.aggregate([
-        {$match: {template_id: new mongoose.Types.ObjectId(req.params.template_id)}},
-        {$count:"imageCount"}],
-        function (err, data) {
+        db.Template.find({"exam_id":texam._id},function(err,templates){
             if (err) return next(err);
-            if (!data) {
-                return res.status(404).json({message: "no such template_id:" + req.params.template_id});
-            } else {
-                res.json(data);
-                //res.json({status: "ok"});
-                console.log(`retrieved ${data.length} templates with the matching template_id ...`);
-            }
-   });
+
+            templates.forEach(function(t,ind){
+
+                db.Series.find({"qc.template_id":t._id}).count(function (err, usedInQC) {
+                    if (err) return next(err);
+
+                    template_instance.usedInQC = usedInQC==0 ? template_instance.usedInQC : template_instance.usedInQC+1;
+
+                    db.TemplateHeader.find({"template_id":t._id}).count(function(err,imageCount){
+                        if(err) return next(err);
+                        
+                        var tobj = {
+                            SeriesNumber: t.SeriesNumber,
+                            series_desc: t.series_desc,
+                            template_id: t._id,
+                            imageCount: imageCount,
+                            usedInQC: usedInQC
+                        };
+
+                        template_instance.series.push(tobj);
+                        
+                        if(template_instance.series.length == templates.length) {
+                            res.json(template_instance);
+                        }
+                    })
+                });
+            })                         
+        })                
+     });
 });
+
+
+
+// delete a template series
+router.get('/deleteselected/:template_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    
+    db.Template.findById(new mongoose.Types.ObjectId(req.params.template_id),function(err,template){
+        if (err) return next(err);
+
+            db.TemplateHeader.findOne({"template_id":template._id,primary_image:null}).exec(function(err,h){
+                if(err) return next(err);
+
+                // Move files from dicom-raw to dicom-deleted 
+                qc_funcs.series.deprecate_series(h.headers,'deleted',function(err){
+                     if (err) return next(err);
+                     db.TemplateHeader.deleteMany({"template_id":template._id},function(err) {
+                        if (err) return next(err);
+    
+                        db.Template.deleteOne({_id:template._id},function(err){
+                            if (err) return next(err);
+                            res.send("Template series deleted successfully!! -- id: "+template._id+ " series_desc: "+template.series_desc)
+                        })
+                    }) 
+                 })               
+            })
+        })                         
+})
+
+
+
+// delete a template exam
+router.get('/deleteall/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    
+    db.Template.find({"exam_id":new mongoose.Types.ObjectId(req.params.exam_id)},function(err,templates){
+        if (err) return next(err);
+
+        var count = 0;
+
+        templates.forEach(function(temp){
+
+            db.TemplateHeader.findOne({"template_id":temp._id,primary_image:null}).exec(function(err,h){
+                if(err) return next(err);
+
+                // Move files from dicom-raw to dicom-deleted 
+                qc_funcs.series.deprecate_series(h.headers,'deleted',function(err){
+                     if (err) return next(err);
+
+                     db.TemplateHeader.deleteMany({"template_id":temp._id},function(err) {
+                        if (err) return next(err);
+    
+                        db.Template.deleteOne({_id:temp._id},function(err){
+                            if (err) return next(err);   
+                            count++;
+                            if (count == templates.length){
+                                db.Exam.deleteOne({_id:new mongoose.Types.ObjectId(req.params.exam_id)},function(err){
+                                    if (err) return next(err);
+                                    res.send("Template exam deleted successfully!!")
+                                })
+                            }                         
+                        })
+                    }) 
+                 })
+            })
+        }) 
+
+    })
+})
+
 
 module.exports = router;

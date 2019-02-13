@@ -1,3 +1,64 @@
+html { margin-left: calc(100vw - 100%); }
+
+.sca-sidebar-page {
+  padding-left: 80px;
+}
+.sca-sidebar {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  z-index: 999;
+  width: 80px;
+  height: 100%;
+  background-color: #eee;
+  border-right: 1px solid #ddd;
+  text-align: center;
+}
+.sca-sidebar .menu {
+  color: #aaa;
+  width: 80px;
+  transition: 0.5s ease all;
+  cursor: pointer;
+  margin: 3px 0px;
+  padding: 8px;
+  font-size: 8pt;
+}
+.sca-sidebar .menu h2 {
+  color: #878787;
+  font-weight: bold;
+  font-size: 21px;
+}
+.sca-sidebar .menu h3 {
+  margin-top: 0;
+  margin-bottom: 5px;
+  color: #666;
+  text-transform: uppercase;
+  font-size: 18px;
+}
+.sca-sidebar .menu:hover {
+  background-color: #ddd;
+  color: #008cba;
+}
+.sca-sidebar .menu:hover h3 {
+  color: #008cba;
+}
+.sca-sidebar .menu.active {
+  background-color: #008cba;
+  color: white;
+}
+.sca-sidebar .menu.active h3 {
+  color: white;
+}
+.sca-sidebar .bottom {
+  position: fixed;
+  bottom: 0px;
+  width: 80px;
+}
+.sca-sidebar hr {
+  margin: 5px 0px;
+}
+
+
 
 dy {
   /*font-family: 'Lato', serif;*/
@@ -410,7 +471,7 @@ h3 {
   margin: 0px;
   padding: 0px;
   height: 18px;
-  width: 150px;
+  width: 110px;
 }
 .subject-label {
   line-height: 100%;
@@ -820,8 +881,8 @@ h3 {
 }
 
 .color-box {
-  width: 15px;
-  height: 15px;
+  width: 25px;
+  height: 25px;
   display: inline-block;
   background-color: rgb(144, 155, 143);
   border: 1px solid #000;
@@ -829,18 +890,54 @@ h3 {
 }
 
 .pass {
-  background-color: rgb(0, 139, 86, 0.5);
+  background-color: rgba(0, 139, 86, 0.7);
 }
 
 .warning {
-  background-color: rgb(189, 176, 51, 0.5);
+  background-color: rgb(189, 176, 51, 0.7);
 }
 
 .fail {
-  background-color: rgb(201, 0, 17, 0.5);
+  background-color: rgb(201, 0, 17, 0.7);
+}
+
+.na {
+  background-color: rgba(148, 148, 148, 0.2);
 }
 
 
 .dropdown-menu>li>a {
   padding: 3px 15px;
+}
+
+.tooltip-inner {
+  text-align: left;
+}
+
+.faded {
+  opacity: 0.5;
+}
+
+pre {
+  white-space: pre-wrap;       /* css-3 */
+  white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+  white-space: -pre-wrap;      /* Opera 4-6 */
+  white-space: -o-pre-wrap;    /* Opera 7 */
+  word-wrap: break-word;       /* Internet Explorer 5.5+ */
+}
+
+.center-parent {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+}
+.center-child {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.fa-8x {
+  font-size: 8em;
 }

@@ -1,23 +1,27 @@
 <div class="template-body">
-    <p class="text-muted" ng-if="$ctrl.times.length == 0">No templates received</p>
-    <table class="table table-condensed" ng-if="$ctrl.times.length > 0">
-        <thead><tr><th width="30%" style="color: #333;">Series Description</th>
-            <th ng-repeat="time in $ctrl.times | orderBy:'-toString()'">{{time| date:'short':'+0400'}}</th>
-        </tr></thead>
-        <tbody>
-            <tr ng-repeat="times in $ctrl.templates | toArray:true | orderBy:'min_SeriesNumber'" ng-init="desc = times.$key">
-                <td>{{desc}}</td>
-                <td ng-repeat="time in $ctrl.times | orderBy:'-toString()'" ng-init="templates = times[time]">
-                    <div ng-if="templates">
+    <p class="text-muted" ng-if="$ctrl.templates.length == 0">No templates received</p>
+    <uib-tabset type="tabs" active="activePill" type="pills" ng-if="!$ctrl.templates.length == 0">
+        <uib-tab ng-repeat="t in $ctrl.templates" index="$index" heading="{{t.StudyTimestamp | date:'short':'-0400'}}">
+            <uib-tab-heading><i class="fa fa-fw fa-file-o"></i> {{t.StudyTimestamp | date:'short':'-0400'}}</uib-tab-heading>
+        <div>
+            <table class="table table-condensed">
+                <thead><tr><th width="30%" style="color: #333;">Series Description</th>
+                    <th></th>
+                </tr></thead>
+                <tbody>
+                <tr ng-repeat="s in t.series | orderBy:'-SeriesNumber'">
+                    <td>{{s.series_desc}}</td>
+                    <td>
                         <span class="label label-default clickable" style="margin-right: 3px;"
-                            ng-repeat="template in templates | orderBy:'-SeriesNumber'" 
-                            ng-click="$ctrl.opentemplate(template._id)">
-                            <span ng-class="{'text-muted': $index != 0}">#{{template.SeriesNumber}}</span>
+                              ng-click="$ctrl.opentemplate(s._id)">
+                            <span ng-class="{'text-muted': $index != 0}">#{{s.SeriesNumber}}</span>
                         </span>
-                    </div>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        </uib-tab>
+    </uib-tabset>
 </div>
 

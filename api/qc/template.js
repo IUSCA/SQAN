@@ -24,7 +24,7 @@ var common_customs = {
         if(!check_set(k, v, tv, qc)) return;
         if(v.constructor === Array && tv.constructor === Array && v.length == tv.length) {
             v.forEach(function(av, idx) {
-                check_absolute_diff(k, av, tv[idx], qc, 'errors', 0.3);
+                check_absolute_diff(k, av, tv[idx], qc, 'errors', 0.3, tv);
             });
         } else {
             qc.errors.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "template and value do not match in type or length"});
@@ -68,6 +68,11 @@ var common_customs = {
     "ReferringPhysicianName": skip,
 
     "Unknown Tag & Data": skip,
+    "p_CoilString": skip,
+    "p_SlicePosition": skip,
+    "p_SlicePositionPCS": skip,
+    "p_ImaRelTablePosition": skip,
+    "p_RelTablePosition": skip
 }
 
 //custom QC logics specific to each modality
@@ -208,6 +213,16 @@ function check_set(k, v, tv, qc) {
 
 //just compare v v.s. tv and raise error if they don't match
 function check_equal(k, v, tv, qc) {
+    if(v !== null && v.constructor === Array && tv.constructor === Array && v.length == tv.length) {
+        v.forEach(function(av, idx) {
+            check_percent_diff(k, av, tv[idx], qc, 'errors', 0.1, tv);
+        });
+        return;
+    } else if(v !== null && (v.constructor === Array || tv.constructor === Array)){
+        qc.errors.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "template and value do not match in either type or length"});
+        return;
+    }
+
     if(typeof v === 'number') {
         //sundar (Regarding ranges, for example: we can use color green for +/-  for target 0.01% difference. Color Yellow for 10% difference, and color Red beyond.)
         if(v == 0 && tv == 0) {
@@ -259,27 +274,40 @@ function convertToFloat(v, f) {
     }
 }
 
-function check_absolute_diff(k, v, tv, qc, r, th) {
+function check_absolute_diff(k, v, tv, qc, r, th, a_tv) {
     var l = 'template_mismatch'
 
     var diff = Math.abs(v - tv);
     if(diff > th) {
-        qc[r].push({type: l, k: k, v: v, tv: tv, msg: "value differs from template by more than "+th});
+        var err_v = tv;
+        if(a_tv !== undefined) {
+            err_v = a_tv;
+        }
+        qc[r].push({type: l, k: k, v: v, tv: err_v, msg: "value differs from template by more than "+th});
     };
 };
 
-function check_percent_diff(k, v, tv, qc, r, th) {
+function check_percent_diff(k, v, tv, qc, r, th, a_tv) {
     var l = 'template_mismatch'
 
     var diff = Math.abs((v - tv)/((v+tv)/2));
     if(diff > th) {
-        qc[r].push({type: l, k: k, v: v, tv: tv, msg: "value differs from template by more than "+th*100+"%"});
+        var err_v = tv;
+        if(a_tv !== undefined) {
+            console.log('a_tv', a_tv);
+            err_v = a_tv;
+        }
+        qc[r].push({type: l, k: k, v: v, tv: err_v, msg: "value differs from template by more than "+th*100+"%"});
     };
 };
 
-
 //compare image headers against template headers
 exports.match = function(image, template, qc) {
+
+    var template_mismatch = 0;
+    var not_set = 0;
+
+    // console.log("QC-ing image " + image.InstanceNumber + " with template " + template.InstanceNumber);
 
     //find exclusion list
     var cus = customs[image.headers.Modality];
@@ -287,8 +315,20 @@ exports.match = function(image, template, qc) {
         qc.errors.push({type: 'unknown_modality', msg: "unknown modality "+image.headers.Modality+" found for image:"+image.id});
         return;
     }
+    
+    // find fileds that are in image and not in template
+    var tl = Object.keys(template.headers).length;
+    var il = Object.keys(image.headers).length;
+    
+    // first check if image header has fields that are not in the template    
+    var keydiff = [];
+    for (var kk in image.headers) {
+        if(template.headers[kk] === undefined) keydiff.push({ik:kk,v:image.headers[kk]})
+    }
+    var lengthdiff = keydiff.length;
+    if (lengthdiff > 0) qc.errors.push({type: 'image_tag_mismatch', k: keydiff, c: lengthdiff, msg: "image has "+ lengthdiff + " fields that are not found in the template"});
 
-    //compare each fields
+    //compare each field of the template with the corresponding filed in the image
     for(var k in template.headers) {
         var v = image.headers[k];
         var tv = template.headers[k];
@@ -300,7 +340,46 @@ exports.match = function(image, template, qc) {
             check_equal(k, v, tv, qc);
         }
     };
+
+    qc.errors.forEach(function(e) {
+        if (e.type == 'template_mismatch') template_mismatch++;
+        if (e.type == 'not_set') not_set++;
+    })
+
+    var error_stats = {
+        template_mismatch: template_mismatch,        
+        not_set: not_set,
+        template_field_count: tl,
+        image_field_count: il,
+        image_tag_mismatch: lengthdiff 
+    }
+
+    qc.error_stats = error_stats;
+
 }
+
+
+function overwritte_template(template_id,new_event,cb) {
+
+    console.log("overwriting template "+template_id)
+        
+    // Now Un-qc the series
+    db.Template.update({
+        _id: template_id,
+    }, { $push: { events: new_event }}, 
+    function(err) {   
+        if(err) return cb(err);
+        // deprecate all images in that series
+        db.TemplateHeader.deleteMany({
+            template_id: template_id,
+        }, function(err) {
+            if(err) return cb(err);
+            return cb();
+        })
+    })
+}
+
 
 exports.cc = common_customs;
 exports.c = customs;
+exports.overwritte_template = overwritte_template;

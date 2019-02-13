@@ -9,20 +9,23 @@ app.directive('studynote', function() {
                 if(!$scope.study) return; //study not loaded yet?
                 $scope.studystate = "na";
                 if($scope.study.qc) {
-                    if($scope.study.qc.errors.length > 0) $scope.studystate = "error";
+                    if($scope.study.qc.errors && $scope.study.qc.errors.length > 0) $scope.studystate = "error";
                     else if($scope.study.qc.notemps > 0) $scope.studystate = "notemp";
-                    else if($scope.study.qc.warnings.length > 0) $scope.studystate = "warning";
+                    else if($scope.study.qc.warnings && $scope.study.qc.warnings.length > 0) $scope.studystate = "warning";
                     else $scope.studystate = "ok";
-                }
+                } else if ($scope.study.qc1_state == "no template") $scope.studystate = "notemp";
+                    
                 $scope.qc1 = null;
                 if($scope.study.qc1_state) {
                     switch($scope.study.qc1_state) {
                     case "accept":
                         $scope.qc1 = "warning"; break;
-                    case "autopass":
-                        $scope.qc1 = "success"; break;
+                    // case "autopass":
+                    //     $scope.qc1 = "success"; break;
                     case "reject":
                         $scope.qc1 = "danger"; break;
+                    // case "no template":
+                    //     $scope.qc1 = "info"; break;
                     }
                 }
                 $scope.qc2 = null;
@@ -58,59 +61,16 @@ app.directive('qcwarning', function() {
     } 
 });
 
-/*
-app.factory('menu', ['appconf', '$http', 'jwtHelper', '$sce', 'toaster',
-function(appconf, $http, jwtHelper, $sce, toaster) {
-    var jwt = localStorage.getItem(appconf.jwt_id);
-    var menu = {
-        header: {
-            //label: appconf.title,
-            //icon: $sce.trustAsHtml("<img src=\""+appconf.icon_url+"\">"),
-            //url: "#/",
-        },
-        //top: scaMenu,
-        user: null, //to-be-loaded
-        //_profile: null, //to-be-loaded
-    };
-
-    var jwt = localStorage.getItem(appconf.jwt_id);
-    if(jwt) {
-        var expdate = jwtHelper.getTokenExpirationDate(jwt);
-        var ttl = expdate - Date.now();
-        if(ttl < 0) {
-            toaster.error("Your login session has expired. Please re-sign in");
-            localStorage.removeItem(appconf.jwt_id);
-        } else {
-            //menu.user = jwtHelper.decodeToken(jwt);
-            if(ttl < 3600*1000) {
-                //jwt expring in less than an hour! refresh!
-                console.log("jwt expiring in an hour.. refreshing first");
-                $http({
-                    url: appconf.auth_api+'/refresh',
-                    //skipAuthorization: true,  //prevent infinite recursion
-                    //headers: {'Authorization': 'Bearer '+jwt},
-                    method: 'POST'
-                }).then(function(response) {
-                    var jwt = response.data.jwt;
-                    localStorage.setItem(appconf.jwt_id, jwt);
-                    //menu.user = jwtHelper.decodeToken(jwt);
-                });
-            }
-        }
-    }
-    return menu;
-}]);
-*/
 
 app.component('exams', {
     templateUrl: 't/components/exams.html',
     bindings: {
-        modality: '<',
+        exam: "=",
         mode: '<', //view mode ('wide' / 'tall')
         deprecated: '=',
-        subject: '<', //subject to show
+        templateLookup: '&'
     },
-    controller: function(appconf, $window, $http, toaster, $interval) { 
+    controller: function(appconf, $window, $http, toaster, $interval) {
         var $ctrl = this;
 
         this.openstudy = function(id) {
@@ -119,8 +79,33 @@ app.component('exams', {
         this.opentemplate = function(id) {
             $window.open("#/template/"+id);
         }
-        this.reqc = function(exam_id) {
-            $http.post(appconf.api+'/series/reqcbyexamid/'+exam_id)
+
+        this.qcalert = function(exam,qc_type) {   
+            date = new Date(exam.StudyTimestamp);
+            var StudyTimestamp = (date.getMonth()+1)+'/' + date.getDate() + '/'+date.getFullYear();
+            //var StudyTimestamp = date.getFullYear()+'-' + (date.getMonth()+1) + '-'+date.getDate();
+            var alert = `Please confirm that you want to ReQC ${qc_type} series for 
+            Subject: ${exam.subject}
+            Study Timestamp: ${StudyTimestamp}`                                
+            var r = confirm(alert);         
+
+            if (r == true) {
+                if (qc_type=="all") {
+                    console.log("ReQc-ing all!");
+                    this.reqc_all(exam._id);
+                }
+                else if (qc_type=="failed"){
+                    console.log("ReQc-ing failures!");
+                    this.reqc_failed(exam._id);
+                }
+            } else {
+              console.log("ReQc canceled")
+            }
+        }
+
+        this.reqc_all = function(exam_id) {
+            console.log("reQC all series")
+            $http.post(appconf.api+'/series/reqcallseries/'+exam_id)
             .then(function(res) {
                 //$scope.$emit("exam_invalidated", {exam_id: exam_id});
                 toaster.success(res.data.message);
@@ -129,12 +114,25 @@ app.component('exams', {
                 else toaster.error(res.statusText);
             });
         }
+        this.reqc_failed = function(exam_id) {
+            console.log("reQC errored series")
+            $http.post(appconf.api+'/series/reqcerroredseries/'+exam_id)
+            .then(function(res) {
+                //$scope.$emit("exam_invalidated", {exam_id: exam_id});
+                toaster.success(res.data.message);
+            }, function(res) {
+                if(res.data && res.data.message) toaster.error(res.data.message);
+                else toaster.error(res.statusText);
+            });
+        }        
     },
 });
 
+
 app.component('templates', {
     templateUrl: 't/components/templates.html',
-    controller: function($window) { 
+    controller: function($window) {
+        var $ctrl = this;
         console.log("init templates");
         this.opentemplate = function(id) {
             $window.open("#/template/"+id, "template:"+id);
@@ -144,7 +142,7 @@ app.component('templates', {
         }
     },
     bindings: {
-        templates: '<', //[time] = template
+        templates: '=', //[time] = template
         times: '<', //list of timestamps to show
     },
 });
