@@ -120,7 +120,11 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
                     } else $scope.other_errors.push(error);
                 });
                 res.data.qc.warnings.forEach(function(warning) {
-                    if(warning.k) {
+                    if(warning.type == 'image_tag_mismatch') {
+                        warning.k.forEach(function(k) {
+                            $scope.image_notemplate[k.ik] = {};
+                        });
+                    } else if(warning.k) {
                         $scope.image_warnings[warning.k] = warning;
                     }
                     else $scope.other_warnings.push(warning);

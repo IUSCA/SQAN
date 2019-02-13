@@ -237,7 +237,7 @@ function toTimestamp(date, time, offset) {
     if(date === null || time === null) return null;
 
     if(offset === undefined) {
-        offset = "+0400";
+        offset = "-0400";
     }
 
     var year = date.substring(0,4);   
@@ -451,7 +451,7 @@ exports.reconstruct_header = function(_header,_primary_image,cb) {
     if (_header.SOPInstanceUID !== _primary_image.SOPInstanceUID) { //image is not primary image
         for (var k in _primary_image.headers) {     
             let v = _primary_image.headers[k]; 
-            if (!_header.headers[k]) {                      
+            if (_header.headers[k] == undefined) {
                 _header.headers[k] = v;
             } 
             if (_header.headers[k] == "not_set") {

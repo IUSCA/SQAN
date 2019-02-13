@@ -72,7 +72,12 @@ var common_customs = {
     "p_SlicePosition": skip,
     "p_SlicePositionPCS": skip,
     "p_ImaRelTablePosition": skip,
-    "p_RelTablePosition": skip
+    "p_RelTablePosition": skip,
+    "p_SliceOrientation": skip,
+    "p_TimeAfterStart": skip,
+    "p_MeasDuration": skip,
+    "p_RBMocoRot": skip,
+    "p_RBMocoTrans": skip,
 }
 
 //custom QC logics specific to each modality
@@ -326,7 +331,7 @@ exports.match = function(image, template, qc) {
         if(template.headers[kk] === undefined) keydiff.push({ik:kk,v:image.headers[kk]})
     }
     var lengthdiff = keydiff.length;
-    if (lengthdiff > 0) qc.errors.push({type: 'image_tag_mismatch', k: keydiff, c: lengthdiff, msg: "image has "+ lengthdiff + " fields that are not found in the template"});
+    if (lengthdiff > 0) qc.warnings.push({type: 'image_tag_mismatch', k: keydiff, c: lengthdiff, msg: "image has "+ lengthdiff + " fields that are not found in the template"});
 
     //compare each field of the template with the corresponding filed in the image
     for(var k in template.headers) {

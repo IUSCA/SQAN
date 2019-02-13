@@ -168,7 +168,7 @@
                                         </div>
                                     </li>
                                     <table class="table table-condensed table-imageheader" ng-if="image_detail">
-                                        <tr ng-repeat="h in image_headers | filter: search.key" ng-if="image_errors[h.key] || image_warnings[h.key] || show_all_headers">
+                                        <tr ng-repeat="h in image_headers | filter: search.key" ng-if="image_errors[h.key] || image_warnings[h.key] || image_notemplate[h.key] || show_all_headers">
                                             <th>{{h.key}}</th>
                                             <td>
                                                 <div ng-if="image_errors[h.key]" class="image-error">

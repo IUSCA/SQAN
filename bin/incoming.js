@@ -405,58 +405,57 @@ function incoming(tags, fromFile, cb) {
                 function(err, _template) {
                     if(err) return next(err);
                     template = _template;
-
-                    // Check if a primary image already exists for this series
-                    db.TemplateHeader.findOne({
-                        template_id: template._id,
-                        primary_image: null,
-                    }, function(err, _primary_template) {
-                        if (err) return next(err);
-                        if (!_primary_template) {
-                            db.TemplateHeader.create({
-                                template_id: template._id,
-                                SOPInstanceUID: h.SOPInstanceUID,
-                                InstanceNumber: h.InstanceNumber,
-                                //EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
-                                primary_image: null,
-                                headers: h
-                            }, function(err,primary_template) {
-                                if (err) return next(err);
-                                var deprecated_by = template_deprecatedBy(template);
-                                // console.log("deprecated_by " + deprecated_by)
-                                // finally, insert primary_template._id into the template document and add a "created" event
-                                var event = {
-                                    service_id: 'incoming', //if event was performeed by a system, this is set
-                                    title: 'Received', // This is the date in which the template document was first created in the database
-                                    date: new Date()
-                                }
-                                db.Template.updateOne({_id: template._id},
-                                    {
-                                        primary_image:primary_template._id,
-                                        deprecated_by: deprecated_by !== "undefined"? deprecated_by : null,
-                                        $push: { events: event },
-                                    }, function(err) {
-                                        if (err) return next(err);
-                                        return next();
-                                    });
-                            })
-                        } else {
-                            //var echonumber = h.EchoNumbers;
-                            qc_func.instance.compare_with_primary(_primary_template.headers,h,function(){
+                    checkDeprecated(template, true, function() {
+                        // Check if a primary image already exists for this series
+                        db.TemplateHeader.findOne({
+                            template_id: template._id,
+                            primary_image: null,
+                        }, function (err, _primary_template) {
+                            if (err) return next(err);
+                            if (!_primary_template) {
                                 db.TemplateHeader.create({
                                     template_id: template._id,
                                     SOPInstanceUID: h.SOPInstanceUID,
                                     InstanceNumber: h.InstanceNumber,
-                                    //EchoNumbers: echonumber !== undefined ? echonumber : null,
-                                    primary_image: _primary_template._id,
-                                    headers:h
-                                }, function(err) {
-                                    if(err) return next(err);
-                                    return next();
+                                    //EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
+                                    primary_image: null,
+                                    headers: h
+                                }, function (err, primary_template) {
+                                    if (err) return next(err);
+                                    // console.log("deprecated_by " + deprecated_by)
+                                    // finally, insert primary_template._id into the template document and add a "created" event
+                                    var event = {
+                                        service_id: 'incoming', //if event was performeed by a system, this is set
+                                        title: 'Received', // This is the date in which the template document was first created in the database
+                                        date: new Date()
+                                    }
+                                    db.Template.updateOne({_id: template._id},
+                                        {
+                                            primary_image: primary_template._id,
+                                            $push: {events: event},
+                                        }, function (err) {
+                                            if (err) return next(err);
+                                            return next();
+                                        });
+                                })
+                            } else {
+                                //var echonumber = h.EchoNumbers;
+                                qc_func.instance.compare_with_primary(_primary_template.headers, h, function () {
+                                    db.TemplateHeader.create({
+                                        template_id: template._id,
+                                        SOPInstanceUID: h.SOPInstanceUID,
+                                        InstanceNumber: h.InstanceNumber,
+                                        //EchoNumbers: echonumber !== undefined ? echonumber : null,
+                                        primary_image: _primary_template._id,
+                                        headers: h
+                                    }, function (err) {
+                                        if (err) return next(err);
+                                        return next();
+                                    });
                                 });
-                            });
-                        }
-                    })
+                            }
+                        })
+                    });
                 })
         },
 
@@ -473,61 +472,60 @@ function incoming(tags, fromFile, cb) {
                 function(err, _series) {
                     if(err) return next(err);
                     series = _series;
-
-                    // Check if a primary image already exists for this series
-                    db.Image.findOne({
-                        series_id: series._id,
-                        primary_image: null,
-                    }, function(err, _primary_image) {
-                        if (err) return next(err);
-                        if (!_primary_image) {
-                            db.Image.create({
-                                series_id: series._id,
-                                SOPInstanceUID: h.SOPInstanceUID,
-                                InstanceNumber: h.InstanceNumber,
-                                primary_image: null,
-                                headers: h
-                            }, function(err,primary_image) {
-                                if (err) return next(err);
-                                var deprecated_by = series_deprecatedBy(series);
-                                // finally, insert primary_image._id into the series document
-                                var event = {
-                                    service_id: 'incoming', //if event was performeed by a system, this is set
-                                    title: 'Received', // This is the date in which the template document was first created in the database
-                                    date: new Date()
-                                }
-                                db.Series.updateOne({_id: series._id},
-                                    {
-                                        primary_image:primary_image._id,
-                                        deprecated_by: deprecated_by !== "undefined"? deprecated_by : null,
-                                        $push: { events: event },
-                                    }, function(err) {
-                                        if (err) return next(err);
-                                        return next();
-                                    });
-                            })
-                        } else {
-                            // Check if series has been QC-ed already (i.e. if this is a new image for an existing series)
-                            if(series.qc !== undefined) {
-                                series.qc = undefined;
-                                series.save();
-                            }
-
-                            qc_func.instance.compare_with_primary(_primary_image.headers,h,function(){
+                    checkDeprecated(series, false, function() {
+                        // Check if a primary image already exists for this series
+                        db.Image.findOne({
+                            series_id: series._id,
+                            primary_image: null,
+                        }, function(err, _primary_image) {
+                            if (err) return next(err);
+                            if (!_primary_image) {
                                 db.Image.create({
                                     series_id: series._id,
                                     SOPInstanceUID: h.SOPInstanceUID,
                                     InstanceNumber: h.InstanceNumber,
-                                    //EchoNumbers: echonumber !== undefined ? echonumber : null,
-                                    primary_image: _primary_image._id,
-                                    headers:h
-                                }, function(err) {
-                                    if(err) return next(err);
-                                    return next();
+                                    primary_image: null,
+                                    headers: h
+                                }, function(err,primary_image) {
+                                    if (err) return next(err);
+                                    // finally, insert primary_image._id into the series document
+                                    var event = {
+                                        service_id: 'incoming', //if event was performeed by a system, this is set
+                                        title: 'Received', // This is the date in which the template document was first created in the database
+                                        date: new Date()
+                                    }
+                                    db.Series.updateOne({_id: series._id},
+                                        {
+                                            primary_image:primary_image._id,
+                                            $push: { events: event },
+                                        }, function(err) {
+                                            if (err) return next(err);
+                                            return next();
+                                        });
+                                })
+                            } else {
+                                // Check if series has been QC-ed already (i.e. if this is a new image for an existing series)
+                                if(series.qc !== undefined) {
+                                    series.qc = undefined;
+                                    series.save();
+                                }
+
+                                qc_func.instance.compare_with_primary(_primary_image.headers,h,function(){
+                                    db.Image.create({
+                                        series_id: series._id,
+                                        SOPInstanceUID: h.SOPInstanceUID,
+                                        InstanceNumber: h.InstanceNumber,
+                                        //EchoNumbers: echonumber !== undefined ? echonumber : null,
+                                        primary_image: _primary_image._id,
+                                        headers:h
+                                    }, function(err) {
+                                        if(err) return next(err);
+                                        return next();
+                                    });
                                 });
-                            });
-                        }
-                    });
+                            }
+                        });
+                    })
                 });
         },
 
@@ -559,20 +557,20 @@ var series_deprecatedBy = function(series) {
         deprecated_by: series._id,
     },{multi: true}, function(err) {
         if (err) logger.warn("error deprecating older series");
+        db.Series.findOne({
+            exam_id: series.exam_id,
+            series_desc: series.series_desc,
+            SeriesNumber: { $gt: series.SeriesNumber },
+        }, function(err, _series){
+            if(err) {
+                logger.warn("error deprecating current series");
+                return (null);
+            }
+            if(!_series) return (undefined); //series.deprecated_by = null;
+            if(_series) return (_series._id); //series.deprecated_by = _series._id;
+        });
     });
 
-    db.Series.findOne({
-        exam_id: series.exam_id,
-        series_desc: series.series_desc,
-        SeriesNumber: { $gt: series.SeriesNumber },
-    }, function(err, _series){
-        if(err) {
-            logger.warn("error deprecating current series");
-            return (null);
-        }
-        if(!_series) return (undefined); //series.deprecated_by = null;
-        if(_series) return (_series._id); //series.deprecated_by = _series._id;
-    });
 }
 
 var template_deprecatedBy = function(template) {
@@ -585,19 +583,50 @@ var template_deprecatedBy = function(template) {
     },{multi: true}, function(err,numdeprecated) {
         if (err) logger.warn("error deprecating older template");
         console.log(numdeprecated);
+        db.Template.findOne({
+            exam_id: template.exam_id,
+            series_desc: template.series_desc,
+            SeriesNumber: { $gt: template.SeriesNumber },
+        }, function(err, _template){
+            if(err) {
+                logger.warn("error deprecating current series");
+                return (null);
+            }
+            if(!_template) return (undefined); //series.deprecated_by = null;
+            if(_template) return (_template._id); //series.deprecated_by = _series._id;
+        });
     });
+}
 
-    db.Template.findOne({
-        exam_id: template.exam_id,
-        series_desc: template.series_desc,
-        SeriesNumber: { $gt: template.SeriesNumber },
-    }, function(err, _template){
-        if(err) {
-            logger.warn("error deprecating current series");
-            return (null);
-        }
-        if(!_template) return (undefined); //series.deprecated_by = null;
-        if(_template) return (_template._id); //series.deprecated_by = _series._id;
+function checkDeprecated(doc, isTemplate, cb) {
+    var mod = db.Series;
+    if(isTemplate !== undefined && isTemplate) {
+        mod = db.Template;
+    }
+    mod.update({
+        exam_id: doc.exam_id,
+        series_desc: doc.series_desc,
+        SeriesNumber: { $lt: doc.SeriesNumber },
+    }, {
+        deprecated_by: doc._id,
+    },{multi: true}, function(err,numdeprecated) {
+        if (err) logger.warn("error deprecating older template");
+        console.log(numdeprecated);
+        mod.findOne({
+            exam_id: doc.exam_id,
+            series_desc: doc.series_desc,
+            SeriesNumber: { $gt: doc.SeriesNumber },
+        }, function(err, _doc){
+            if(err) logger.warn("error deprecating current series");
+            if(_doc) {
+                doc.deprecated_by = _doc._id;
+            } else {
+                doc.deprecated_by = null;
+            }
+            doc.save();
+            cb();
+
+        });
     });
 }
 
