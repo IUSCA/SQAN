@@ -1,7 +1,7 @@
 <div class="subject-body">
     <div class="subject-tall">
         <p>
-            <time style="position: relative; top: 5px"><b>{{$ctrl.exam.StudyTimestamp|date:'short':'+0400'}} <small>(EST)</small></b></time> &nbsp;
+            <time style="position: relative; top: 5px"><b>{{$ctrl.exam.StudyTimestamp|date:'short':'-0400'}} <small>(EST)</small></b></time> &nbsp;
             <!-- <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc($ctrl.exam._id)" uib-tooltip="ReQC all series in this exam">ReQC</button> -->
             <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.qcalert($ctrl.exam,'all')" uib-tooltip="ReQC all series in this exam">ReQC</button>
             <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.qcalert($ctrl.exam,'failed')" uib-tooltip="ReQC only series that have not passed QC">ReQC failed series</button>            
@@ -31,8 +31,8 @@
                 <td style="padding: 0px;">
                     <div>
                         <!--search for series.qc.template_id-->
-                        <div ng-init="template = $ctrl.templateLookup({t_id: s.qc.template_id})" class="studynote">                            
-                            {{template.StudyTimestamp | date:'short'}}
+                        <div ng-init="template = $ctrl.templateLookup({t_id: s.qc.template_id})" class="studynote" ng-if="s.qc1_state !== 'no template'">
+                            {{template.StudyTimestamp | date:'short':'-0400'}}
                             <!--<span class="text-muted">{{template.series_desc}}</span>-->
                             <span class="text-muted">(#{{template.SeriesNumber}})</span>
                         </div>

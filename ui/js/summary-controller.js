@@ -50,7 +50,7 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
         }
 
         var tooltip = "Subject: "+subject;
-        tooltip += '<br>StudyTime: '+$filter('date')(series.exam_id.StudyTimestamp, 'short','+0400');
+        tooltip += '<br>StudyTime: '+$filter('date')(series.exam_id.StudyTimestamp, 'short','-0400');
         if(series.qc === undefined) {
             tooltip += '<br>QC Details not available';
             return tooltip;

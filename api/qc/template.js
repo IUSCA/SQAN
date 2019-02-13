@@ -24,7 +24,7 @@ var common_customs = {
         if(!check_set(k, v, tv, qc)) return;
         if(v.constructor === Array && tv.constructor === Array && v.length == tv.length) {
             v.forEach(function(av, idx) {
-                check_absolute_diff(k, av, tv[idx], qc, 'errors', 0.3);
+                check_absolute_diff(k, av, tv[idx], qc, 'errors', 0.3, tv);
             });
         } else {
             qc.errors.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "template and value do not match in type or length"});
@@ -215,11 +215,11 @@ function check_set(k, v, tv, qc) {
 function check_equal(k, v, tv, qc) {
     if(v !== null && v.constructor === Array && tv.constructor === Array && v.length == tv.length) {
         v.forEach(function(av, idx) {
-            check_percent_diff(k, av, tv[idx], qc, 'errors', 0.1);
+            check_percent_diff(k, av, tv[idx], qc, 'errors', 0.1, tv);
         });
         return;
     } else if(v !== null && (v.constructor === Array || tv.constructor === Array)){
-        qc.errors.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "template and value do not match in type or length"});
+        qc.errors.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "template and value do not match in either type or length"});
         return;
     }
 
@@ -274,21 +274,30 @@ function convertToFloat(v, f) {
     }
 }
 
-function check_absolute_diff(k, v, tv, qc, r, th) {
+function check_absolute_diff(k, v, tv, qc, r, th, a_tv) {
     var l = 'template_mismatch'
 
     var diff = Math.abs(v - tv);
     if(diff > th) {
-        qc[r].push({type: l, k: k, v: v, tv: tv, msg: "value differs from template by more than "+th});
+        var err_v = tv;
+        if(a_tv !== undefined) {
+            err_v = a_tv;
+        }
+        qc[r].push({type: l, k: k, v: v, tv: err_v, msg: "value differs from template by more than "+th});
     };
 };
 
-function check_percent_diff(k, v, tv, qc, r, th) {
+function check_percent_diff(k, v, tv, qc, r, th, a_tv) {
     var l = 'template_mismatch'
 
     var diff = Math.abs((v - tv)/((v+tv)/2));
     if(diff > th) {
-        qc[r].push({type: l, k: k, v: v, tv: tv, msg: "value differs from template by more than "+th*100+"%"});
+        var err_v = tv;
+        if(a_tv !== undefined) {
+            console.log('a_tv', a_tv);
+            err_v = a_tv;
+        }
+        qc[r].push({type: l, k: k, v: v, tv: err_v, msg: "value differs from template by more than "+th*100+"%"});
     };
 };
 

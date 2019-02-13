@@ -27,7 +27,7 @@
                                 <div class="row">
                                     <div class="col-md-1"><img gravatar-src="user.email" gravatar-size="30"></img></div>
                                     <div class="col-md-11" style="position: relative; top: -3px">
-                                        <time class="pull-right text-muted">{{comment.date| date:'short':'+0400'}} <small>(EST)</small></time>
+                                        <time class="pull-right text-muted">{{comment.date| date:'short':'-0400'}} <small>(EST)</small></time>
                                         <b>{{user.fullname}}</b>
                                         <p>{{comment.comment}}</p>
                                     </div>
@@ -55,7 +55,7 @@
                 <li class="list-group-item">
                     <div class="row">
                         <div class="col-sm-2">Study Timestamp</div>
-                        <div class="col-sm-10">{{data.series.exam_id.StudyTimestamp|date:'medium':'+0400'}} <small>(EST)</small></div>
+                        <div class="col-sm-10">{{data.series.exam_id.StudyTimestamp|date:'medium':'-0400'}} <small>(EST)</small></div>
                     </div>
                 </li>
                 <li class="list-group-item">
@@ -70,7 +70,7 @@
                         <div class="col-sm-10">
                             <div class="studynote" ng-click="opentemplate(data.template._id)">
                                 <b>{{data.template.series_desc}}</b> 
-                                {{data.template.exam_id.StudyTimestamp | date:'medium'}} 
+                                {{data.template.exam_id.StudyTimestamp | date:'medium':'-0400'}}
                                 <span class="text-muted">(#{{data.template.SeriesNumber}})</span>
                             </div>
                         </div>
@@ -86,11 +86,11 @@
                                 ng-disabled="!data.canqc">
                                 <ui-select-match placeholder="Specify a template or leave it blank to auto select the latest template" allow-clear-dis="true">
                                     <div class_dis="studynote" ng-click_dis="opentemplate($select.selected._id)">
-                                        {{$select.selected.exam_id.StudyTimestamp | date:'medium':'+0400'}}
+                                        {{$select.selected.exam_id.StudyTimestamp | date:'medium':'-0400'}}
                                     </div>
                                 </ui-select-match>
                                 <ui-select-choices repeat="template in data.templates">
-                                    {{template.exam_id.StudyTimestamp | date:'medium':'+0400'}}
+                                    {{template.exam_id.StudyTimestamp | date:'medium':'-0400'}}
                                 </ui-select-choices>
                             </ui-select>
                         </div>
@@ -141,7 +141,7 @@
                                     </li>
                                     <!-- <p>AcquisitionNumber: {{image_detail.acquisition_id}}</p>-->
                                     <li class="list-group-item" ng-if="image_detail">
-                                        <div class="pull-right"><span class="text-muted">Image QC Date:</span> {{image_detail.qc.date | date:'medium':'+0400'}} <small>(EST)</small></div>
+                                        <div class="pull-right"><span class="text-muted">Image QC Date:</span> {{image_detail.qc.date | date:'medium':'-0400'}} <small>(EST)</small></div>
                                         Aq#{{image_detail.AcquisitionNumber}} - Inst#{{image_detail.InstanceNumber}}
                                     </li>
                                     <li class="list-group-item" ng-if="other_errors.length > 0 || other_warnings.length > 0 || image_detail.qc.notemp">
@@ -234,30 +234,30 @@
                     ng-model="data.series.qc1_state" ng-click="changestate(1, 'reject', $event)">Rejected</button>
             </div>
             <br>
-            <div ng-if="data.series.qc1_state && data.series.qc1_state != 'reject'">
-                <h4 class="text-muted">QC2</h4>
-                <p class="help-block">Image Level QC</p>
-                <button type="button" class="btn btn-xs pull-right" 
-                    ng-if="data.series.qc2_state"
-                    ng-click="changestate(2, null, $event)"><i class="fa fa-undo"></i> Reset</button>
-                <button type="button" class="btn btn-xs" ng-class="{'btn-success':data.series.qc2_state == 'accept'}" 
-                    ng-disabled="!data.canqc" 
-                    ng-model="data.series.qc2_state" ng-click="changestate(2, 'accept', $event)">Accepted</button>
-                <button type="button" class="btn btn-xs" ng-class="{'btn-warning':data.series.qc2_state == 'condaccept'}" 
-                    ng-disabled="!data.canqc" 
-                    ng-model="data.series.qc2_state" ng-click="changestate(2, 'condaccept', $event)"
-                    tooltip-dis="Conditionally accept this series despite the stage 2 QC issues">Cond. Accepted</button>
-                <button type="button" class="btn btn-xs" ng-class="{'btn-danger':data.series.qc2_state == 'reject'}" 
-                    ng-disabled="!data.canqc" 
-                    ng-model="data.series.qc2_state" ng-click="changestate(2, 'reject', $event)">Rejected</button>
-                <hr>
-            </div>
+            <!--<div ng-if="data.series.qc1_state && data.series.qc1_state != 'reject'">-->
+                <!--<h4 class="text-muted">QC2</h4>-->
+                <!--<p class="help-block">Image Level QC</p>-->
+                <!--<button type="button" class="btn btn-xs pull-right" -->
+                    <!--ng-if="data.series.qc2_state"-->
+                    <!--ng-click="changestate(2, null, $event)"><i class="fa fa-undo"></i> Reset</button>-->
+                <!--<button type="button" class="btn btn-xs" ng-class="{'btn-success':data.series.qc2_state == 'accept'}" -->
+                    <!--ng-disabled="!data.canqc" -->
+                    <!--ng-model="data.series.qc2_state" ng-click="changestate(2, 'accept', $event)">Accepted</button>-->
+                <!--<button type="button" class="btn btn-xs" ng-class="{'btn-warning':data.series.qc2_state == 'condaccept'}" -->
+                    <!--ng-disabled="!data.canqc" -->
+                    <!--ng-model="data.series.qc2_state" ng-click="changestate(2, 'condaccept', $event)"-->
+                    <!--tooltip-dis="Conditionally accept this series despite the stage 2 QC issues">Cond. Accepted</button>-->
+                <!--<button type="button" class="btn btn-xs" ng-class="{'btn-danger':data.series.qc2_state == 'reject'}" -->
+                    <!--ng-disabled="!data.canqc" -->
+                    <!--ng-model="data.series.qc2_state" ng-click="changestate(2, 'reject', $event)">Rejected</button>-->
+                <!--<hr>-->
+            <!--</div>-->
             <h4 class="text-muted">Events</h4>
             <div class="activity">
                 <div class="row">
                     <div class="col-md-2"><i class="fa fa-video-camera"></i></div>
                     <div class="col-md-10">
-                        <time class="pull-right text-muted">{{data.series.exam_id.StudyTimestamp |date:'short'}}</time>
+                        <time class="pull-right text-muted">{{data.series.exam_id.StudyTimestamp |date:'short':'-0400'}}</time>
                         Studied
                     </div>
                 </div>
@@ -266,7 +266,7 @@
                 <div class="row">
                     <div class="col-md-2"><i class="fa fa-server"></i></div>
                     <div class="col-md-10">
-                        <time class="pull-right text-muted">{{data.date_received |date:'short'}}</time>
+                        <time class="pull-right text-muted">{{data.date_received |date:'short':'-0400'}}</time>
                         Data Recieved by SCA
                     </div>
                 </div>
@@ -275,7 +275,7 @@
                 <div class="row">
                     <div class="col-md-2"><i class="fa fa-stethoscope"></i></div>
                     <div class="col-md-10">
-                        <time class="pull-right text-muted">{{data.series.qc.date |date:'short'}}</time>
+                        <time class="pull-right text-muted">{{data.series.qc.date |date:'short':'-0400'}}</time>
                         Stage 1 QC performed
                     </div>
                 </div>
@@ -287,7 +287,7 @@
                         <!-- <img gravatar-src="user.email" gravatar-size="25"></img> -->
                     </div>
                     <div class="col-md-10">
-                        <time class="pull-right text-muted">{{event.date|date:'short'}}</time>
+                        <time class="pull-right text-muted">{{event.date|date:'short':'-0400'}}</time>
                         <b>{{event.username}}</b>                        
                         <p ng-if="event.title">{{event.title}}</p>
                         <p ng-if="event.detail.qc1_state"><span>Previous QC1 state: </span><span>{{event.detail.qc1_state}}</span> </p> 

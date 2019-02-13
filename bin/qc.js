@@ -60,12 +60,13 @@ function run(cb) {
             })
 
             if(exams2qc.length > 0) {
-                logger.info("Batch complete. Sleeping before next batch");
-            }
-
-            setTimeout(function() {
+                logger.info("Batch complete. Starting next batch...");
                 run(cb);
-            }, 1000*3);
+            } else {
+                setTimeout(function() {
+                    run(cb);
+                }, 1000*10);
+            }
         })
     });
 }
