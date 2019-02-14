@@ -98,7 +98,8 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
                     db.Series.distinct('exam_id',{
                         $and: [
                             {qc1_state:{$ne:"autopass"}},
-                            {qc1_state:{$ne:"accept"}}
+                            {qc1_state:{$ne:"accept"}},
+                            {deprecated_by: null}
                         ]
                     }).exec(function(err, _exam_ids){
                         query.where('_id').in(_exam_ids);
