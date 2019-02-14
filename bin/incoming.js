@@ -537,7 +537,9 @@ function incoming(tags, fromFile, cb) {
             logger.error(err);
             h.qc_err = err;
             // conn.publish(config.cleaner.failed_q, h); //publishing to default exchange can't be confirmed?
-            write_to_disk(config.cleaner.failed_headers, h, function(err) {
+            var newpath = config.cleaner.failed_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
+            var path2file = newpath+"/"+h.SOPInstanceUID+".json"
+            write_to_disk(newpath, path2file, h, function(err) {
                 if(err) throw err; //TODO - will crash app. Maybe we should remove this if we want this to run continuously
                 cb();
             });
