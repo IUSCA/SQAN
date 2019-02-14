@@ -48,16 +48,16 @@ function run(cb) {
                 }
             });
 
-
             if(exams2qc.length > 0) {
                 logger.info(exams2qc.length + " Exams to be updated"); //: "+exams2qc)
-            }
-            exams2qc.forEach(function(ee){
-                qc_funcs.exam.qc_exam(ee,function(err){
-                    if (err) return cb(err);
-                    //console.log('Done with exam: ', ee);
+                exams2qc.forEach(function(ee){
+                    qc_funcs.exam.qc_exam(ee,function(err){
+                        if (err) return cb(err);
+                        //console.log('Done with exam: ', ee);
+                    })
                 })
-            })
+            }
+
 
             if(exams2qc.length > 0) {
                 logger.info("Batch complete. Starting next batch...");

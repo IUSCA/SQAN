@@ -27,9 +27,11 @@ function qc_exam(exam_id,cb) {
         qced_series:0,
         all_series: 0,
         template_series: 0, 
+        template_series_deprecated:0,
         series_passed: 0,
         series_failed: 0,
         series_missing: [],
+        series_deprecated:0,
         series_no_template: [],
         image_count:0,
         images_errored: 0,
@@ -67,7 +69,7 @@ function qc_exam(exam_id,cb) {
 
                     db.Template.find().lean()  // find all template series for this exam
                     .where('exam_id',texam._id)
-                    .select({'_id': 1, 'series_desc': 1})
+                    .select({'_id': 1, 'series_desc': 1,'deprecated_by':1})
                     .exec(function(err, _templates) {
                         if(err) return next(err); 
         
@@ -75,8 +77,8 @@ function qc_exam(exam_id,cb) {
         
                         // create array with all template series descriptions (for this template exam)                
                         _templates.forEach(function(t){
-                            if (template_series.indexOf(t.series_desc) == -1) 
-                                template_series.push(t.series_desc);
+                            if (template_series.indexOf(t.series_desc) == -1) template_series.push(t.series_desc);
+                            if (t.deprecated_by === null) qc.template_series_deprecated++;
                         });
         
                         next();
@@ -95,32 +97,33 @@ function qc_exam(exam_id,cb) {
                 qc.all_series = _series.length;
                                 
                 _series.forEach(function(s){
-                    if (exam_series.indexOf(s.series_desc) == -1) {
-                        exam_series.push(s.series_desc);
-                    }
-                    if (s.qc1_state == "no template") {
-                        qc.series_no_template.push(s.series_desc);
-                    }
+                    if (exam_series.indexOf(s.series_desc) == -1) exam_series.push(s.series_desc);
+                    if (s.qc1_state == "no template")  qc.series_no_template.push(s.series_desc);
+                    
                     if (typeof s.qc === 'object' && s.qc !== null) {
-                        
-                        if (s.qc1_state == "fail") {
-                            qc.series_failed++;
-                        }
-                        if (s.qc1_state == "autopass") {
-                            qc.series_passed++;
-                        }
-                                        
                         qc.qced_series++; 
 
-                        // count images
-                        qc.image_count += s.qc.series_image_count;
-                        qc.images_errored += s.qc.errored_images;
-                        qc.images_clean += s.qc.clean;
-                        qc.images_no_template += s.qc.notemps;
+                        if (s.deprecated_by === null) { // only count non-deprecated series for exam-level qc errors
 
-                        qc.fields_errored += s.qc.series_fields_errored;
-
+                            qc.series_deprecated++;
+                        
+                            if (s.qc1_state == "fail") {
+                                qc.series_failed++;
+                            }
+                            if (s.qc1_state == "autopass") {
+                                qc.series_passed++;
+                            }                                               
+                            // count images
+                            qc.image_count += s.qc.series_image_count;
+                            qc.images_errored += s.qc.errored_images;
+                            qc.images_clean += s.qc.clean;
+                            qc.images_no_template += s.qc.notemps;
+    
+                            qc.fields_errored += s.qc.series_fields_errored;
+    
+                        }
                     }
+
                 });
 
                 next(); 
