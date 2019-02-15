@@ -78,7 +78,7 @@ function qc_exam(exam_id,cb) {
                         // create array with all template series descriptions (for this template exam)                
                         _templates.forEach(function(t){
                             if (template_series.indexOf(t.series_desc) == -1) template_series.push(t.series_desc);
-                            if (t.deprecated_by === null) qc.template_series_deprecated++;
+                            if (t.deprecated_by !== null) qc.template_series_deprecated++;
                         });
         
                         next();
@@ -104,8 +104,6 @@ function qc_exam(exam_id,cb) {
                         qc.qced_series++; 
 
                         if (s.deprecated_by === null) { // only count non-deprecated series for exam-level qc errors
-
-                            qc.series_deprecated++;
                         
                             if (s.qc1_state == "fail") {
                                 qc.series_failed++;
@@ -120,8 +118,7 @@ function qc_exam(exam_id,cb) {
                             qc.images_no_template += s.qc.notemps;
     
                             qc.fields_errored += s.qc.series_fields_errored;
-    
-                        }
+                        } else qc.series_deprecated++;
                     }
 
                 });
