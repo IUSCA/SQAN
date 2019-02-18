@@ -141,7 +141,9 @@ function qc_one_image(image,primimage,primtemplate,cb) {
         },
 
         function(next) {
-            if (image.InstanceNumber !== primtemplate.InstanceNumber) {  // check if primary template is the header for the current image
+	    var hasEchoNumbers = false;
+	    if (primtemplate.EchoNumbers !== undefined && image.EchoNumbers !== undefined && primtemplate.EchoNumbers !== image.EchoNumbers) hasEchoNumbers = true;	
+            if ((image.InstanceNumber !== primtemplate.InstanceNumber) || hasEchoNumbers) {  // check if primary template is the header for the current image
                 get_template_image(primtemplate,image.InstanceNumber, function(err,templateheader) {
                     if (err) return next(err);
                     
@@ -285,6 +287,7 @@ function get_template_image(primtemplate,InstanceNumber,cb) {
     db.TemplateHeader.findOne({
         primary_image: primtemplate._id, 
         InstanceNumber: InstanceNumber,
+	EchoNumbers: primtemplate.EchoNumbers !== undefined ? primtemplate.EchoNumbers : undefined,
     }, function(err,templateheader){
         if (err) cb(err)
         if (!templateheader) {

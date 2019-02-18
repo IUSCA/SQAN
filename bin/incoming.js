@@ -138,6 +138,7 @@ function incoming(tags, fromFile, cb) {
     var aq = null;
     var h = {};
     var isHeader;
+    var needsEchoNumbers = false;
 
     async.series([
 
@@ -174,6 +175,10 @@ function incoming(tags, fromFile, cb) {
                 h.qc_subject = meta.subject;
                 h.qc_istemplate = meta.template;
                 h.qc_series_desc = meta.series_desc;
+		if (meta.EchoNumbers) {
+			needsEchoNumbers = true;
+			console.log("needs EchoNumbers: "+needsEchoNumbers);
+		}
                 //h.qc_series_desc_version = meta.series_desc_version;
 
                 //construct esindex
@@ -417,7 +422,7 @@ function incoming(tags, fromFile, cb) {
                                     template_id: template._id,
                                     SOPInstanceUID: h.SOPInstanceUID,
                                     InstanceNumber: h.InstanceNumber,
-                                    //EchoNumbers: h.EchoNumbers !== undefined ? h.EchoNumbers : null,
+                                    EchoNumbers: needsEchoNumbers ? h.EchoNumbers : undefined,
                                     primary_image: null,
                                     headers: h
                                 }, function (err, primary_template) {
@@ -439,13 +444,13 @@ function incoming(tags, fromFile, cb) {
                                         });
                                 })
                             } else {
-                                //var echonumber = h.EchoNumbers;
+                                var echonumber = h.EchoNumbers;
                                 qc_func.instance.compare_with_primary(_primary_template.headers, h, function () {
                                     db.TemplateHeader.create({
                                         template_id: template._id,
                                         SOPInstanceUID: h.SOPInstanceUID,
                                         InstanceNumber: h.InstanceNumber,
-                                        //EchoNumbers: echonumber !== undefined ? echonumber : null,
+                                        EchoNumbers: needsEchoNumbers ? echonumber : undefined,
                                         primary_image: _primary_template._id,
                                         headers: h
                                     }, function (err) {
@@ -484,6 +489,7 @@ function incoming(tags, fromFile, cb) {
                                     series_id: series._id,
                                     SOPInstanceUID: h.SOPInstanceUID,
                                     InstanceNumber: h.InstanceNumber,
+				    EchoNumbers: needsEchoNumbers ? h.EchoNumbers : undefined,
                                     primary_image: null,
                                     headers: h
                                 }, function(err,primary_image) {
@@ -509,14 +515,14 @@ function incoming(tags, fromFile, cb) {
                                     series.qc = undefined;
                                     series.save();
                                 }
-
+				var echonumber = h.EchoNumbers;
                                 qc_func.instance.compare_with_primary(_primary_image.headers,h,function(){
                                     db.Image.create({
                                         series_id: series._id,
                                         SOPInstanceUID: h.SOPInstanceUID,
                                         InstanceNumber: h.InstanceNumber,
-                                        //EchoNumbers: echonumber !== undefined ? echonumber : null,
-                                        primary_image: _primary_image._id,
+                                        EchoNumbers: needsEchoNumbers ? echonumber : undefined,
+					primary_image: _primary_image._id,
                                         headers:h
                                     }, function(err) {
                                         if(err) return next(err);

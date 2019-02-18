@@ -356,6 +356,7 @@ exports.parseMeta = function(h) {
         iibisid: null, 
         subject: null,
         template: false,
+	EchoNumbers: null,
     };
 
     if(h.PatientName) {
@@ -388,6 +389,7 @@ exports.parseMeta = function(h) {
             //console.log(h.ImageType.indexOf("\\M\\"));
             //console.log(h.ImageType)
         meta.series_desc += "_M"; // this is a magnitude template so we label it as such
+	meta.EchoNumbers = h.EchoNumbers;
         }
     }
 
