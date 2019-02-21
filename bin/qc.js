@@ -141,8 +141,14 @@ function qc_one_image(image,primimage,primtemplate,cb) {
         },
 
         function(next) {
-            if (image.InstanceNumber !== primtemplate.InstanceNumber) {  // check if primary template is the header for the current image
-                get_template_image(primtemplate,image.InstanceNumber, function(err,templateheader) {
+	        var hasEchoNumbers = false;
+	        if (primtemplate.EchoNumbers !== undefined && image.EchoNumbers !== undefined && primtemplate.EchoNumbers !== image.EchoNumbers) {
+                hasEchoNumbers = true;	
+                console.log(" header has EchoNumbers that don't match --- "+ "primtemplate.EchoNumbers " +primtemplate.EchoNumbers + " image.EchoNumbers "+ image.EchoNumbers)
+            }
+
+            if ((image.InstanceNumber !== primtemplate.InstanceNumber) || hasEchoNumbers) {  // check if primary template is the header for the current image
+                get_template_image(primtemplate,image, function(err,templateheader) {
                     if (err) return next(err);
                     
                     if (templateheader) {
@@ -281,17 +287,18 @@ function find_template_primary(template,cb) {
     })
 }
 
-function get_template_image(primtemplate,InstanceNumber,cb) {
+function get_template_image(primtemplate,image,cb) {
     db.TemplateHeader.findOne({
         primary_image: primtemplate._id, 
-        InstanceNumber: InstanceNumber,
+        InstanceNumber: image.InstanceNumber,
+	    EchoNumbers: image.EchoNumbers !== undefined ? image.EchoNumbers : undefined,
     }, function(err,templateheader){
         if (err) cb(err)
         if (!templateheader) {
             //console.log("template header with instance number"  +InstanceNumber + " not found");
             cb(null);
         } else {
-            //console.log("template header with instance number"  +templateheader.InstanceNumber + " found");
+            console.log("template header with instance number"  +templateheader.InstanceNumber + " and EchoNumbers "+ templateheader.EchoNumbers+ " and image with EchoNumbers is "+ image.EchoNumbers);
             qc_funcs.instance.reconstruct_header(templateheader, primtemplate, function() {
                 cb(null,templateheader)
             })
