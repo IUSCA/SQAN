@@ -92,7 +92,7 @@ function process0(since) {
                     if(err) throw err;
                     // logger.debug("last:"+json.Last);
                     if(json.Done) setTimeout(function() { process0(json.Last)}, 1000*3);
-                    else setTimeout(function() {process0(json.Last)}, 0);
+                    else setTimeout(function() {process0(json.Last)}, 10);
                 });
             }
         } else {
@@ -120,8 +120,10 @@ function process_instance(change, next) {
             logger.error(err);
             next(err);
         } else {
+            console.time('processQC');
             incoming(json, false, function(){
                 request.del(config.orthanc.url+change.Path).on('response', function(res) {
+                    console.timeEnd('processQC');
                     next();
                 });
             });
@@ -286,11 +288,14 @@ function incoming(tags, fromFile, cb) {
             //write full header to disk, not simplified tags
             write_to_disk(newpath, path2file, tags, function(err) {
                 if(err) throw err; //let's kill the app - to alert the operator of this critical issue
-                var path2tar = newpath+".tar"
-                write_to_tar(path2tar, path2file, function(err) {
-                    if(err) throw err; //let's kill the app - to alert the operator of this critical issue
-                    next();
-                });
+                next();
+                // var path2tar = newpath+".tar"
+                // console.time('tarring');
+                // write_to_tar(path2tar, path2file, function(err) {
+                //     console.timeEnd('tarring');
+                //     if(err) throw err; //let's kill the app - to alert the operator of this critical issue
+                //     next();
+                // });
             });
         },
 
