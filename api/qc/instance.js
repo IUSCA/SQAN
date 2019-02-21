@@ -356,7 +356,7 @@ exports.parseMeta = function(h) {
         iibisid: null, 
         subject: null,
         template: false,
-	EchoNumbers: null,
+	    EchoNumbers: null,
     };
 
     if(h.PatientName) {
@@ -389,7 +389,7 @@ exports.parseMeta = function(h) {
             //console.log(h.ImageType.indexOf("\\M\\"));
             //console.log(h.ImageType)
         meta.series_desc += "_M"; // this is a magnitude template so we label it as such
-	meta.EchoNumbers = h.EchoNumbers;
+	    meta.EchoNumbers = h.EchoNumbers;
         }
     }
 
@@ -431,7 +431,7 @@ exports.compare_with_primary = function(primaryImg,h,cb) {
     for (var k in primaryImg) {     
         let v = primaryImg[k];  
         if (h.hasOwnProperty(k) && h[k] !== undefined) {
-            if (['qc_istemplate'].indexOf(k) < 0) { 
+            if (['qc_istemplate','InstanceNumber'].indexOf(k) < 0) { 
                 if (!Array.isArray(v) && !isObject(v) && h[k] === v) {  
                     //console.log('deleting field: '+k +' -- ' + h[k]);
                     delete h[k]

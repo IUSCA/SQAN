@@ -177,10 +177,11 @@ function incoming(tags, fromFile, cb) {
                 h.qc_subject = meta.subject;
                 h.qc_istemplate = meta.template;
                 h.qc_series_desc = meta.series_desc;
-		if (meta.EchoNumbers) {
-			needsEchoNumbers = true;
-			console.log("needs EchoNumbers: "+needsEchoNumbers);
-		}
+
+                if (meta.EchoNumbers !== null) {
+                    needsEchoNumbers = true;
+                    console.log("needs EchoNumbers: "+needsEchoNumbers);
+                }
                 //h.qc_series_desc_version = meta.series_desc_version;
 
                 //construct esindex
@@ -494,7 +495,7 @@ function incoming(tags, fromFile, cb) {
                                     series_id: series._id,
                                     SOPInstanceUID: h.SOPInstanceUID,
                                     InstanceNumber: h.InstanceNumber,
-				    EchoNumbers: needsEchoNumbers ? h.EchoNumbers : undefined,
+				                    EchoNumbers: needsEchoNumbers ? h.EchoNumbers : undefined,
                                     primary_image: null,
                                     headers: h
                                 }, function(err,primary_image) {
@@ -520,14 +521,14 @@ function incoming(tags, fromFile, cb) {
                                     series.qc = undefined;
                                     series.save();
                                 }
-				var echonumber = h.EchoNumbers;
+				                var echonumber = h.EchoNumbers;
                                 qc_func.instance.compare_with_primary(_primary_image.headers,h,function(){
                                     db.Image.create({
                                         series_id: series._id,
                                         SOPInstanceUID: h.SOPInstanceUID,
                                         InstanceNumber: h.InstanceNumber,
                                         EchoNumbers: needsEchoNumbers ? echonumber : undefined,
-					primary_image: _primary_image._id,
+					                    primary_image: _primary_image._id,
                                         headers:h
                                     }, function(err) {
                                         if(err) return next(err);
