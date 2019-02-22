@@ -30,27 +30,12 @@ db.init(function(err) {
     
     if (fpath && file_exists(fpath)) {
         logger.info("Running in file mode, will exit when processing is complete.");
-        // check if fpath is a file or a directory
-        if (path.extname(fpath).toString().toLowerCase() == '.json') {
-            var jsoni = validateJSON(fpath.toString());
-            if (jsoni) {                            
-                incoming(jsoni, true, function(){
-                    logger.info("Processing complete");
-                    process.exit(0);
-                });
-            }
-        }
-        else if (path.extname(fpath).toString() == '.tar') {
-            extracttarball(fpath,function(files){
-                gotoIncoming(files)
-            })
-        }
-        else {
-            filewalker(fpath, function(err, files){
-                if(err) throw err;
-                gotoIncoming(files);
-            });
-        }
+
+        filewalker2(fpath, function(err, files){
+            if(err) throw err;
+            console.log(files);
+            //gotoIncoming(files);
+        });
     } 
     else if (fpath && !file_exists(fpath)){
         logger.error("Path not found --> "+ fpath);
@@ -689,7 +674,7 @@ function gotoIncoming(filelist){
     }, function(err) {
         if(err) throw err;
         logger.info("processed "+filelist.length+ " files");
-        process.exit(0);
+        //process.exit(0);
     });
 }
 
@@ -745,4 +730,54 @@ function filewalker(dir, done) {
             });
         });
     });
+};
+
+
+function filewalker2(inputarg, done) {
+
+    let results = [];
+
+    if (path.extname(inputarg).toString().toLowerCase() == '.json') {
+        var jsoni = validateJSON(inputarg.toString());
+        if (jsoni) {                            
+            incoming(jsoni, true, function(){
+                logger.info("Processing complete");
+                //process.exit(0);
+                results.push(inputarg);
+                //if (!--pending) 
+                done(null, results);
+            });
+        }
+    }
+    else if (path.extname(inputarg).toString() == '.tar') {
+        extracttarball(inputarg,function(files){
+            gotoIncoming(files);
+            results = results.concat(files);
+            //if (!--pending) 
+            done(null, results);
+        })
+    }
+    else {        
+        fs.readdir(inputarg, function(err, list) {
+            if (err) return done(err);
+            var pending = list.length;
+            if (!pending) return done(null, results);
+            list.forEach(function(file){
+                file = path.resolve(inputarg, file);
+                //fs.stat(file, function(err, stat){
+                    // If directory, execute a recursive call
+                    //if (stat && stat.isDirectory()) {
+                        filewalker2(file, function(err, res){
+                            results = results.concat(res);
+                            //if (!--pending) done(null, results);
+                        });
+                   // } else {
+                   //    results.push(file);
+                   //     if (!--pending) done(null, results);
+                   // }
+               // });
+            });
+        });
+
+    }
 };
