@@ -371,9 +371,13 @@ function incoming(tags, fromFile, cb) {
         function(next) {
             //TODO radio_tracer should always be set for CT.. right? Should I validate?
             var radio_tracer = null;
-            if(h.RadiopharmaceuticalInformationSequence && h.RadiopharmaceuticalInformationSequence.length > 0) {
-                //AAK - h.RadiopharmaceuticalInformationSequence is an array with a single entry. Can there be more than 1 entry? - for now just pick the first one
-                radio_tracer = h.RadiopharmaceuticalInformationSequence[0].Radiopharmaceutical;
+            if(h.RadiopharmaceuticalInformationSequence) {
+                //AAK - http://dicomlookup.com/lookup.asp?sw=Tnumber&q=(0018,0031)
+                var rt = h.RadiopharmaceuticalInformationSequence[0]["0018,0031"];
+		if (rt && rt.Name == "Radiopharmaceutical"){
+			radio_tracer = rt.Value;
+			//console.log(" radio_tracer is : "+ radio_tracer);
+		}
             }
             db.Research.findOneAndUpdate({
                 IIBISID: h.qc_iibisid,
