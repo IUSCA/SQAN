@@ -730,6 +730,14 @@ function filewalker(dir, done) {
                         results = results.concat(res);
                         if (!--pending) done(null, results);
                     });
+                } else if (path.extname(file).toString() == '.tar') {
+                    console.log("file is tarball")
+                    extracttarball(file,function(files){
+                        files.forEach(function(tf) {
+                            results.push(tf);
+                            if (!--pending) done(null,results);
+                        })
+                    })
                 } else {
                     results.push(file);
                     if (!--pending) done(null, results);
