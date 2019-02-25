@@ -31,11 +31,16 @@ db.init(function(err) {
     if (fpath && file_exists(fpath)) {
         logger.info("Running in file mode, will exit when processing is complete.");
 
-        filewalker2(fpath, function(err, files){
-            if(err) throw err;
-            console.log(files);
-            //gotoIncoming(files);
-        });
+        // Run first filewalker1 which will look for tarballs and extract them;
+        // this will overwrite whatever .json files are in the directories, but the expectation is that there shouldn't be any json files because these will get cleaned out periodically. 
+        //filewalker1(fpath, function(err,files){
+            //if (err) throw err;  
+            //console.log(files);          
+            filewalker2(fpath, function(err, files){
+                if(err) throw err;
+                console.log(files);
+            });
+       // })
     } 
     else if (fpath && !file_exists(fpath)){
         logger.error("Path not found --> "+ fpath);
@@ -359,10 +364,10 @@ function incoming(tags, fromFile, cb) {
             if(h.RadiopharmaceuticalInformationSequence) {
                 //AAK - http://dicomlookup.com/lookup.asp?sw=Tnumber&q=(0018,0031)
                 var rt = h.RadiopharmaceuticalInformationSequence[0]["0018,0031"];
-		if (rt && rt.Name == "Radiopharmaceutical"){
-			radio_tracer = rt.Value;
-			//console.log(" radio_tracer is : "+ radio_tracer);
-		}
+                if (rt && rt.Name == "Radiopharmaceutical"){
+                    radio_tracer = rt.Value;
+                    //console.log(" radio_tracer is : "+ radio_tracer);
+                }
             }
             db.Research.findOneAndUpdate({
                 IIBISID: h.qc_iibisid,
@@ -551,55 +556,55 @@ function incoming(tags, fromFile, cb) {
     });
 }
 
-var series_deprecatedBy = function(series) {
-    db.Series.update({
-        exam_id: series.exam_id,
-        series_desc: series.series_desc,
-        SeriesNumber: { $lt: series.SeriesNumber },
-    }, {
-        deprecated_by: series._id,
-    },{multi: true}, function(err) {
-        if (err) logger.warn("error deprecating older series");
-        db.Series.findOne({
-            exam_id: series.exam_id,
-            series_desc: series.series_desc,
-            SeriesNumber: { $gt: series.SeriesNumber },
-        }, function(err, _series){
-            if(err) {
-                logger.warn("error deprecating current series");
-                return (null);
-            }
-            if(!_series) return (undefined); //series.deprecated_by = null;
-            if(_series) return (_series._id); //series.deprecated_by = _series._id;
-        });
-    });
+// var series_deprecatedBy = function(series) {
+//     db.Series.update({
+//         exam_id: series.exam_id,
+//         series_desc: series.series_desc,
+//         SeriesNumber: { $lt: series.SeriesNumber },
+//     }, {
+//         deprecated_by: series._id,
+//     },{multi: true}, function(err) {
+//         if (err) logger.warn("error deprecating older series");
+//         db.Series.findOne({
+//             exam_id: series.exam_id,
+//             series_desc: series.series_desc,
+//             SeriesNumber: { $gt: series.SeriesNumber },
+//         }, function(err, _series){
+//             if(err) {
+//                 logger.warn("error deprecating current series");
+//                 return (null);
+//             }
+//             if(!_series) return (undefined); //series.deprecated_by = null;
+//             if(_series) return (_series._id); //series.deprecated_by = _series._id;
+//         });
+//     });
 
-}
+// }
 
-var template_deprecatedBy = function(template) {
-    db.Template.update({
-        exam_id: template.exam_id,
-        series_desc: template.series_desc,
-        SeriesNumber: { $lt: template.SeriesNumber },
-    }, {
-        deprecated_by: template._id,
-    },{multi: true}, function(err,numdeprecated) {
-        if (err) logger.warn("error deprecating older template");
-        console.log(numdeprecated);
-        db.Template.findOne({
-            exam_id: template.exam_id,
-            series_desc: template.series_desc,
-            SeriesNumber: { $gt: template.SeriesNumber },
-        }, function(err, _template){
-            if(err) {
-                logger.warn("error deprecating current series");
-                return (null);
-            }
-            if(!_template) return (undefined); //series.deprecated_by = null;
-            if(_template) return (_template._id); //series.deprecated_by = _series._id;
-        });
-    });
-}
+// var template_deprecatedBy = function(template) {
+//     db.Template.update({
+//         exam_id: template.exam_id,
+//         series_desc: template.series_desc,
+//         SeriesNumber: { $lt: template.SeriesNumber },
+//     }, {
+//         deprecated_by: template._id,
+//     },{multi: true}, function(err,numdeprecated) {
+//         if (err) logger.warn("error deprecating older template");
+//         console.log(numdeprecated);
+//         db.Template.findOne({
+//             exam_id: template.exam_id,
+//             series_desc: template.series_desc,
+//             SeriesNumber: { $gt: template.SeriesNumber },
+//         }, function(err, _template){
+//             if(err) {
+//                 logger.warn("error deprecating current series");
+//                 return (null);
+//             }
+//             if(!_template) return (undefined); //series.deprecated_by = null;
+//             if(_template) return (_template._id); //series.deprecated_by = _series._id;
+//         });
+//     });
+// }
 
 function checkDeprecated(doc, isTemplate, cb) {
     var mod = db.Series;
@@ -628,10 +633,10 @@ function checkDeprecated(doc, isTemplate, cb) {
             }
             doc.save();
             cb();
-
         });
     });
 }
+
 
 function write_to_tar(path2tar, path2file, cb) {
     tar.u({file: path2tar},[path2file]
@@ -645,20 +650,9 @@ function write_to_disk(dir, filepath, h, cb) {
     fs.writeFile(filepath, JSON.stringify(h), cb);
 }
 
-function extracttarball(path2tar,cb){
-    var extr = [];
-    tar.x({
-        file: path2tar,
-        cwd: "/",
-        onentry: entry => {
-            extr.push("/"+entry.path);
-        }
-    }).then(function(){
-        cb(extr)
-    })
-}
 
-function gotoIncoming(filelist){
+
+function batch2Incoming(filelist){
 
     async.eachSeries(filelist, function(f, next) {
 
@@ -700,7 +694,105 @@ var file_exists = function(filePath){
 }
 
 
+function filewalker2(inputarg, done) {
+
+    let results = [];
+
+    if (path.extname(inputarg).toString().toLowerCase() == '.json') {
+        var jsoni = validateJSON(inputarg.toString());
+        if (jsoni) {                            
+            incoming(jsoni, true, function(){
+                logger.info("Processing complete");
+                //process.exit(0);
+                results.push(inputarg);
+                //if (!--pending) 
+                done(null, results);
+            });
+        } else done(null,null);
+    }
+    // else if (path.extname(inputarg).toString() == '.tar') {
+    //     extracttarball(inputarg,function(files){
+    //         batch2Incoming(files);
+    //         results = results.concat(files);
+    //         //if (!--pending) 
+    //         done(null, results);
+    //     })
+    // }
+    else {    
+        fs.stat(inputarg, function(err, stat){
+            // If directory, execute a recursive call
+            if (stat && stat.isDirectory()) {    
+                fs.readdir(inputarg, function(err, list) {
+                    if (err) return done(err);
+                    if (list.length == 0) return done(null, results);
+                    list.forEach(function(file){
+                        file = path.resolve(inputarg, file);
+                        console.log(file);
+                        //fs.stat(file, function(err, stat){
+                            // If directory, execute a recursive call
+                            //if (stat && stat.isDirectory()) {
+                                filewalker2(file, function(err, res){
+                                    results = results.concat(res);
+                                    //if (!--pending) done(null, results);
+                                });
+                        // } else {
+                        //    results.push(file);
+                        //     if (!--pending) done(null, results);
+                        // }
+                    // });
+                    });
+                });
+            } else return done(null, results);
+        });
+    }
+};
+
+function filewalker1(inputarg, done) {
+
+    let results = [];
+
+    if (path.extname(inputarg).toString() == '.tar') {
+        extracttarball(inputarg,function(files){
+            results = results.concat(files);
+            done(null, results);
+        })
+    }
+    else {  
+        fs.stat(inputarg, function(err, stat){
+            // If directory, execute a recursive call
+            if (stat && stat.isDirectory()) {      
+                fs.readdir(inputarg, function(err, list) {
+                    if (err) return done(err);
+                    if (list.length == 0) return done(null, results);
+                    list.forEach(function(file){
+                        file = path.resolve(inputarg, file);
+                        filewalker1(file, function(err, res){
+                            results = results.concat(res);
+                        });
+                    });
+                });
+            } else return done(null, results);
+        });
+    }
+};
+
+
+
+function extracttarball(path2tar,cb){
+    var extr = [];
+    tar.x({
+        file: path2tar,
+        cwd: "/",
+        onentry: entry => {
+            extr.push("/"+entry.path);
+        }
+    }).then(function(){
+        cb(extr)
+    })
+}
+
 function filewalker(dir, done) {
+
     let results = [];
     fs.readdir(dir, function(err, list) {
         if (err) return done(err);
@@ -730,54 +822,4 @@ function filewalker(dir, done) {
             });
         });
     });
-};
-
-
-function filewalker2(inputarg, done) {
-
-    let results = [];
-
-    if (path.extname(inputarg).toString().toLowerCase() == '.json') {
-        var jsoni = validateJSON(inputarg.toString());
-        if (jsoni) {                            
-            incoming(jsoni, true, function(){
-                logger.info("Processing complete");
-                //process.exit(0);
-                results.push(inputarg);
-                //if (!--pending) 
-                done(null, results);
-            });
-        }
-    }
-    else if (path.extname(inputarg).toString() == '.tar') {
-        extracttarball(inputarg,function(files){
-            gotoIncoming(files);
-            results = results.concat(files);
-            //if (!--pending) 
-            done(null, results);
-        })
-    }
-    else {        
-        fs.readdir(inputarg, function(err, list) {
-            if (err) return done(err);
-            var pending = list.length;
-            if (!pending) return done(null, results);
-            list.forEach(function(file){
-                file = path.resolve(inputarg, file);
-                //fs.stat(file, function(err, stat){
-                    // If directory, execute a recursive call
-                    //if (stat && stat.isDirectory()) {
-                        filewalker2(file, function(err, res){
-                            results = results.concat(res);
-                            //if (!--pending) done(null, results);
-                        });
-                   // } else {
-                   //    results.push(file);
-                   //     if (!--pending) done(null, results);
-                   // }
-               // });
-            });
-        });
-
-    }
 };
