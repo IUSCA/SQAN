@@ -225,7 +225,7 @@ function unQc_series(series_id,new_event,cb) {
         }, {$unset:{qc:1},qc1_state:"re-qcing", $push: { events: new_event }}, 
         function(err) {   
             if(err) return cb(err);
-            // deprecate all images in that series
+            // deprecate all images in that series so that they can be overwritten
             db.Image.deleteMany({
                 series_id: series._id,
             }, function(err) {
@@ -313,11 +313,11 @@ function delete_and_move(path,type,cb) {
         fs.rename(file2rename,config.cleaner.deleted_headers+"/"+path+"/"+type+"_"+timestamp+".tar", function(err) {
             if (err) return cb(err);
             console.log("deleting files in directory -- "+config.cleaner.raw_headers+"/"+path)
-            rimraf(config.cleaner.raw_headers+"/"+path+"/*", function (err) { 
-                if (err) return cb(err);
+            //rimraf(config.cleaner.raw_headers+"/"+path+"/*", function (err) { 
+                //if (err) return cb(err);
                 tar.c({file: file2rename},['/dev/null']
                     ).then(cb);
-            });
+            //});
         });
     } else {
         //console.log(file2rename+ " does not exist but it shoud.... ");
