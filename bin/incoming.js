@@ -650,8 +650,10 @@ function write_to_disk(dir, filepath, h, cb) {
     fs.writeFile(filepath, JSON.stringify(h), cb);
 }
 
+
 function filewalker(dir, done) {
     let results = [];
+    results.push(dir);
     fs.readdir(dir, function(err, list) {
         if (err) return done(err);
         var pending = list.length;
