@@ -30,17 +30,17 @@ db.init(function(err) {
     
     if (fpath && file_exists(fpath)) {
         logger.info("Running in file mode, will exit when processing is complete.");
-
-        // Run first filewalker1 which will look for tarballs and extract them;
-        // this will overwrite whatever .json files are in the directories, but the expectation is that there shouldn't be any json files because these will get cleaned out periodically. 
-        //filewalker1(fpath, function(err,files){
-            //if (err) throw err;  
-            //console.log(files);          
-            filewalker2(fpath, function(err, files){
-                if(err) throw err;
-                console.log(files);
-            });
-       // })
+ 
+        filewalker(fpath, function(err,dirs){
+            if (err) throw err;  
+            dirs.forEach(function(dir){
+                dir2Incoming(dir) //,function(err){
+                //     if (err) throw err;
+                //     console.log("directory processed -- "+dir);
+                // });
+            })  
+            //db.disconnect(function(){})       
+       })
     } 
     else if (fpath && !file_exists(fpath)){
         logger.error("Path not found --> "+ fpath);
@@ -650,7 +650,66 @@ function write_to_disk(dir, filepath, h, cb) {
     fs.writeFile(filepath, JSON.stringify(h), cb);
 }
 
+function filewalker(dir, done) {
+    let results = [];
+    fs.readdir(dir, function(err, list) {
+        if (err) return done(err);
+        var pending = list.length;
+        if (!pending) return done(null, results);
+        list.forEach(function(file){
+            file = path.resolve(dir, file);
+            fs.stat(file, function(err, stat){
+                if (stat && stat.isDirectory()) {
+                    // Add directory to array 
+                    results.push(file);
+                    filewalker(file, function(err, res){
+                        results = results.concat(res);
+                        if (!--pending) done(null, results);
+                    });
+                } else {
+                    //results.push(file);
+                    if (!--pending) done(null, results);
+                }
+            });
+        });
+    });
+};
 
+
+function dir2Incoming(dir){ //}, cb){
+
+    filelist = fs.readdirSync(dir);
+    //console.log(filelist);
+    var numJson=0;
+    filelist.forEach(function(file){
+        file = path.resolve(dir, file);
+        var jsoni = validateJSON(file.toString());
+        if (jsoni) {
+            incoming(jsoni, true, function(){
+                numJson++;
+                console.log(file +" --> processed!!");
+            });
+        }
+    });
+    console.log(numJson);
+    // async.eachSeries(filelist, function(file, next) {  
+    //     //console.log("file --  " +file);      
+    //     var jsoni = validateJSON(file.toString());
+    //     if (jsoni) {
+    //         incoming(jsoni, true, function(){
+    //             console.log(file +" --> processed!!");
+    //             next();
+    //         });
+    //     } else {
+    //         next();
+    //     }
+    // }, function(err) {
+    //     if(err) cb(err);
+    //     logger.info("processed "+filelist.length+ " files");
+    //     cb()
+    //     //process.exit(0);
+    // });
+}
 
 function batch2Incoming(filelist){
 
@@ -694,90 +753,6 @@ var file_exists = function(filePath){
 }
 
 
-function filewalker2(inputarg, done) {
-
-    let results = [];
-
-    if (path.extname(inputarg).toString().toLowerCase() == '.json') {
-        var jsoni = validateJSON(inputarg.toString());
-        if (jsoni) {                            
-            incoming(jsoni, true, function(){
-                logger.info("Processing complete");
-                //process.exit(0);
-                results.push(inputarg);
-                //if (!--pending) 
-                done(null, results);
-            });
-        } else done(null,null);
-    }
-    // else if (path.extname(inputarg).toString() == '.tar') {
-    //     extracttarball(inputarg,function(files){
-    //         batch2Incoming(files);
-    //         results = results.concat(files);
-    //         //if (!--pending) 
-    //         done(null, results);
-    //     })
-    // }
-    else {    
-        fs.stat(inputarg, function(err, stat){
-            // If directory, execute a recursive call
-            if (stat && stat.isDirectory()) {    
-                fs.readdir(inputarg, function(err, list) {
-                    if (err) return done(err);
-                    if (list.length == 0) return done(null, results);
-                    list.forEach(function(file){
-                        file = path.resolve(inputarg, file);
-                        console.log(file);
-                        //fs.stat(file, function(err, stat){
-                            // If directory, execute a recursive call
-                            //if (stat && stat.isDirectory()) {
-                                filewalker2(file, function(err, res){
-                                    results = results.concat(res);
-                                    //if (!--pending) done(null, results);
-                                });
-                        // } else {
-                        //    results.push(file);
-                        //     if (!--pending) done(null, results);
-                        // }
-                    // });
-                    });
-                });
-            } else return done(null, results);
-        });
-    }
-};
-
-function filewalker1(inputarg, done) {
-
-    let results = [];
-
-    if (path.extname(inputarg).toString() == '.tar') {
-        extracttarball(inputarg,function(files){
-            results = results.concat(files);
-            done(null, results);
-        })
-    }
-    else {  
-        fs.stat(inputarg, function(err, stat){
-            // If directory, execute a recursive call
-            if (stat && stat.isDirectory()) {      
-                fs.readdir(inputarg, function(err, list) {
-                    if (err) return done(err);
-                    if (list.length == 0) return done(null, results);
-                    list.forEach(function(file){
-                        file = path.resolve(inputarg, file);
-                        filewalker1(file, function(err, res){
-                            results = results.concat(res);
-                        });
-                    });
-                });
-            } else return done(null, results);
-        });
-    }
-};
-
-
-
 function extracttarball(path2tar,cb){
     var extr = [];
     tar.x({
@@ -791,35 +766,3 @@ function extracttarball(path2tar,cb){
     })
 }
 
-function filewalker(dir, done) {
-
-    let results = [];
-    fs.readdir(dir, function(err, list) {
-        if (err) return done(err);
-        var pending = list.length;
-        if (!pending) return done(null, results);
-        list.forEach(function(file){
-            file = path.resolve(dir, file);
-            fs.stat(file, function(err, stat){
-                // If directory, execute a recursive call
-                if (stat && stat.isDirectory()) {
-                    filewalker(file, function(err, res){
-                        results = results.concat(res);
-                        if (!--pending) done(null, results);
-                    });
-                } else if (path.extname(file).toString() == '.tar') {
-                    console.log("file is tarball")
-                    extracttarball(file,function(files){
-                        files.forEach(function(tf) {
-                            results.push(tf);
-                            if (!--pending) done(null,results);
-                        })
-                    })
-                } else {
-                    results.push(file);
-                    if (!--pending) done(null, results);
-                }
-            });
-        });
-    });
-};
