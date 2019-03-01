@@ -681,54 +681,22 @@ function filewalker(dir, done) {
 function dir2Incoming(dir){ //}, cb){
 
     filelist = fs.readdirSync(dir);
-    //console.log(filelist);
-    var numJson=0;
-    filelist.forEach(function(file){
-        file = path.resolve(dir, file);
+    async.eachSeries(filelist, function(file, next) {  
+        //console.log("file --  " +file);  
+        file = path.resolve(dir, file);    
         var jsoni = validateJSON(file.toString());
         if (jsoni) {
             incoming(jsoni, true, function(){
-                numJson++;
                 console.log(file +" --> processed!!");
-            });
-        }
-    });
-    console.log(numJson);
-    // async.eachSeries(filelist, function(file, next) {  
-    //     //console.log("file --  " +file);      
-    //     var jsoni = validateJSON(file.toString());
-    //     if (jsoni) {
-    //         incoming(jsoni, true, function(){
-    //             console.log(file +" --> processed!!");
-    //             next();
-    //         });
-    //     } else {
-    //         next();
-    //     }
-    // }, function(err) {
-    //     if(err) cb(err);
-    //     logger.info("processed "+filelist.length+ " files");
-    //     cb()
-    //     //process.exit(0);
-    // });
-}
-
-function batch2Incoming(filelist){
-
-    async.eachSeries(filelist, function(f, next) {
-
-        var jsoni = validateJSON(f.toString());
-        if (jsoni) {
-            incoming(jsoni, true, function(){
-                // console.log(f +" --> processed!!");
                 next();
             });
         } else {
             next();
         }
     }, function(err) {
-        if(err) throw err;
+        if(err) cb(err);
         logger.info("processed "+filelist.length+ " files");
+        //cb()
         //process.exit(0);
     });
 }
