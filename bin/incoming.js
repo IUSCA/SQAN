@@ -36,9 +36,11 @@ db.init(function(err) {
         //filewalker1(fpath, function(err,files){
             //if (err) throw err;  
             //console.log(files);          
-            filewalker2(fpath, function(err, files){
+            filewalker2(fpath, function(err){
                 if(err) throw err;
-                console.log(files);
+		//console.log("DONE!!");
+		//process.exit(0);
+                //console.log(files);
             });
        // })
     } 
@@ -696,19 +698,19 @@ var file_exists = function(filePath){
 
 function filewalker2(inputarg, done) {
 
-    let results = [];
+   // let results = [];
 
     if (path.extname(inputarg).toString().toLowerCase() == '.json') {
         var jsoni = validateJSON(inputarg.toString());
         if (jsoni) {                            
             incoming(jsoni, true, function(){
-                logger.info("Processing complete");
+            logger.info("Processing complete");
                 //process.exit(0);
-                results.push(inputarg);
+                //results.push(inputarg);
                 //if (!--pending) 
-                done(null, results);
+                done(null);
             });
-        } else done(null,null);
+        } else done(null);
     }
     // else if (path.extname(inputarg).toString() == '.tar') {
     //     extracttarball(inputarg,function(files){
@@ -724,17 +726,14 @@ function filewalker2(inputarg, done) {
             if (stat && stat.isDirectory()) {    
                 fs.readdir(inputarg, function(err, list) {
                     if (err) return done(err);
-                    if (list.length == 0) return done(null, results);
+                    if (list.length == 0) return done(null);
                     list.forEach(function(file){
                         file = path.resolve(inputarg, file);
                         console.log(file);
                         //fs.stat(file, function(err, stat){
                             // If directory, execute a recursive call
                             //if (stat && stat.isDirectory()) {
-                                filewalker2(file, function(err, res){
-                                    results = results.concat(res);
-                                    //if (!--pending) done(null, results);
-                                });
+                                filewalker2(file,done);
                         // } else {
                         //    results.push(file);
                         //     if (!--pending) done(null, results);
@@ -742,7 +741,7 @@ function filewalker2(inputarg, done) {
                     // });
                     });
                 });
-            } else return done(null, results);
+            } else return done(null);
         });
     }
 };
