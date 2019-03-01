@@ -27,23 +27,21 @@ db.init(function(err) {
     // process.argv.forEach((val, index) => {console.log(`${index}: ${val}`);});
 
     var fpath = process.argv.slice(2).toString();
-    
+
     if (fpath && file_exists(fpath)) {
         logger.info("Running in file mode, will exit when processing is complete.");
 
-        // Run first filewalker1 which will look for tarballs and extract them;
-        // this will overwrite whatever .json files are in the directories, but the expectation is that there shouldn't be any json files because these will get cleaned out periodically. 
-        //filewalker1(fpath, function(err,files){
-            //if (err) throw err;  
-            //console.log(files);          
-            filewalker2(fpath, function(err){
-                if(err) throw err;
-		//console.log("DONE!!");
-		//process.exit(0);
-                //console.log(files);
-            });
-       // })
-    } 
+        filewalker(fpath, function(err,dirs){
+            if (err) throw err;
+            dirs.forEach(function(dir){
+                dir2Incoming(dir) //,function(err){
+                //     if (err) throw err;
+                //     console.log("directory processed -- "+dir);
+                // });
+            })
+            //db.disconnect(function(){})
+        })
+    }
     else if (fpath && !file_exists(fpath)){
         logger.error("Path not found --> "+ fpath);
         process.exit(0);
@@ -52,7 +50,7 @@ db.init(function(err) {
         logger.info("Running in batch mode");
         process0(0)
     }
-   
+
 });
 
 var process_loop = 0;
@@ -149,7 +147,7 @@ function incoming(tags, fromFile, cb) {
         },
 
         //process tags into key/value pairs for database
-        function(next) {  
+        function(next) {
             if (isHeader) return next();
             async.each(tags, function(tag, _cb) {
                 h[tag.Name] = tag.Value;
@@ -260,10 +258,10 @@ function incoming(tags, fromFile, cb) {
                         if (err) return next(err);
 
                         if (fromFile) return next();
-                            
+
                         qc_func.series.deprecate_series(h, 'overwritten',function(err){
                             if (err) return next(err);
-                                return next()
+                            return next()
                         })
                     })
 
@@ -491,7 +489,7 @@ function incoming(tags, fromFile, cb) {
                                     series_id: series._id,
                                     SOPInstanceUID: h.SOPInstanceUID,
                                     InstanceNumber: h.InstanceNumber,
-				                    EchoNumbers: needsEchoNumbers ? h.EchoNumbers : undefined,
+                                    EchoNumbers: needsEchoNumbers ? h.EchoNumbers : undefined,
                                     primary_image: null,
                                     headers: h
                                 }, function(err,primary_image) {
@@ -517,14 +515,14 @@ function incoming(tags, fromFile, cb) {
                                     series.qc = undefined;
                                     series.save();
                                 }
-				                var echonumber = h.EchoNumbers;
+                                var echonumber = h.EchoNumbers;
                                 qc_func.instance.compare_with_primary(_primary_image.headers,h,function(){
                                     db.Image.create({
                                         series_id: series._id,
                                         SOPInstanceUID: h.SOPInstanceUID,
                                         InstanceNumber: h.InstanceNumber,
                                         EchoNumbers: needsEchoNumbers ? echonumber : undefined,
-					                    primary_image: _primary_image._id,
+                                        primary_image: _primary_image._id,
                                         headers:h
                                     }, function(err) {
                                         if(err) return next(err);
@@ -653,6 +651,67 @@ function write_to_disk(dir, filepath, h, cb) {
 }
 
 
+function filewalker(dir, done) {
+    let results = [];
+    results.push(dir);
+    fs.readdir(dir, function(err, list) {
+        if (err) return done(err);
+        var pending = list.length;
+        if (!pending) return done(null, results);
+        list.forEach(function(file){
+            file = path.resolve(dir, file);
+            fs.stat(file, function(err, stat){
+                if (stat && stat.isDirectory()) {
+                    // Add directory to array
+                    results.push(file);
+                    filewalker(file, function(err, res){
+                        results = results.concat(res);
+                        if (!--pending) done(null, results);
+                    });
+                } else {
+                    //results.push(file);
+                    if (!--pending) done(null, results);
+                }
+            });
+        });
+    });
+};
+
+
+function dir2Incoming(dir){ //}, cb){
+
+    filelist = fs.readdirSync(dir);
+    //console.log(filelist);
+    var numJson=0;
+    filelist.forEach(function(file){
+        file = path.resolve(dir, file);
+        var jsoni = validateJSON(file.toString());
+        if (jsoni) {
+            incoming(jsoni, true, function(){
+                numJson++;
+                console.log(file +" --> processed!!");
+            });
+        }
+    });
+    console.log(numJson);
+    // async.eachSeries(filelist, function(file, next) {
+    //     //console.log("file --  " +file);
+    //     var jsoni = validateJSON(file.toString());
+    //     if (jsoni) {
+    //         incoming(jsoni, true, function(){
+    //             console.log(file +" --> processed!!");
+    //             next();
+    //         });
+    //     } else {
+    //         next();
+    //     }
+    // }, function(err) {
+    //     if(err) cb(err);
+    //     logger.info("processed "+filelist.length+ " files");
+    //     cb()
+    //     //process.exit(0);
+    // });
+}
 
 function batch2Incoming(filelist){
 
@@ -676,7 +735,7 @@ function batch2Incoming(filelist){
 
 
 function validateJSON(filePath) {
-     try {
+    try {
         var json = JSON.parse(fs.readFileSync(filePath, 'utf8'));
         //console.log(json);
         return json;
@@ -690,91 +749,10 @@ var file_exists = function(filePath){
         if (fs.existsSync(filePath)) {
             return true;
         }
-      } catch(err) {
+    } catch(err) {
         return false;
-      }
+    }
 }
-
-
-function filewalker2(inputarg, done) {
-
-   // let results = [];
-
-    if (path.extname(inputarg).toString().toLowerCase() == '.json') {
-        var jsoni = validateJSON(inputarg.toString());
-        if (jsoni) {                            
-            incoming(jsoni, true, function(){
-            logger.info("Processing complete");
-                //process.exit(0);
-                //results.push(inputarg);
-                //if (!--pending) 
-                done(null);
-            });
-        } else done(null);
-    }
-    // else if (path.extname(inputarg).toString() == '.tar') {
-    //     extracttarball(inputarg,function(files){
-    //         batch2Incoming(files);
-    //         results = results.concat(files);
-    //         //if (!--pending) 
-    //         done(null, results);
-    //     })
-    // }
-    else {    
-        fs.stat(inputarg, function(err, stat){
-            // If directory, execute a recursive call
-            if (stat && stat.isDirectory()) {    
-                fs.readdir(inputarg, function(err, list) {
-                    if (err) return done(err);
-                    if (list.length == 0) return done(null);
-                    list.forEach(function(file){
-                        file = path.resolve(inputarg, file);
-                        console.log(file);
-                        //fs.stat(file, function(err, stat){
-                            // If directory, execute a recursive call
-                            //if (stat && stat.isDirectory()) {
-                                filewalker2(file,done);
-                        // } else {
-                        //    results.push(file);
-                        //     if (!--pending) done(null, results);
-                        // }
-                    // });
-                    });
-                });
-            } else return done(null);
-        });
-    }
-};
-
-function filewalker1(inputarg, done) {
-
-    let results = [];
-
-    if (path.extname(inputarg).toString() == '.tar') {
-        extracttarball(inputarg,function(files){
-            results = results.concat(files);
-            done(null, results);
-        })
-    }
-    else {  
-        fs.stat(inputarg, function(err, stat){
-            // If directory, execute a recursive call
-            if (stat && stat.isDirectory()) {      
-                fs.readdir(inputarg, function(err, list) {
-                    if (err) return done(err);
-                    if (list.length == 0) return done(null, results);
-                    list.forEach(function(file){
-                        file = path.resolve(inputarg, file);
-                        filewalker1(file, function(err, res){
-                            results = results.concat(res);
-                        });
-                    });
-                });
-            } else return done(null, results);
-        });
-    }
-};
-
 
 
 function extracttarball(path2tar,cb){
@@ -789,36 +767,3 @@ function extracttarball(path2tar,cb){
         cb(extr)
     })
 }
-
-function filewalker(dir, done) {
-
-    let results = [];
-    fs.readdir(dir, function(err, list) {
-        if (err) return done(err);
-        var pending = list.length;
-        if (!pending) return done(null, results);
-        list.forEach(function(file){
-            file = path.resolve(dir, file);
-            fs.stat(file, function(err, stat){
-                // If directory, execute a recursive call
-                if (stat && stat.isDirectory()) {
-                    filewalker(file, function(err, res){
-                        results = results.concat(res);
-                        if (!--pending) done(null, results);
-                    });
-                } else if (path.extname(file).toString() == '.tar') {
-                    console.log("file is tarball")
-                    extracttarball(file,function(files){
-                        files.forEach(function(tf) {
-                            results.push(tf);
-                            if (!--pending) done(null,results);
-                        })
-                    })
-                } else {
-                    results.push(file);
-                    if (!--pending) done(null, results);
-                }
-            });
-        });
-    });
-};
