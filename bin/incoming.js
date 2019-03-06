@@ -27,31 +27,21 @@ db.init(function(err) {
     // process.argv.forEach((val, index) => {console.log(`${index}: ${val}`);});
 
     var fpath = process.argv.slice(2).toString();
-    
+
     if (fpath && file_exists(fpath)) {
         logger.info("Running in file mode, will exit when processing is complete.");
-        // check if fpath is a file or a directory
-        if (path.extname(fpath).toString().toLowerCase() == '.json') {
-            var jsoni = validateJSON(fpath.toString());
-            if (jsoni) {                            
-                incoming(jsoni, true, function(){
-                    logger.info("Processing complete");
-                    process.exit(0);
-                });
-            }
-        }
-        else if (path.extname(fpath).toString() == '.tar') {
-            extracttarball(fpath,function(files){
-                gotoIncoming(files)
+
+        filewalker(fpath, function(err,dirs){
+            if (err) throw err;
+            dirs.forEach(function(dir){
+                dir2Incoming(dir) //,function(err){
+                //     if (err) throw err;
+                //   console.log("directory processed -- "+dir);
+                // });
             })
-        }
-        else {
-            filewalker(fpath, function(err, files){
-                if(err) throw err;
-                gotoIncoming(files);
-            });
-        }
-    } 
+            //db.disconnect(function(){})
+        })
+    }
     else if (fpath && !file_exists(fpath)){
         logger.error("Path not found --> "+ fpath);
         process.exit(0);
@@ -60,7 +50,7 @@ db.init(function(err) {
         logger.info("Running in batch mode");
         process0(0)
     }
-   
+
 });
 
 var process_loop = 0;
@@ -157,7 +147,7 @@ function incoming(tags, fromFile, cb) {
         },
 
         //process tags into key/value pairs for database
-        function(next) {  
+        function(next) {
             if (isHeader) return next();
             async.each(tags, function(tag, _cb) {
                 h[tag.Name] = tag.Value;
@@ -204,39 +194,40 @@ function incoming(tags, fromFile, cb) {
                 if (err) return next(err);
                 if (repeated_header) {
 
-
-                    logger.info(h.SOPInstanceUID+ " --Repeated template header identified");
-                    logger.info("Archiving and deprecating qc state of qc-ed series");
-
-                    // check if this template is used for QC
-                    db.Template.findOne({_id:repeated_header.template_id},function(err,template){
-                        if (err) return next(err);
-
-                        db.Series.find({"qc.template_id":template._id}).count(function (err, usedInQC) {
-                            if (err) return next(err);
-
-                            if (usedInQC == 0) {
-
-                                qc_func.series.deprecate_series(h, 'overwritten',function(err){
-                                    if (err) return next(err);
-
-                                    var new_event = {
-                                        service_id: 'incoming', //if event was performeed by a system, this is set
-                                        title: 'Template Overwritten',
-                                        detail: {},
-                                        date: new Date()
-                                    }
-
-                                    qc_func.series.overwritte_template(repeated_header.template_id,new_event,function(err) {
-                                        if (err) return next(err);
-                                        return next()
-                                    })
-                                })
-                            } else {
-                                return next("Cannot overwrite template -- it is currently used to QC "+usedInQC+ " series");
-                            }
-                        })
-                    })
+                    //temporarily stopping deprecation TODO REVISIT THIS
+                    next('duplicate');
+                    // logger.info(h.SOPInstanceUID+ " --Repeated template header identified");
+                    // logger.info("Archiving and deprecating qc state of qc-ed series");
+                    //
+                    // // check if this template is used for QC
+                    // db.Template.findOne({_id:repeated_header.template_id},function(err,template){
+                    //     if (err) return next(err);
+                    //
+                    //     db.Series.find({"qc.template_id":template._id}).count(function (err, usedInQC) {
+                    //         if (err) return next(err);
+                    //
+                    //         if (usedInQC == 0) {
+                    //
+                    //             qc_func.series.deprecate_series(h, 'overwritten',function(err){
+                    //                 if (err) return next(err);
+                    //
+                    //                 var new_event = {
+                    //                     service_id: 'incoming', //if event was performeed by a system, this is set
+                    //                     title: 'Template Overwritten',
+                    //                     detail: {},
+                    //                     date: new Date()
+                    //                 }
+                    //
+                    //                 qc_func.series.overwritte_template(repeated_header.template_id,new_event,function(err) {
+                    //                     if (err) return next(err);
+                    //                     return next()
+                    //                 })
+                    //             })
+                    //         } else {
+                    //             return next("Cannot overwrite template -- it is currently used to QC "+usedInQC+ " series");
+                    //         }
+                    //     })
+                    // })
                 } else {
                     next();
                 }
@@ -254,26 +245,28 @@ function incoming(tags, fromFile, cb) {
                 if (err) return next(err);
                 if (repeated_header) {
 
-                    logger.info(h.SOPInstanceUID+ " --Repeated image header identified");
-                    logger.info("Archiving and deprecating qc state of series");
-
-                    var new_event = {
-                        service_id: 'incoming', //if event was performeed by a system, this is set
-                        title: 'Series Overwritten',
-                        detail: {},
-                        date: new Date()
-                    }
-
-                    qc_func.series.unQc_series(repeated_header.series_id,new_event,function(err) {
-                        if (err) return next(err);
-
-                        if (fromFile) return next();
-                            
-                        qc_func.series.deprecate_series(h, 'overwritten',function(err){
-                            if (err) return next(err);
-                                return next()
-                        })
-                    })
+                    //temporarily stopping deprecation TODO REVISIT THIS
+                    next('duplicate');
+                    // logger.info(h.SOPInstanceUID+ " --Repeated image header identified");
+                    // logger.info("Archiving and deprecating qc state of series");
+                    //
+                    // var new_event = {
+                    //     service_id: 'incoming', //if event was performeed by a system, this is set
+                    //     title: 'Series Overwritten',
+                    //     detail: {},
+                    //     date: new Date()
+                    // }
+                    //
+                    // qc_func.series.unQc_series(repeated_header.series_id,new_event,function(err) {
+                    //     if (err) return next(err);
+                    //
+                    //     if (fromFile) return next();
+                    //
+                    //     qc_func.series.deprecate_series(h, 'overwritten',function(err){
+                    //         if (err) return next(err);
+                    //         return next()
+                    //     })
+                    // })
 
                 } else {;
                     next();
@@ -371,9 +364,13 @@ function incoming(tags, fromFile, cb) {
         function(next) {
             //TODO radio_tracer should always be set for CT.. right? Should I validate?
             var radio_tracer = null;
-            if(h.RadiopharmaceuticalInformationSequence && h.RadiopharmaceuticalInformationSequence.length > 0) {
-                //AAK - h.RadiopharmaceuticalInformationSequence is an array with a single entry. Can there be more than 1 entry? - for now just pick the first one
-                radio_tracer = h.RadiopharmaceuticalInformationSequence[0].Radiopharmaceutical;
+            if(h.RadiopharmaceuticalInformationSequence) {
+                //AAK - http://dicomlookup.com/lookup.asp?sw=Tnumber&q=(0018,0031)
+                var rt = h.RadiopharmaceuticalInformationSequence[0]["0018,0031"];
+                if (rt && rt.Name == "Radiopharmaceutical"){
+                    radio_tracer = rt.Value;
+                    //console.log(" radio_tracer is : "+ radio_tracer);
+                }
             }
             db.Research.findOneAndUpdate({
                 IIBISID: h.qc_iibisid,
@@ -495,7 +492,7 @@ function incoming(tags, fromFile, cb) {
                                     series_id: series._id,
                                     SOPInstanceUID: h.SOPInstanceUID,
                                     InstanceNumber: h.InstanceNumber,
-				                    EchoNumbers: needsEchoNumbers ? h.EchoNumbers : undefined,
+                                    EchoNumbers: needsEchoNumbers ? h.EchoNumbers : undefined,
                                     primary_image: null,
                                     headers: h
                                 }, function(err,primary_image) {
@@ -521,14 +518,14 @@ function incoming(tags, fromFile, cb) {
                                     series.qc = undefined;
                                     series.save();
                                 }
-				                var echonumber = h.EchoNumbers;
+                                var echonumber = h.EchoNumbers;
                                 qc_func.instance.compare_with_primary(_primary_image.headers,h,function(){
                                     db.Image.create({
                                         series_id: series._id,
                                         SOPInstanceUID: h.SOPInstanceUID,
                                         InstanceNumber: h.InstanceNumber,
                                         EchoNumbers: needsEchoNumbers ? echonumber : undefined,
-					                    primary_image: _primary_image._id,
+                                        primary_image: _primary_image._id,
                                         headers:h
                                     }, function(err) {
                                         if(err) return next(err);
@@ -548,7 +545,7 @@ function incoming(tags, fromFile, cb) {
         if(err) {
             logger.error(err);
             h.qc_err = err;
-            // conn.publish(config.cleaner.failed_q, h); //publishing to default exchange can't be confirmed?
+            // // conn.publish(config.cleaner.failed_q, h); //publishing to default exchange can't be confirmed?
             var newpath = config.cleaner.failed_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
             var path2file = newpath+"/"+h.SOPInstanceUID+".json"
             write_to_disk(newpath, path2file, h, function(err) {
@@ -562,55 +559,55 @@ function incoming(tags, fromFile, cb) {
     });
 }
 
-var series_deprecatedBy = function(series) {
-    db.Series.update({
-        exam_id: series.exam_id,
-        series_desc: series.series_desc,
-        SeriesNumber: { $lt: series.SeriesNumber },
-    }, {
-        deprecated_by: series._id,
-    },{multi: true}, function(err) {
-        if (err) logger.warn("error deprecating older series");
-        db.Series.findOne({
-            exam_id: series.exam_id,
-            series_desc: series.series_desc,
-            SeriesNumber: { $gt: series.SeriesNumber },
-        }, function(err, _series){
-            if(err) {
-                logger.warn("error deprecating current series");
-                return (null);
-            }
-            if(!_series) return (undefined); //series.deprecated_by = null;
-            if(_series) return (_series._id); //series.deprecated_by = _series._id;
-        });
-    });
+// var series_deprecatedBy = function(series) {
+//     db.Series.update({
+//         exam_id: series.exam_id,
+//         series_desc: series.series_desc,
+//         SeriesNumber: { $lt: series.SeriesNumber },
+//     }, {
+//         deprecated_by: series._id,
+//     },{multi: true}, function(err) {
+//         if (err) logger.warn("error deprecating older series");
+//         db.Series.findOne({
+//             exam_id: series.exam_id,
+//             series_desc: series.series_desc,
+//             SeriesNumber: { $gt: series.SeriesNumber },
+//         }, function(err, _series){
+//             if(err) {
+//                 logger.warn("error deprecating current series");
+//                 return (null);
+//             }
+//             if(!_series) return (undefined); //series.deprecated_by = null;
+//             if(_series) return (_series._id); //series.deprecated_by = _series._id;
+//         });
+//     });
 
-}
+// }
 
-var template_deprecatedBy = function(template) {
-    db.Template.update({
-        exam_id: template.exam_id,
-        series_desc: template.series_desc,
-        SeriesNumber: { $lt: template.SeriesNumber },
-    }, {
-        deprecated_by: template._id,
-    },{multi: true}, function(err,numdeprecated) {
-        if (err) logger.warn("error deprecating older template");
-        console.log(numdeprecated);
-        db.Template.findOne({
-            exam_id: template.exam_id,
-            series_desc: template.series_desc,
-            SeriesNumber: { $gt: template.SeriesNumber },
-        }, function(err, _template){
-            if(err) {
-                logger.warn("error deprecating current series");
-                return (null);
-            }
-            if(!_template) return (undefined); //series.deprecated_by = null;
-            if(_template) return (_template._id); //series.deprecated_by = _series._id;
-        });
-    });
-}
+// var template_deprecatedBy = function(template) {
+//     db.Template.update({
+//         exam_id: template.exam_id,
+//         series_desc: template.series_desc,
+//         SeriesNumber: { $lt: template.SeriesNumber },
+//     }, {
+//         deprecated_by: template._id,
+//     },{multi: true}, function(err,numdeprecated) {
+//         if (err) logger.warn("error deprecating older template");
+//         console.log(numdeprecated);
+//         db.Template.findOne({
+//             exam_id: template.exam_id,
+//             series_desc: template.series_desc,
+//             SeriesNumber: { $gt: template.SeriesNumber },
+//         }, function(err, _template){
+//             if(err) {
+//                 logger.warn("error deprecating current series");
+//                 return (null);
+//             }
+//             if(!_template) return (undefined); //series.deprecated_by = null;
+//             if(_template) return (_template._id); //series.deprecated_by = _series._id;
+//         });
+//     });
+// }
 
 function checkDeprecated(doc, isTemplate, cb) {
     var mod = db.Series;
@@ -639,10 +636,10 @@ function checkDeprecated(doc, isTemplate, cb) {
             }
             doc.save();
             cb();
-
         });
     });
 }
+
 
 function write_to_tar(path2tar, path2file, cb) {
     tar.u({file: path2tar},[path2file]
@@ -656,42 +653,60 @@ function write_to_disk(dir, filepath, h, cb) {
     fs.writeFile(filepath, JSON.stringify(h), cb);
 }
 
-function extracttarball(path2tar,cb){
-    var extr = [];
-    tar.x({
-        file: path2tar,
-        cwd: "/",
-        onentry: entry => {
-            extr.push("/"+entry.path);
-        }
-    }).then(function(){
-        cb(extr)
-    })
-}
 
-function gotoIncoming(filelist){
+function filewalker(dir, done) {
+    let results = [];
+    results.push(dir);
+    fs.readdir(dir, function(err, list) {
+        if (err) return done(err);
+        var pending = list.length;
+        if (!pending) return done(null, results);
+        list.forEach(function(file){
+            file = path.resolve(dir, file);
+            fs.stat(file, function(err, stat){
+                if (stat && stat.isDirectory()) {
+                    // Add directory to array
+                    //results.push(file);
+                    filewalker(file, function(err, res){
+                        results = results.concat(res);
+                        if (!--pending) done(null, results);
+                    });
+                } else {
+                    //results.push(file);
+                    if (!--pending) done(null, results);
+                }
+            });
+        });
+    });
+};
 
-    async.eachSeries(filelist, function(f, next) {
 
-        var jsoni = validateJSON(f.toString());
+function dir2Incoming(dir){ //}, cb){
+
+    filelist = fs.readdirSync(dir);
+    async.eachSeries(filelist, function(file, next) {
+        //console.log("file --  " +file);
+        file = path.resolve(dir, file);
+        var jsoni = validateJSON(file.toString());
         if (jsoni) {
             incoming(jsoni, true, function(){
-                // console.log(f +" --> processed!!");
+                console.log(file +" --> processed!!");
                 next();
             });
         } else {
             next();
         }
     }, function(err) {
-        if(err) throw err;
+        if(err) cb(err);
         logger.info("processed "+filelist.length+ " files");
-        process.exit(0);
+        //cb()
+        //process.exit(0);
     });
 }
 
 
 function validateJSON(filePath) {
-     try {
+    try {
         var json = JSON.parse(fs.readFileSync(filePath, 'utf8'));
         //console.log(json);
         return json;
@@ -705,32 +720,21 @@ var file_exists = function(filePath){
         if (fs.existsSync(filePath)) {
             return true;
         }
-      } catch(err) {
+    } catch(err) {
         return false;
-      }
+    }
 }
 
 
-function filewalker(dir, done) {
-    let results = [];
-    fs.readdir(dir, function(err, list) {
-        if (err) return done(err);
-        var pending = list.length;
-        if (!pending) return done(null, results);
-        list.forEach(function(file){
-            file = path.resolve(dir, file);
-            fs.stat(file, function(err, stat){
-                // If directory, execute a recursive call
-                if (stat && stat.isDirectory()) {
-                    filewalker(file, function(err, res){
-                        results = results.concat(res);
-                        if (!--pending) done(null, results);
-                    });
-                } else {
-                    results.push(file);
-                    if (!--pending) done(null, results);
-                }
-            });
-        });
-    });
-};
+function extracttarball(path2tar,cb){
+    var extr = [];
+    tar.x({
+        file: path2tar,
+        cwd: "/",
+        onentry: entry => {
+            extr.push("/"+entry.path);
+        }
+    }).then(function(){
+        cb(extr)
+    })
+}

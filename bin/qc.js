@@ -144,7 +144,7 @@ function qc_one_image(image,primimage,primtemplate,cb) {
 	        var hasEchoNumbers = false;
 	        if (primtemplate.EchoNumbers !== undefined && image.EchoNumbers !== undefined && primtemplate.EchoNumbers !== image.EchoNumbers) {
                 hasEchoNumbers = true;	
-                console.log(" header has EchoNumbers that don't match --- "+ "primtemplate.EchoNumbers " +primtemplate.EchoNumbers + " image.EchoNumbers "+ image.EchoNumbers)
+                // console.log(" header has EchoNumbers that don't match --- "+ "primtemplate.EchoNumbers " +primtemplate.EchoNumbers + " image.EchoNumbers "+ image.EchoNumbers)
             }
 
             if ((image.InstanceNumber !== primtemplate.InstanceNumber) || hasEchoNumbers) {  // check if primary template is the header for the current image
@@ -298,7 +298,7 @@ function get_template_image(primtemplate,image,cb) {
             //console.log("template header with instance number"  +InstanceNumber + " not found");
             cb(null);
         } else {
-            console.log("template header with instance number"  +templateheader.InstanceNumber + " and EchoNumbers "+ templateheader.EchoNumbers+ " and image with EchoNumbers is "+ image.EchoNumbers);
+            // console.log("template header with instance number"  +templateheader.InstanceNumber + " and EchoNumbers "+ templateheader.EchoNumbers+ " and image with EchoNumbers is "+ image.EchoNumbers);
             qc_funcs.instance.reconstruct_header(templateheader, primtemplate, function() {
                 cb(null,templateheader)
             })

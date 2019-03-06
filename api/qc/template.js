@@ -328,7 +328,7 @@ exports.match = function(image, template, qc) {
     // first check if image header has fields that are not in the template    
     var keydiff = [];
     for (var kk in image.headers) {
-        if(template.headers[kk] === undefined) keydiff.push({ik:kk,v:image.headers[kk]})
+        if(template.headers[kk] === undefined && cus[k] !== undefined) keydiff.push({ik:kk,v:image.headers[kk]})
     }
     var lengthdiff = keydiff.length;
     if (lengthdiff > 0) qc.warnings.push({type: 'image_tag_mismatch', k: keydiff, c: lengthdiff, msg: "image has "+ lengthdiff + " fields that are not found in the template"});
