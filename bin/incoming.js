@@ -36,7 +36,7 @@ db.init(function(err) {
             dirs.forEach(function(dir){
                 dir2Incoming(dir) //,function(err){
                 //     if (err) throw err;
-                //     console.log("directory processed -- "+dir);
+                //   console.log("directory processed -- "+dir);
                 // });
             })
             //db.disconnect(function(){})
@@ -194,39 +194,40 @@ function incoming(tags, fromFile, cb) {
                 if (err) return next(err);
                 if (repeated_header) {
 
-
-                    logger.info(h.SOPInstanceUID+ " --Repeated template header identified");
-                    logger.info("Archiving and deprecating qc state of qc-ed series");
-
-                    // check if this template is used for QC
-                    db.Template.findOne({_id:repeated_header.template_id},function(err,template){
-                        if (err) return next(err);
-
-                        db.Series.find({"qc.template_id":template._id}).count(function (err, usedInQC) {
-                            if (err) return next(err);
-
-                            if (usedInQC == 0) {
-
-                                qc_func.series.deprecate_series(h, 'overwritten',function(err){
-                                    if (err) return next(err);
-
-                                    var new_event = {
-                                        service_id: 'incoming', //if event was performeed by a system, this is set
-                                        title: 'Template Overwritten',
-                                        detail: {},
-                                        date: new Date()
-                                    }
-
-                                    qc_func.series.overwritte_template(repeated_header.template_id,new_event,function(err) {
-                                        if (err) return next(err);
-                                        return next()
-                                    })
-                                })
-                            } else {
-                                return next("Cannot overwrite template -- it is currently used to QC "+usedInQC+ " series");
-                            }
-                        })
-                    })
+                    //temporarily stopping deprecation TODO REVISIT THIS
+                    next('duplicate');
+                    // logger.info(h.SOPInstanceUID+ " --Repeated template header identified");
+                    // logger.info("Archiving and deprecating qc state of qc-ed series");
+                    //
+                    // // check if this template is used for QC
+                    // db.Template.findOne({_id:repeated_header.template_id},function(err,template){
+                    //     if (err) return next(err);
+                    //
+                    //     db.Series.find({"qc.template_id":template._id}).count(function (err, usedInQC) {
+                    //         if (err) return next(err);
+                    //
+                    //         if (usedInQC == 0) {
+                    //
+                    //             qc_func.series.deprecate_series(h, 'overwritten',function(err){
+                    //                 if (err) return next(err);
+                    //
+                    //                 var new_event = {
+                    //                     service_id: 'incoming', //if event was performeed by a system, this is set
+                    //                     title: 'Template Overwritten',
+                    //                     detail: {},
+                    //                     date: new Date()
+                    //                 }
+                    //
+                    //                 qc_func.series.overwritte_template(repeated_header.template_id,new_event,function(err) {
+                    //                     if (err) return next(err);
+                    //                     return next()
+                    //                 })
+                    //             })
+                    //         } else {
+                    //             return next("Cannot overwrite template -- it is currently used to QC "+usedInQC+ " series");
+                    //         }
+                    //     })
+                    // })
                 } else {
                     next();
                 }
@@ -244,26 +245,28 @@ function incoming(tags, fromFile, cb) {
                 if (err) return next(err);
                 if (repeated_header) {
 
-                    logger.info(h.SOPInstanceUID+ " --Repeated image header identified");
-                    logger.info("Archiving and deprecating qc state of series");
-
-                    var new_event = {
-                        service_id: 'incoming', //if event was performeed by a system, this is set
-                        title: 'Series Overwritten',
-                        detail: {},
-                        date: new Date()
-                    }
-
-                    qc_func.series.unQc_series(repeated_header.series_id,new_event,function(err) {
-                        if (err) return next(err);
-
-                        if (fromFile) return next();
-
-                        qc_func.series.deprecate_series(h, 'overwritten',function(err){
-                            if (err) return next(err);
-                            return next()
-                        })
-                    })
+                    //temporarily stopping deprecation TODO REVISIT THIS
+                    next('duplicate');
+                    // logger.info(h.SOPInstanceUID+ " --Repeated image header identified");
+                    // logger.info("Archiving and deprecating qc state of series");
+                    //
+                    // var new_event = {
+                    //     service_id: 'incoming', //if event was performeed by a system, this is set
+                    //     title: 'Series Overwritten',
+                    //     detail: {},
+                    //     date: new Date()
+                    // }
+                    //
+                    // qc_func.series.unQc_series(repeated_header.series_id,new_event,function(err) {
+                    //     if (err) return next(err);
+                    //
+                    //     if (fromFile) return next();
+                    //
+                    //     qc_func.series.deprecate_series(h, 'overwritten',function(err){
+                    //         if (err) return next(err);
+                    //         return next()
+                    //     })
+                    // })
 
                 } else {;
                     next();
@@ -542,7 +545,7 @@ function incoming(tags, fromFile, cb) {
         if(err) {
             logger.error(err);
             h.qc_err = err;
-            // conn.publish(config.cleaner.failed_q, h); //publishing to default exchange can't be confirmed?
+            // // conn.publish(config.cleaner.failed_q, h); //publishing to default exchange can't be confirmed?
             var newpath = config.cleaner.failed_headers+"/"+h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
             var path2file = newpath+"/"+h.SOPInstanceUID+".json"
             write_to_disk(newpath, path2file, h, function(err) {
@@ -663,7 +666,7 @@ function filewalker(dir, done) {
             fs.stat(file, function(err, stat){
                 if (stat && stat.isDirectory()) {
                     // Add directory to array
-                    results.push(file);
+                    //results.push(file);
                     filewalker(file, function(err, res){
                         results = results.concat(res);
                         if (!--pending) done(null, results);
@@ -681,54 +684,22 @@ function filewalker(dir, done) {
 function dir2Incoming(dir){ //}, cb){
 
     filelist = fs.readdirSync(dir);
-    //console.log(filelist);
-    var numJson=0;
-    filelist.forEach(function(file){
+    async.eachSeries(filelist, function(file, next) {
+        //console.log("file --  " +file);
         file = path.resolve(dir, file);
         var jsoni = validateJSON(file.toString());
         if (jsoni) {
             incoming(jsoni, true, function(){
-                numJson++;
                 console.log(file +" --> processed!!");
-            });
-        }
-    });
-    console.log(numJson);
-    // async.eachSeries(filelist, function(file, next) {
-    //     //console.log("file --  " +file);
-    //     var jsoni = validateJSON(file.toString());
-    //     if (jsoni) {
-    //         incoming(jsoni, true, function(){
-    //             console.log(file +" --> processed!!");
-    //             next();
-    //         });
-    //     } else {
-    //         next();
-    //     }
-    // }, function(err) {
-    //     if(err) cb(err);
-    //     logger.info("processed "+filelist.length+ " files");
-    //     cb()
-    //     //process.exit(0);
-    // });
-}
-
-function batch2Incoming(filelist){
-
-    async.eachSeries(filelist, function(f, next) {
-
-        var jsoni = validateJSON(f.toString());
-        if (jsoni) {
-            incoming(jsoni, true, function(){
-                // console.log(f +" --> processed!!");
                 next();
             });
         } else {
             next();
         }
     }, function(err) {
-        if(err) throw err;
+        if(err) cb(err);
         logger.info("processed "+filelist.length+ " files");
+        //cb()
         //process.exit(0);
     });
 }
