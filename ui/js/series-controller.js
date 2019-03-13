@@ -20,6 +20,7 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
         $http.get(appconf.api+'/series/id/'+$routeParams.seriesid)
         .then(function(res) {
             $scope.data = res.data;
+            console.log($scope.data)
             if($scope.data.images) {
                 $scope.data.images.forEach(computeColor);
             }
@@ -28,17 +29,18 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
                 if(template._id == res.data.series.qc.template_id) $scope.data.template = template;
             });
             // get date received by SCA
+            $scope.data.date_received = res.data.series.createdAt;
             res.data.series.events.forEach(function(e,index){
-                if(e.title == "Received") {
-                    console.log(e);
-                    $scope.data.date_received = e.date;
-                }
+                // if(e.title == "Received") {
+                //     console.log(e);
+                //     $scope.data.date_received = e.date;
+                // }
                 if ($scope.users[e.user_id]) {
                     $scope.data.series.events[index].username = $scope.users[e.user_id].fullname;                    
                 } else $scope.data.series.events[index].username = "RADY-SCA";               
             })
             //reload if qc is not yet loaded
-            if(!res.data.series.qc) {
+            if(res.data.series.qc1_state != "no template" && !res.data.series.qc) {
                 $timeout(load_series, 1000);
             }
             console.log($scope.data);
@@ -50,7 +52,7 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
         var h = 0; 
         var s = "0%"; //saturation (default to gray)
         var l = "50%"; //light
-        if(image.qc.errors !== undefined) {
+        if(image.qc != undefined && image.qc.errors !== undefined) {
             if(image.qc.errors.length > 0) {
                 //error - red
                 h = 0; 
