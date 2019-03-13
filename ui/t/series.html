@@ -15,7 +15,10 @@
                         <div class="col-sm-2" style="margin-top: 5px;"><b>Series</b></div>
                         <div class="col-sm-10">
                             <studynote study="data.series" ng-if="data.series"></studynote> 
-                            <button type="button" class="btn btn-xs pull-right" ng-click="reqc()" ng-disabled="!data.canqc">ReQC</button>
+
+                            <button  type="button" class="btn btn-xs pull-right" ng-click="QCalert()" ng-disabled="!data.canqc">ReQC</button>
+
+                            <!-- <button type="button" class="btn btn-xs pull-right" ng-click="reqc()" ng-disabled="!data.canqc">ReQC</button> -->
                         </div>
                     </div>
                 </li>
