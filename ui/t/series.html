@@ -233,7 +233,7 @@
                     ng-model="data.series.qc1_state" ng-click="changestate(1, 'accept', $event)">Accepted</button>
 
                 <button type="button" class="btn btn-xs" ng-class="{'btn-danger':data.series.qc1_state == 'reject'}"
-                    ng-disabled="data.series.qc1_state == 'autopass' || !data.canqc"
+                    ng-disabled="!data.canqc"
                     ng-model="data.series.qc1_state" ng-click="changestate(1, 'reject', $event)">Rejected</button>
             </div>
             <br>
