@@ -107,10 +107,11 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
     }
 
 
-    $scope.deleteTemplate = function(texam_id,index) {
+    $scope.deleteTemplate = function(timestamp,index) {
         var alert = `Please confirm that you want to Delete all the series in this Template`;                               
         var r = confirm(alert);
         if (r == true) {
+            var texam_id = timestamp.exam_id;
             console.log("Deleting template exam "+texam_id);
             $http.get(appconf.api+'/templatesummary/deleteall/'+texam_id,{}).then(function(res) {
                 console.log(res.data) 

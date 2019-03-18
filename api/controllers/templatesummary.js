@@ -5,6 +5,8 @@ var express = require('express');
 var router = express.Router();
 var winston = require('winston');
 var jwt = require('express-jwt');
+const async = require('async');
+
 
 
 //mine
@@ -106,82 +108,130 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(r
 
 
 // delete a template series
+
+// delete a template series
 router.get('/deleteselected/:template_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+
+    console.log(req.user.sub);
+    var user = req.user.sub;
     
     db.Template.findById(new mongoose.Types.ObjectId(req.params.template_id),function(err,template){
         if (err) return next(err);
 
-            db.TemplateHeader.findOne({"template_id":template._id,primary_image:null}).exec(function(err,h){
-                if(err) return next(err);
-
-                // Move files from dicom-raw to dicom-deleted 
-                qc_funcs.series.deprecate_series(h.headers,'deleted',function(err){
-                     if (err) return next(err);
-                     db.TemplateHeader.deleteMany({"template_id":template._id},function(err) {
-                        if (err) return next(err);
-    
-                        db.Template.deleteOne({_id:template._id},function(err){
+        deleteTemplate(template._id,function(err){
+            if (err) return next(err);
+            unQC_series(template._id, user, function(err,images_modified){
+                if (err) return next(err);
+        
+                // check if there are any template series remainging in this template exam.
+                db.Template.find({"exam_id":template.exam_id},function(err,templates){
+                    if (err) return next(err);
+                    console.log("templates left "+templates.length)
+                    if (!templates || templates.length == 0){
+                        // this was the last template, so we delete the Template exam
+                        console.log("Empty template exam to delete "+template.exam_id)
+                        db.Exam.deleteOne({_id: template.exam_id}, function(err){
                             if (err) return next(err);
-
-                            // check if there are any template series remainging in this template exam.
-                            db.Template.find({"exam_id":template.exam_id},function(err,templates){
-                                if (err) return next(err);
-                                if (!templates || templates.length == 0){
-                                    // this was the last template, so we delete the Template exam
-                                    db.Exam.deleteOne({_id: template.exam_id}, function(err){
-                                        if (err) return next(err);
-                                        res.send("Template series "+template.series_desc+"deleted successfully! Template exam has also been deleted as this was the only template in this exam")
-                                    })
-                                } else {
-                                    res.send("Template series "+template.series_desc+"deleted successfully! There are "+templates.length+ " series in this template exam")
-                                }
-                            })    
+                            res.send("Template series "+template.series_desc+"deleted successfully! Template exam has also been deleted as this was the only template in this exam")
                         })
-                    }) 
-                 })               
-            })
-        })                         
+                    } else {
+                        res.send("Template series "+template.series_desc+"deleted successfully! There are "+templates.length+ " series in this template exam")
+                    }
+                })  
+            });  
+        });                       
+    })
 })
 
 
 
 // delete a template exam
 router.get('/deleteall/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    
+
+    console.log(req.user.sub);
+    var user = req.user.sub;
+
     db.Template.find({"exam_id":new mongoose.Types.ObjectId(req.params.exam_id)},function(err,templates){
         if (err) return next(err);
 
-        var count = 0;
+        async.forEach(templates, function(temp, next_temp) {
 
-        templates.forEach(function(temp){
-
-            db.TemplateHeader.findOne({"template_id":temp._id,primary_image:null}).exec(function(err,h){
+            deleteTemplate(temp._id,function(err){
+                if (err) return next(err);
+                unQC_series(temp._id, user, function(err,images_modified){
+                    if (err) return next(err);
+                    console.log("images modified -- "+ images_modified);
+                    console.log(temp.series_desc+ " deleted!!");
+                    next_temp();
+                });
+            });            
+        }, function(err){
+            //total_modified += images_modified;
+            console.log("Deleting Template exam "+req.params.exam_id);
+            db.Exam.deleteOne({_id:new mongoose.Types.ObjectId(req.params.exam_id)}, function(err){
                 if(err) return next(err);
-
-                // Move files from dicom-raw to dicom-deleted 
-                qc_funcs.series.deprecate_series(h.headers,'deleted',function(err){
-                     if (err) return next(err);
-
-                     db.TemplateHeader.deleteMany({"template_id":temp._id},function(err) {
-                        if (err) return next(err);
-    
-                        db.Template.deleteOne({_id:temp._id},function(err){
-                            if (err) return next(err);   
-                            count++;
-                            if (count == templates.length){
-                                db.Exam.deleteOne({_id:new mongoose.Types.ObjectId(req.params.exam_id)},function(err){
-                                    if (err) return next(err);
-                                    res.send("Template exam deleted successfully!!")
-                                })
-                            }                         
-                        })
-                    }) 
-                 })
+                res.send("Template deleted successfully!")
             })
-        }) 
-
+        })                         
     })
 })
 
+
+function deleteTemplate(template_id, cb){
+
+    db.TemplateHeader.findOne({"template_id":template_id,primary_image:null}).exec(function(err,h){
+        if(err) return cb(err);
+
+        // Move files from dicom-raw to dicom-deleted 
+        qc_funcs.series.deprecate_series(h.headers,'deleted',function(err){
+             if (err) return cb(err);
+
+             db.TemplateHeader.deleteMany({"template_id":template_id},function(err) {
+                if (err) return cb(err);
+
+                db.Template.deleteOne({_id:template_id},function(err){
+                    if (err) return cb(err);   
+                    cb();                        
+                })
+            }) 
+         })
+    })
+}
+
+
+function unQC_series(template_id,user,cb){
+    db.Series.find({"qc.template_id": template_id}).exec(function(err, serieses) {
+        if(err) return cb(err);
+        var images_modified = 0;
+        var count = 0;
+
+        serieses.forEach(function(series) {
+            db.Image.update({series_id: series._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
+                if(err) return cb(err);
+
+                images_modified += affected.nModified;
+                // add event to each series
+                var detail = {
+                    qc1_state:series.qc1_state,
+                    date_qced: series.qc ? series.qc.date : undefined,
+                    template_id: series.qc ? series.qc.template_id : undefined,
+                }
+                var event = {
+                    user_id: user,
+                    title: "QC Template deleted",
+                    date: new Date(), //should be set by default, but UI needs this right away
+                    detail: detail,
+                }; 
+                db.Series.update({_id: series._id}, {$push: { events: event }, qc1_state:"re-qcing", $unset: {qc: 1}}, function(err){
+                    if(err) return cb(err); 
+                    count++; 
+                    if(count == serieses.length){
+                        return cb(null,images_modified);
+                    }                  
+                });
+            });
+        });
+    });
+}
 
 module.exports = router;

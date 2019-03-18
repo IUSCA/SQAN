@@ -95,11 +95,9 @@ outline:none;
                                                             <div class="panel-body">
                                                                 <div
                                                                     uib-tooltip="Templates currently being used for QC cannot be deleted"
-                                                                    tooltip-enable="timestamp.usedInQC>0"
                                                                     class="text-danger"
-                                                                    ng-class="{'faded': timestamp.usedInQC>0}"
                                                                     style="cursor:pointer;"
-                                                                    ng-click="timestamp.usedInQC>0 || deleteTemplate(timestamp.exam_id,$index)">
+                                                                    ng-click="deleteTemplate(timestamp,$index)">
                                                                     <h5>
                                                                         <i class="fa fa-trash fa-sm" aria-hidden="true"></i>
                                                                         Delete All Series
@@ -142,7 +140,7 @@ outline:none;
                                                                 <td class="text-center" style="word-wrap: break-all;">{{dd.series_desc}}</td>
                                                                 <td class="text-center">{{dd.usedInQC}}</td>
                                                                 <td class="text-center">{{dd.imageCount}}</td>  
-                                                                <td><input type="checkbox" ng-disabled="dd.usedInQC > 0" ng-click="deleteThisSeries(dd)"></td>                                       
+                                                                <td><input type="checkbox" ng-click="deleteThisSeries(dd)"></td>                                       
                                                             </tr>
                                                         </tr>                                               
                                                     </table>
