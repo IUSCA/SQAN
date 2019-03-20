@@ -117,12 +117,13 @@ router.get('/deleteselected/:template_id', jwt({secret: config.express.jwt.pub})
     
     db.Template.findById(new mongoose.Types.ObjectId(req.params.template_id),function(err,template){
         if (err) return next(err);
-
+        console.log("TEMPLATE FOUND "+ template.series_desc)
         deleteTemplate(template._id,function(err){
             if (err) return next(err);
+            console.log("TEMPLATE DELETED")
             unQC_series(template._id, user, function(err,images_modified){
                 if (err) return next(err);
-        
+                console.log("RETURNED FROM UN_ QC_SERIES FUNCTION WITH "+images_modified+ "IMAGES MODIFIED")
                 // check if there are any template series remainging in this template exam.
                 db.Template.find({"exam_id":template.exam_id},function(err,templates){
                     if (err) return next(err);
@@ -202,10 +203,12 @@ function deleteTemplate(template_id, cb){
 function unQC_series(template_id,user,cb){
     db.Series.find({"qc.template_id": template_id}).exec(function(err, serieses) {
         if(err) return cb(err);
-        var images_modified = 0;
-        var count = 0;
+        if (!serieses) return cb(null,0);
 
-        serieses.forEach(function(series) {
+        var images_modified = 0;
+
+        async.forEach(serieses, function(series, next_series) {
+
             db.Image.update({series_id: series._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
                 if(err) return cb(err);
 
@@ -224,12 +227,12 @@ function unQC_series(template_id,user,cb){
                 }; 
                 db.Series.update({_id: series._id}, {$push: { events: event }, qc1_state:"re-qcing", $unset: {qc: 1}}, function(err){
                     if(err) return cb(err); 
-                    count++; 
-                    if(count == serieses.length){
-                        return cb(null,images_modified);
-                    }                  
+                    next_series();
                 });
             });
+        }, function(err){
+            if(err) return cb(err);
+            return cb(null,images_modified);
         });
     });
 }

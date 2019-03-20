@@ -84,23 +84,26 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
         var r = confirm(alert);
         if (r == true) {
             console.log(timestamp);
-            console.log($scope.series2delete)
-            $scope.series2delete.forEach(function(ts,ind1){
+            console.log("initial timestamp length is "+timestamp.series.length)
+            console.log($scope.series2delete);
+            var s2d = 0;
+            $scope.series2delete.forEach(function(ts){
                 $http.get(appconf.api+'/templatesummary/deleteselected/'+ts,{}).then(function(res) {
                     console.log(res.data);
-                    timestamp.series.forEach(function(ss,ind2){
-                        if (ss.template_id == ts){
-                            $scope.series2delete.splice(ind1,1);
-                            timestamp.series.splice(ind2,1);
-                            return;
+                    timestamp.series.forEach(function(ss,ind){
+                        if(ss.template_id == ts){
+                            timestamp.series.splice(ind,1);
+                            console.log("timestamp length is "+timestamp.series.length)
+                            s2d++
+                            console.log(s2d)
+                            if (s2d == $scope.series2delete.length) {
+                                    console.log("Emtying series2delete")
+                                    $scope.series2delete = [];
+                            } else return;
                         }
-                    }); 
+                    })
                 })
-                if ($scope.series2delete.length == 0) {
-                    $scope.indexShowSeries = -1;
-                    $scope.getTemplateSeries(timestamp,index);
-                }
-            }) 
+            });
         } else {
           console.log("Deletion canceled")
         }      
@@ -121,7 +124,5 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
           console.log("Deletion canceled")
         }
     }
-
-
 
 });
