@@ -1,5 +1,5 @@
 app.controller('TemplateSummaryController',
-function($scope, appconf, toaster, $http, $location, serverconf) {
+function($scope, appconf, toaster, $http, $window, $location, serverconf) {
     
     $scope.$parent.active_menu = "tsummary";
 
@@ -12,6 +12,12 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
         filter: '',
         fieldname: $scope.fieldnames[0]        
     };
+
+    $scope.opentemplate = function(tid) {
+        console.log(tid);
+        $window.open("#/template/"+tid);
+        
+    }
 
     $scope.getTemplateSummary = function() {
         $http.get(appconf.api+'/templatesummary/istemplate').then(function(res) {

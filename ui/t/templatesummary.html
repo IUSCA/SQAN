@@ -7,10 +7,10 @@
   pointer-events: none;
 } */
 
-button:disabled {
+/* button:disabled {
   cursor: not-allowed;
   pointer-events: all !important;
-}
+} */
 
 button {
 background-color: Transparent;
@@ -135,7 +135,7 @@ outline:none;
                                                         <tr style="background-color:#e2eef5">
                                                             <th class="text-center" ng-repeat="dd in tseriesTable track by $index">{{dd}}</th>
                                                             <th><i class="fa fa-trash fa-lg" aria-hidden="true"></i></th>
-                                                            <tr ng-repeat-end style="background-color:#f2f7fa" ng-repeat="dd in templateSeries.series | orderBy: 'SeriesNumber'">              
+                                                            <tr ng-repeat-end style="background-color:#f2f7fa; cursor:pointer" ng-repeat="dd in templateSeries.series | orderBy: 'SeriesNumber'" ng-click="opentemplate(dd.template_id)"s>              
                                                                 <td class="text-center">{{dd.SeriesNumber}}</td>
                                                                 <td class="text-center" style="word-wrap: break-all;">{{dd.series_desc}}</td>
                                                                 <td class="text-center">{{dd.usedInQC}}</td>
