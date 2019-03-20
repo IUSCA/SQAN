@@ -79,38 +79,47 @@ function($scope, appconf, toaster, $http, $location, serverconf) {
 
 
     $scope.deleteSelectedSeries = function(timestamp,index) {
-        console.log(timestamp);
-        console.log($scope.series2delete)
 
-
-        $scope.series2delete.forEach(function(ts,ind1){
-            $http.get(appconf.api+'/templatesummary/deleteselected/'+ts,{}).then(function(res) {
-                console.log(res.data);
-                timestamp.series.forEach(function(ss,ind2){
-                    if (ss.template_id == ts){
-                        $scope.series2delete.splice(ind1,1);
-                        timestamp.series.splice(ind2,1);
-                        return;
-                    }
-                }); 
-            })
-            if ($scope.series2delete.length == 0) {
-                $scope.indexShowSeries = -1;
-                $scope.getTemplateSeries(timestamp,index);
-            }
-        })       
+        var alert = `Please confirm that you want to delete ${$scope.series2delete.length} selected series in this Template`;                                
+        var r = confirm(alert);
+        if (r == true) {
+            console.log(timestamp);
+            console.log($scope.series2delete)
+            $scope.series2delete.forEach(function(ts,ind1){
+                $http.get(appconf.api+'/templatesummary/deleteselected/'+ts,{}).then(function(res) {
+                    console.log(res.data);
+                    timestamp.series.forEach(function(ss,ind2){
+                        if (ss.template_id == ts){
+                            $scope.series2delete.splice(ind1,1);
+                            timestamp.series.splice(ind2,1);
+                            return;
+                        }
+                    }); 
+                })
+                if ($scope.series2delete.length == 0) {
+                    $scope.indexShowSeries = -1;
+                    $scope.getTemplateSeries(timestamp,index);
+                }
+            }) 
+        } else {
+          console.log("Deletion canceled")
+        }      
     }
 
 
     $scope.deleteTemplate = function(texam_id,index) {
-        console.log(texam_id);
-        $http.get(appconf.api+'/templatesummary/deleteall/'+texam_id,{}).then(function(res) {
-            console.log(res.data) 
-            $scope.templatebytimestamp.splice(index,1);
-        })
+        var alert = `Please confirm that you want to Delete all the series in this Template`;                               
+        var r = confirm(alert);
+        if (r == true) {
+            console.log("Deleting template exam "+texam_id);
+            $http.get(appconf.api+'/templatesummary/deleteall/'+texam_id,{}).then(function(res) {
+                console.log(res.data) 
+                $scope.templatebytimestamp.splice(index,1);
+            })
+        } else {
+          console.log("Deletion canceled")
+        }
     }
-
-
 
 
 

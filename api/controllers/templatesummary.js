@@ -122,7 +122,20 @@ router.get('/deleteselected/:template_id', jwt({secret: config.express.jwt.pub})
     
                         db.Template.deleteOne({_id:template._id},function(err){
                             if (err) return next(err);
-                            res.send("Template series deleted successfully!! -- id: "+template._id+ " series_desc: "+template.series_desc)
+
+                            // check if there are any template series remainging in this template exam.
+                            db.Template.find({"exam_id":template.exam_id},function(err,templates){
+                                if (err) return next(err);
+                                if (!templates || templates.length == 0){
+                                    // this was the last template, so we delete the Template exam
+                                    db.Exam.deleteOne({_id: template.exam_id}, function(err){
+                                        if (err) return next(err);
+                                        res.send("Template series "+template.series_desc+"deleted successfully! Template exam has also been deleted as this was the only template in this exam")
+                                    })
+                                } else {
+                                    res.send("Template series "+template.series_desc+"deleted successfully! There are "+templates.length+ " series in this template exam")
+                                }
+                            })    
                         })
                     }) 
                  })               

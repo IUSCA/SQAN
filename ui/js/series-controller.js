@@ -206,7 +206,22 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
         }
     }
 
-    $scope.reqc = function() {  
+
+    $scope.QCalert = function() {  
+        var alert = `Please confirm that you want to ReQC this Series`;                                
+        var r = confirm(alert);
+        if (r == true) {
+            console.log("ReQc-ing series " +$routeParams.seriesid);
+            reqc();
+
+        } else {
+          console.log("ReQc canceled")
+        }
+    }
+
+
+
+    reqc = function() {  
         $scope.image_detail = null;
         $scope.active_image = null;
         $http.post(appconf.api+'/series/reqc/'+$routeParams.seriesid)
