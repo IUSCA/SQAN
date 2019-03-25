@@ -1,7 +1,7 @@
 <!--<sca-menutab fluid="true" menu="appconf.menu" active="'research'" user="user"></sca-menutab>-->
 <div class="container-fluid study" ng-class="{'study-accepted': data.series.qc1_state == 'accepted'}">
     <div class="row-fluid">
-        <div class="col-md-9">
+        <div class="col-md-8">
             <p class="alert alert-warning" ng-if="data.canqc == false">You don't have QC access for this IIBISID.</p>
             <h2 style="display: inline-block">IIBISID: {{data.series.exam_id.research_id.IIBISID}}</h2> &nbsp;
             <h3 style="display: inline-block">
@@ -215,8 +215,8 @@
                     </div><!--row-->
                 </li>
             </ul><!--list-group-->
-        </div><!--col-md-9-->
-        <div class="col-md-3">
+        </div><!--col-md-8-->
+        <div class="col-md-4">
             <!-- TODO - prevent user from selecting button that's already selected -->
             <div>
                 <h4 class="text-muted">QC1</h4>
@@ -233,7 +233,7 @@
                     ng-model="data.series.qc1_state" ng-click="changestate(1, 'accept', $event)">Accepted</button>
 
                 <button type="button" class="btn btn-xs" ng-class="{'btn-danger':data.series.qc1_state == 'reject'}"
-                    ng-disabled="data.series.qc1_state == 'autopass' || !data.canqc"
+                    ng-disabled="!data.canqc"
                     ng-model="data.series.qc1_state" ng-click="changestate(1, 'reject', $event)">Rejected</button>
             </div>
             <br>
@@ -270,7 +270,7 @@
                     <div class="col-md-2"><i class="fa fa-server"></i></div>
                     <div class="col-md-10">
                         <time class="pull-right text-muted">{{data.date_received |date:'short':'-0400'}}</time>
-                        Data Recieved by SCA
+                        Recieved by SCA
                     </div>
                 </div>
             </div>
