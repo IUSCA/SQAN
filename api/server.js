@@ -49,7 +49,7 @@ process.on('uncaughtException', function (err) {
 
 exports.app = app;
 exports.start = function(cb) {
-    var port = process.env.PORT || config.express.port || '8080';
+    var port = process.env.PORT || config.express.port || '8081';
     var host = process.env.HOST || config.express.host || 'localhost';
     db.init(function(err) {
         if(err) return cb(err);
