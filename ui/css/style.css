@@ -335,9 +335,9 @@ h3 {
   font-size: inherit;
 }
 .activity {
-  padding-top: 5px;
-  padding-bottom: 10px;
-  font-size: 90%;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  font-size: 80%;
 }
 .activity p {
   margin-bottom: 0px;
@@ -455,6 +455,16 @@ h3 {
   font-size: 16px;
   line-height: 100%;
 }
+
+.subject h3 {
+  margin: 0px;
+  padding: 8px 15px;
+  background-color: #eee;
+  color: gray;
+  font-size: 18px;
+  line-height: 100%;
+}
+
 .subbar-content .fixed-top {
   position: fixed;
   top: 0px;
@@ -940,4 +950,14 @@ pre {
 
 .fa-8x {
   font-size: 8em;
+}
+
+
+.nav-tabs>li.active>a {
+  background-color: transparent;
+}
+
+.nav-tabs>li>a {
+  background-color: transparent;
+  filter: brightness(65%);
 }
