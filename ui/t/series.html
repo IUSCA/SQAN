@@ -3,10 +3,7 @@
     <div class="row-fluid">
         <div class="col-md-8">
             <p class="alert alert-warning" ng-if="data.canqc == false">You don't have QC access for this IIBISID.</p>
-            <!-- <h2 style="display: inline-block">Subject: {{data.series.exam_id.subject}}</h2> &nbsp; -->
-            <!-- <h2 style="display: inline-block">IIBISID: {{data.series.exam_id.research_id.IIBISID}}</h2> &nbsp; -->
-            <h3>
-                
+            <h3>                
                 IIBISID:  <b>{{data.series.exam_id.research_id.IIBISID}}</b>&nbsp;&nbsp;
                 Modality: <b>{{data.series.exam_id.research_id.Modality}}</b>&nbsp;&nbsp;
                 StationName: <b>{{data.series.exam_id.research_id.StationName}}</b>
@@ -235,14 +232,17 @@
                 <div class="row">
                     <div class="col-md-1">
                             <i class="fa fa-user" aria-hidden="true"></i>
-                        <!-- <img gravatar-src="user.email" gravatar-size="25"></img> -->
                     </div>
-                    <div class="col-md-10">
+                    <div class="col-md-10" style="color: rgb(42, 84, 90);">
                         <time class="pull-right text-muted">{{event.date|date:'short':'-0400'}}</time>
                         <b>{{event.username}}</b>                        
                         <p ng-if="event.title">{{event.title}}</p>
-                        <p ng-if="event.detail.qc1_state"><span>Previous QC1 state: </span><span>{{event.detail.qc1_state}}</span> </p> 
-                        <p ng-if="event.detail.date_qced"><span>Previous QC1 date: </span><time >{{event.detail.date_qced |date:'short'}}</time></p>
+                        <p ng-if="event.detail.qc1_state"><span>Previous QC1 state: </span><span><b >{{event.detail.qc1_state}}</b></span> </p> 
+                        <p ng-if="event.detail.date_qced"><span>Previous QC1 date: </span><b><time >{{event.detail.date_qced |date:'short'}}</time></b></p>
+                        <p ng-if="event.detail.comment"><span>Comment: </span></p>                        
+                        <p ng-if="event.detail.comment">
+                            <i>{{event.detail.comment}}</i>                            
+                        </p>
                     </div>
                 </div>
                 <hr />
@@ -270,39 +270,21 @@
                     </div>
                 </div>
             </div>
-            <div class="activity">
+            <div class="activity" ng-if="data.series.qc">
                 <div class="row">
-
-                    <div class="col-md-2">
-                        <i class="fa fa-user" aria-hidden="true"></i>
-                        <!-- <img gravatar-src="user.email" gravatar-size="25"></img> -->
-                    </div>
-                    <div class="col-md-10" style="color: rgb(51, 94, 100);">
-                        <time class="pull-right text-muted">{{event.date|date:'short':'-0400'}}</time>
-                        <b>{{event.username}}</b>                        
-                        <p ng-if="event.title">{{event.title}}</p>
-                        <p ng-if="event.detail.qc1_state"><span>Previous QC1 state: </span><b >{{event.detail.qc1_state}}</b> </p> 
-                        <p ng-if="event.detail.date_qced"><span>Previous QC1 date: </span><b><time >{{event.detail.date_qced |date:'short'}}</time></b></p>
-                        <p ng-if="event.detail.comment"><span>Comment: </span></p>                        
-                        <p ng-if="event.detail.comment">
-                            <i>{{event.detail.comment}}</i>
-                            
-                        </p>
-
                     <div class="col-md-1"><i class="fa fa-long-arrow-up fa-fw faded"></i></div>
                 </div>
             </div>
- <!--           <div class="activity">
+            <div class="activity">
                 <div class="row">
                     <div class="col-md-1"><i class="fa fa-flask fa-fw"></i></div>
                     <div class="col-md-10">
                         <time class="pull-right text-muted">{{data.series.exam_id.StudyTimestamp |date:'short':'-0400'}}</time>
                         Studied
-
                     </div>
                 </div>
             </div>
-            -->
+           
 <!--
             <hr>
             <h4 class="text-muted">Comments</h4>
@@ -320,6 +302,6 @@
             <button type="button" class="btn btn-xs" ng-click="addcomment()" ng-if="newcomment"><i class="fa fa-check"></i></button>
             -->
         </div>
-    </div><!--row-->
+    </div>
 </div>
 
