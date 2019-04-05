@@ -112,7 +112,7 @@ function($scope, appconf, toaster, $http, $location, serverconf, $document, $win
         load_series();
     });
     */
-
+ 
     //used to apply filter for /research
     $scope.show_researches = function(researches) {
         for(var i in researches) {
