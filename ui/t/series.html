@@ -3,23 +3,42 @@
     <div class="row-fluid">
         <div class="col-md-8">
             <p class="alert alert-warning" ng-if="data.canqc == false">You don't have QC access for this IIBISID.</p>
-            <h2 style="display: inline-block">IIBISID: {{data.series.exam_id.research_id.IIBISID}}</h2> &nbsp;
-            <h3 style="display: inline-block">
-                Modality: <b>{{data.series.exam_id.research_id.Modality}}</b>
+            <!-- <h2 style="display: inline-block">Subject: {{data.series.exam_id.subject}}</h2> &nbsp; -->
+            <!-- <h2 style="display: inline-block">IIBISID: {{data.series.exam_id.research_id.IIBISID}}</h2> &nbsp; -->
+            <h3>
+                
+                IIBISID:  <b>{{data.series.exam_id.research_id.IIBISID}}</b>&nbsp;&nbsp;
+                Modality: <b>{{data.series.exam_id.research_id.Modality}}</b>&nbsp;&nbsp;
                 StationName: <b>{{data.series.exam_id.research_id.StationName}}</b>
-                <span ng-if="data.exam_id.research_id.Modality == 'PT'">RadioTracer: <b>{{data.series.exam_id.research_id.radio_tracer}}</b></span>
+                <p>
+                    <small ng-show="data.series.exam_id.research_id.Modality == 'PT'">
+                        RadioTracer: <b>{{data.series.exam_id.research_id.radio_tracer}}</b>
+                    </small>
+                </p>
             </h3>
             <ul class="list-group">
+                <li class="list-group-item" style="background-color: rgb(141, 184, 185);">
+                    <div class="row">
+                        <h4>
+                            <div class="col-sm-2"><b>Subject</b></div> 
+                            <div class="col-sm-10"><b>{{data.series.exam_id.subject}}</b></div>
+                        </h4>
+                    </div>
+                </li>
                 <li class="list-group-item" style="background-color: #eee;">
                     <div class="row">
-                        <div class="col-sm-2" style="margin-top: 5px;"><b>Series</b></div>
+                        <div class="col-sm-2" style="margin-top: 5px;"><b>Series Description</b></div>
                         <div class="col-sm-10">
+                                {{data.series.series_desc}}
                             <studynote study="data.series" ng-if="data.series"></studynote> 
-
                             <button  type="button" class="btn btn-xs pull-right" ng-click="QCalert()" ng-disabled="!data.canqc">ReQC</button>
-
-                            <!-- <button type="button" class="btn btn-xs pull-right" ng-click="reqc()" ng-disabled="!data.canqc">ReQC</button> -->
                         </div>
+                    </div>
+                </li>
+                <li class="list-group-item">
+                    <div class="row">
+                        <div class="col-sm-2">Study Timestamp</div>
+                        <div class="col-sm-10">{{data.series.exam_id.StudyTimestamp|date:'medium':'-0400'}} <small>(EST)</small></div>
                     </div>
                 </li>
                 <li class="list-group-item">
@@ -39,32 +58,6 @@
                             <textarea class="form-control" placeholder="New Comment" ng-model="newcomment" ng-class="{'comment-active':comment_active}" ng-focus="comment_active = true"></textarea>
                             <button type="button" class="btn btn-xs" ng-click="addcomment()" ng-disabled="!newcomment"><i class="fa fa-check"></i></button>
                         </div>
-                    </div>
-                </li>
-                <li class="list-group-item">
-                    <div class="row">
-                        <div class="col-sm-2">Series Description</div>
-                        <div class="col-sm-10">{{data.series.series_desc}} <!--<span class="text-muted">(#{{data.series.SeriesNumber}})</span>--></div>
-                    </div>
-                </li>
-                <!--
-                <li class="list-group-item">
-                    <div class="row">
-                        <div class="col-sm-2"><span class="text-muted">Series Number</span></div>
-                        <div class="col-sm-10">{{data.series.SeriesNumber}}</div>
-                    </div>
-                </li>
-                -->
-                <li class="list-group-item">
-                    <div class="row">
-                        <div class="col-sm-2">Study Timestamp</div>
-                        <div class="col-sm-10">{{data.series.exam_id.StudyTimestamp|date:'medium':'-0400'}} <small>(EST)</small></div>
-                    </div>
-                </li>
-                <li class="list-group-item">
-                    <div class="row">
-                        <div class="col-sm-2">Subject</div>
-                        <div class="col-sm-10">{{data.series.exam_id.subject}}</div>
                     </div>
                 </li>
                 <li class="list-group-item" ng-if="data.template">
@@ -237,24 +230,6 @@
                     ng-model="data.series.qc1_state" ng-click="changestate(1, 'reject', $event)">Rejected</button>
             </div>
             <br>
-            <!--<div ng-if="data.series.qc1_state && data.series.qc1_state != 'reject'">-->
-                <!--<h4 class="text-muted">QC2</h4>-->
-                <!--<p class="help-block">Image Level QC</p>-->
-                <!--<button type="button" class="btn btn-xs pull-right" -->
-                    <!--ng-if="data.series.qc2_state"-->
-                    <!--ng-click="changestate(2, null, $event)"><i class="fa fa-undo"></i> Reset</button>-->
-                <!--<button type="button" class="btn btn-xs" ng-class="{'btn-success':data.series.qc2_state == 'accept'}" -->
-                    <!--ng-disabled="!data.canqc" -->
-                    <!--ng-model="data.series.qc2_state" ng-click="changestate(2, 'accept', $event)">Accepted</button>-->
-                <!--<button type="button" class="btn btn-xs" ng-class="{'btn-warning':data.series.qc2_state == 'condaccept'}" -->
-                    <!--ng-disabled="!data.canqc" -->
-                    <!--ng-model="data.series.qc2_state" ng-click="changestate(2, 'condaccept', $event)"-->
-                    <!--tooltip-dis="Conditionally accept this series despite the stage 2 QC issues">Cond. Accepted</button>-->
-                <!--<button type="button" class="btn btn-xs" ng-class="{'btn-danger':data.series.qc2_state == 'reject'}" -->
-                    <!--ng-disabled="!data.canqc" -->
-                    <!--ng-model="data.series.qc2_state" ng-click="changestate(2, 'reject', $event)">Rejected</button>-->
-                <!--<hr>-->
-            <!--</div>-->
             <h4 class="text-muted">Events</h4>
             <div class="activity">
                 <div class="row">
@@ -286,15 +261,20 @@
             <div class="activity" ng-repeat="event in data.series.events | filter:{title: '!Received'} | orderBy: 'date':1">
                 <div class="row">
                     <div class="col-md-2">
-                            <i class="fa fa-user" aria-hidden="true"></i>
+                        <i class="fa fa-user" aria-hidden="true"></i>
                         <!-- <img gravatar-src="user.email" gravatar-size="25"></img> -->
                     </div>
-                    <div class="col-md-10">
+                    <div class="col-md-10" style="color: rgb(51, 94, 100);">
                         <time class="pull-right text-muted">{{event.date|date:'short':'-0400'}}</time>
                         <b>{{event.username}}</b>                        
                         <p ng-if="event.title">{{event.title}}</p>
-                        <p ng-if="event.detail.qc1_state"><span>Previous QC1 state: </span><span>{{event.detail.qc1_state}}</span> </p> 
-                        <p ng-if="event.detail.date_qced"><span>Previous QC1 date: </span><time >{{event.detail.date_qced |date:'short'}}</time></p>
+                        <p ng-if="event.detail.qc1_state"><span>Previous QC1 state: </span><b >{{event.detail.qc1_state}}</b> </p> 
+                        <p ng-if="event.detail.date_qced"><span>Previous QC1 date: </span><b><time >{{event.detail.date_qced |date:'short'}}</time></b></p>
+                        <p ng-if="event.detail.comment"><span>Comment: </span></p>                        
+                        <p ng-if="event.detail.comment">
+                            <i>{{event.detail.comment}}</i>
+                            
+                        </p>
                     </div>
                 </div>
             </div>
