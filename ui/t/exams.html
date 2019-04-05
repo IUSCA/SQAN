@@ -49,7 +49,7 @@
             <div class="subbar-list-header"><small class="text-muted">{{$index + 1}}. </small> {{iibisid}}</div>
             <div class="subbar-list-item"
                  ng-repeat="modality in research"
-                 ng-show="show_modality(iibisid, modality.research.Modality, modality.exams)"
+                 ng-show="show_modality(iibisid, modality.research.Modality, modality.research.radio_tracer, modality.exams)"
                  ng-class="{'active': modality == selected_modality}"
                  ng-click="select(modality)">
 
@@ -101,17 +101,23 @@
                 <small ng-show="selected.Modality == 'PT'">
                     RadioTracer: <b>{{selected.radio_tracer}}</b>
                 </small>
+                <span class="pull-right" style="width: 150px">
+                    <input type="text" class="form-control pull-right input-sm" ng-model="subject_filter" placeholder="Filter by Subject">
+                </span>
+
+                <br>
             </h3>
         </div>
-        <div style="margin-top: 65px;">
-            <div ng-repeat="exam in selected.exams"
-                 class="subject"
-                 id="{{exam._id}}">
-                <h4>
-                    <b>{{exam.subject}}</b>
+        <div style="margin-top: 100px;">
+            <div ng-repeat="subject in selected_subjects | filter:subject_filter"
+                 class="subject">
+                <h3>
+                    <b><i class="fa fa-user fa-fw"></i> {{subject}}</b>
                     <!-- <span class="text-muted">Subject</span> -->
-                </h4>
-                <exams exam="exam" mode="view_mode" template-lookup="templateLookup(t_id)" deprecated="show_deprecated"></exams>
+                </h3>
+                <div ng-repeat="exam in selected.exams" ng-if="exam.subject === subject" id="{{exam._id}}">
+                    <exams exam="exam" mode="view_mode" template-lookup="templateLookup(t_id)" deprecated="show_deprecated"></exams>
+                </div>
             </div>
             <div class="template">
                 <h4>

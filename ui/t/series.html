@@ -231,35 +231,48 @@
             </div>
             <br>
             <h4 class="text-muted">Events</h4>
-            <div class="activity">
+            <div class="activity" ng-repeat="event in data.series.events | filter:{title: '!Received'} | orderBy: 'date':1">
                 <div class="row">
-                    <div class="col-md-2"><i class="fa fa-video-camera"></i></div>
+                    <div class="col-md-1">
+                            <i class="fa fa-user" aria-hidden="true"></i>
+                        <!-- <img gravatar-src="user.email" gravatar-size="25"></img> -->
+                    </div>
                     <div class="col-md-10">
-                        <time class="pull-right text-muted">{{data.series.exam_id.StudyTimestamp |date:'short':'-0400'}}</time>
-                        Studied
+                        <time class="pull-right text-muted">{{event.date|date:'short':'-0400'}}</time>
+                        <b>{{event.username}}</b>                        
+                        <p ng-if="event.title">{{event.title}}</p>
+                        <p ng-if="event.detail.qc1_state"><span>Previous QC1 state: </span><span>{{event.detail.qc1_state}}</span> </p> 
+                        <p ng-if="event.detail.date_qced"><span>Previous QC1 date: </span><time >{{event.detail.date_qced |date:'short'}}</time></p>
                     </div>
                 </div>
-            </div>
-            <div class="activity">
-                <div class="row">
-                    <div class="col-md-2"><i class="fa fa-server"></i></div>
-                    <div class="col-md-10">
-                        <time class="pull-right text-muted">{{data.date_received |date:'short':'-0400'}}</time>
-                        Recieved by SCA
-                    </div>
-                </div>
+                <hr />
             </div>
             <div class="activity" ng-if="data.series.qc">
                 <div class="row">
-                    <div class="col-md-2"><i class="fa fa-stethoscope"></i></div>
+                    <div class="col-md-1"><i class="fa fa-stethoscope fa-fw"></i></div>
                     <div class="col-md-10">
                         <time class="pull-right text-muted">{{data.series.qc.date |date:'short':'-0400'}}</time>
                         Stage 1 QC performed
                     </div>
                 </div>
             </div>
-            <div class="activity" ng-repeat="event in data.series.events | filter:{title: '!Received'} | orderBy: 'date':1">
+            <div class="activity" ng-if="data.series.qc">
                 <div class="row">
+                    <div class="col-md-1"><i class="fa fa-long-arrow-up fa-fw faded"></i></div>
+                </div>
+            </div>
+            <div class="activity">
+                <div class="row">
+                    <div class="col-md-1"><i class="fa fa-cloud-upload fa-fw"></i></div>
+                    <div class="col-md-10">
+                        <time class="pull-right text-muted">{{data.series.createdAt |date:'short':'-0400'}}</time>
+                        Recieved by SCA
+                    </div>
+                </div>
+            </div>
+            <div class="activity">
+                <div class="row">
+
                     <div class="col-md-2">
                         <i class="fa fa-user" aria-hidden="true"></i>
                         <!-- <img gravatar-src="user.email" gravatar-size="25"></img> -->
@@ -275,10 +288,22 @@
                             <i>{{event.detail.comment}}</i>
                             
                         </p>
+
+                    <div class="col-md-1"><i class="fa fa-long-arrow-up fa-fw faded"></i></div>
+                </div>
+            </div>
+ <!--           <div class="activity">
+                <div class="row">
+                    <div class="col-md-1"><i class="fa fa-flask fa-fw"></i></div>
+                    <div class="col-md-10">
+                        <time class="pull-right text-muted">{{data.series.exam_id.StudyTimestamp |date:'short':'-0400'}}</time>
+                        Studied
+
                     </div>
                 </div>
             </div>
-            <!--
+            -->
+<!--
             <hr>
             <h4 class="text-muted">Comments</h4>
             <div class="activity" ng-repeat="comment in data.series.comments" ng-init="user = users[comment.user_id]">

@@ -44,7 +44,15 @@ app.controller('ExamsController',
             'iibis': 'IIBISID'
         };
 
+        $scope.selected_subjects = [];
+        $scope.subject_filter = "";
+
+
+
         $scope.select = function(modality, exam) {
+
+            $scope.subject_filter = "";
+            $scope.selected_subjects = [];
             console.log(modality);
             console.log(exam);
 
@@ -76,6 +84,17 @@ app.controller('ExamsController',
                     console.log('new API response:');
                     console.log(res.data);
                     $scope.selected = res.data;
+
+                    angular.forEach(res.data.templates, function(t) {
+                        t.bgcolor = newColor();
+                    });
+
+                    angular.forEach(res.data.exams, function(e) {
+                        if($scope.selected_subjects.indexOf(e.subject) < 0) {
+                            $scope.selected_subjects.push(e.subject);
+                        }
+                    });
+
                     handle_scroll();
 
                     function handle_scroll() {
@@ -84,13 +103,13 @@ app.controller('ExamsController',
                         var pos = $('#' + exam._id).position();
                         if (pos) {
                             window.scroll({
-                                top: pos.top - 85,
+                                top: pos.top - 150,
                                 left: 0,
                                 behavior: 'smooth'
                             });
                         } else {
                             //item not loaded yet.. wait
-                            $timeout(handle_scroll, 100, false);
+                            $timeout(handle_scroll, 300, false);
                         }
                     }
                 }, function(err) {
@@ -182,16 +201,18 @@ app.controller('ExamsController',
         $scope.show_iibis = function(iibisid, researches) {
             for(var research_id in researches){
                 var research = researches[research_id];
-                if($scope.show_modality(iibisid, research.research.Modality, research.exams)) return true;
+                if($scope.show_modality(iibisid, research.research.Modality, research.research.radio_tracer, research.exams)) return true;
             }
             return false;
         };
 
-        $scope.show_modality = function(iibisid, modality, exams) {
+        $scope.show_modality = function(iibisid, modality, radio_tracer, exams) {
             if(!$scope.modalities[modality].display) return false;
             if(!$scope.research_filter) return true;
             if(~iibisid.toLowerCase().indexOf($scope.research_filter.toLowerCase())) return true;
             if(~modality.toLowerCase().indexOf($scope.research_filter.toLowerCase())) return true;
+            console.log(radio_tracer);
+            if(radio_tracer && ~radio_tracer.toLowerCase().indexOf($scope.research_filter.toLowerCase())) return true;
             for(var exam in exams) {
                 if(~exams[exam].subject.toLowerCase().indexOf($scope.research_filter.toLowerCase())) return true;
             }
@@ -221,7 +242,8 @@ app.controller('ExamsController',
                         return {
                             StudyTimestamp: template.StudyTimestamp,
                             series_desc: series.series_desc,
-                            SeriesNumber: series.SeriesNumber};
+                            SeriesNumber: series.SeriesNumber,
+                            bgcolor : template.bgcolor};
                     }
                 }
             }
@@ -264,6 +286,25 @@ app.controller('ExamsController',
                 .then(function(res) {
                     toaster.success(res.data.message);
                 }, $scope.toast_error);
+        }
+
+        $scope.availableColors = [
+            "rgb(192,231,243,0.5)", "rgb(198,198,255,0.5)","rgb(255,200,200,0.5)","rgb(244,202,214,0.5)","rgb(255,168,255,0.5)","rgb(220,237,234,0.5)","rgb(239,205,248,0.5)"
+        ];
+
+        $scope.takenColors = [];
+
+        newColor = function (){
+            if($scope.availableColors.length) {
+                return $scope.availableColors.shift()
+
+            } else { //make a new random pastel if the above 7 are taken
+                var r = (Math.round(Math.random()* 127) + 127);
+                var g = (Math.round(Math.random()* 127) + 127);
+                var b = (Math.round(Math.random()* 127) + 127);
+                return 'rgb(' + r + ', ' + g + ', ' + b + ', 0.5)';
+            }
+
         }
 
     });
