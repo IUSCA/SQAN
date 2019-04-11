@@ -239,7 +239,9 @@ app.controller('ExamsController',
                 tooltip += '<br>QC Details not available';
                 return tooltip;
             }
-            tooltip += '<br>Series Failed: '+ ((exam.qc.series_failed / (exam.qc.series_failed + exam.qc.series_passed)) * 100).toFixed(1) + '\%';
+            let total = exam.qc.series_failed + exam.qc.series_passed + exam.qc.series_passed_warning;
+            tooltip += '<br>Series Failed: '+ ((exam.qc.series_failed / total) * 100).toFixed(1) + '\%';
+            tooltip += '<br>Series Passed w/Warnings: '+ ((exam.qc.series_passed_warning / total) * 100).toFixed(1) + '\%';
             tooltip += '<br>Images w/Errors: '+ ((exam.qc.images_errored / exam.qc.image_count) * 100).toFixed(1) + '\%';
             tooltip += '<br>Average # of Errors/Image: ' + (exam.qc.fields_errored / exam.qc.image_count).toFixed(2);
             tooltip += '<br>Series Missing: '+exam.qc.series_missing.length;

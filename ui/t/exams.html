@@ -32,7 +32,7 @@
                         <i class="fa fa-fw fa-check" ng-show="settings.display"></i>
                         <i class="fa fa-fw fa-square-o" ng-show="!settings.display"></i> {{mod_id}} </a>
                 </li>
-                <li role="separator" class="divider"></li>
+                <li role="separator" >&nbsp; </li>
                 <li ng-click="toggleExamShow()">
                     <a href>
                         <i class="fa fa-fw fa-check" ng-show="showExams"></i>
@@ -77,10 +77,10 @@
                         <small style="position: absolute; color: black">{{exam.subject}}</small>
                         <div class="progress exam-state pull-right"
                              uib-tooltip-html="makeTooltip(exam)" tooltip-append-to-body="true"
-                             ng-init="total = exam.qc.series_passed + exam.qc.series_failed + exam.qc.series_missing.length + exam.qc.series_no_template.length">
+                             ng-init="total = exam.qc.series_passed + exam.qc.series_failed + exam.qc.series_passed_warning + exam.qc.series_missing.length + exam.qc.series_no_template.length">
                             <div class="progress-bar progress-bar-success" style="height: 20%; width: {{exam.qc.series_passed / total*100}}%"></div>
                             <div class="progress-bar progress-bar-danger" style="height: 20%; width: {{exam.qc.series_failed / total*100}}%"></div>
-                            <!--<div class="progress-bar progress-bar-warning" style="height: 20%; width: {{exam.qc.warnings / total*100}}%"></div>-->
+                            <div class="progress-bar progress-bar-warning" style="height: 20%; width: {{exam.qc.series_passed_warning / total*100}}%"></div>
                             <div class="progress-bar progress-bar-primary" style="height: 20%; width: {{exam.qc.series_no_template.length / total*100}}%"></div>
                             <div class="progress-bar progress-bar-info" style="height: 20%; width: {{exam.qc.series_missing.length/ total*100}}%"></div>
                         </div>
@@ -92,6 +92,7 @@
             <!--<span class="label label-default"></span>-->
             <span class="label label-success">Pass</span>
             <span class="label label-danger">Fail</span>
+            <span class="label label-warning">Warning</span>
             <span class="label label-primary">No Templ</span>
             <span class="label label-info">Missing</span>
         </p>
@@ -130,7 +131,7 @@
                     <!-- <span class="text-muted">Subject</span> -->
                 </h3>
                 <div ng-repeat="exam in selected.exams" ng-if="exam.subject === subject" id="{{exam._id}}">
-                    <exams exam="exam" mode="view_mode" template-lookup="templateLookup(t_id)" deprecated="show_deprecated"></exams>
+                    <exams exam="exam" mode="view_mode" templates="selected.templates" template-lookup="templateLookup(t_id)" deprecated="show_deprecated"></exams>
                 </div>
             </div>
             <div class="template">

@@ -14,7 +14,7 @@ app.directive('studynote', function() {
                     else if($scope.study.qc.warnings && $scope.study.qc.warnings.length > 0) $scope.studystate = "warning";
                     else $scope.studystate = "ok";
                 } else if ($scope.study.qc1_state == "no template") $scope.studystate = "notemp";
-                    
+
                 $scope.qc1 = null;
                 if($scope.study.qc1_state) {
                     switch($scope.study.qc1_state) {
@@ -31,10 +31,10 @@ app.directive('studynote', function() {
                 $scope.qc2 = null;
                 if($scope.study.qc2_state)  {
                     switch($scope.study.qc2_state) {
-                    case "accept": 
+                    case "accept":
                         //$scope.label = "QC2";
                         $scope.qc2 = "success"; break;
-                    case "condaccept": 
+                    case "condaccept":
                         //$scope.label = "QC2";
                         $scope.qc2 = "warning"; break;
                     case "reject":
@@ -44,21 +44,28 @@ app.directive('studynote', function() {
                 }
             }
         }
-    } 
+    }
 });
 
 app.directive('qcerror', function() {
     return {
         scope: { error: '=', },
         templateUrl: 't/qcerror.html',
-    } 
+    }
 });
 
 app.directive('qcwarning', function() {
     return {
         scope: { warning: '=', },
         templateUrl: 't/qcwarning.html',
-    } 
+    }
+});
+
+app.directive('errorpanel', function() {
+    return {
+        scope: { error: '=', type: '=', notemps: '='},
+        templateUrl: 't/components/errorpanel.html',
+    }
 });
 
 
@@ -66,28 +73,67 @@ app.component('exams', {
     templateUrl: 't/components/exams.html',
     bindings: {
         exam: "=",
+        templates: '=',
         mode: '<', //view mode ('wide' / 'tall')
         deprecated: '=',
         templateLookup: '&'
     },
-    controller: function(appconf, $window, $http, toaster, $interval) {
+    controller: function(appconf, $window, $http, $uibModal, toaster, $interval) {
         var $ctrl = this;
 
         this.openstudy = function(id) {
             $window.open("#/series/"+id, "study:"+id);
         }
+
         this.opentemplate = function(id) {
             $window.open("#/template/"+id);
         }
 
-        this.qcalert = function(exam,qc_type) {   
+        this.openmodal = function () {
+            $uibModal.open({
+                templateUrl: 't/components/modal.html',
+                size: 'lg',
+                controller: function ($scope, $uibModalInstance) {
+                    $scope.templates = $ctrl.templates;
+                    var $mctrl = this;
+                    $scope.exam = $ctrl.exam;
+                    this.overridetemplate = '';
+
+                    $scope.select_template = function(item) {
+                        $mctrl.overridetemplate = item;
+                    }
+
+                    $scope.ok = function () {
+                        $uibModalInstance.close($mctrl.overridetemplate);
+                    };
+
+                    $scope.cancel = function () {
+                        $uibModalInstance.dismiss('cancel');
+                    };
+                }
+            }).result.then(function(result){
+                console.log(result);
+                $http.post(appconf.api+'/exam/template/'+$ctrl.exam._id, {template_id: result._id})
+                    .then(function(res) {
+                        toaster.success(res.data.message);
+                    }, function(res) {
+                        if(res.data && res.data.message) toaster.error(res.data.message);
+                        else toaster.error(res.statusText);
+                    });
+            }, function(result){
+                console.log('cancel or escaped');
+                console.log(result);
+            });
+        }
+
+        this.qcalert = function(exam,qc_type) {
             date = new Date(exam.StudyTimestamp);
             var StudyTimestamp = (date.getMonth()+1)+'/' + date.getDate() + '/'+date.getFullYear();
             //var StudyTimestamp = date.getFullYear()+'-' + (date.getMonth()+1) + '-'+date.getDate();
             var alert = `Please confirm that you want to ReQC ${qc_type} series for 
             Subject: ${exam.subject}
-            Study Timestamp: ${StudyTimestamp}`                                
-            var r = confirm(alert);         
+            Study Timestamp: ${StudyTimestamp}`
+            var r = confirm(alert);
 
             if (r == true) {
                 if (qc_type=="all") {
@@ -124,7 +170,7 @@ app.component('exams', {
                 if(res.data && res.data.message) toaster.error(res.data.message);
                 else toaster.error(res.statusText);
             });
-        }        
+        }
     },
 });
 

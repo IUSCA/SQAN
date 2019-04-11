@@ -277,7 +277,7 @@ h3 {
 }
 .template .qcalert,
 .study .qcalert {
-  display: inline-block;
+  /*display: inline-block;*/
   padding: 5px 10px;
   margin-bottom: 3px;
 }
@@ -960,4 +960,62 @@ pre {
 .nav-tabs>li>a {
   background-color: transparent;
   filter: brightness(65%);
+}
+
+
+
+.qc_errorpanel {
+  cursor: pointer;
+  min-height: 60px;
+  border: 1px solid #9b9b9b;
+  background-color: #fff;
+  margin-left: 0px;
+  margin-right: 0px;
+  margin-bottom: 2px;
+  display: flex;
+  /*margin: 0 4px 8px 4px;*/
+  /*position: relative;*/
+  /*display: inline-block;*/
+  /*-webkit-box-sizing: content-box;*/
+  /*-moz-box-sizing: content-box;*/
+  /*box-sizing: content-box;*/
+}
+
+.qc_errorpanel .errorpanelicon {
+  min-height: 60px;
+  min-width: 60px;
+  max-width: 60px;
+  float: left;
+  vertical-align: middle;
+  position: relative;
+}
+
+.erroricon {
+  background-color: #f04124;
+}
+
+.warningicon {
+  background-color: #e99002;
+}
+
+.infoicon {
+  background-color: #5bc0de;
+}
+
+.erroricon i,
+.warningicon i,
+.infoicon i {
+  max-height: 50px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+
+.errordesc, .infodesc {
+  min-height: 60px;
+  float: left;
+  margin-left: 5px;
+  margin-top: -5px;
 }
