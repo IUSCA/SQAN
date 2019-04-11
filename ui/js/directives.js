@@ -91,7 +91,7 @@ app.component('exams', {
 
         this.openmodal = function () {
             $uibModal.open({
-                templateUrl: 't/components/modal.html',
+                templateUrl: 't/components/overridemodal.html',
                 size: 'lg',
                 controller: function ($scope, $uibModalInstance) {
                     $scope.templates = $ctrl.templates;
