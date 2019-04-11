@@ -1,9 +1,9 @@
 <!--<sca-menutab fluid="true" menu="appconf.menu" active="'research'" user="user"></sca-menutab>-->
 <div class="container-fluid study" ng-class="{'study-accepted': data.series.qc1_state == 'accepted'}">
     <div class="row-fluid">
-        <div class="col-md-8">
+        <div class="col-md-9">
             <p class="alert alert-warning" ng-if="data.canqc == false">You don't have QC access for this IIBISID.</p>
-            <h3>                
+            <h3>
                 IIBISID:  <b>{{data.series.exam_id.research_id.IIBISID}}</b>&nbsp;&nbsp;
                 Modality: <b>{{data.series.exam_id.research_id.Modality}}</b>&nbsp;&nbsp;
                 StationName: <b>{{data.series.exam_id.research_id.StationName}}</b>
@@ -16,31 +16,29 @@
             <ul class="list-group">
                 <li class="list-group-item" style="background-color: rgb(141, 184, 185);">
                     <div class="row">
-                        <h4>
-                            <div class="col-sm-2"><b>Subject</b></div> 
-                            <div class="col-sm-10"><b>{{data.series.exam_id.subject}}</b></div>
-                        </h4>
+                        <div class="col-sm-2"><h4><b><i class="fa fa-fw fa-user"></i> Subject</b></h4></div>
+                        <div class="col-sm-10"><h4><b>{{data.series.exam_id.subject}}</b></h4></div>
                     </div>
                 </li>
                 <li class="list-group-item" style="background-color: #eee;">
                     <div class="row">
-                        <div class="col-sm-2" style="margin-top: 5px;"><b>Series Description</b></div>
+                        <div class="col-sm-2" style="margin-top: 5px;"><b><i class="fa fa-fw fa-list-alt"></i> Series Description</b></div>
                         <div class="col-sm-10">
                                 {{data.series.series_desc}}
-                            <studynote study="data.series" ng-if="data.series"></studynote> 
+                            <studynote study="data.series" ng-if="data.series"></studynote>
                             <button  type="button" class="btn btn-xs pull-right" ng-click="QCalert()" ng-disabled="!data.canqc">ReQC</button>
                         </div>
                     </div>
                 </li>
                 <li class="list-group-item">
                     <div class="row">
-                        <div class="col-sm-2">Study Timestamp</div>
+                        <div class="col-sm-2"><i class="fa fa-fw fa-calendar-check-o"></i> Study Timestamp</div>
                         <div class="col-sm-10">{{data.series.exam_id.StudyTimestamp|date:'medium':'-0400'}} <small>(EST)</small></div>
                     </div>
                 </li>
                 <li class="list-group-item">
                     <div class="row">
-                        <div class="col-sm-2">Comments</div>
+                        <div class="col-sm-2"><i class="fa fa-fw fa-comments-o"></i> Comments</div>
                         <div class="col-sm-10 comments">
                             <div class="comment" ng-repeat="comment in data.series.comments" ng-init="user = users[comment.user_id]">
                                 <div class="row">
@@ -59,10 +57,10 @@
                 </li>
                 <li class="list-group-item" ng-if="data.template">
                     <div class="row">
-                        <div class="col-sm-2">Template Used</div>
+                        <div class="col-sm-2"><i class="fa fa-fw fa-file-o"></i> Template Used</div>
                         <div class="col-sm-10">
                             <div class="studynote" ng-click="opentemplate(data.template._id)">
-                                <b>{{data.template.series_desc}}</b> 
+                                <b>{{data.template.series_desc}}</b>
                                 {{data.template.exam_id.StudyTimestamp | date:'medium':'-0400'}}
                                 <span class="text-muted">(#{{data.template.SeriesNumber}})</span>
                             </div>
@@ -71,9 +69,9 @@
                 </li>
                 <li class="list-group-item">
                     <div class="row">
-                        <div class="col-sm-2">Template Override</div>
+                        <div class="col-sm-2"><i class="fa fa-fw fa-file"></i> Template Override</div>
                         <div class="col-sm-10">
-                            <ui-select class="template-selecter" 
+                            <ui-select class="template-selecter"
                                 ng-model="data.template"
                                 on-select="select_template($item, $model)"
                                 ng-disabled="!data.canqc">
@@ -93,21 +91,19 @@
                         data.series.qc.errors.length > 0 || data.series.qc.warnings.length > 0 || data.series.qc.notemps > 0
                     )">
                     <div class="row">
-                        <div class="col-sm-2">QC Issues</div>
+                        <div class="col-sm-2"><i class="fa fa-fw fa-check-square-o"></i> QC Issues</div>
                         <div class="col-sm-10">
                             <!-- qc errors / warnings -->
                             <!--
                             <button type="button" class="btn btn-xs pull-right" ng-click="reqc()" ng-disabled="!data.canqc">Rerun QC1</button>
                             -->
-                            <div style="max-height: 300px; overflow: auto;" class="qc-issues">
+                            <div class="qc-issues">
+                                <div class="help-block" ng-if="data.series.qc.errors.length"><i class="fa fa-fw fa-question-circle text-info"></i> Click on the image blocks below for more details on each image header.</div>
                                 <!--<qcerror ng-repeat="error in data.series.qc.errors" error="error"></qcerror>-->
                                 <!--<qcwarning ng-repeat="warning in data.series.qc.warnings" warning="warning"></qcwarning>-->
-                                <div class="alert alert-danger qcalert" ng-repeat="error in data.series.qc.errors" role="alert">
-                                    {{error.msg}} ({{error.per * 100 | number: 1}}%)
-                                </div>
-                                <div class="alert alert-info qcalert" role="alert" ng-if="data.series.qc.notemps > 0">
-                                    Study contains {{data.series.qc.notemps}} images with no matching template
-                                </div>
+                                <errorpanel ng-repeat="error in data.series.qc.errors" error="error" type="'error'" notemps="data.series.qc.notemps"></errorpanel>
+                                <errorpanel ng-repeat="warning in data.series.qc.warnings" error="warning" type="'warning'"></errorpanel>
+                                <errorpanel ng-if="data.series.qc.notemps > 0" notemps="data.series.qc.notemps" type="'info'"></errorpanel>
                             </div>
                         </div>
                     </div>
@@ -115,15 +111,15 @@
                 <li class="list-group-item">
                     <div class="row">
                         <div class="col-sm-2">
-                            Images <span class="label label-default">{{data.series.qc.series_image_count}}</span>
+                            <i class="fa fa-fw fa-files-o"></i> Images <span class="label label-info"><strong>{{data.series.qc.series_image_count}}</strong></span>
                         </div>
                         <div class="col-sm-10">
                             <div class="panel panel-default">
                                 <div class="panel-heading">
                                     <ul class="images">
-                                        <li style="background-color: {{::image.color}};" 
-                                            ng-repeat="image in data.images" 
-                                            ng-class="{active: active_image == image}" 
+                                        <li style="background-color: {{::image.color}};"
+                                            ng-repeat="image in data.images"
+                                            ng-class="{active: active_image == image}"
                                             ng-click="load_image(image)" title="#{{image.headers.InstanceNumber}}">
                                         </li>
                                     </ul>
@@ -162,11 +158,11 @@
                                     </li>
                                     <table class="table table-condensed table-imageheader" ng-if="image_detail">
                                         <tr ng-repeat="h in image_headers | filter: search.key" ng-if="image_errors[h.key] || image_warnings[h.key] || image_notemplate[h.key] || show_all_headers">
-                                            <th>{{h.key}}</th>
+                                            <th>{{h.key}} <span class="label label-info" ng-if="image_notemplate[h.key]"> Not in template </span></th>
                                             <td>
                                                 <div ng-if="image_errors[h.key]" class="image-error">
                                                     <strong>{{image_errors[h.key].msg}}</strong>
-                                                    <div class="row"> 
+                                                    <div class="row">
                                                         <div class="col-md-6">
                                                             Image Value
                                                             <pre ng-if="h.value !== undefined">{{h.value|json}}</pre>
@@ -179,7 +175,7 @@
                                                 </div>
                                                 <div ng-if="image_warnings[h.key]" class="image-warning">
                                                     <strong>{{image_warnings[h.key].msg}}</strong>
-                                                    <div class="row"> 
+                                                    <div class="row">
                                                         <div class="col-md-6">
                                                             Image Value
                                                             <pre ng-if="h.value !== undefined">{{h.value|json}}</pre>
@@ -190,12 +186,9 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div ng-if="!image_errors[h.key] && !image_warnings[h.key]">                                                    
+                                                <div ng-if="!image_errors[h.key] && !image_warnings[h.key]">
                                                     <pre>{{h.value|json}}</pre>
                                                 </div>
-                                            </td>
-                                            <td>
-                                                <span class="alert alert-info qcalert" role="alert" ng-if="image_notemplate[h.key]"> Not in template </span>
                                             </td>
                                         </tr>
                                     </table>
@@ -206,19 +199,19 @@
                 </li>
             </ul><!--list-group-->
         </div><!--col-md-8-->
-        <div class="col-md-4">
+        <div class="col-md-3">
             <!-- TODO - prevent user from selecting button that's already selected -->
             <div>
                 <h4 class="text-muted">QC1</h4>
                 <p class="help-block">Protocol Level QC</p>
-                <button type="button" class="btn btn-xs pull-right" 
+                <button type="button" class="btn btn-xs pull-right"
                     ng-if="data.series.qc1_state && (data.series.qc1_state == 'accept' || data.series.qc1_state == 'reject')"
                     ng-click="changestate(1, null, $event)"><i class="fa fa-undo"></i> Reset</button>
                 <button type="button" class="btn btn-xs" ng-class="{'btn-success':data.series.qc1_state == 'autopass'}" disabled
                     ng-if="data.series.qc1_state == 'autopass'"
                     ng-model="data.series.qc1_state" ng-click="changestate(1, 'autopass', $event)">AutoPassed</button>
 
-                <button type="button" class="btn btn-xs" ng-class="{'btn-warning':data.series.qc1_state == 'accept'}" 
+                <button type="button" class="btn btn-xs" ng-class="{'btn-warning':data.series.qc1_state == 'accept'}"
                     ng-disabled="data.series.qc1_state == 'autopass' || !data.canqc"
                     ng-model="data.series.qc1_state" ng-click="changestate(1, 'accept', $event)">Accepted</button>
 
@@ -235,13 +228,13 @@
                     </div>
                     <div class="col-md-10" style="color: rgb(42, 84, 90);">
                         <time class="pull-right text-muted">{{event.date|date:'short':'-0400'}}</time>
-                        <b>{{event.username}}</b>                        
+                        <b>{{event.username}}</b>
                         <p ng-if="event.title">{{event.title}}</p>
-                        <p ng-if="event.detail.qc1_state"><span>Previous QC1 state: </span><span><b >{{event.detail.qc1_state}}</b></span> </p> 
+                        <p ng-if="event.detail.qc1_state"><span>Previous QC1 state: </span><span><b >{{event.detail.qc1_state}}</b></span> </p>
                         <p ng-if="event.detail.date_qced"><span>Previous QC1 date: </span><b><time >{{event.detail.date_qced |date:'short'}}</time></b></p>
-                        <p ng-if="event.detail.comment"><span>Comment: </span></p>                        
+                        <p ng-if="event.detail.comment"><span>Comment: </span></p>
                         <p ng-if="event.detail.comment">
-                            <i>{{event.detail.comment}}</i>                            
+                            <i>{{event.detail.comment}}</i>
                         </p>
                     </div>
                 </div>
@@ -284,7 +277,7 @@
                     </div>
                 </div>
             </div>
-           
+
 <!--
             <hr>
             <h4 class="text-muted">Comments</h4>

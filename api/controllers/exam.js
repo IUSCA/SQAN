@@ -39,7 +39,7 @@ router.post('/comment/:exam_id', jwt({secret: config.express.jwt.pub}), function
         if(err) return next(err);
         //make sure user has access to this series
         if(!exam) return res.status(404).json({message: "no such exam:"+req.params.exam_id});
-        
+
         profile.isUserAllowed(req.user,'view',exam.research_id.IIBISID,function(err,can){
         //db.Acl.can(req.user, 'view', exam.IIBISID, function(can) {
             if (err) return res.status(404).json({message:"there was an error during authorization - please contact SCA team"})
@@ -61,8 +61,8 @@ router.post('/comment/:exam_id', jwt({secret: config.express.jwt.pub}), function
 });
 
 router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    
-    //lookup iibisids that user has access to (TODO - refactor this to aclSchema statics?)  
+
+    //lookup iibisids that user has access to (TODO - refactor this to aclSchema statics?)
     //console.log(req.user);
     profile.getUserCan(req.user,'view', function(err,researchids){
 
@@ -130,11 +130,68 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
                 res.json(org);
             });
         });
-    })    
+    })
+});
 
+router.post('/template/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
 
-        //});            
-    //});
+    db.Exam.findById(req.params.exam_id).populate('research_id').exec(function(err, exam) {
+        if(err) return next(err);
+        //make sure user has access to this series
+        if(!exam) return res.status(404).json({message: "no such exam:"+req.params.exam_id});
+        console.log(exam);
+
+        db.Acl.can(req.user,'qc',exam.research_id.IIBISID,function(can) {
+            if(!can) return res.status(401).json({message: "You are not authorized to QC this IIBISID:"+exam.research_id.IIBISID});
+
+            db.Series.find({exam_id: exam._id})
+                .exec(function(err, serieses) {
+
+                    let series_updated = 0;
+                    let images_updated = 0;
+                    async.each(serieses, function(series, cb) {
+                        db.Template.findOne({
+                            exam_id: req.body.template_id,
+                            series_desc: series.series_desc,
+                            deprecated_by: null,
+                            updatedAt: {$lt: new Date(new Date().getTime() - 1000 * 30)}
+                        },function(err,template) {
+                            if (err) return cb(err);
+                            if (!template) return cb();
+
+                            var override_template_id = template._id;
+
+                            var detail = {
+                                qc1_state:series.qc1_state,
+                                date_qced: series.qc ? series.qc.date : undefined,
+                                template_id: series.qc ? series.qc.template_id : undefined,
+                                comment:"Re-QCing due to exam-level template override",
+                            }
+
+                            var event = {
+                                user_id: req.user.sub,
+                                title: "Template override",
+                                date: new Date(), //should be set by default, but UI needs this right away
+                                detail:detail,
+                            };
+
+                            db.Image.update({series_id: series._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
+                                if(err) return next(err);
+                                db.Series.update({_id: series._id}, {$push: { events: event }, qc1_state:"re-qcing", override_template_id:override_template_id, $unset: {qc: 1}}, function(err){
+                                    if(err) next(err);
+                                    series_updated++;
+                                    images_updated += affected.nModified;
+                                    cb()
+                                });
+                            });
+                        })
+                    }, function(err) {
+                        if(err) return res.status(500).json({message: "There was an error overriding series templates in this exam"});
+                        return res.json({message: images_updated + " images in " + series_updated + " series marked for QC with override template."});
+                    })
+                });
+        });
+    });
 });
 
 module.exports = router;

@@ -1,10 +1,11 @@
 <div class="subject-body">
+
     <div class="subject-tall">
         <p>
             <time style="position: relative; top: 5px"><b>{{$ctrl.exam.StudyTimestamp|date:'short':'-0400'}} <small>(EST)</small></b></time> &nbsp;
             <!-- <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc($ctrl.exam._id)" uib-tooltip="ReQC all series in this exam">ReQC</button> -->
-            <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.qcalert($ctrl.exam,'all')" uib-tooltip="ReQC all series in this exam">ReQC</button>
-            <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.qcalert($ctrl.exam,'failed')" uib-tooltip="ReQC only series that have not passed QC">ReQC failed series</button>            
+            <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.openmodal();" uib-tooltip="ReQC all series in this exam">ReQC</button>
+            <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.qcalert($ctrl.exam,'failed')" uib-tooltip="ReQC only series that have not passed QC">ReQC failed series</button>
         </p>
         <table class="table table-condensed" style="margin-bottom: 0px;">
         <thead><tr class="text-muted"><th width="30%">Series Description</th><th width="30%">Status</th><th>Template Used</th></tr></thead>
@@ -13,7 +14,7 @@
             <tr ng-repeat="s in $ctrl.exam.series">
                 <td>{{s.series_desc}}</td>
                 <td style="padding: 0px;">
-                    <div class="text-muted excluded" 
+                    <div class="text-muted excluded"
                         ng-if="s._isexcluded"
                         ng-click="s._isexcluded = false">Excluded</div>
                     <div class="slide-down"
@@ -44,14 +45,11 @@
             <tr ng-repeat="series_desc in $ctrl.exam.qc.series_missing">
                 <td class="text-muted">{{series_desc}}</td>
                 <td style="padding: 0px;">
-                    <div class="missing clickable" 
-                        ng-repeat="template in templates | orderBy:'-SeriesNumber'"
-                        ng-click="$ctrl.opentemplate(template._id)">
-                        <span class="label label-info">Missing</span> 
-                        <span class="text-muted">#{{template.SeriesNumber}}</span>
+                    <div class="missing">
+                        <span class="label label-info">Missing</span>
                     </div>
                 </td>
-                <td><!--missing series doesn't have any used template--></td>
+                <td></td>
             </tr>
         </tbody>
         </table>

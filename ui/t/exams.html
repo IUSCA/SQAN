@@ -32,6 +32,12 @@
                         <i class="fa fa-fw fa-check" ng-show="settings.display"></i>
                         <i class="fa fa-fw fa-square-o" ng-show="!settings.display"></i> {{mod_id}} </a>
                 </li>
+                <li role="separator" >&nbsp; </li>
+                <li ng-click="toggleExamShow()">
+                    <a href>
+                        <i class="fa fa-fw fa-check" ng-show="showExams"></i>
+                        <i class="fa fa-fw fa-square-o" ng-show="!showExams"></i> Exams/Subjects</a>
+                </li>
                 <li role="separator" class="divider"></li>
                 <li class="dropdown-header">Sort By</li>
                 <li ng-repeat="(sort_id, label) in sortoptions"
@@ -40,6 +46,7 @@
                         <i class="fa fa-fw fa-check" ng-if="search.sort == sort_id"></i>
                         <i class="fa fa-fw" ng-if="search.sort !=  sort_id"></i> {{label}}</a>
                 </li>
+
             </ul>
         </div>
         <span ng-if="loading_series" class="text-muted"><i class="fa fa-circle-o-notch fa-spin"></i> Loading ...</span>
@@ -50,23 +57,30 @@
             <div class="subbar-list-item"
                  ng-repeat="modality in research"
                  ng-show="show_modality(iibisid, modality.research.Modality, modality.research.radio_tracer, modality.exams)"
+                 ng-init="modality.showme = true"
                  ng-class="{'active': modality == selected_modality}"
                  ng-click="select(modality)">
 
                 <!--modality detail-->
                 <h6>
                     {{modality.research.Modality}} / {{modality.research.StationName}}
-                    <small ng-show="modality.research.Modality == 'PT'"> / {{modality.research.radio_tracer}}</small> <em>({{modality.exams.length}})</em><br><br>
+                    <small ng-show="modality.research.Modality == 'PT'"> / {{modality.research.radio_tracer}}</small> <em>({{modality.exams.length}})</em>
+                        <span class="pull-right faded" style="padding: 2px;" ng-click="modality.showme = !modality.showme; $event.stopPropagation()">
+                                <i class="fa fa-fw fa-minus-square" ng-show="modality.showme"></i>
+                                <i class="fa fa-fw fa-plus-square" ng-hide="modality.showme"></i>
+                        </span>
+                    <br><br>
                     <div ng-repeat="exam in modality.exams"
                          ng-click="select(modality, exam);$event.stopPropagation()"
+                         ng-show="modality.showme"
                          class="subject-label">
                         <small style="position: absolute; color: black">{{exam.subject}}</small>
                         <div class="progress exam-state pull-right"
                              uib-tooltip-html="makeTooltip(exam)" tooltip-append-to-body="true"
-                             ng-init="total = exam.qc.series_passed + exam.qc.series_failed + exam.qc.series_missing.length + exam.qc.series_no_template.length">
+                             ng-init="total = exam.qc.series_passed + exam.qc.series_failed + exam.qc.series_passed_warning + exam.qc.series_missing.length + exam.qc.series_no_template.length">
                             <div class="progress-bar progress-bar-success" style="height: 20%; width: {{exam.qc.series_passed / total*100}}%"></div>
                             <div class="progress-bar progress-bar-danger" style="height: 20%; width: {{exam.qc.series_failed / total*100}}%"></div>
-                            <!--<div class="progress-bar progress-bar-warning" style="height: 20%; width: {{exam.qc.warnings / total*100}}%"></div>-->
+                            <div class="progress-bar progress-bar-warning" style="height: 20%; width: {{exam.qc.series_passed_warning / total*100}}%"></div>
                             <div class="progress-bar progress-bar-primary" style="height: 20%; width: {{exam.qc.series_no_template.length / total*100}}%"></div>
                             <div class="progress-bar progress-bar-info" style="height: 20%; width: {{exam.qc.series_missing.length/ total*100}}%"></div>
                         </div>
@@ -78,6 +92,7 @@
             <!--<span class="label label-default"></span>-->
             <span class="label label-success">Pass</span>
             <span class="label label-danger">Fail</span>
+            <span class="label label-warning">Warning</span>
             <span class="label label-primary">No Templ</span>
             <span class="label label-info">Missing</span>
         </p>
@@ -116,7 +131,7 @@
                     <!-- <span class="text-muted">Subject</span> -->
                 </h3>
                 <div ng-repeat="exam in selected.exams" ng-if="exam.subject === subject" id="{{exam._id}}">
-                    <exams exam="exam" mode="view_mode" template-lookup="templateLookup(t_id)" deprecated="show_deprecated"></exams>
+                    <exams exam="exam" mode="view_mode" templates="selected.templates" template-lookup="templateLookup(t_id)" deprecated="show_deprecated"></exams>
                 </div>
             </div>
             <div class="template">

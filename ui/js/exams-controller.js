@@ -31,6 +31,18 @@ app.controller('ExamsController',
             PT: {display: false, count: 0}
         };
 
+        $scope.showExams = true;
+
+        $scope.toggleExamShow = function() {
+            $scope.showExams = !$scope.showExams;
+
+            angular.forEach($scope.org, function(research, iibisid) {
+                angular.forEach(research, function(modality) {
+                    modality.showme = $scope.showExams;
+                });
+            });
+        }
+
         $scope.ranges = {
             30: '30 days',
             60: '60 days',
@@ -227,7 +239,9 @@ app.controller('ExamsController',
                 tooltip += '<br>QC Details not available';
                 return tooltip;
             }
-            tooltip += '<br>Series Failed: '+ ((exam.qc.series_failed / (exam.qc.series_failed + exam.qc.series_passed)) * 100).toFixed(1) + '\%';
+            let total = exam.qc.series_failed + exam.qc.series_passed + exam.qc.series_passed_warning;
+            tooltip += '<br>Series Failed: '+ ((exam.qc.series_failed / total) * 100).toFixed(1) + '\%';
+            tooltip += '<br>Series Passed w/Warnings: '+ ((exam.qc.series_passed_warning / total) * 100).toFixed(1) + '\%';
             tooltip += '<br>Images w/Errors: '+ ((exam.qc.images_errored / exam.qc.image_count) * 100).toFixed(1) + '\%';
             tooltip += '<br>Average # of Errors/Image: ' + (exam.qc.fields_errored / exam.qc.image_count).toFixed(2);
             tooltip += '<br>Series Missing: '+exam.qc.series_missing.length;
@@ -250,13 +264,13 @@ app.controller('ExamsController',
         };
 
 
-        $scope.QCalert = function(research,qc_type) {  
+        $scope.QCalert = function(research,qc_type) {
             var alert = `Please confirm that you want to ReQC ${qc_type} series under 
             IIBISID: ${research.IIBISID}
             Modality: ${research.Modality}
             Station Name: ${research.StationName}`;
             if (research.radio_tracer) {alert = `${alert}
-            Radio tracer: ${research.radio_tracer}`};                                 
+            Radio tracer: ${research.radio_tracer}`};
             var r = confirm(alert);
             if (r == true) {
                 if (qc_type=="all") {
@@ -310,4 +324,4 @@ app.controller('ExamsController',
     });
 
 
-    
+
