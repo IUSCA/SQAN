@@ -44,7 +44,8 @@ outline:none;
                         </tr>
                     </thead>
                     <tbody>
-                        <tr ng-repeat-start="templ in templates | filter:sorting.filter | orderBy: sorting.fieldname"  ng-click="templatesByTimestamp(templ,$index)" style="cursor: pointer;">
+                        <tr ng-class="{'faded': $index!=rowNumber && fadedBackground==true}"
+                            ng-repeat-start="templ in templates | filter:sorting.filter | orderBy: sorting.fieldname"  ng-click="templatesByTimestamp(templ,$index)" style="cursor: pointer;">
                             <td ng-repeat="ff in fields" class="text-center">{{templ[ff]}}</td>  
                             <td class="text-center"><a href="">
                                 <i ng-show="$index!=rowNumber" class="fa fa-angle-left"></i>
