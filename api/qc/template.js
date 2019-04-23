@@ -299,7 +299,7 @@ function check_percent_diff(k, v, tv, qc, r, th, a_tv) {
     if(diff > th) {
         var err_v = tv;
         if(a_tv !== undefined) {
-            console.log('a_tv', a_tv);
+            //console.log('a_tv', a_tv);
             err_v = a_tv;
         }
         qc[r].push({type: l, k: k, v: v, tv: err_v, msg: "value differs from template by more than "+th*100+"%"});
@@ -366,7 +366,7 @@ exports.match = function(image, template, qc) {
 
 function overwritte_template(template_id,new_event,cb) {
 
-    console.log("overwriting template "+template_id)
+    //console.log("overwriting template "+template_id)
         
     // Now Un-qc the series
     db.Template.update({

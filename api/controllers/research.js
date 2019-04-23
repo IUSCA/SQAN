@@ -42,7 +42,7 @@ router.get('/summary/:id', function(req, res, next) {
     var series_desc = [];
     db.Exam.find({'research_id': req.params.id, 'istemplate' : false}).exec(function(err, _exams){
         if(err) return next(err);
-        console.log(_exams);
+        //console.log(_exams);
 
         async.each(_exams, function(exam, callback) {
             subjects.indexOf(exam.subject) === -1 && subjects.push(exam.subject);
@@ -69,7 +69,7 @@ router.get('/summary/:id', function(req, res, next) {
 //rerun QC1 on the entire "research"
 router.post('/reqcall/:research_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
 
-    console.log("ReQCing research id "+req.params.research_id)
+    console.log("ReQC-All research id "+req.params.research_id)
     db.Research.findById(req.params.research_id)
     .exec(function(err, research) {
         if(err) return next(err);
@@ -125,7 +125,7 @@ router.post('/reqcall/:research_id', jwt({secret: config.express.jwt.pub}), func
 //rerun QC1 on the entire "research"
 router.post('/reqcfailed/:research_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
 
-    console.log("ReQCing research id "+req.params.research_id)
+    console.log("ReQC-failed research id "+req.params.research_id)
     db.Research.findById(req.params.research_id)
     .exec(function(err, research) {
         if(err) return next(err);
@@ -184,7 +184,6 @@ router.post('/reqcfailed/:research_id', jwt({secret: config.express.jwt.pub}), f
 //get research detail, exams and series for a given research
 router.get('/:id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
 
-    console.log('in new API');
     db.Research.findById(req.params.id).lean().exec(function(err, research) {
 
         //make sure user has access to this IIBISID
@@ -195,7 +194,7 @@ router.get('/:id', jwt({secret: config.express.jwt.pub}), function(req, res, nex
 
             research['exams'] = {};
             research['templates'] = {};
-            console.log(research);
+            //console.log(research);
             async.series([
 
                 //get subject exams
@@ -208,7 +207,7 @@ router.get('/:id', jwt({secret: config.express.jwt.pub}), function(req, res, nex
                     query.exec(function(err, _exams) {
                         if(err) return next(err);
                         async.each(_exams, function(exam, callback) {
-                            console.log("looking up exam "+exam._id);
+                            //console.log("looking up exam "+exam._id);
                             var query = db.Series.find().lean();
                             query.where('exam_id', exam._id);
                             query.sort({SeriesNumber: 1});
@@ -218,7 +217,7 @@ router.get('/:id', jwt({secret: config.express.jwt.pub}), function(req, res, nex
                                 callback();
                             });
                         }, function(err) {
-                            console.log('done getting series');
+                            //console.log('done getting series');
                             if(err) return next(err);
                             research.exams = _exams;
                             next();

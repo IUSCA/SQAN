@@ -67,11 +67,11 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
     profile.getUserCan(req.user,'view', function(err,researchids){
 
         if (err) {
-            console.log("error in getUserCan")
-            console.log(err);
+            //console.log("error in getUserCan")
+            //console.log(err);
             return next(err);
         }
-        console.log(researchids);
+        //console.log(researchids);
 
         var query = db.Exam.find().populate('research_id');
         query.where('research_id').in(researchids);
@@ -91,10 +91,10 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
         async.series([
             function(next){
                 if(!req.query.pending){
-                    console.log('getting all!');
+                    //console.log('getting all!');
                     next();
                 } else {
-                    console.log('getting pending!');
+                    //console.log('getting pending!');
                     db.Series.distinct('exam_id',{
                         $and: [
                             {qc1_state:{$ne:"autopass"}},
@@ -139,7 +139,7 @@ router.post('/template/:exam_id', jwt({secret: config.express.jwt.pub}), functio
         if(err) return next(err);
         //make sure user has access to this series
         if(!exam) return res.status(404).json({message: "no such exam:"+req.params.exam_id});
-        console.log(exam);
+        //console.log(exam);
 
         db.Acl.can(req.user,'qc',exam.research_id.IIBISID,function(can) {
             if(!can) return res.status(401).json({message: "You are not authorized to QC this IIBISID:"+exam.research_id.IIBISID});

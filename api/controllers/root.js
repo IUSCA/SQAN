@@ -47,8 +47,8 @@ router.put('/acl/:key', jwt({secret: config.express.jwt.pub/*, credentialsRequir
     if(!~req.user.scopes.dicom.indexOf('admin')) return next(new Error("admin only"));
     var update_cnt = 0;
     async.eachOf(req.body, function(acl, iibisid, callback) {
-        console.log(iibisid);
-        console.log(acl);
+        //console.log(iibisid);
+        //console.log(acl);
         db.Acl.findOneAndUpdate({IIBISID: iibisid}, acl, {upsert:true}, function(err, doc){
             if (err) return next(err);
             update_cnt++;

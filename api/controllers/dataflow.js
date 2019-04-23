@@ -24,13 +24,13 @@ router.get('/', function(req, res, next) {
 
 //add new dataflow request
 router.get('/new/:type', function(req, res, next) {
-    console.log(req.params.type);
+    //console.log(req.params.type);
     var df = new db.Dataflow({
         isManual: (req.params.type == 'manual')
     });
 
     df.save(function (err, results) {
-        console.log(results._id);
+        //console.log(results._id);
         res.responseBody = results._id;
         return res.status(200).send();
     });

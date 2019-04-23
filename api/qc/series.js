@@ -80,7 +80,7 @@ function qc_series(series,images,template,cb) {
 
     //if there is an image that's not yet qc-ed, series cannot be qc-ed.
     if(!all_qced) {
-        console.log("cannot qc the series because not all images have been qc-ed");
+        //console.log("cannot qc the series because not all images have been qc-ed");
         // This should not happen, unless a series has too many images and cannot be retrieved all at once. 
         return 
     } else {
@@ -239,7 +239,7 @@ function unQc_series(series_id,new_event,cb) {
 
 function overwritte_template(template_id,new_event,cb) {
 
-    console.log("overwritting template "+template_id)
+    //console.log("overwritting template "+template_id)
         
     // Now Un-qc the series
     db.Template.update({

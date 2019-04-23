@@ -34,7 +34,7 @@ function run(cb) {
     
         if(err) return cb(err);
 
-        logger.info("Un-qc-ed Series retrieved: "+ series.length);
+        //logger.info("Un-qc-ed Series retrieved: "+ series.length);
 
         async.forEach(series,qc_images,function(err) {
             if (err) return cb(err);
@@ -49,7 +49,7 @@ function run(cb) {
             });
 
             if(exams2qc.length > 0) {
-                logger.info(exams2qc.length + " Exams to be updated"); //: "+exams2qc)
+                //logger.info(exams2qc.length + " Exams to be updated"); //: "+exams2qc)
                 exams2qc.forEach(function(ee){
                     qc_funcs.exam.qc_exam(ee,function(err){
                         if (err) return cb(err);
@@ -77,7 +77,7 @@ function qc_images(series,next) {
     // find the primary image for this series
     db.Image.findOne({"series_id":series._id, "primary_image":null},function(err,primimage) {
         if (err) return next(err);
-        console.log(`primary image for this series : ${primimage._id}`);
+        //console.log(`primary image for this series : ${primimage._id}`);
                 
         // find template for this series
         find_template(series, function(err,template) {
@@ -157,7 +157,7 @@ function qc_one_image(image,primimage,primtemplate,cb) {
                         next()                       
                     }
                     else {
-                        console.log("No template");
+                        //console.log("No template");
                         qc.notemp = true;
                         next()
                     }  // template header is missing for this instance number                                  

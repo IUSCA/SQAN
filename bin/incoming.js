@@ -110,10 +110,10 @@ function process_instance(change, next) {
             logger.error(err);
             next(err);
         } else {
-            console.time('processQC');
+            //console.time('processQC');
             incoming(json, false, function(){
                 request.del(config.orthanc.url+change.Path).on('response', function(res) {
-                    console.timeEnd('processQC');
+                    //console.timeEnd('processQC');
                     next();
                 });
             });
@@ -623,7 +623,7 @@ function checkDeprecated(doc, isTemplate, cb) {
         deprecated_by: doc._id,
     },{multi: true}, function(err,numdeprecated) {
         if (err) logger.warn("error deprecating older template");
-        console.log(numdeprecated);
+        //console.log(numdeprecated);
         mod.findOne({
             exam_id: doc.exam_id,
             series_desc: doc.series_desc,
