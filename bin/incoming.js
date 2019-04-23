@@ -170,7 +170,7 @@ function incoming(tags, fromFile, cb) {
 
                 if (meta.EchoNumbers !== null) {
                     needsEchoNumbers = true;
-                    console.log("needs EchoNumbers: "+needsEchoNumbers);
+                    //console.log("needs EchoNumbers: "+needsEchoNumbers);
                 }
                 //h.qc_series_desc_version = meta.series_desc_version;
 
@@ -389,6 +389,7 @@ function incoming(tags, fromFile, cb) {
             db.Exam.findOneAndUpdate({
                     research_id: research._id,
                     subject: (h.qc_istemplate?null:h.qc_subject),
+                    StudyInstanceUID: h.StudyInstanceUID,
                     StudyTimestamp: h.qc_StudyTimestamp
                 },
                 {

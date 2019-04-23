@@ -41,7 +41,9 @@ var examSchema = mongoose.Schema({
     ///////////////////////////////////////////////////////////////////////////
     research_id: {type: mongoose.Schema.Types.ObjectId, index: true, ref: 'Research'},
     subject: {type: String}, //not set if it's template
-    //StudyInstanceUID: {type: String, index: true},
+    
+    StudyInstanceUID: {type: String, index: true},
+    
     istemplate: {type: Boolean},
     StudyTimestamp: Date,
     //series: mongoose.Schema.Types.Mixed, 
@@ -53,7 +55,7 @@ var examSchema = mongoose.Schema({
         date: {type: Date, default: Date.now},
     }) ],
 });
-examSchema.index({research_id: 1});
+examSchema.index({research_id: 1, StudyInstanceUID:1});
 exports.Exam = mongoose.model('Exam', examSchema);
 
 //counter part for "series"
