@@ -31,10 +31,32 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
             // get date received by SCA
             $scope.data.date_received = res.data.series.createdAt;
             res.data.series.events.forEach(function(e,index){
-                // if(e.title == "Received") {
-                //     console.log(e);
-                //     $scope.data.date_received = e.date;
-                // }
+
+                /*
+                "Exam-level ReQC all",
+                "Received",
+                "Research-level ReQC failures",
+                "Series Overwritten",
+                "Template override",
+                "Research-level ReQC all",
+                "Updated QC1 state to accept",
+                "Series-level ReQC",
+                "Updated QC1 state to reject"
+                */
+
+                if(e.title == 'Template override') $scope.data.series.events[index].icon = "fa fa-fw fa-file";
+                else if(e.title.includes('ReQC')) $scope.data.series.events[index].icon = "fa fa-fw fa-refresh";
+                else if(e.title == "Series Overwritten") $scope.data.series.events[index].icon = "fa fa-exchange";
+                else if(e.title.includes('Updated QC1')) {
+                    $scope.data.series.events[index].icon = "fa fa-exclamation-circle";                                     $scope.data.series.events[index].qc1_update = e.title.includes('accept')? "accept" : "reject";
+                    if (e.detail.qc1_state.includes('fail')) $scope.data.series.events[index].qc1_prev = 'reject';
+                    else if (e.detail.qc1_state.includes('autopass')) $scope.data.series.events[index].qc1_prev = 'accept';
+                    else if (e.detail.qc1_state.includes('no template')) $scope.data.series.events[index].qc1_prev = 'no template'; 
+                    $scope.data.series.events[index].title = "QC1 state manually updated:";  
+                    console.log(e.title);
+                    console.log($scope.data.series.events[index].qc1_update)                
+                }
+
                 if ($scope.users[e.user_id]) {
                     $scope.data.series.events[index].username = $scope.users[e.user_id].fullname;                    
                 } else $scope.data.series.events[index].username = "RADY-SCA";               
