@@ -231,7 +231,7 @@
                         <time class="pull-right text-muted">{{event.date|date:'short':'-0400'}}</time>
                         <b>{{event.username}}</b>
                         <p ng-if="event.title">{{event.title}}</p>
-                        <p ng-if="event.detail.qc1_state && !event.qc1_update"><span>Previous QC1 state: <b >{{event.detail.qc1_state}}</b></span> </p>
+                        <p ng-if="event.detail.qc1_state && !event.qc1_update"><span>Previous QC1 state: </span><span></span><b >{{event.detail.qc1_state}}</b></span> </p>
                         <p ng-if="event.qc1_update"><span><b> {{event.qc1_prev}}<i class="fa fa-long-arrow-right fa-fw faded"></i> {{event.qc1_update}} </b></span> </p>
 
                         <!-- <time class="pull-right text-muted">{{event.detail.date_qced |date:'short'}}</time>
