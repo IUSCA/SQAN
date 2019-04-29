@@ -27,7 +27,7 @@ router.get('/:image_id', jwt({secret: config.express.jwt.pub}), function(req, re
         })
         .populate('primary_image')
         .exec(function(err, image) {
-            console.log(image);
+            //console.log(image);
         //make sure user has access to this IIBISID
             db.Acl.can(req.user, 'view', image.series_id.exam_id.research_id.IIBISID, function(can) {
             //db.Acl.canAccessIIBISID(req.user, image.IIBISID, function(can) {

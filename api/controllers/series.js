@@ -55,7 +55,7 @@ function compose_modalityid(research_detail) {
 //  }
 
 function reorg(data) {
-    console.log("----------------beginning of reorg ----------------")
+    //console.log("----------------beginning of reorg ----------------")
 
     var org = {};
 
@@ -97,7 +97,7 @@ function reorg(data) {
             if (new String(series.exam_id).valueOf() == new String(exam._id).valueOf()){
             //if (series.exam_id == exam._id) {
 
-                console.log('INSIDE THE SERIES LOOP -- series.exam_id: '+series.exam_id+ ' exam._id ' + exam._id);
+                //console.log('INSIDE THE SERIES LOOP -- series.exam_id: '+series.exam_id+ ' exam._id ' + exam._id);
 
                 var subject = exam.subject;
                 var series_desc = series.series_desc;
@@ -147,7 +147,7 @@ function reorg(data) {
 
 
 
-    console.log(org);
+    //console.log(org);
     return org;
 }
 
@@ -156,9 +156,9 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
     //lookup iibisids that user has access to (TODO - refactor this to aclSchema statics?)
     
     var where = JSON.parse(req.query.where);
-    console.log(where);
+    //console.log(where);
     var r_id = where.research_id;
-    console.log(r_id);
+    //console.log(r_id);
     var timerange = where.StudyTimestamp ? where.StudyTimestamp : null;
 
     profile.isUserAllowed(req.user,'view', r_id, function(err, isallowed) {
@@ -411,7 +411,7 @@ router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), funct
                 .populate('research_id')
                 .exec(function(err,texam){
                     if(err) return next(err);
-                    console.log(texam);
+                    //console.log(texam);
                     // make sure this template and subject series belong to the same research
                     if(!series.exam_id.research_id.equals(texam.research_id)) return next("invalid template_id");
 
@@ -447,6 +447,9 @@ router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), funct
 });
 
 router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    
+    console.log("ReQ series_id "+req.params.series_id)
+
     db.Series.findById(req.params.series_id)
         .populate({
             path: 'exam_id',
@@ -472,10 +475,10 @@ router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub}), function(
         db.Acl.can(req.user, 'qc', series.exam_id.research_id.IIBISID, function(can) {
             if(!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:"+series.exam_id.research_id.IIBISID});
             //events.series(series);
-            console.log(event);
+            //console.log(event);
             //also invalidate image QC.
             db.Image.update({series_id: series._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
-                console.log(affected);
+                //console.log(affected);
                 if(err) return next(err);
                 // series.events.push(event);
                 // series.qc = undefined;
@@ -492,7 +495,9 @@ router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub}), function(
 });
 
 router.post('/reqcallseries/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    console.log("Exam-level ReQC all");
+
+    console.log("ReQ-All exam "+req.params.exam_id)
+
     db.Exam.findById(req.params.exam_id)
         .populate('research_id')
         .exec(function(err, exam) {
@@ -537,7 +542,9 @@ router.post('/reqcallseries/:exam_id', jwt({secret: config.express.jwt.pub}), fu
 });
 
 router.post('/reqcerroredseries/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    console.log("Exam-level ReQC errored series");
+
+    console.log("ReQ-failed exam "+req.params.exam_id)
+
     db.Exam.findById(req.params.exam_id)
         .populate('research_id')
         .exec(function(err, exam) {

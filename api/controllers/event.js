@@ -30,7 +30,7 @@ router.get('/checkaccess/series/:key', jwt({secret: config.express.jwt.pub}), fu
     var key_tokens = key.split(".");
     var research_id = key_tokens[0];
 
-    logger.debug("checking access for research_id:"+research_id);
+    //logger.debug("checking access for research_id:"+research_id);
 
     //first lookup IIBISID for this research
     db.Research.findById(research_id, function(err, research) {

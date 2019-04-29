@@ -110,10 +110,10 @@ function process_instance(change, next) {
             logger.error(err);
             next(err);
         } else {
-            console.time('processQC');
+            //console.time('processQC');
             incoming(json, false, function(){
                 request.del(config.orthanc.url+change.Path).on('response', function(res) {
-                    console.timeEnd('processQC');
+                    //console.timeEnd('processQC');
                     next();
                 });
             });
@@ -170,7 +170,7 @@ function incoming(tags, fromFile, cb) {
 
                 if (meta.EchoNumbers !== null) {
                     needsEchoNumbers = true;
-                    console.log("needs EchoNumbers: "+needsEchoNumbers);
+                    //console.log("needs EchoNumbers: "+needsEchoNumbers);
                 }
                 //h.qc_series_desc_version = meta.series_desc_version;
 
@@ -389,6 +389,7 @@ function incoming(tags, fromFile, cb) {
             db.Exam.findOneAndUpdate({
                     research_id: research._id,
                     subject: (h.qc_istemplate?null:h.qc_subject),
+                    StudyInstanceUID: h.StudyInstanceUID,
                     StudyTimestamp: h.qc_StudyTimestamp
                 },
                 {
@@ -622,7 +623,7 @@ function checkDeprecated(doc, isTemplate, cb) {
         deprecated_by: doc._id,
     },{multi: true}, function(err,numdeprecated) {
         if (err) logger.warn("error deprecating older template");
-        console.log(numdeprecated);
+        //console.log(numdeprecated);
         mod.findOne({
             exam_id: doc.exam_id,
             series_desc: doc.series_desc,

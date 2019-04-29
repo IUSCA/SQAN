@@ -33,12 +33,15 @@ function($scope, appconf, toaster, $http, $window, $location, serverconf) {
 
     $scope.rowNumber = -1;
     $scope.indexShowSeries=-1; 
+    $scope.fadedBackground = false;
 
     $scope.templatesByTimestamp = function(research,index){
        
         $scope.indexShowSeries=-1;
 
         if($scope.rowNumber!==index){
+            
+            $scope.fadedBackground = true;
                
             $scope.templatebytimestamp = [];
             $scope.templatesUsed = [];
@@ -55,6 +58,7 @@ function($scope, appconf, toaster, $http, $window, $location, serverconf) {
 
         } else {
             $scope.rowNumber=-1;
+            $scope.fadedBackground = false;
         };      
     }   
 

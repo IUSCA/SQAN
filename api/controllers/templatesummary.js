@@ -51,7 +51,7 @@ router.get('/istemplate', jwt({secret: config.express.jwt.pub}),function(req,res
                  next(err);
              } else {
                  res.json(data);
-                 console.log(`retrieved ${data.length} templates from exam db ...`);
+                 //console.log(`retrieved ${data.length} templates from exam db ...`);
              }
     });
 });
@@ -112,25 +112,27 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(r
 // delete a template series
 router.get('/deleteselected/:template_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
 
-    console.log(req.user.sub);
+    console.log("Deleting Template-Series "+req.params.template_id);
+    
+    //console.log(req.user.sub);
     var user = req.user.sub;
     
     db.Template.findById(new mongoose.Types.ObjectId(req.params.template_id),function(err,template){
         if (err) return next(err);
-        console.log("TEMPLATE FOUND "+ template.series_desc)
+        //console.log("TEMPLATE FOUND "+ template.series_desc)
         deleteTemplate(template._id,function(err){
             if (err) return next(err);
-            console.log("TEMPLATE DELETED")
+            //console.log("TEMPLATE DELETED")
             unQC_series(template._id, user, function(err,images_modified){
                 if (err) return next(err);
-                console.log("RETURNED FROM UN_ QC_SERIES FUNCTION WITH "+images_modified+ "IMAGES MODIFIED")
+                //console.log("RETURNED FROM UN_ QC_SERIES FUNCTION WITH "+images_modified+ "IMAGES MODIFIED")
                 // check if there are any template series remainging in this template exam.
                 db.Template.find({"exam_id":template.exam_id},function(err,templates){
                     if (err) return next(err);
-                    console.log("templates left "+templates.length)
+                    //console.log("templates left "+templates.length)
                     if (!templates || templates.length == 0){
                         // this was the last template, so we delete the Template exam
-                        console.log("Empty template exam to delete "+template.exam_id)
+                        //console.log("Empty template exam to delete "+template.exam_id)
                         db.Exam.deleteOne({_id: template.exam_id}, function(err){
                             if (err) return next(err);
                             res.send("Template series "+template.series_desc+"deleted successfully! Template exam has also been deleted as this was the only template in this exam")
@@ -149,7 +151,7 @@ router.get('/deleteselected/:template_id', jwt({secret: config.express.jwt.pub})
 // delete a template exam
 router.get('/deleteall/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
 
-    console.log(req.user.sub);
+    //console.log(req.user.sub);
     var user = req.user.sub;
 
     db.Template.find({"exam_id":new mongoose.Types.ObjectId(req.params.exam_id)},function(err,templates){
@@ -161,14 +163,14 @@ router.get('/deleteall/:exam_id', jwt({secret: config.express.jwt.pub}), functio
                 if (err) return next(err);
                 unQC_series(temp._id, user, function(err,images_modified){
                     if (err) return next(err);
-                    console.log("images modified -- "+ images_modified);
-                    console.log(temp.series_desc+ " deleted!!");
+                    //console.log("images modified -- "+ images_modified);
+                    //console.log(temp.series_desc+ " deleted!!");
                     next_temp();
                 });
             });            
         }, function(err){
             //total_modified += images_modified;
-            console.log("Deleting Template exam "+req.params.exam_id);
+            console.log("Deleting Template-Exam "+req.params.exam_id);
             db.Exam.deleteOne({_id:new mongoose.Types.ObjectId(req.params.exam_id)}, function(err){
                 if(err) return next(err);
                 res.send("Template deleted successfully!")
