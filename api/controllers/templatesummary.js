@@ -34,9 +34,9 @@ router.get('/istemplate', jwt({secret: config.express.jwt.pub}),function(req,res
                  as:"fromResearch"
                  }
          },{ $project: {
-                 StudyTimestamp: 1, 
+                 StudyTimestamp: 1,
                  exam_id:1,
-                 count: { $size: "$exam_id" },       
+                 count: { $size: "$exam_id" },
                  IIBISID: "$fromResearch.IIBISID",
                  Modality: "$fromResearch.Modality",
                  StationName: "$fromResearch.StationName",
@@ -59,7 +59,7 @@ router.get('/istemplate', jwt({secret: config.express.jwt.pub}),function(req,res
 
 // search template's by research_id and group them by exam_id:
 router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-        
+
     var template_instance = {
         date: null,
         exam_id: null,
@@ -84,7 +84,7 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(r
 
                     db.TemplateHeader.find({"template_id":t._id}).count(function(err,imageCount){
                         if(err) return next(err);
-                        
+
                         var tobj = {
                             SeriesNumber: t.SeriesNumber,
                             series_desc: t.series_desc,
@@ -94,14 +94,14 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(r
                         };
 
                         template_instance.series.push(tobj);
-                        
+
                         if(template_instance.series.length == templates.length) {
                             res.json(template_instance);
                         }
                     })
                 });
-            })                         
-        })                
+            })
+        })
      });
 });
 
@@ -113,10 +113,10 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(r
 router.get('/deleteselected/:template_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
 
     console.log("Deleting Template-Series "+req.params.template_id);
-    
+
     //console.log(req.user.sub);
     var user = req.user.sub;
-    
+
     db.Template.findById(new mongoose.Types.ObjectId(req.params.template_id),function(err,template){
         if (err) return next(err);
         //console.log("TEMPLATE FOUND "+ template.series_desc)
@@ -140,9 +140,9 @@ router.get('/deleteselected/:template_id', jwt({secret: config.express.jwt.pub})
                     } else {
                         res.send("Template series "+template.series_desc+"deleted successfully! There are "+templates.length+ " series in this template exam")
                     }
-                })  
-            });  
-        });                       
+                })
+            });
+        });
     })
 })
 
@@ -167,7 +167,7 @@ router.get('/deleteall/:exam_id', jwt({secret: config.express.jwt.pub}), functio
                     //console.log(temp.series_desc+ " deleted!!");
                     next_temp();
                 });
-            });            
+            });
         }, function(err){
             //total_modified += images_modified;
             console.log("Deleting Template-Exam "+req.params.exam_id);
@@ -175,17 +175,17 @@ router.get('/deleteall/:exam_id', jwt({secret: config.express.jwt.pub}), functio
                 if(err) return next(err);
                 res.send("Template deleted successfully!")
             })
-        })                         
+        })
     })
 })
 
 
 function deleteTemplate(template_id, cb){
 
-    db.TemplateHeader.findOne({"template_id":template_id,primary_image:null}).exec(function(err,h){
+    db.TemplateHeader.findOneAndRemove({"template_id":template_id,primary_image:null}).exec(function(err,h){
         if(err) return cb(err);
 
-        // Move files from dicom-raw to dicom-deleted 
+        // Move files from dicom-raw to dicom-deleted
         qc_funcs.series.deprecate_series(h.headers,'deleted',function(err){
              if (err) return cb(err);
 
@@ -193,10 +193,10 @@ function deleteTemplate(template_id, cb){
                 if (err) return cb(err);
 
                 db.Template.deleteOne({_id:template_id},function(err){
-                    if (err) return cb(err);   
-                    cb();                        
+                    if (err) return cb(err);
+                    cb();
                 })
-            }) 
+            })
          })
     })
 }
@@ -226,9 +226,9 @@ function unQC_series(template_id,user,cb){
                     title: "QC Template deleted",
                     date: new Date(), //should be set by default, but UI needs this right away
                     detail: detail,
-                }; 
+                };
                 db.Series.update({_id: series._id}, {$push: { events: event }, qc1_state:"re-qcing", $unset: {qc: 1}}, function(err){
-                    if(err) return cb(err); 
+                    if(err) return cb(err);
                     next_series();
                 });
             });
