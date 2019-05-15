@@ -33,11 +33,15 @@ db.init(function(err) {
 
         filewalker(fpath, function(err,dirs){
             if (err) throw err;
-            dirs.forEach(function(dir){
-                dir2Incoming(dir) //,function(err){
+            async.eachSeries(dirs, function(dir, next) {
+            // dirs.forEach(function(dir){
+                dir2Incoming(dir, next) //,function(err){
                 //     if (err) throw err;
                 //   console.log("directory processed -- "+dir);
                 // });
+            }, function(err) {
+                if(err) logger.error(err);
+                process.exit(0)
             })
             //db.disconnect(function(){})
         })
@@ -682,7 +686,7 @@ function filewalker(dir, done) {
 };
 
 
-function dir2Incoming(dir){ //}, cb){
+function dir2Incoming(dir, cb){ //}, cb){
 
     filelist = fs.readdirSync(dir);
     async.eachSeries(filelist, function(file, next) {
@@ -698,9 +702,9 @@ function dir2Incoming(dir){ //}, cb){
             next();
         }
     }, function(err) {
-        if(err) cb(err);
+        if(err) return cb(err);
         logger.info("processed "+filelist.length+ " files");
-        //cb()
+        cb()
         //process.exit(0);
     });
 }
