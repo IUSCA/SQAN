@@ -117,10 +117,17 @@
                             <div class="panel panel-default">
                                 <div class="panel-heading">
                                     <ul class="images">
+                                        <li style="background-color: {{::timage.image.color}} {{timage.image === undefined ? 'hsl(0, 0%, 85%, 0.8); cursor: auto;' : ';'}}"
+                                            ng-if="data.template_images.length"
+                                            ng-repeat="timage in data.template_images"
+                                            ng-class="{active: timage.image !== undefined && active_image == timage.image}"
+                                            ng-click="load_image(timage.image)" uib-tooltip="#{{timage.InstanceNumber}}{{timage.image === undefined ? ' (missing)': ''}}">
+                                        </li>
                                         <li style="background-color: {{::image.color}};"
+                                            ng-if="!data.template_images.length"
                                             ng-repeat="image in data.images"
                                             ng-class="{active: active_image == image}"
-                                            ng-click="load_image(image)" title="#{{image.headers.InstanceNumber}}">
+                                            ng-click="load_image(image)" uib-tooltip="#{{image.headers.InstanceNumber}}">
                                         </li>
                                     </ul>
                                 </div>

@@ -1,14 +1,15 @@
-app.controller('HeaderController', 
+app.controller('HeaderController',
 function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window, $location, $timeout) {
     $scope.title = appconf.title;
     $scope.active_menu = "unknown";
+    $scope.$parent.appmode = appconf.mode !== undefined ? appconf.mode : 'prod';
 
     serverconf.then(function(_c) { $scope.serverconf = _c; });
 
 
     function update_jwt(jwt) {
         if(!jwt) return;
-        $scope.user = jwtHelper.decodeToken(jwt); 
+        $scope.user = jwtHelper.decodeToken(jwt);
         $scope.user.isadmin = ($scope.user.scopes.dicom.indexOf('admin') !== -1)
     }
 
@@ -128,7 +129,7 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
     //         }
     //     }
     // }
-    
+
     $scope.count = function(org) {
         //do some extra processing for each subject
         for(var research_id in org) {
@@ -137,14 +138,14 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
                 var modality = modalities[modality_id];
                 for(var subject_id in modality.subjects) {
                     var subject = modality.subjects[subject_id];
-                    
+
                     //reset counter
                     subject.non_qced = 0;
                     subject.oks = 0;
                     subject.errors = 0;
                     subject.warnings = 0;
                     subject.notemps = 0;
-                    
+
                     //count number of status for each subject
                     for(var series_desc in subject.serieses) {
                         var series_group = subject.serieses[series_desc];
@@ -155,13 +156,13 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
                                 if(series.deprecated_by) return; //only count non-deprecated series
                                 //if(idx > 0) return; //only count the first (latest) series
                                 if(series.qc) {
-                                    //decide the overall status(with error>warning>notemp precedence) for each series and count that.. 
+                                    //decide the overall status(with error>warning>notemp precedence) for each series and count that..
                                     if(series.qc.errors && series.qc.errors.length > 0) {
-                                        subject.errors++; 
+                                        subject.errors++;
                                     } else if(series.qc.warnings && series.qc.warnings.length > 0) {
-                                        subject.warnings++; 
+                                        subject.warnings++;
                                     } else if(series.qc.notemps > 0) {
-                                        subject.notemps++; 
+                                        subject.notemps++;
                                     } else subject.oks++;
                                 } else {
                                     subject.non_qced++;

@@ -1,7 +1,8 @@
 angular.module('app.config', [])
 .constant('appconf', {
     title: 'RADY QC',
-
+    //assumes prod if not set
+    mode: 'dev',
     api: '/api/qc',
 
     kibana_url: '/kibana/',
@@ -17,7 +18,7 @@ angular.module('app.config', [])
     auth_url: '/auth',
 
     jwt_id: 'jwt',
-    
+
     event_api: '/api/event',
     /*
     menu: [
