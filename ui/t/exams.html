@@ -99,8 +99,8 @@
     </div>
 </div>
 <div class="subbar-content subbar-contentnew">
-    <div ng-show="!selected" class="help-block center-parent"><span class="center-child text-center"><h3><i class="fa fa-8x fa-flask faded"></i> <br>Please select a research to display</h3></span></div>
-    <div ng-show="selected">
+    <div ng-if="!selected" class="help-block center-parent"><span class="center-child text-center"><h3><i class="fa fa-8x fa-flask faded"></i> <br>Please select a research to display</h3></span></div>
+    <div ng-if="selected">
         <div class="fixed-top" style="margin-left: 355px;">
             <h2 class="pull-right" style="position: relative; left: -15px;">
                 <viewmode-toggler mode="view_mode" deprecated="show_deprecated"></viewmode-toggler>
@@ -130,8 +130,8 @@
                     <b><i class="fa fa-user fa-fw"></i> {{subject}}</b>
                     <!-- <span class="text-muted">Subject</span> -->
                 </h3>
-                <div ng-repeat="exam in selected.exams" ng-if="exam.subject === subject" id="{{exam._id}}">
-                    <exams exam="exam" mode="view_mode" templates="selected.templates" template-lookup="templateLookup(t_id)" deprecated="show_deprecated"></exams>
+                <div ng-repeat="exam in subject_exams[subject] track by exam._id" id="{{exam._id}}">
+                    <exams exam="exam" mode="view_mode" templates="selected.templates" template-lookup="selected.template_map" deprecated="show_deprecated"></exams>
                 </div>
             </div>
             <div class="template">

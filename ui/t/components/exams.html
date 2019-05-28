@@ -2,7 +2,7 @@
 
     <div class="subject-tall">
         <p>
-            <time style="position: relative; top: 5px"><b>{{$ctrl.exam.StudyTimestamp|date:'short':'-0400'}} <small>(EST)</small></b></time> &nbsp;
+            <time style="position: relative; top: 5px"><b>{{::$ctrl.exam.StudyTimestamp|date:'short':'-0400'}} <small>(EST)</small></b></time> &nbsp;
             <!-- <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc($ctrl.exam._id)" uib-tooltip="ReQC all series in this exam">ReQC</button> -->
             <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.openmodal();" uib-tooltip="ReQC all series in this exam">ReQC</button>
             <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.qcalert($ctrl.exam,'failed')" uib-tooltip="ReQC only series that have not passed QC">ReQC failed series</button>
@@ -10,15 +10,14 @@
         <table class="table table-condensed" style="margin-bottom: 0px;">
         <thead><tr class="text-muted"><th width="30%">Series Description</th><th width="30%">Status</th><th>Template Used</th></tr></thead>
         <tbody>
-            {{exam}}
-            <tr ng-repeat="s in $ctrl.exam.series">
-                <td>{{s.series_desc}}</td>
+            <tr ng-repeat="s in $ctrl.exam.series track by s._id" ng-if="!s.deprecated_by || $ctrl.deprecated !== null ">
+                <td>{{::s.series_desc}}</td>
                 <td style="padding: 0px;">
                     <div class="text-muted excluded"
-                        ng-if="s._isexcluded"
+                        ng-if="::s._isexcluded"
                         ng-click="s._isexcluded = false">Excluded</div>
                     <div class="slide-down"
-                        ng-if="!s._isexcluded">
+                        ng-if="::!s._isexcluded">
                         <div class="studies" style="display: inline-block;">
                             <div ng-if="!s.deprecated_by || $ctrl.deprecated">
                                 <studynote ng-click="$ctrl.openstudy(s._id)" study="s"></studynote>
@@ -32,10 +31,10 @@
                 <td style="padding: 0px;">
                     <div>
                         <!--search for series.qc.template_id-->
-                        <div ng-init="template = $ctrl.templateLookup({t_id: s.qc.template_id})" class="studynote" ng-if="s.qc1_state !== 'no template'" style="background-color: {{template.bgcolor}}">
-                            {{template.StudyTimestamp | date:'short':'-0400'}}
+                        <div ng-init="template = $ctrl.templateLookup[s.qc.template_id]" class="studynote" ng-if="::s.qc1_state !== 'no template'" style="background-color: {{::template.bgcolor}}">
+                            {{::template.StudyTimestamp | date:'short':'-0400'}}
                             <!--<span class="text-muted">{{template.series_desc}}</span>-->
-                            <span class="text-muted">(#{{template.SeriesNumber}})</span>
+                            <span class="text-muted">(#{{::template.SeriesNumber}})</span>
                         </div>
                     </div>
                 </td>
