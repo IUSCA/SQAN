@@ -1,35 +1,11 @@
-<!-- <style>
-.rotate_text
-{
-    -moz-transform:rotate(-90deg); 
-    -moz-transform-origin: top left;
-    -webkit-transform: rotate(-90deg);
-    -webkit-transform-origin: top left;
-    -o-transform: rotate(-90deg);
-    -o-transform-origin:  top left;
-    position:relative;
-    top:20px;
-}
-</style>
 
 <style>  
-table
+.table
 {
-    border: 1px solid black;
-    table-layout: fixed;
-    width: 69px; /*Table width must be set or it wont resize the cells*/
+    margin-bottom: 0;
 }
-th, td 
-{
-    border: 1px solid black;
-    width: 23px;
-}
-.rotated_cell
-{
-    height:300px;
-    vertical-align:bottom
-}
-</style> -->
+
+</style>
 
 
 <div class="container">
@@ -118,28 +94,36 @@ th, td
                     <thead>
                         <tr>
                             <th ng-repeat-start="(mod, res) in summary"></th>
-                            <th class="rotate-45 text-muted" ng-repeat="sd in res.series_desc | filter:seriesfilter"><div style="height:180px; left:100px"><span class="pull-right">{{sd}}&nbsp;&nbsp;</span></div></th>
-                            <th ng-repeat-end></th>
+                            <th ng-repeat-end class="rotate-45 text-muted" ng-repeat="sd in res.series_desc | filter:seriesfilter"><div style="white-space:nowrap; height:180px; left:100px"><span class="pull-right">{{sd}}&nbsp;&nbsp;</span></div></th>
+                            <!-- <th ng-repeat-end></th> -->
                         </tr>
-                        <!-- <tr>
-                            <td><h6 class="pull-right text-muted">Subjects</h6></td>
-                            <td ng-repeat="(mod, res) in summary" colspan="3" style="background-color: #006687; color: white"><h5><b>{{mod}}</b></h5></td>
-                        </tr> -->
+                        <tr>
+                            <td><h6 class="pull-right text-muted">Subjects/Modality</h6></td>
+                            <td ng-repeat="(mod, res) in summary" colspan="{{res.series_desc.length+1}}" style="background-color: #006687; color: white">{{mod}}</td>
+                        </tr>                     
                     </thead>
                     <tbody>
                         <tr ng-repeat="sub in subjects | filter:subfilter">
-                            <td><div class="pull-right" style="white-space: nowrap;"><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></td>
-                            <td style="white-space:nowrap" ng-repeat="sd in res.series_desc | filter:seriesfilter">
-                                <span style="cursor: pointer" class="color-box"
-                                    ng-repeat="exam in res.exams[sub]"
-                                    ng-click="openstudy(exam[sd]._id)"
-                                    ng-init="qcs = exam[sd].qc1_state !== undefined ? exam[sd].qc1_state : 'na' "
-                                    ng-class="{'pass': qcs == 'autopass',
-                                            'fail' : qcs == 'fail',
-                                            'warning' : qcs == 'accept',
-                                            'reject' : qcs == 'reject',
-                                            'na': qcs == 'na'}"
-                                    uib-tooltip-html="makeTooltip(sub, exam[sd])" tooltip-append-to-body="true"></span>
+                            <td><div class="pull-right" style="white-
+                            : nowrap;"><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></td>
+                            <td ng-repeat="(mod, res) in summary" colspan="{{res.series_desc.length+1}}" style="white-space:nowrap;">
+                                <table class="table table-condensed">
+                                    <tr style="border-bottom: 1px solid #ddd" ng-repeat="exam in res.exams[sub]">
+                                        <td ng-repeat="sd in res.series_desc | filter:seriesfilter" >
+                                                <span style="cursor: pointer" class="color-box"                                                        
+                                                    ng-click="openstudy(exam[sd]._id)"
+                                                    ng-init="qcs = exam[sd].qc1_state !== undefined ? exam[sd].qc1_state : 'na' "
+                                                    ng-class="{'pass': qcs == 'autopass',
+                                                            'fail' : qcs == 'fail',
+                                                            'warning' : qcs == 'accept',
+                                                            'reject' : qcs == 'reject',
+                                                            'na': qcs == 'na'}"
+                                                    uib-tooltip-html="makeTooltip(sub, exam[sd])" tooltip-append-to-body="true">
+                                                </span>
+                                        </td>
+                                    </tr>
+                                    <!-- <tr><td colspan="{{res.series_desc.length+1}}"> </td></tr> -->
+                                </table>
                             </td>
                         </tr>
                     <tr><td colspan="100"> </td></tr>
@@ -150,36 +134,25 @@ th, td
     </div>
 </div>
 
-<!-- <table class="table table-header-rotated table-condensed" ng-show="subjects.length">
-        <thead>
-        <tr>
-            <th></th>
-            <th class="rotate-45 text-muted" ng-repeat="sub in subjects | filter:subfilter"><div style="white-space: nowrap;"><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></th>
-        </tr>
-        </thead>
-        <tbody ng-repeat="(mod, res) in summary">
-        <tr>
-            <td colspan="100" style="background-color: #006687; color: white"><h5><b>{{mod}}</b></h5></td>
-        </tr>
-        <tr>
-            <th><h6 class="pull-right text-muted">Series Descriptions</h6></th>
-            <td colspan="100"></td>
-        </tr>
-        <tr ng-repeat="sd in res.series_desc | filter:seriesfilter">
-            <td><span class="pull-right">{{sd}}&nbsp;&nbsp;</span></td>
-            <td style="white-space:nowrap" ng-repeat="sub in subjects | filter:subfilter">
-                  <span style="cursor: pointer" class="color-box"
-                    ng-repeat="exam in res.exams[sub]"
-                       ng-click="openstudy(exam[sd]._id)"
-                       ng-init="qcs = exam[sd].qc1_state !== undefined ? exam[sd].qc1_state : 'na' "
-                       ng-class="{'pass': qcs == 'autopass',
-                            'fail' : qcs == 'fail',
-                            'warning' : qcs == 'accept',
-                            'reject' : qcs == 'reject',
-                            'na': qcs == 'na'}"
-                      uib-tooltip-html="makeTooltip(sub, exam[sd])" tooltip-append-to-body="true"></span>
-            </td>
-        </tr>
-        <tr><td colspan="100"> </td></tr>
-        </tbody>
-    </table> -->
+
+<!-- <tbody>
+    <tr ng-repeat="sub in subjects | filter:subfilter">
+        <td><div class="pull-right" style="white-space: nowrap;"><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></td>
+        <td ng-repeat-start="(mod, res) in summary" style="white-space:nowrap"></td>
+        <td ng-repeat="sd in res.series_desc | filter:seriesfilter">
+            <span style="cursor: pointer" class="color-box"
+                ng-repeat="exam in res.exams[sub]"
+                ng-click="openstudy(exam[sd]._id)"
+                ng-init="qcs = exam[sd].qc1_state !== undefined ? exam[sd].qc1_state : 'na' "
+                ng-class="{'pass': qcs == 'autopass',
+                        'fail' : qcs == 'fail',
+                        'warning' : qcs == 'accept',
+                        'reject' : qcs == 'reject',
+                        'na': qcs == 'na'}"
+                uib-tooltip-html="makeTooltip(sub, exam[sd])" tooltip-append-to-body="true"></table>
+        </td>
+        <td ng-repeat-end></td>
+    </tr>
+<tr><td colspan="100"> </td></tr>
+</tbody> -->
+

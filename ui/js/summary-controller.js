@@ -33,8 +33,8 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
                 $scope.researches.push({id: k, studies: v})
             });
 
-            console.log($scope.researches);
-            console.log(res.data);
+            //console.log($scope.researches);
+            //console.log(res.data);
             $scope.research.selected = $scope.researches[0];
             $scope.getSummary();
         }, $scope.toast_error);
@@ -67,10 +67,10 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
 
     $scope.getIIBIS = function() {
         var url = appconf.api+'/iibis/'+$scope.research.selected.id;
-        console.log(url);
+        //console.log(url);
         $http.get(url)
             .then(function(res) {
-                console.log(res);
+                //console.log(res);
                 $scope.research_detail = res.data[0];
             }, $scope.toast_error);
     };
@@ -86,17 +86,17 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
         $scope.seriesfilter = '';
         $scope.getIIBIS();
         angular.forEach($scope.research.selected.studies, function(s){
-            console.log(s);
+            //console.log(s);
             $http.get(appconf.api+'/research/summary/'+s._id)
                 .then(function(res) {
-                    console.log(s);
+                    //console.log(s);
                     var label = s.Modality;
                     if(s.radio_tracer !== null){
                         label += ' - ' + s.radio_tracer;
                     }
 
                     $scope.summary[label] = res.data;
-                    console.log(res.data);
+                    //console.log(res.data);
                     res.data.subjects.forEach(function(k){
                         if($scope.subjects.indexOf(k) < 0){
                             $scope.subjects.push(k);
@@ -108,7 +108,8 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
                 }, $scope.toast_error);
         });
 
-        console.dir($scope.subjects);
+        console.log($scope.subjects);
+        console.log($scope.summary);
 
     };
 
