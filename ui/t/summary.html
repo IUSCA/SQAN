@@ -4,6 +4,10 @@
 {
     margin-bottom: 0;
 }
+.table-scroll {
+    height: 150px;
+    overflow-y: scroll;
+    }
 
 </style>
 
@@ -90,8 +94,8 @@
                     <h4><i class="fa fa-info-circle fa-2x"></i> No exam records have been received for IIBISID <b>{{research.selected.id}}</b></h4>
                 </div>
 
-                <table class="table table-header-rotated table-condensed" ng-show="subjects.length">
-                    <thead>
+                <table class="table table-scroll table-header-rotated table-condensed" ng-show="subjects.length">
+                    <thead style="table-layout: fixed;">
                         <tr>
                             <th ng-repeat-start="(mod, res) in summary"></th>
                             <th ng-repeat-end class="rotate-45 text-muted" ng-repeat="sd in res.series_desc | filter:seriesfilter"><div style="white-space:nowrap; height:180px; left:100px"><span class="pull-right">{{sd}}&nbsp;&nbsp;</span></div></th>
@@ -104,8 +108,7 @@
                     </thead>
                     <tbody>
                         <tr ng-repeat="sub in subjects | filter:subfilter">
-                            <td><div class="pull-right" style="white-
-                            : nowrap;"><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></td>
+                            <td><div class="pull-right" style="white-space: nowrap;"><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></td>
                             <td ng-repeat="(mod, res) in summary" colspan="{{res.series_desc.length+1}}" style="white-space:nowrap;">
                                 <table class="table table-condensed">
                                     <tr style="border-bottom: 1px solid #ddd" ng-repeat="exam in res.exams[sub]">
