@@ -11,6 +11,10 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
     $scope.seriesfilter = '';
 
     $scope.loading = true;
+    $scope.transpose = false;
+
+    $scope.toggle = {};
+    $scope.toggle.switch = false;
 
     $scope.openstudy = function(id) {
         $window.open("#/series/"+id, "study:"+id);
