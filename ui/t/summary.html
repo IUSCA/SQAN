@@ -4,10 +4,15 @@
 {
     margin-bottom: 0;
 }
-.table-scroll {
-height: 150px;
-overflow-y: scroll;
-}
+ .borderless tr td {
+    border-bottom: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    margin: 0px !important;
+    border: 0px !important;
+    padding: 0px !important;
+} 
 
 .switch {
   position: relative;
@@ -68,6 +73,7 @@ input:checked + .slider:before {
 .slider.round:before {
   border-radius: 50%;
 }
+
 </style>
 
 
@@ -163,19 +169,18 @@ input:checked + .slider:before {
                             </label>
                             <th ng-repeat-start="(mod, res) in summary"></th>
                             <th ng-repeat-end class="rotate-45 text-muted" ng-repeat="sd in res.series_desc | filter:seriesfilter"><div style="white-space:nowrap; height:180px; left:100px"><span class="pull-right">{{sd}}&nbsp;&nbsp;</span></div></th>
-                            <!-- <th ng-repeat-end></th> -->
-                        </tr>
+                        </tr>                    
+                    </thead>
+                    <tbody style="border-bottom: 1px solid #ddd">
                         <tr>
                             <td><h6 class="pull-right text-muted">Subjects/Modality</h6></td>
                             <td ng-repeat="(mod, res) in summary" colspan="{{res.series_desc.length+1}}" style="background-color: #006687; color: white">{{mod}}</td>
-                        </tr>                     
-                    </thead>
-                    <tbody style="border-bottom: 1px solid #ddd">
+                        </tr> 
                         <tr ng-repeat="sub in subjects | filter:subfilter">
                             <td><div class="pull-right" style="white-space: nowrap;"><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></td>
                             <td ng-repeat="(mod, res) in summary" colspan="{{res.series_desc.length+1}}" style="white-space:nowrap;">
-                                <table class="table table-condensed">
-                                    <tr style="border-bottom: 1px solid #ddd" ng-repeat="exam in res.exams[sub]">
+                                <table class='table borderless'>
+                                    <tr style="border-bottom: none" class='borderless' ng-repeat="exam in res.exams[sub]">
                                         <td ng-repeat="sd in res.series_desc | filter:seriesfilter" >
                                                 <span style="cursor: pointer" class="color-box"                                                        
                                                     ng-click="openstudy(exam[sd]._id)"
@@ -192,12 +197,11 @@ input:checked + .slider:before {
                                 </table>
                             </td>
                         </tr>
-                    <!-- <tr><td colspan="100"> </td></tr> -->
                     </tbody>
                 </table>
 
 
-                <table ng-show="transpose" class="table table-header-rotated table-condensed" ng-show="subjects.length">
+                <table ng-show="transpose" class="table table-scroll table-header-rotated table-condensed" ng-show="subjects.length">
                     <thead>
                         <tr>
                             <th></th>
