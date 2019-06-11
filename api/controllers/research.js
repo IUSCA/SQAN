@@ -40,12 +40,47 @@ router.get('/summary/:id', function(req, res, next) {
     var subjects = [];
     var exams = {};
     var series_desc = [];
+
+    function subjExists(subject) {
+        console.log(`subject ${subject}`);
+        return subjects.some(function(el) {
+            console.log(el);
+            console.log(el.subject)
+            return el.subject === subject;
+        }); 
+      }
+
+    function updateTimeStamp(exam) {
+        var found = subjExists(subject);
+        console.log(found);
+            if (!found) {
+                var subj = {};
+                subj.subject = exam.subject;
+                subj.StudyTimestamp = exam.StudyTimestamp;
+                subjects.push(subj); 
+            } else{
+                console.log(`subject ${exam.subject}`);
+                subjects.some(function(el) {
+                    console.log(el);
+                    if (el.subject === exam.subject) {
+                        if (el.StudyTimestamp > exam.StudyTimestamp) {
+                            console.log('updating timestamp');
+                            el.StudyTimestamp = exam.StudyTimestamp;
+                        }
+                    }
+                }); 
+            }
+      }
+
+
     db.Exam.find({'research_id': req.params.id, 'istemplate' : false}).exec(function(err, _exams){
         if(err) return next(err);
         //console.log(_exams);
 
         async.each(_exams, function(exam, callback) {
-            subjects.indexOf(exam.subject) === -1 && subjects.push(exam.subject);
+            // subjects.indexOf(exam.subject) === -1 && subjects.push(exam.subject);
+            updateTimeStamp(exam);
+            
             db.Series.find({exam_id: exam._id}).populate('exam_id').exec(function(err, _series){
                 var exam_series = {};
                 _series.forEach(function(ser){
@@ -59,12 +94,10 @@ router.get('/summary/:id', function(req, res, next) {
             if(err) return next(err);
             res.json({series_desc: series_desc, subjects: subjects, exams: exams});
         });
-
-
     });
-
-
 });
+
+
 
 //rerun QC1 on the entire "research"
 router.post('/reqcall/:research_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {

@@ -81,6 +81,42 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
 
     $scope.exportJSON = "";
 
+    // $scope.getSummary = function() {
+
+    //     $scope.loading = true;
+    //     $scope.summary = {};
+    //     $scope.subjects = [];
+    //     $scope.subfilter = '';
+    //     $scope.seriesfilter = '';
+    //     $scope.getIIBIS();
+    //     angular.forEach($scope.research.selected.studies, function(s){
+    //         //console.log(s);
+    //         $http.get(appconf.api+'/research/summary/'+s._id)
+    //             .then(function(res) {
+    //                 console.log(res.data);
+    //                 var label = s.Modality;
+    //                 if(s.radio_tracer !== null){
+    //                     label += ' - ' + s.radio_tracer;
+    //                 }
+
+    //                 $scope.summary[label] = res.data;
+    //                 //console.log(res.data);
+    //                 res.data.subjects.forEach(function(k){
+    //                     if($scope.subjects.indexOf(k) < 0){
+    //                         $scope.subjects.push(k);
+    //                     }
+    //                 });
+    //                 $scope.loading = false;
+    //                 $scope.exportJSON = encodeURIComponent(JSON.stringify($scope.export()));
+
+    //             }, $scope.toast_error);
+    //     });
+
+    //     console.log($scope.subjects);
+    //     console.log($scope.summary);
+
+    // };
+
     $scope.getSummary = function() {
 
         $scope.loading = true;
@@ -93,7 +129,7 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
             //console.log(s);
             $http.get(appconf.api+'/research/summary/'+s._id)
                 .then(function(res) {
-                    //console.log(s);
+                    console.log(res.data);
                     var label = s.Modality;
                     if(s.radio_tracer !== null){
                         label += ' - ' + s.radio_tracer;
