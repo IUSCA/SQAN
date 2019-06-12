@@ -1,6 +1,6 @@
 app.directive('studynote', function() {
     return {
-        scope: { study: '=', },
+        scope: { study: '<', },
         templateUrl: 't/studynote.html',
         link: function($scope, elem, attrs) {
             update();
@@ -72,11 +72,11 @@ app.directive('errorpanel', function() {
 app.component('exams', {
     templateUrl: 't/components/exams.html',
     bindings: {
-        exam: "=",
-        templates: '=',
+        exam: "<",
+        templates: '<',
         mode: '<', //view mode ('wide' / 'tall')
         deprecated: '=',
-        templateLookup: '&'
+        templateLookup: '<'
     },
     controller: function(appconf, $window, $http, $uibModal, toaster, $interval) {
         var $ctrl = this;
@@ -195,6 +195,19 @@ app.component('templates', {
 
 app.component('viewmodeToggler', {
     templateUrl: 't/components/viewmodetoggler.html',
+    controller: function($window) {
+        var $ctrl = this;
+        this.toggleView = function() {
+            console.log("toggling!")
+            if($ctrl.deprecated === null) {
+                $ctrl.deprecated = true;
+            } else if($ctrl.deprecated === true) {
+                $ctrl.deprecated = false;
+            } else if($ctrl.deprecated === false) {
+                $ctrl.deprecated = null;
+            }
+        }
+    },
     bindings: {
         mode: '=', //view mode ('wide' / 'tall')
         deprecated: '='

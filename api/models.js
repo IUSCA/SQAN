@@ -41,12 +41,13 @@ var examSchema = mongoose.Schema({
     ///////////////////////////////////////////////////////////////////////////
     research_id: {type: mongoose.Schema.Types.ObjectId, index: true, ref: 'Research'},
     subject: {type: String}, //not set if it's template
-    
+
     StudyInstanceUID: {type: String, index: true},
-    
+    override_template_id: {type: mongoose.Schema.Types.ObjectId},  // _id of template exam if override is set
+
     istemplate: {type: Boolean},
     StudyTimestamp: Date,
-    //series: mongoose.Schema.Types.Mixed, 
+    //series: mongoose.Schema.Types.Mixed,
     qc: mongoose.Schema.Types.Mixed,
 
     comments: [ mongoose.Schema({
@@ -85,12 +86,12 @@ exports.Template = mongoose.model('Template', templateSchema);
 
 var templateHeaderSchema = mongoose.Schema({
 
-    template_id: {type: mongoose.Schema.Types.ObjectId, index: true, ref: 'Template'}, 
+    template_id: {type: mongoose.Schema.Types.ObjectId, index: true, ref: 'Template'},
     InstanceNumber: {type: Number},
     EchoNumbers: {type: Number},
     SOPInstanceUID : {type: String, index: true},
-    
-    headers: mongoose.Schema.Types.Mixed, 
+
+    headers: mongoose.Schema.Types.Mixed,
     primary_image: {type: mongoose.Schema.Types.ObjectId, index: true,  ref: 'TemplateHeader'}
 });
 templateHeaderSchema.index({template_id: 1, SOPInstanceUID: 1, primary_image: 1});
@@ -122,7 +123,7 @@ var seriesSchema = mongoose.Schema({
     series_desc: {type: String, index: true}, //original SeriesDescription minut anything after ^
     SeriesNumber: {type: Number}, //some study has repeated series
     deprecated_by: {type: mongoose.Schema.Types.ObjectId},
-    override_template_id: {type: mongoose.Schema.Types.ObjectId, index: true},  // template_id to use for qc 
+    override_template_id: {type: mongoose.Schema.Types.ObjectId, index: true},  // template_id to use for qc
 
     isexcluded: Boolean,
     primary_image: {type: mongoose.Schema.Types.ObjectId, index: true},
@@ -152,7 +153,7 @@ exports.Series = mongoose.model('Series', seriesSchema);
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 var imageSchema = mongoose.Schema({
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     series_id: {type: mongoose.Schema.Types.ObjectId, index: true, ref: 'Series'},
@@ -162,7 +163,7 @@ var imageSchema = mongoose.Schema({
     EchoNumbers: {type: Number},
 
     //the actual headers for this instance (cleaned)
-    headers: mongoose.Schema.Types.Mixed, 
+    headers: mongoose.Schema.Types.Mixed,
 
     qc: mongoose.Schema.Types.Mixed,
     primary_image:  {type: mongoose.Schema.Types.ObjectId, index: true, ref: 'Image'}

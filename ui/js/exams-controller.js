@@ -65,8 +65,7 @@ app.controller('ExamsController',
 
             $scope.subject_filter = "";
             $scope.selected_subjects = [];
-            console.log(modality);
-            console.log(exam);
+            $scope.subject_exams = {};
 
             var where = {};
             var research = modality.research;
@@ -93,19 +92,34 @@ app.controller('ExamsController',
                     where: where,
                 }})
                 .then(function(res) {
-                    console.log('new API response:');
-                    console.log(res.data);
-                    $scope.selected = res.data;
+
+                    console.log("back from the api");
+
+                    res.data.template_map = {};
 
                     angular.forEach(res.data.templates, function(t) {
                         t.bgcolor = newColor();
+                        angular.forEach(t.series, function(ts) {
+                            res.data.template_map[ts._id] = {
+                                StudyTimestamp: t.StudyTimestamp,
+                                series_desc: ts.series_desc,
+                                SeriesNumber: ts.SeriesNumber,
+                                bgcolor : t.bgcolor
+                            };
+                        });
                     });
+
 
                     angular.forEach(res.data.exams, function(e) {
                         if($scope.selected_subjects.indexOf(e.subject) < 0) {
                             $scope.selected_subjects.push(e.subject);
+                            $scope.subject_exams[e.subject] = [e]
+                        } else {
+                            $scope.subject_exams[e.subject].push(e);
                         }
                     });
+
+                    $scope.selected = res.data;
 
                     handle_scroll();
 

@@ -51,7 +51,7 @@ function compose_modalityid(research_detail) {
 //                  }
 //              }
 //          }
-//      }        
+//      }
 //  }
 
 function reorg(data) {
@@ -59,7 +59,7 @@ function reorg(data) {
 
     var org = {};
 
-    var researches = {}; 
+    var researches = {};
     researches[data.research._id] = data.research;
 
     function get_modality(research_id) {
@@ -71,7 +71,7 @@ function reorg(data) {
             modality = {
                 _detail: research_detail,
                 exams: {},
-                subjects: {}, 
+                subjects: {},
                 templates_times: [], //array - because not grouped by subjects like subjects_times
                 templates: {},
             };
@@ -80,7 +80,7 @@ function reorg(data) {
         }
         return modality;
     }
-    
+
 
 
     //organize exams
@@ -89,7 +89,7 @@ function reorg(data) {
         var modality = get_modality(exam.research_id);
 
         if(modality.exams[exam.subject] === undefined) modality.exams[exam.subject] = {};
-        modality.exams[exam.subject][exam._id] = exam; 
+        modality.exams[exam.subject][exam._id] = exam;
 
         //organize series
         data.serieses.forEach(function(series) {
@@ -102,9 +102,9 @@ function reorg(data) {
                 var subject = exam.subject;
                 var series_desc = series.series_desc;
                 var exam_id = series.exam_id;
-                
+
                 var mod = get_modality(exam.research_id);
-    
+
                 //initialize datastructure to fill
                 if(mod.subjects[subject] == undefined) mod.subjects[subject] = {
                     serieses: {},
@@ -116,24 +116,24 @@ function reorg(data) {
                 mod.subjects[subject].serieses[series_desc] = {exams: {}};
                 if(mod.subjects[subject].serieses[series_desc].exams[exam_id] == undefined)
                 mod.subjects[subject].serieses[series_desc].exams[exam_id] = [];
-    
+
                 //unshift to put the latest one on the top - since serieses are sorted by studytime/-seriesnumber
                 mod.subjects[subject].serieses[series_desc].exams[exam_id].unshift(series);
                 //if(series.qc == undefined) $scope.qcing = true;
                 if(series.isexcluded) mod.subjects[subject].serieses[series_desc]._isexcluded = series.isexcluded;
 
                 //console.log(mod.subject[subject])
-            }            
+            }
         });
     });
 
 
     //organize templates
-    data.template_exams.forEach(function(texam) {                  
+    data.template_exams.forEach(function(texam) {
 
         data.templates.forEach(function(template) {
             if (new String(template.exam_id).valueOf() == new String(texam._id).valueOf()) {
-                
+
                 var modality = get_modality(texam.research_id);
                 var time = texam.StudyTimestamp.toISOString(); //TODO not exactly sure why I need to do this.
                 var series_desc = template.series_desc;
@@ -154,7 +154,7 @@ function reorg(data) {
 //query against all serieses
 router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     //lookup iibisids that user has access to (TODO - refactor this to aclSchema statics?)
-    
+
     var where = JSON.parse(req.query.where);
     //console.log(where);
     var r_id = where.research_id;
@@ -163,8 +163,8 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
 
     profile.isUserAllowed(req.user,'view', r_id, function(err, isallowed) {
         if (err) return res.status(404).json({message:"there was an error during authorization - please contact SCA team"})
-        if(!isallowed) return res.status(401).json({message: "you are not authorized to view this study"});               
-        
+        if(!isallowed) return res.status(401).json({message: "you are not authorized to view this study"});
+
         //load various raw records
         var serieses = null;
         //var all_serieses = null;
@@ -194,7 +194,7 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
             },
 
             //now query serie documents that belong to the exams in the selected research
-            function(next) {                
+            function(next) {
 
                 var query = db.Series.find().lean();
                 query.where('exam_id').in(eids);
@@ -204,8 +204,8 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
                     next(err);
                 });
             },
-        
-            //retrieve the research document 
+
+            //retrieve the research document
             function(next) {
                 //var where = JSON.parse(req.query.where);
                 //var r_id = where.research_id;
@@ -224,8 +224,8 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
                 query.where('istemplate', true);
                 query.sort({StudyTimestamp: -1});
 
-                query.exec(function(err, _texams) {  
-                    template_exams = _texams;                  
+                query.exec(function(err, _texams) {
+                    template_exams = _texams;
                     template_exams.forEach(function(te) {
                         teids.push(te._id);
                     });
@@ -234,7 +234,7 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
             },
 
             //now query template documents that belong to the exams in the selected research
-            function(next) {                
+            function(next) {
 
                 var query = db.Template.find().lean();
                 query.where('exam_id').in(teids);
@@ -326,7 +326,7 @@ router.post('/comment/:series_id', jwt({secret: config.express.jwt.pub}), functi
         if(err) return next(err);
         if(!series) return res.status(404).json({message: "can't find specified series"});
         //make sure user has access to this series
-        db.Acl.can(req.user, 'view', series.exam_id.research_id.IIBISID, function(can) {            
+        db.Acl.can(req.user, 'view', series.exam_id.research_id.IIBISID, function(can) {
             if(!can) return res.status(401).json({message: "you are not authorized to view this IIBISID:"+series.exam_id.research_id.IIBISID});
             if(!series.comments) series.comments = [];
             var comment = {
@@ -336,7 +336,7 @@ router.post('/comment/:series_id', jwt({secret: config.express.jwt.pub}), functi
             };
             db.Series.update({_id: series._id}, {$push: { comments: comment }}, function(err){
                 if(err) return(err);
-                res.json(comment); 
+                res.json(comment);
             });
         });
     });
@@ -376,7 +376,7 @@ router.post('/qcstate/:series_id', jwt({secret: config.express.jwt.pub}), functi
                     if(err) next(err);
                     res.json({message: "State updated to "+req.body.state, event: event});
                 });
-            } //series.qc1_state = req.body.state; 
+            } //series.qc1_state = req.body.state;
             if(req.body.level == "2") {
                 db.Series.update({_id: series._id}, {$push: { events: event }, qc2_state:req.body.state}, function(err){
                     if(err) next(err);
@@ -386,7 +386,7 @@ router.post('/qcstate/:series_id', jwt({secret: config.express.jwt.pub}), functi
         });
     });
 });
- 
+
 
 router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     db.Series.findById(req.params.series_id)
@@ -423,7 +423,7 @@ router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), funct
                         template_id: series.qc ? series.qc.template_id : undefined,
                         comment:"Re-QCing with template: "+texam.StudyTimestamp.toString()+" and Series Number "+template.SeriesNumber,
                     }
-    
+
                     var event = {
                         user_id: req.user.sub,
                         title: "Template override",
@@ -447,7 +447,7 @@ router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), funct
 });
 
 router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    
+
     console.log("ReQ series_id "+req.params.series_id)
 
     db.Series.findById(req.params.series_id)
@@ -470,8 +470,8 @@ router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub}), function(
             title: "Series-level ReQC",
             date: new Date(), //should be set by default, but UI needs this right away
             detail: detail,
-        };       
-        //make sure user has access to this research 
+        };
+        //make sure user has access to this research
         db.Acl.can(req.user, 'qc', series.exam_id.research_id.IIBISID, function(can) {
             if(!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:"+series.exam_id.research_id.IIBISID});
             //events.series(series);
@@ -527,7 +527,7 @@ router.post('/reqcallseries/:exam_id', jwt({secret: config.express.jwt.pub}), fu
                             title: "Exam-level ReQC all",
                             date: new Date(), //should be set by default, but UI needs this right away
                             detail: detail,
-                        }; 
+                        };
                         db.Series.update({_id: series._id}, {$push: { events: event }, qc1_state:"re-qcing", $unset: {qc: 1}}, function(err){
                             if(err) next(err);
                             next_series();
@@ -574,7 +574,7 @@ router.post('/reqcerroredseries/:exam_id', jwt({secret: config.express.jwt.pub})
                             title: "Exam-level ReQC failures",
                             date: new Date(), //should be set by default, but UI needs this right away
                             detail: detail,
-                        }; 
+                        };
                         db.Series.update({_id: series._id}, {$push: { events: event }, qc1_state:"re-qcing", $unset: {qc: 1}}, function(err){
                             if(err) next(err);
                             next_series();

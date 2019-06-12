@@ -4,7 +4,7 @@
 //contrib
 var winston = require('winston');
 var async = require('async');
-var _ = require('underscore'); 
+var _ = require('underscore');
 
 //mine
 var config = require('../config');
@@ -31,7 +31,7 @@ function run(cb) {
             updatedAt: {$lt: new Date(new Date().getTime() - 1000 * 30)} //wait for 30 seconds since last update
         }},{$sample: {size:config.qc.series_batch_size}}
     ]).exec(function(err,series){
-    
+
         if(err) return cb(err);
 
         //logger.info("Un-qc-ed Series retrieved: "+ series.length);
@@ -39,9 +39,9 @@ function run(cb) {
         async.forEach(series,qc_images,function(err) {
             if (err) return cb(err);
 
-            // update exams reccords 
+            // update exams reccords
             var exams2qc = [];
-            
+
             series.forEach(function(ss){
                 if (exams2qc.indexOf(ss.exam_id.toString()) == -1){
                     exams2qc.push(ss.exam_id.toString());
@@ -53,7 +53,7 @@ function run(cb) {
                 exams2qc.forEach(function(ee){
                     qc_funcs.exam.qc_exam(ee,function(err){
                         if (err) return cb(err);
-                        //console.log('Done with exam: ', ee);
+                        console.log('Done with exam: ', ee);
                     })
                 })
             }
@@ -71,14 +71,14 @@ function run(cb) {
     });
 }
 
-//iii) Compare headers on the images with the chosen template (on fields configured to be checked against) and store discrepancies. 
+//iii) Compare headers on the images with the chosen template (on fields configured to be checked against) and store discrepancies.
 function qc_images(series,next) {
 
     // find the primary image for this series
     db.Image.findOne({"series_id":series._id, "primary_image":null},function(err,primimage) {
         if (err) return next(err);
         //console.log(`primary image for this series : ${primimage._id}`);
-                
+
         // find template for this series
         find_template(series, function(err,template) {
             if (err) return next(err);
@@ -143,29 +143,29 @@ function qc_one_image(image,primimage,primtemplate,cb) {
         function(next) {
 	        var hasEchoNumbers = false;
 	        if (primtemplate.EchoNumbers !== undefined && image.EchoNumbers !== undefined && primtemplate.EchoNumbers !== image.EchoNumbers) {
-                hasEchoNumbers = true;	
+                hasEchoNumbers = true;
                 // console.log(" header has EchoNumbers that don't match --- "+ "primtemplate.EchoNumbers " +primtemplate.EchoNumbers + " image.EchoNumbers "+ image.EchoNumbers)
             }
 
             if ((image.InstanceNumber !== primtemplate.InstanceNumber) || hasEchoNumbers) {  // check if primary template is the header for the current image
                 get_template_image(primtemplate,image, function(err,templateheader) {
                     if (err) return next(err);
-                    
+
                     if (templateheader) {
                         //console.log("matching template header "+ templateheader.InstanceNumber+ " with image header " + image.InstanceNumber);
                         qc_funcs.template.match(image,templateheader,qc);
-                        next()                       
+                        next()
                     }
                     else {
                         //console.log("No template");
                         qc.notemp = true;
                         next()
-                    }  // template header is missing for this instance number                                  
+                    }  // template header is missing for this instance number
                 })
             } else {
                 qc_funcs.template.match(image,primtemplate,qc);
                 next()
-            } 
+            }
         },
 
         function(next) {
@@ -212,7 +212,7 @@ function get_override_template(series,cb) {
     },function(err,template) {
         if (err) return cb(err);
         update_qc1(series,template,cb)
-    }) 
+    })
 }
 
 
@@ -242,9 +242,9 @@ function get_mostrecent_template(series, cb) {
                     updatedAt: {$lt: new Date(new Date().getTime() - 1000 * 30)}
                 },function(err,temp) {
                     if (err) return cb(err);
-                    return update_qc1(series,temp,cb);        
-                }) 
-            }                                      
+                    return update_qc1(series,temp,cb);
+                })
+            }
         })
     });
 }
@@ -258,11 +258,11 @@ function update_qc1(series,template,cb){
             db.Series.findOneAndUpdate({_id: series._id},{qc1_state:series.qc1_state},function(err) {
                 if (err) return cb(err);
                 return cb(null);
-            })                 
-        }                        
+            })
+        }
     } else {
         cb(null,template)
-    } 
+    }
 }
 
 
@@ -289,7 +289,7 @@ function find_template_primary(template,cb) {
 
 function get_template_image(primtemplate,image,cb) {
     db.TemplateHeader.findOne({
-        primary_image: primtemplate._id, 
+        primary_image: primtemplate._id,
         InstanceNumber: image.InstanceNumber,
 	    EchoNumbers: image.EchoNumbers !== undefined ? image.EchoNumbers : undefined,
     }, function(err,templateheader){

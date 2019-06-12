@@ -57,8 +57,12 @@ function qc_exam(exam_id,cb) {
         function(next) {
 
             // find the most recent template for this research
-            db.Exam.find({"research_id":exam.research_id, "istemplate":true})
-            .sort({"StudyTimestamp":-1})
+            let query = db.Exam.find({"research_id":exam.research_id, "istemplate":true});
+            if(typeof(exam.override_template_id) !== undefined && exam.override_template_id !== null) {
+                console.log("exam template override is set, using override template");
+                query = db.Exam.find({_id: exam.override_template_id, "istemplate":true});
+            }
+            query.sort({"StudyTimestamp":-1})
             .exec(function(err,texams) {
                 if (err) return next(err);
                 //console.log(texams.length + " template exams retrieved for research_id "+exam.research_id);

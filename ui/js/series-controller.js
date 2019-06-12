@@ -1,10 +1,10 @@
 //used to be StudyController
-app.controller('SeriesController', 
+app.controller('SeriesController',
 function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, users, $timeout) {
     $scope.appconf = appconf;
     //scaMessage.show(toaster);
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
-    
+
     //load userprofiles for comments..
     //TODO loading all user is stupid.. just load the users who are authors of comments
     users.then(function(_users) { $scope.users = _users; });
@@ -15,18 +15,33 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
         key: ''
     };
 
+    const mergeByInstanceNumber = (a1, a2) =>
+        a1.map(itm => ({
+            image: a2.find((item) => (item.headers.InstanceNumber === itm.InstanceNumber) && item),
+            ...itm
+        }));
+
+
     function load_series() {
         if(!$routeParams.seriesid) return; //probably the route changed since last time
         $http.get(appconf.api+'/series/id/'+$routeParams.seriesid)
         .then(function(res) {
             $scope.data = res.data;
+            $scope.data.template_images = [];
             console.log($scope.data)
             if($scope.data.images) {
                 $scope.data.images.forEach(computeColor);
             }
             //find template object selected / used by QC
             res.data.templates.forEach(function(template) {
-                if(template._id == res.data.series.qc.template_id) $scope.data.template = template;
+                if(template._id == res.data.series.qc.template_id) {
+                    $scope.data.template = template;
+                    $http.get(appconf.api+'/template/head/'+template._id)
+                        .then(function(tres) {
+                            console.log(tres.data.templates);
+                            $scope.data.template_images = mergeByInstanceNumber(tres.data.templates, $scope.data.images);
+                        }, $scope.toast_error)
+                }
             });
             // get date received by SCA
             $scope.data.date_received = res.data.series.createdAt;
@@ -51,15 +66,16 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
                     $scope.data.series.events[index].icon = "fa fa-exclamation-circle";                                     $scope.data.series.events[index].qc1_update = e.title.includes('accept')? "accept" : "reject";
                     if (e.detail.qc1_state.includes('fail')) $scope.data.series.events[index].qc1_prev = 'reject';
                     else if (e.detail.qc1_state.includes('autopass')) $scope.data.series.events[index].qc1_prev = 'accept';
-                    else if (e.detail.qc1_state.includes('no template')) $scope.data.series.events[index].qc1_prev = 'no template'; 
-                    $scope.data.series.events[index].title = "QC1 state manually updated:";  
+                    else if (e.detail.qc1_state.includes('no template')) $scope.data.series.events[index].qc1_prev = 'no template';
+                    $scope.data.series.events[index].title = "QC1 state manually updated:";
                     console.log(e.title);
-                    console.log($scope.data.series.events[index].qc1_update)                
+                    console.log($scope.data.series.events[index].qc1_update)
                 }
 
-                if ($scope.users[e.user_id]) {
-                    $scope.data.series.events[index].username = $scope.users[e.user_id].fullname;                    
-                } else $scope.data.series.events[index].username = "RADY-SCA";               
+
+                if (e.user_id !== undefined && $scope.users[e.user_id]) {
+                    $scope.data.series.events[index].username = $scope.users[e.user_id].fullname;
+                } else $scope.data.series.events[index].username = "RADY-SCA";
             })
             //reload if qc is not yet loaded
             if(res.data.series.qc1_state != "no template" && !res.data.series.qc) {
@@ -68,22 +84,22 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
             console.log($scope.data);
         }, $scope.toast_error);
     }
-    
+
     //TODO this needs some overhawling
     function computeColor(image) {
-        var h = 0; 
+        var h = 0;
         var s = "0%"; //saturation (default to gray)
         var l = "50%"; //light
         if(image.qc != undefined && image.qc.errors !== undefined) {
             if(image.qc.errors.length > 0) {
                 //error - red
-                h = 0; 
+                h = 0;
                 var _s = 50-image.qc.errors.length;
                 if(_s < 0) _l = 0;
                 s = _s+"%";
             } else if(image.qc.warnings.length > 0) {
                 //warning - yello
-                h = 60; 
+                h = 60;
                 var _s = 50-image.qc.warnings.length;
                 if(_s < 0) _l = 0;
                 s = _s+"%";
@@ -94,7 +110,7 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
                 l = "36%";
             } else {
                 //ok - green
-                h = 120; 
+                h = 120;
                 s = "50%";
             }
         }
@@ -214,7 +230,7 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
         console.log(item);
 
         var alert = `You are about to override the default template for this series; this action will result in ReQCing this series only with the selected template.`
-                                
+
         var r = confirm(alert);
         if (r == true) {
             console.log("ReQc-ing series!");
@@ -231,8 +247,8 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
     }
 
 
-    $scope.QCalert = function() {  
-        var alert = `Please confirm that you want to ReQC this Series`;                                
+    $scope.QCalert = function() {
+        var alert = `Please confirm that you want to ReQC this Series`;
         var r = confirm(alert);
         if (r == true) {
             console.log("ReQc-ing series " +$routeParams.seriesid);
@@ -245,7 +261,7 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
 
 
 
-    reqc = function() {  
+    reqc = function() {
         $scope.image_detail = null;
         $scope.active_image = null;
         $http.post(appconf.api+'/series/reqc/'+$routeParams.seriesid)
