@@ -11,7 +11,7 @@
         <thead><tr class="text-muted"><th width="30%">Series Description</th><th width="30%">Status</th><th>Template Used</th></tr></thead>
         <tbody>
             <tr ng-repeat="s in $ctrl.exam.series track by s._id" ng-if="!s.deprecated_by || $ctrl.deprecated !== null ">
-                <td>{{::s.series_desc}}</td>
+                <td ng-class="{'text-muted' : s.deprecated_by}">{{::s.series_desc}}</td>
                 <td style="padding: 0px;">
                     <div class="text-muted excluded"
                         ng-if="::s._isexcluded"
