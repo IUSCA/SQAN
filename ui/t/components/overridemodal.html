@@ -29,7 +29,7 @@
                                ng-model="$mctrl.overridetemplate">
                         <ui-select-match placeholder="Specify a template or leave it blank to auto select the latest template" allow-clear-dis="true">
                             <div class_dis="studynote">
-                                {{$select.selected.StudyTimestamp | date:'medium':'-0400'}} ({{template.series.length}} series)
+                                {{$select.selected.StudyTimestamp | date:'medium':'-0400'}} ({{$select.selected.series.length}} series)
                             </div>
                         </ui-select-match>
                         <ui-select-choices repeat="template in templates">
