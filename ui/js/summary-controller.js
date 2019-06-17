@@ -40,6 +40,7 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
             //console.log($scope.researches);
             //console.log(res.data);
             $scope.research.selected = $scope.researches[0];
+            console.log($scope.research.selected)
             $scope.getSummary();
         }, $scope.toast_error);
 
@@ -121,7 +122,7 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
 
     $scope.export = function() {
         var data = [{"modality":"modality","series":"series"}];
-        console.log($scope.summary);
+        //console.log($scope.summary);
         var mods = Object.keys($scope.summary);
         mods.forEach(function(mod){
             var res = $scope.summary[mod];
@@ -148,7 +149,7 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
                 data.push(row);
             });
         })
-        console.log(data);
+        //console.log(data);
         return data;
     };
 

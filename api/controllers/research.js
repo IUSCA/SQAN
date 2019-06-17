@@ -40,13 +40,13 @@ router.get('/summary/:id', function(req, res, next) {
     var subjects = [];
     var exams = {};
     var series_desc = [];
-    db.Exam.find({'research_id': req.params.id, 'istemplate' : false}).exec(function(err, _exams){
+    db.Exam.find({'research_id': req.params.id, 'istemplate' : false}).sort({ StudyTimestamp:-1 }).exec(function(err, _exams){
         if(err) return next(err);
         //console.log(_exams);
 
         async.each(_exams, function(exam, callback) {
             subjects.indexOf(exam.subject) === -1 && subjects.push(exam.subject);
-            db.Series.find({exam_id: exam._id}).populate('exam_id').exec(function(err, _series){
+            db.Series.find({exam_id: exam._id}).populate('exam_id').sort({ SeriesNumber:1 }).exec(function(err, _series){
                 var exam_series = {};
                 _series.forEach(function(ser){
                     series_desc.indexOf(ser.series_desc) === -1 && series_desc.push(ser.series_desc);
