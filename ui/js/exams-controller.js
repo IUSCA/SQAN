@@ -59,9 +59,13 @@ app.controller('ExamsController',
         $scope.selected_subjects = [];
         $scope.subject_filter = "";
 
+        $scope.loading_exam = false;
 
 
         $scope.select = function(modality, exam) {
+
+            $scope.selected = null;
+            $scope.loading_exam = true;
 
             $scope.subject_filter = "";
             $scope.selected_subjects = [];
@@ -119,6 +123,7 @@ app.controller('ExamsController',
                         }
                     });
 
+                    $scope.loading_exam = false;
                     $scope.selected = res.data;
 
                     handle_scroll();

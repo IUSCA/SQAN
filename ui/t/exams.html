@@ -6,7 +6,7 @@
             <p class="help-block" ng-if="search.recentrange == 'all'">Showing all {{qc_text}}</p>
         </div>
 
-        <input type="text" class="form-control" ng-model="research_filter" placeholder="Filter">
+        <input type="text" class="form-control" ng-model="research_filter" placeholder="Filter" ng-model-options="{debounce: 500}">
         <br>
         <div class="btn-group pull-right" style="left: 0px;top: -5px;">
             <button class="btn btn-xs btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -99,7 +99,14 @@
     </div>
 </div>
 <div class="subbar-content subbar-contentnew">
-    <div ng-if="!selected" class="help-block center-parent"><span class="center-child text-center"><h3><i class="fa fa-8x fa-flask faded"></i> <br>Please select a research to display</h3></span></div>
+    <div ng-if="!selected" class="help-block center-parent">
+        <span class="center-child text-center" ng-if="!loading_exam">
+            <h3><i class="fa fa-8x fa-flask faded"></i> <br>Please select a research to display</h3>
+        </span>
+        <span class="center-child text-center" ng-if="loading_exam">
+            <h3><i class="fa fa-8x fa-circle-o-notch fa-spin"></i> <br>Loading research...</h3>
+        </span>
+    </div>
     <div ng-if="selected">
         <div class="fixed-top" style="margin-left: 355px;">
             <h2 class="pull-right" style="position: relative; left: -15px;">
@@ -116,8 +123,11 @@
                 <small ng-show="selected.Modality == 'PT'">
                     RadioTracer: <b>{{selected.radio_tracer}}</b>
                 </small>
-                <span class="pull-right" style="width: 150px">
-                    <input type="text" class="form-control pull-right input-sm" ng-model="subject_filter" placeholder="Filter by Subject">
+                <span class="pull-right" style="width: 200px">
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-fw fa-filter"></i></span>
+                        <input type="text" class="form-control pull-right input-sm" ng-model="subject_filter" placeholder="Filter by Subject" ng-model-options="{debounce: 500}">
+                      </div>
                 </span>
 
                 <br>

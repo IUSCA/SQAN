@@ -56,13 +56,13 @@
                         <th><div class="row">
                             <div class="input-group" style="width:250px;">
                                 <span class="input-group-addon input-sm"><i class="fa fa-fw fa-user"></i></span>
-                                <input type="text" class="form-control input-sm" ng-model="subfilter" placeholder="subject...">
+                                <input type="text" class="form-control input-sm" ng-model="subfilter" placeholder="subject..." ng-model-options="{debounce: 500}">
                             </div>
                             </div>
                             <div class="row">
                             <div class="input-group" style="width:250px;">
                                 <span class="input-group-addon input-sm"><i class="fa fa-fw fa-list-alt"></i></span>
-                                <input type="text" class="form-control input-sm" ng-model="seriesfilter" placeholder="series...">
+                                <input type="text" class="form-control input-sm" ng-model="seriesfilter" placeholder="series..." ng-model-options="{debounce: 500}">
                             </div>
                             </div>
                         </th>

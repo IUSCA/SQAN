@@ -1019,3 +1019,7 @@ pre {
   margin-left: 5px;
   margin-top: -5px;
 }
+
+.input-group-addon {
+  padding: 2px; 
+}
