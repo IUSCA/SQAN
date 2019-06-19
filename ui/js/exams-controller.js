@@ -265,6 +265,7 @@ app.controller('ExamsController',
                 return tooltip;
             }
             let total = exam.qc.series_failed + exam.qc.series_passed + exam.qc.series_passed_warning;
+            tooltip += '<br>Missing Images: '+ exam.qc.total_missing_images;
             tooltip += '<br>Series Failed: '+ ((exam.qc.series_failed / total) * 100).toFixed(1) + '\%';
             tooltip += '<br>Series Passed w/Warnings: '+ ((exam.qc.series_passed_warning / total) * 100).toFixed(1) + '\%';
             tooltip += '<br>Images w/Errors: '+ ((exam.qc.images_errored / exam.qc.image_count) * 100).toFixed(1) + '\%';

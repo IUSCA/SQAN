@@ -491,11 +491,15 @@ h3 {
 .subject-label small {
   line-height: 175%;
   margin-left: 3px;
-  color: white;
+  color: #000000;
   font-size: 70%;
 }
 .subject-label:hover {
   box-shadow: 0px 0px 5px #666;
+}
+
+small.missing_images {
+  color: #b9071d;
 }
 
 /*-----------------------------------------------
@@ -1021,5 +1025,5 @@ pre {
 }
 
 .input-group-addon {
-  padding: 2px; 
+  padding: 2px;
 }
