@@ -5,7 +5,8 @@
             <time style="position: relative; top: 5px"><b>{{$ctrl.exam.StudyTimestamp|date:'short':'-0400'}} <small>(EST)</small></b></time> &nbsp;
             <!-- <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc($ctrl.exam._id)" uib-tooltip="ReQC all series in this exam">ReQC</button> -->
             <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.openmodal();" uib-tooltip="ReQC all series in this exam">ReQC</button>
-            <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.qcalert($ctrl.exam,'failed')" uib-tooltip="ReQC only series that have not passed QC">ReQC failed series</button>
+            <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.qcalert($ctrl.exam,'ReQC failed')" uib-tooltip="ReQC only series that have not passed QC">ReQC failed series</button>
+            <button class="pull-right btn btn-xs btn-warning" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.qcalert($ctrl.exam,'delete all')" uib-tooltip="Delete all series in this exam"><i class="fa fa-trash fa-sm" aria-hidden="true"></i>  Delete Exam</button>
         </p>
         <table class="table table-condensed" style="margin-bottom: 0px;">
         <thead><tr class="text-muted"><th width="30%">Series Description</th><th width="30%">Status</th><th>Template Used</th></tr></thead>

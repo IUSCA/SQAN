@@ -126,51 +126,66 @@ app.component('exams', {
             });
         }
 
-        this.qcalert = function(exam,qc_type) {
+        this.qcalert = function(exam,alert_tyep) {
             date = new Date(exam.StudyTimestamp);
             var StudyTimestamp = (date.getMonth()+1)+'/' + date.getDate() + '/'+date.getFullYear();
             //var StudyTimestamp = date.getFullYear()+'-' + (date.getMonth()+1) + '-'+date.getDate();
-            var alert = `Please confirm that you want to ReQC ${qc_type} series for 
+            var alert = `Please confirm that you want to ${alert_tyep} series for 
             Subject: ${exam.subject}
             Study Timestamp: ${StudyTimestamp}`
             var r = confirm(alert);
 
             if (r == true) {
-                if (qc_type=="all") {
+                if (alert_tyep=="ReQC all") {
                     console.log("ReQc-ing all!");
                     this.reqc_all(exam._id);
                 }
-                else if (qc_type=="failed"){
+                else if (alert_tyep=="ReQC failed"){
                     console.log("ReQc-ing failures!");
                     this.reqc_failed(exam._id);
                 }
+                else if (alert_tyep=="delete all"){
+                    console.log("Deleting Exam "+exam.subject);
+                    this.delete_exam(exam._id);
+                }
             } else {
-              console.log("ReQc canceled")
+              console.log("action canceled")
             }
+        }
+
+        this.delete_exam = function(exam_id) {
+            console.log("deleting exam "+exam_id)
+            $http.post(appconf.api+'/exam/delete/'+exam_id)
+            .then(function(res) {
+                toaster.success(res.data.message);
+            }, function(res) {
+                if(res.data && res.data.message) toaster.error(res.data.message);
+                else toaster.error(res.statusText);
+            });
+        }
+
+        this.reqc_failed = function(exam_id) {
+            console.log("reQC errored series")
+            $http.post(appconf.api+'/series/reqcerroredseries/'+exam_id)
+            .then(function(res) {
+                toaster.success(res.data.message);
+            }, function(res) {
+                if(res.data && res.data.message) toaster.error(res.data.message);
+                else toaster.error(res.statusText);
+            });
         }
 
         this.reqc_all = function(exam_id) {
             console.log("reQC all series")
             $http.post(appconf.api+'/series/reqcallseries/'+exam_id)
             .then(function(res) {
-                //$scope.$emit("exam_invalidated", {exam_id: exam_id});
                 toaster.success(res.data.message);
             }, function(res) {
                 if(res.data && res.data.message) toaster.error(res.data.message);
                 else toaster.error(res.statusText);
             });
         }
-        this.reqc_failed = function(exam_id) {
-            console.log("reQC errored series")
-            $http.post(appconf.api+'/series/reqcerroredseries/'+exam_id)
-            .then(function(res) {
-                //$scope.$emit("exam_invalidated", {exam_id: exam_id});
-                toaster.success(res.data.message);
-            }, function(res) {
-                if(res.data && res.data.message) toaster.error(res.data.message);
-                else toaster.error(res.statusText);
-            });
-        }
+
     },
 });
 

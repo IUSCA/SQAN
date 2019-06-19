@@ -194,6 +194,40 @@ router.post('/template/:exam_id', jwt({secret: config.express.jwt.pub}), functio
     });
 });
 
+
+router.post('/delete/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+
+    db.Exam.findById(req.params.exam_id).populate('research_id').exec(function(err, exam) {
+        if(err) return next(err);
+        //make sure user has access to this series
+        if(!exam) return res.status(404).json({message: "no such exam:"+req.params.exam_id});
+        //console.log(exam);
+
+        db.Acl.can(req.user,'qc',exam.research_id.IIBISID,function(can) { // for now..
+            if(!can) return res.status(401).json({message: "You are not authorized to Delete data from this IIBISID:"+exam.research_id.IIBISID});
+
+            db.Series.find({exam_id:exam._id},function(err,series){
+                if(err) console.log(err);
+                if(!series) return res.status(404).json({message: "no series found for such exam:"+req.params.exam_id});
+                //var n_series = series.length;
+                series.forEach(function(t){
+                    db.Image.deleteMany({series_id:t._id},function(err){
+                        if (err) console.log(err);
+                        db.Series.deleteOne({_id:t._id},function(err){
+                            if (err) console.log(err);
+                        })
+                    })
+                })
+                db.Exam.deleteOne({_id:exam._id},function(err){
+                    if (err) console.log(err);
+                    return res.json({message: "Subject " + exam.subject + " -- " + series.length + " series deleted "});
+                })
+            })
+        });
+    });
+});
+
+
 module.exports = router;
 
 
