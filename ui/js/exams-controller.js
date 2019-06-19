@@ -56,6 +56,11 @@ app.controller('ExamsController',
             'iibis': 'IIBISID'
         };
 
+        $scope.subj_sortoptions = {
+            'StudyTimestamp': 'Exam Date',
+            'subject' : 'Subject ID'
+        };
+
         $scope.selected_subjects = [];
         $scope.subject_filter = "";
 
@@ -224,7 +229,8 @@ app.controller('ExamsController',
 
         $scope.search = {
             recentrange : (appconf.recent_study_days||30),
-            sort: 'dateup'
+            sort: 'dateup',
+            subj_sort: 'StudyTimestamp',
         };
 
         $scope.changerange($scope.search.recentrange);

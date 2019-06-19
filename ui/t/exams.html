@@ -39,13 +39,22 @@
                         <i class="fa fa-fw fa-square-o" ng-show="!showExams"></i> Exams/Subjects</a>
                 </li>
                 <li role="separator" class="divider"></li>
-                <li class="dropdown-header">Sort By</li>
+                <li class="dropdown-header">Sort Research By</li>
                 <li ng-repeat="(sort_id, label) in sortoptions"
                     ng-click="changesort(sort_id)">
                     <a href>
                         <i class="fa fa-fw fa-check" ng-if="search.sort == sort_id"></i>
                         <i class="fa fa-fw" ng-if="search.sort !=  sort_id"></i> {{label}}</a>
                 </li>
+                <li role="separator" class="divider"></li>
+                <li class="dropdown-header">Sort Subjects By</li>
+                <li ng-repeat="(sort_id, label) in subj_sortoptions"
+                    ng-click="search.subj_sort = sort_id">
+                    <a href>
+                        <i class="fa fa-fw fa-check" ng-if="search.subj_sort == sort_id"></i>
+                        <i class="fa fa-fw" ng-if="search.subj_sort !=  sort_id"></i> {{label}}</a>
+                </li>
+                <li role="separator" class="divider"></li>
 
             </ul>
         </div>
@@ -70,13 +79,12 @@
                                 <i class="fa fa-fw fa-plus-square" ng-hide="modality.showme"></i>
                         </span>
                     <br><br>
-                    <div ng-repeat="exam in modality.exams"
+                    <div ng-repeat="exam in modality.exams | orderBy:search.subj_sort:reverse"
                          ng-click="select(modality, exam);$event.stopPropagation()"
                          ng-show="modality.showme"
-                         class="subject-label">
+                         class="subject-label" uib-tooltip-html="makeTooltip(exam)" tooltip-append-to-body="true" tooltip-popup-delay='200'>
                         <small style="position: absolute; color: black">{{exam.subject}}</small>
                         <div class="progress exam-state pull-right"
-                             uib-tooltip-html="makeTooltip(exam)" tooltip-append-to-body="true"
                              ng-init="total = exam.qc.series_passed + exam.qc.series_failed + exam.qc.series_passed_warning + exam.qc.series_missing.length + exam.qc.series_no_template.length">
                             <div class="progress-bar progress-bar-success" style="height: 20%; width: {{exam.qc.series_passed / total*100}}%"></div>
                             <div class="progress-bar progress-bar-danger" style="height: 20%; width: {{exam.qc.series_failed / total*100}}%"></div>
