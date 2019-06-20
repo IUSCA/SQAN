@@ -206,6 +206,27 @@ router.post('/delete/:exam_id', jwt({secret: config.express.jwt.pub}), function(
         db.Acl.can(req.user,'qc',exam.research_id.IIBISID,function(can) { // for now..
             if(!can) return res.status(401).json({message: "You are not authorized to Delete data from this IIBISID:"+exam.research_id.IIBISID});
 
+            var comment = {
+                user_id: req.user.sub,
+                comment: req.body.comment, //TODO - validate?
+                date: new Date(),
+            };
+            exam.comments.push(comment);
+            
+            db.Deletedexam.create({
+                research_id:exam.research_id._id,
+                subject: exam.subject,
+                StudyInstanceUID:exam.StudyInstanceUID,
+                istemplate: exam.istemplate,
+                StudyTimestamp: exam.StudyTimestamp,
+                DeletionTimestamp: new Date(),
+                qc: exam.qc,
+                comments: exam.comments
+            }, function (err) {
+                if (err) return next(err);
+            })
+
+
             db.Series.find({exam_id:exam._id},function(err,series){
                 if(err) console.log(err);
                 if(!series) return res.status(404).json({message: "no series found for such exam:"+req.params.exam_id});

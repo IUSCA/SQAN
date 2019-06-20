@@ -126,6 +126,48 @@ app.component('exams', {
             });
         }
 
+
+        this.opencomment = function () {
+            $uibModal.open({
+                templateUrl: 't/components/addcomment.html',
+                size: 'lg',
+                controller: function ($scope, $uibModalInstance) {
+                    var $m2ctrl = this;
+                    $scope.exam = $ctrl.exam;                
+                    console.log($scope.exam);
+
+                    $scope.comment = "";
+
+                    $scope.delete = function (comment) {
+                        console.log(comment);
+                        $scope.comment = comment;
+                        $uibModalInstance.close(comment);
+                    };
+
+                    $scope.cancel = function () {
+                        $uibModalInstance.dismiss('cancel2');
+                    };
+                }
+            }).result.then(function(result){
+
+                console.log($ctrl.exam._id);
+                
+                console.log("deleting exam "+ $ctrl.exam._id)
+                $http.post(appconf.api+'/exam/delete/'+$ctrl.exam._id, {comment: result})
+                .then(function(res) {
+                    toaster.success(res.data.message);
+                }, function(res) {
+                    if(res.data && res.data.message) toaster.error(res.data.message);
+                    else toaster.error(res.statusText);
+                });
+
+            }, function(result){
+                console.log('cancel or escaped');
+                console.log(result);
+            });
+        }
+
+
         this.qcalert = function(exam,alert_tyep) {
             date = new Date(exam.StudyTimestamp);
             var StudyTimestamp = (date.getMonth()+1)+'/' + date.getDate() + '/'+date.getFullYear();
@@ -153,9 +195,9 @@ app.component('exams', {
             }
         }
 
-        this.delete_exam = function(exam_id) {
+        this.delete_exam = function(exam_id, comment) {
             console.log("deleting exam "+exam_id)
-            $http.post(appconf.api+'/exam/delete/'+exam_id)
+            $http.post(appconf.api+'/exam/delete/'+exam_id, {comment: comment})
             .then(function(res) {
                 toaster.success(res.data.message);
             }, function(res) {

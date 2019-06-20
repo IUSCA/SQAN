@@ -6,7 +6,8 @@
             <!-- <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc($ctrl.exam._id)" uib-tooltip="ReQC all series in this exam">ReQC</button> -->
             <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.openmodal();" uib-tooltip="ReQC all series in this exam">ReQC</button>
             <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.qcalert($ctrl.exam,'ReQC failed')" uib-tooltip="ReQC only series that have not passed QC">ReQC failed series</button>
-            <button class="pull-right btn btn-xs btn-warning" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.qcalert($ctrl.exam,'delete all')" uib-tooltip="Delete all series in this exam"><i class="fa fa-trash fa-sm" aria-hidden="true"></i>  Delete Exam</button>
+            <!-- <button class="pull-right btn btn-xs btn-warning" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.qcalert($ctrl.exam,'delete all')" uib-tooltip="Delete all series in this exam"><i class="fa fa-trash fa-sm" aria-hidden="true"></i>  Delete Exam</button> -->
+            <button class="pull-right btn btn-xs btn-warning" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.opencomment()" uib-tooltip="Delete all series in this exam"><i class="fa fa-trash fa-sm" aria-hidden="true"></i>  Delete Exam</button>
         </p>
         <table class="table table-condensed" style="margin-bottom: 0px;">
         <thead><tr class="text-muted"><th width="30%">Series Description</th><th width="30%">Status</th><th>Template Used</th></tr></thead>
@@ -24,9 +25,6 @@
                             <div ng-if="!s.deprecated_by || $ctrl.deprecated">
                                 <studynote ng-click="$ctrl.openstudy(s._id)" study="s"></studynote>
                             </div>
-                            <!--<div ng-if="series.deprecated_by" class="studynote" ng-click="$ctrl.openstudy(series._id)">-->
-                                <!--<span class="text-muted">#{{series.SeriesNumber}}</span>-->
-                            <!--</div>-->
                         </div>
                     </div>
                 </td>

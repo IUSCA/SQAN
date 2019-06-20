@@ -58,6 +58,32 @@ var examSchema = mongoose.Schema({
 examSchema.index({research_id: 1, StudyInstanceUID:1});
 exports.Exam = mongoose.model('Exam', examSchema);
 
+
+var deletedexamSchema = mongoose.Schema({
+    ///////////////////////////////////////////////////////////////////////////
+    research_id: {type: mongoose.Schema.Types.ObjectId, index: true, ref: 'Research'},
+    subject: {type: String}, //not set if it's template
+    
+    StudyInstanceUID: {type: String, index: true},
+    
+    istemplate: {type: Boolean},
+    StudyTimestamp: Date,
+    
+    DeletionTimestamp: {type: Date, default: Date.now},
+    //series: mongoose.Schema.Types.Mixed, 
+    qc: mongoose.Schema.Types.Mixed,
+
+    comments: [ mongoose.Schema({
+        user_id: String, //req.user.sub
+        comment: String,
+        date: {type: Date, default: Date.now},
+    }) ],
+});
+deletedexamSchema.index({research_id: 1, StudyInstanceUID:1});
+exports.Deletedexam = mongoose.model('Deletedexam', deletedexamSchema);
+
+
+
 //counter part for "series"
 var templateSchema = mongoose.Schema({
     ///////////////////////////////////////////////////////////////////////////
