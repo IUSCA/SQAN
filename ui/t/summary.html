@@ -80,7 +80,7 @@ input:checked + .slider:before {
 <div class="container">
     <div class="row">
         <div class="col-sm-12">
-            <h2><i class="fa fa-flask"></i> Research Summary</h2>
+            <h3><i class="fa fa-flask"></i> Research Summary</h3>
 
             <div class="row">
                 <div class="col-sm-4">
@@ -138,14 +138,18 @@ input:checked + .slider:before {
                 <div class="col-sm-6">
                     <div class="panel">
                         <div class="panel-body">
-                            <h4>{{research_detail.iibis_project_id}} - {{research_detail.short_title}}</h4>
-                            <h5><i class="fa fa-fw fa-user"></i> <b>PI</b>: {{research_detail.pi_first_name}} {{research_detail.pi_last_name}} ({{research_detail.email_address}})</h5>
-                            <h5><i class="fa fa-fw fa-calendar"></i> <b>Dates</b>: {{research_detail.start_date | date: 'mediumDate'}} - {{research_detail.end_date | date: 'mediumDate'}}</h5>
-                            <h5><i class="fa fa-fw fa-check"></i> <b>Status</b>: {{research_detail.project_status}}</h5>
-                            <h5><i class="fa fa-fw fa-flask"></i> <b>Study Type</b>: {{research_detail.study_type}}</h5>
-                            <h5><i class="fa fa-fw fa-area-chart"></i> <b>Area of Study</b>: {{research_detail.area_of_study}}</h5>
-                            <h5><i class="fa fa-fw fa-sitemap"></i> <b>Modality/Lab</b>: {{research_detail.modality_or_laboratory}}</h5>
-                            <h5><i class="fa fa-fw fa-ellipsis-v"></i> <b>Full Title</b>: {{research_detail.full_title}}</h5>
+                            <h5>{{research_detail.iibis_project_id}} - {{research_detail.short_title}}</h5>
+                            <h6><i class="fa fa-fw fa-user"></i> <b>PI</b>: {{research_detail.pi_first_name}} {{research_detail.pi_last_name}} ({{research_detail.email_address}})</h6>
+                            <h6><i class="fa fa-fw fa-calendar"></i> <b>Dates</b>: {{research_detail.start_date | date: 'mediumDate'}} - {{research_detail.end_date | date: 'mediumDate'}}</h6>
+                            <h6><i class="fa fa-fw fa-check"></i> <b>Status</b>: {{research_detail.project_status}}</h6>
+                            <h6><i class="fa fa-fw fa-flask"></i> <b>Study Type</b>: {{research_detail.study_type}}</h6>
+                            <h6><i class="fa fa-fw fa-area-chart"></i> <b>Area of Study</b>: {{research_detail.area_of_study}}</h6>
+                            <h6><i class="fa fa-fw fa-sitemap"></i> <b>Modality/Lab</b>: {{research_detail.modality_or_laboratory}}</h6>
+                            <!-- <h6><i class="fa fa-fw fa-ellipsis-v"></i> <b>Full Title</b>: {{research_detail.full_title | limitTo: 55}} {{research_detail.full_title.length > 55 ? '...' : ''}}</h6> -->
+                            <h6 style="cursor: pointer" ng-click="showfull=!showfull"><i class="fa fa-fw fa-ellipsis-v"></i> <b>Full Title</b>
+                                <span ng-if="showfull" >{{research_detail.full_title}}</span>
+                                <span ng-if="!showfull">: {{research_detail.full_title | limitTo: 45}} ...</span>
+                            </h6>
                         </div>
                     </div>
                 </div>

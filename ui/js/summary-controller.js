@@ -9,6 +9,7 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
     };
     $scope.subfilter = '';
     $scope.seriesfilter = '';
+    $scope.showfull = false;
 
     $scope.loading = true;
     $scope.transpose = false;
