@@ -78,8 +78,11 @@ app.component('exams', {
         deprecated: '=',
         templateLookup: '&'
     },
-    controller: function(appconf, $window, $http, $uibModal, toaster, $interval) {
+    controller: function(appconf, $window, $http, $uibModal, toaster, $interval, users) {
         var $ctrl = this;
+
+        users.then(function(_users) { $ctrl.users = _users; });
+
 
         this.openstudy = function(id) {
             $window.open("#/series/"+id, "study:"+id);
@@ -132,7 +135,6 @@ app.component('exams', {
                 templateUrl: 't/components/addcomment.html',
                 size: 'lg',
                 controller: function ($scope, $uibModalInstance) {
-                    var $m2ctrl = this;
                     $scope.exam = $ctrl.exam;                
                     console.log($scope.exam);
 
@@ -163,6 +165,34 @@ app.component('exams', {
 
             }, function(result){
                 console.log('cancel or escaped');
+                console.log(result);
+            });
+        }
+
+
+        this.opendeleted = function (comment) {
+            $uibModal.open({
+                templateUrl: 't/components/viewdeleted.html',
+                size: 'lg',
+                controller: function ($scope, $uibModalInstance) {
+                    $scope.exam = $ctrl.exam;                
+                    console.log($scope.exam);
+                    
+                    $scope.comment = comment;
+                    console.log($scope.comment)
+
+                    console.log($ctrl.users)
+                    $scope.user = $ctrl.users[comment.user_id];
+
+                    $scope.close = function () {
+                        $uibModalInstance.dismiss('close');
+                    };
+                }
+            }).result.then(function(){
+
+                console.log('nothing to do');
+
+            }, function(result){
                 console.log(result);
             });
         }

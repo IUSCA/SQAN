@@ -207,6 +207,7 @@ router.post('/delete/:exam_id', jwt({secret: config.express.jwt.pub}), function(
             if(!can) return res.status(401).json({message: "You are not authorized to Delete data from this IIBISID:"+exam.research_id.IIBISID});
 
             var comment = {
+                title: "Exam Deleted",
                 user_id: req.user.sub,
                 comment: req.body.comment, //TODO - validate?
                 date: new Date(),
@@ -239,10 +240,14 @@ router.post('/delete/:exam_id', jwt({secret: config.express.jwt.pub}), function(
                         })
                     })
                 })
-                db.Exam.deleteOne({_id:exam._id},function(err){
+                // db.Exam.deleteOne({_id:exam._id},function(err){
+                //     if (err) console.log(err);
+                //     return res.json({message: "Subject " + exam.subject + " -- " + series.length + " series deleted "});
+                // })
+                db.Exam.update({_id: exam._id}, {isdeleted:true, $push: { comments: comment }, $unset: {qc: 1}}, function(err){
                     if (err) console.log(err);
                     return res.json({message: "Subject " + exam.subject + " -- " + series.length + " series deleted "});
-                })
+                });
             })
         });
     });

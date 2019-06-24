@@ -1,6 +1,6 @@
 <div class="subject-body">
 
-    <div class="subject-tall">
+    <div ng-if="!$ctrl.exam.isdeleted" class="subject-tall">
         <p>
             <time style="position: relative; top: 5px"><b>{{$ctrl.exam.StudyTimestamp|date:'short':'-0400'}} <small>(EST)</small></b></time> &nbsp;
             <!-- <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.reqc($ctrl.exam._id)" uib-tooltip="ReQC all series in this exam">ReQC</button> -->
@@ -53,5 +53,16 @@
         </tbody>
         </table>
     </div><!--end of tall view-->
+
+    <div ng-if="$ctrl.exam.isdeleted" class="subject-tall">
+            <div ng-repeat="cmnt in $ctrl.exam.comments" ng-if="cmnt.title === 'Exam Deleted'">
+                <p>
+                    <time style="position: relative; top: 5px"><b>Exam Deleted</b></time> &nbsp;
+                    <button class="btn btn-warning" style="position: relative; top: 5px; padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.opendeleted(cmnt)" uib-tooltip="Exam deletion details"><i class="fa fa-info-circle" aria-hidden="true"></i></button>
+                </p>
+            </div>
+
+    </div>
+
 </div><!--subject-body-->
 

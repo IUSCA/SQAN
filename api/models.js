@@ -43,6 +43,7 @@ var examSchema = mongoose.Schema({
     subject: {type: String}, //not set if it's template
     
     StudyInstanceUID: {type: String, index: true},
+    isdeleted: {type: Boolean,default: false},
     
     istemplate: {type: Boolean},
     StudyTimestamp: Date,
@@ -50,6 +51,7 @@ var examSchema = mongoose.Schema({
     qc: mongoose.Schema.Types.Mixed,
 
     comments: [ mongoose.Schema({
+        title: String,
         user_id: String, //req.user.sub
         comment: String,
         date: {type: Date, default: Date.now},
@@ -74,6 +76,7 @@ var deletedexamSchema = mongoose.Schema({
     qc: mongoose.Schema.Types.Mixed,
 
     comments: [ mongoose.Schema({
+        title: String,
         user_id: String, //req.user.sub
         comment: String,
         date: {type: Date, default: Date.now},

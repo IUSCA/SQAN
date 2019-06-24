@@ -393,11 +393,12 @@ function incoming(tags, fromFile, cb) {
             db.Exam.findOneAndUpdate({
                     research_id: research._id,
                     subject: (h.qc_istemplate?null:h.qc_subject),
-                    StudyInstanceUID: h.StudyInstanceUID,
-                    StudyTimestamp: h.qc_StudyTimestamp
+                    StudyInstanceUID: h.StudyInstanceUID,                    
                 },
                 {
+                    StudyTimestamp: h.qc_StudyTimestamp,
                     istemplate:h.qc_istemplate,
+                    isdeleted: false,
                 },
                 {upsert:true, 'new': true}, function(err, _exam) {
                     if(err) return next(err);
