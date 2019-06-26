@@ -213,7 +213,7 @@ router.post('/delete/:exam_id', jwt({secret: config.express.jwt.pub}), function(
                 date: new Date(),
             };
             exam.comments.push(comment);
-            
+
             db.Deletedexam.create({
                 research_id:exam.research_id._id,
                 subject: exam.subject,
@@ -244,10 +244,16 @@ router.post('/delete/:exam_id', jwt({secret: config.express.jwt.pub}), function(
                 //     if (err) console.log(err);
                 //     return res.json({message: "Subject " + exam.subject + " -- " + series.length + " series deleted "});
                 // })
-                db.Exam.update({_id: exam._id}, {isdeleted:true, $push: { comments: comment }, $unset: {qc: 1}}, function(err){
+                exam.isdeleted = true;
+                exam.qc = undefined;
+                exam.save(function(err, _exam) {
                     if (err) console.log(err);
-                    return res.json({message: "Subject " + exam.subject + " -- " + series.length + " series deleted "});
+                    return res.json({message: "Subject " + exam.subject + " -- " + series.length + " series deleted ", exam: _exam});
                 });
+                // db.Exam.update({_id: exam._id}, {isdeleted:true, $push: { comments: comment }, $unset: {qc: 1}}, function(err){
+                //     if (err) console.log(err);
+                //     return res.json({message: "Subject " + exam.subject + " -- " + series.length + " series deleted ", exam: });
+                // });
             })
         });
     });

@@ -1,5 +1,5 @@
 
-<style>  
+<style>
 .table
 {
     margin-bottom: 0;
@@ -12,7 +12,7 @@
     margin: 0px !important;
     border: 0px !important;
     padding: 0px !important;
-} 
+}
 
 .switch {
   position: relative;
@@ -21,7 +21,7 @@
   height: 25px;
 }
 
-.switch input { 
+.switch input {
   opacity: 0;
   width: 0;
   height: 0;
@@ -87,7 +87,7 @@ input:checked + .slider:before {
                     <div class="row">
                         <form class="form">
                             <div class="form-group">
-                                <label class="col-sm-4 control-label">Select Research</label>
+                                <label class="col-sm-5 control-label">Select Research</label>
                                 <div class="col-xs-12 col-sm-12">
                                     <ui-select
                                             ng-model="research.selected"
@@ -102,7 +102,8 @@ input:checked + .slider:before {
                             </div>
                         </form>
                     </div><p></p>
-                    <div class="row">
+                    <hr>
+                    <div class="row" ng-show="research.selected">
                         <div class="row">
                             <div class="col-sm-1"></div>
                             <label class="col-sm-4 control-label">Filter by </label>
@@ -122,10 +123,10 @@ input:checked + .slider:before {
                             </div>
                         </div>
                     </div><p></p>
-                    <div class="row">
+                    <div class="row" ng-show="research.selected">
                         <div class="row">
                             <div class="col-sm-1"></div>
-                            <label class="col-sm-4 control-label">Download </label>
+                            <label class="col-sm-4 control-label">Download Summary</label>
                         </div>
                         <div class="row">
                             <div class="col-sm-1"></div>
@@ -136,7 +137,7 @@ input:checked + .slider:before {
                 </div>
                 <div class="col-sm-1"></div>
                 <div class="col-sm-6">
-                    <div class="panel">
+                    <div class="panel" ng-show="research.selected">
                         <div class="panel-body">
                             <h5>{{research_detail.iibis_project_id}} - {{research_detail.short_title}}</h5>
                             <h6><i class="fa fa-fw fa-user"></i> <b>PI</b>: {{research_detail.pi_first_name}} {{research_detail.pi_last_name}} ({{research_detail.email_address}})</h6>
@@ -154,7 +155,8 @@ input:checked + .slider:before {
                     </div>
                 </div>
             </div>
-            <div class="col-xs-10">
+            <div ng-show="!research.selected" class="col-xs-10 help-block center-parent"><span class="center-child text-center"><h3><i class="fa fa-8x fa-flask faded"></i> <br>Please select a research to display</h3></span></div>
+            <div ng-show="research.selected" class="col-xs-10">
                 <div class="text-center" ng-show="loading">
                     <h4><i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>
                         <span class="sr-only">Loading...</span></h4>
@@ -166,27 +168,30 @@ input:checked + .slider:before {
                 <table ng-show="!transpose" class="table table-scroll table-header-rotated table-condensed" ng-show="subjects.length">
                     <thead style="table-layout: fixed;">
                         <tr>
-                            <h6> Transpose Table</h6>
-                            <label class="switch">
-                                <input type="checkbox" ng-click="transpose = !transpose">
-                                <span class="slider round"></span>
-                            </label>
-                            <th ng-repeat-start="(mod, res) in summary"></th>
-                            <th ng-repeat-end class="rotate-45 text-muted" ng-repeat="sd in res.series_desc | filter:seriesfilter"><div style="white-space:nowrap; height:180px; left:100px"><span class="pull-right">{{sd}}&nbsp;&nbsp;</span></div></th>
-                        </tr>                    
+                            <th>
+                                <h6> Transpose Table</h6>
+                                <label class="switch">
+                                    <input type="checkbox" ng-click="transpose = !transpose" ng-model="transpose">
+                                    <span class="slider round"></span>
+                                </label>
+                            </th>
+                            <th ng-if="0" ng-repeat-start="(mod, res) in summary"></th>
+                            <th class="rotate-45 text-muted" ng-repeat="sd in res.series_desc | filter:seriesfilter"><div style="white-space:nowrap; height:180px; left:100px"><span class="pull-right">{{sd}}&nbsp;&nbsp;</span></div></th>
+                            <th ng-repeat-end ng-if="0"></th>
+                        </tr>
                     </thead>
                     <tbody style="border-bottom: 1px solid #ddd">
                         <tr>
                             <td><h6 class="pull-right text-muted">Subjects/Modality</h6></td>
-                            <td ng-repeat="(mod, res) in summary" colspan="{{res.series_desc.length+1}}" style="background-color: #006687; color: white">{{mod}}</td>
-                        </tr> 
+                            <td ng-repeat="(mod, res) in summary" ng-if="(res.series_desc | filter:seriesfilter).length" colspan="{{(res.series_desc | filter:seriesfilter).length}}" style="background-color: #006687; color: white">{{mod}}</td>
+                        </tr>
                         <tr ng-repeat="sub in subjects | filter:subfilter">
                             <td><div class="pull-right" style="white-space: nowrap;"><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></td>
-                            <td ng-repeat="(mod, res) in summary" colspan="{{res.series_desc.length+1}}" style="white-space:nowrap;">
+                            <td ng-repeat="(mod, res) in summary" colspan="{{(res.series_desc | filter:seriesfilter).length}}" ng-if="(res.series_desc | filter:seriesfilter).length" style="white-space:nowrap;">
                                 <table class='table borderless'>
                                     <tr style="border-bottom: none" class='borderless' ng-repeat="exam in res.exams[sub]">
                                         <td ng-repeat="sd in res.series_desc | filter:seriesfilter" >
-                                                <span style="cursor: pointer" class="color-box"                                                        
+                                                <span style="cursor: pointer" class="color-box"
                                                     ng-click="openstudy(exam[sd]._id)"
                                                     ng-init="qcs = exam[sd].qc1_state !== undefined ? exam[sd].qc1_state : 'na' "
                                                     ng-class="{'pass': qcs == 'autopass',
@@ -208,8 +213,14 @@ input:checked + .slider:before {
                 <table ng-show="transpose" class="table table-scroll table-header-rotated table-condensed" ng-show="subjects.length">
                     <thead>
                         <tr>
-                            <th></th>
-                            <th class="rotate-45 text-muted" ng-repeat="sub in subjects | filter:subfilter"><div style="white-space: nowrap;"><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></th>
+                            <th>
+                                <h6> Transpose Table</h6>
+                                <label class="switch">
+                                    <input type="checkbox" ng-model="transpose" ng-click="transpose = !transpose">
+                                    <span class="slider round"></span>
+                                </label>
+                            </th>
+                            <th class="rotate-45 text-muted" ng-repeat="sub in subjects | filter:subfilter"><div style="white-space: nowrap; height:180px; left:100px"><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></th>
                         </tr>
                     </thead>
                     <tbody style="border-bottom: 1px solid #ddd" ng-repeat="(mod, res) in summary">

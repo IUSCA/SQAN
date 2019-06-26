@@ -78,8 +78,10 @@ app.component('exams', {
         deprecated: '=',
         templateLookup: '&'
     },
-    controller: function(appconf, $window, $http, $uibModal, toaster, $interval, users) {
+    controller: function(appconf, $scope, $window, $http, $uibModal, toaster, $interval, users) {
         var $ctrl = this;
+
+
 
         users.then(function(_users) { $ctrl.users = _users; });
 
@@ -135,7 +137,7 @@ app.component('exams', {
                 templateUrl: 't/components/addcomment.html',
                 size: 'lg',
                 controller: function ($scope, $uibModalInstance) {
-                    $scope.exam = $ctrl.exam;                
+                    $scope.exam = $ctrl.exam;
                     console.log($scope.exam);
 
                     $scope.comment = "";
@@ -153,11 +155,13 @@ app.component('exams', {
             }).result.then(function(result){
 
                 console.log($ctrl.exam._id);
-                
+
                 console.log("deleting exam "+ $ctrl.exam._id)
                 $http.post(appconf.api+'/exam/delete/'+$ctrl.exam._id, {comment: result})
                 .then(function(res) {
                     toaster.success(res.data.message);
+                    $ctrl.exam = res.data.exam;
+                    $scope.$emit("ExamDeletion", $ctrl.exam);
                 }, function(res) {
                     if(res.data && res.data.message) toaster.error(res.data.message);
                     else toaster.error(res.statusText);
@@ -175,9 +179,9 @@ app.component('exams', {
                 templateUrl: 't/components/viewdeleted.html',
                 size: 'lg',
                 controller: function ($scope, $uibModalInstance) {
-                    $scope.exam = $ctrl.exam;                
+                    $scope.exam = $ctrl.exam;
                     console.log($scope.exam);
-                    
+
                     $scope.comment = comment;
                     console.log($scope.comment)
 

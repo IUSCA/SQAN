@@ -60,6 +60,17 @@ app.controller('ExamsController',
         $scope.subject_filter = "";
 
 
+        $scope.$on("ExamDeletion", function(evt, exam) {
+            console.log("Exam deleted!");
+            console.log(exam);
+            var research = $scope.org[exam.research_id.IIBISID][exam.research_id._id];
+            angular.forEach(research.exams, function(_exam) {
+                if(_exam._id == exam._id) {
+                    console.log("Found it, clearing!");
+                    _exam.qc = undefined;
+                }
+            });
+        });
 
         $scope.select = function(modality, exam) {
 

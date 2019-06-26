@@ -40,7 +40,7 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
 
             //console.log($scope.researches);
             //console.log(res.data);
-            $scope.research.selected = $scope.researches[0];
+            // $scope.research.selected = $scope.researches[0];
             console.log($scope.research.selected)
             $scope.getSummary();
         }, $scope.toast_error);
@@ -86,6 +86,7 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
     $scope.getSummary = function() {
 
         $scope.loading = true;
+        $scope.showfull = false;
         $scope.summary = {};
         $scope.subjects = [];
         $scope.subfilter = '';
