@@ -148,7 +148,7 @@ input:checked + .slider:before {
                             <!-- <h6><i class="fa fa-fw fa-ellipsis-v"></i> <b>Full Title</b>: {{research_detail.full_title | limitTo: 55}} {{research_detail.full_title.length > 55 ? '...' : ''}}</h6> -->
                             <h6 style="cursor: pointer" ng-click="showfull=!showfull"><i class="fa fa-fw fa-ellipsis-v"></i> <b>Full Title</b>
                                 <span ng-if="showfull" >{{research_detail.full_title}}</span>
-                                <span ng-if="!showfull">: {{research_detail.full_title | limitTo: 45}} ...</span>
+                                <span ng-if="!showfull">: {{research_detail.full_title | limitTo: 45}} [<b>...</b>]</span>
                             </h6>
                         </div>
                     </div>
