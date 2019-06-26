@@ -57,7 +57,7 @@ app.controller('ExamsController',
         };
 
         $scope.subj_sortoptions = {
-            'StudyTimestamp': 'Exam Date',
+            '-StudyTimestamp': 'Exam Date',
             'subject' : 'Subject ID'
         };
 
@@ -241,7 +241,7 @@ app.controller('ExamsController',
         $scope.search = {
             recentrange : (appconf.recent_study_days||30),
             sort: 'dateup',
-            subj_sort: 'StudyTimestamp',
+            subj_sort: '-StudyTimestamp',
         };
 
         $scope.changerange($scope.search.recentrange);
