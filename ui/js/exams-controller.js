@@ -66,6 +66,17 @@ app.controller('ExamsController',
 
         $scope.loading_exam = false;
 
+        $scope.$on("ExamDeletion", function(evt, exam) {
+            console.log("Exam deleted!");
+            console.log(exam);
+            var research = $scope.org[exam.research_id.IIBISID][exam.research_id._id];
+            angular.forEach(research.exams, function(_exam) {
+                if(_exam._id == exam._id) {
+                    console.log("Found it, clearing!");
+                    _exam.qc = undefined;
+                }
+            });
+        });
 
         $scope.select = function(modality, exam) {
 
@@ -248,7 +259,7 @@ app.controller('ExamsController',
             if(!$scope.research_filter) return true;
             if(~iibisid.toLowerCase().indexOf($scope.research_filter.toLowerCase())) return true;
             if(~modality.toLowerCase().indexOf($scope.research_filter.toLowerCase())) return true;
-            console.log(radio_tracer);
+            //console.log(radio_tracer);
             if(radio_tracer && ~radio_tracer.toLowerCase().indexOf($scope.research_filter.toLowerCase())) return true;
             for(var exam in exams) {
                 if(~exams[exam].subject.toLowerCase().indexOf($scope.research_filter.toLowerCase())) return true;

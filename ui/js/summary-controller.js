@@ -9,8 +9,13 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
     };
     $scope.subfilter = '';
     $scope.seriesfilter = '';
+    $scope.showfull = false;
 
     $scope.loading = true;
+    $scope.transpose = false;
+
+    $scope.toggle = {};
+    $scope.toggle.switch = false;
 
     $scope.openstudy = function(id) {
         $window.open("#/series/"+id, "study:"+id);
@@ -33,9 +38,10 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
                 $scope.researches.push({id: k, studies: v})
             });
 
-            console.log($scope.researches);
-            console.log(res.data);
-            $scope.research.selected = $scope.researches[0];
+            //console.log($scope.researches);
+            //console.log(res.data);
+            // $scope.research.selected = $scope.researches[0];
+            console.log($scope.research.selected)
             $scope.getSummary();
         }, $scope.toast_error);
 
@@ -67,10 +73,10 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
 
     $scope.getIIBIS = function() {
         var url = appconf.api+'/iibis/'+$scope.research.selected.id;
-        console.log(url);
+        //console.log(url);
         $http.get(url)
             .then(function(res) {
-                console.log(res);
+                //console.log(res);
                 $scope.research_detail = res.data[0];
             }, $scope.toast_error);
     };
@@ -80,23 +86,24 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
     $scope.getSummary = function() {
 
         $scope.loading = true;
+        $scope.showfull = false;
         $scope.summary = {};
         $scope.subjects = [];
         $scope.subfilter = '';
         $scope.seriesfilter = '';
         $scope.getIIBIS();
         angular.forEach($scope.research.selected.studies, function(s){
-            console.log(s);
+            //console.log(s);
             $http.get(appconf.api+'/research/summary/'+s._id)
                 .then(function(res) {
-                    console.log(s);
+                    //console.log(s);
                     var label = s.Modality;
                     if(s.radio_tracer !== null){
                         label += ' - ' + s.radio_tracer;
                     }
 
                     $scope.summary[label] = res.data;
-                    console.log(res.data);
+                    //console.log(res.data);
                     res.data.subjects.forEach(function(k){
                         if($scope.subjects.indexOf(k) < 0){
                             $scope.subjects.push(k);
@@ -108,7 +115,8 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
                 }, $scope.toast_error);
         });
 
-        console.dir($scope.subjects);
+        console.log($scope.subjects);
+        console.log($scope.summary);
 
     };
 
@@ -116,7 +124,7 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
 
     $scope.export = function() {
         var data = [{"modality":"modality","series":"series"}];
-        console.log($scope.summary);
+        //console.log($scope.summary);
         var mods = Object.keys($scope.summary);
         mods.forEach(function(mod){
             var res = $scope.summary[mod];
@@ -143,7 +151,7 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
                 data.push(row);
             });
         })
-        console.log(data);
+        //console.log(data);
         return data;
     };
 
