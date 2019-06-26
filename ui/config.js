@@ -9,6 +9,9 @@ angular.module('app.config', [])
 
     recent_study_days: "all", //default 60 days
 
+    iucas_url: 'https://cas.iu.edu/cas/login',
+    base_url: '',
+    default_redirect_url: '/exams',
     //shared servive api and ui urls (for menus and stuff)
     shared_api: '/api/shared',
     shared_url: '/shared',

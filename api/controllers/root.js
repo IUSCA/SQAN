@@ -7,9 +7,11 @@ var winston = require('winston');
 var jwt = require('express-jwt');
 var _ = require('underscore');
 var async = require('async');
+var axios = require('axios');
 
 //mine
 var config = require('../../config');
+var common = require('./common');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
 var profile = require('../profile');
@@ -80,6 +82,73 @@ router.get('/stats', function(req, res, next) {
         });
     });
 });
+
+
+///////////////////AUTH//////////////////////
+/////////////////////////////////////////////
+
+
+router.get('/verify', function(req, res, next) {
+    var ticket = req.query.casticket;
+
+    //guess casurl using referer - TODO - should I use cookie and pass it from the UI method begin_iucas() instead?
+    //var casurl = config.iucas.home_url;
+    if(!req.headers.referer) return next("Referer not set in header..");
+    var casurl = req.headers.referer;
+    axios.get('https://cas.iu.edu/cas/validate?cassvc=IU&casticket='+ticket+'&casurl='+casurl, {
+        timeout: 2000,
+        // headers: {'Connection': 'close'},
+        // httpsAgent: new https.Agent({ keepAlive: false }),
+    })
+        .then(function(response) {
+
+            // if(response.headers['content-length'] > response.request._response.length){
+            //     response.__incomplete = true;
+            //     logger.error("INCOMPLETE RESPONSE");
+            // }
+            logger.info("verify responded", response.status, response.data);
+
+            if (response.status == 200) {
+                var reslines = response.data.split("\n");
+                // console.log(reslines);
+                if(reslines[0].trim() == "yes") {
+                    var uid = reslines[1].trim();
+
+                    db.User.findOne({username: uid}).exec(function(err, user) {
+                        if(err) return next(err);
+                        if(!user) {
+                            common.create_user(uid, next, function(err, _user) {
+                                if(err) return next(err);
+                                common.issue_jwt(uid, function (err, jwt) {
+                                    if (err) return next(err);
+                                    res.json({jwt: jwt, uid: uid, role: _user.primary_role});
+                                });
+                            })
+                        } else {
+                            common.issue_jwt(uid, function (err, jwt) {
+                                if (err) return next(err);
+                                res.json({jwt: jwt, uid: uid, role: user.primary_role});
+                            });
+                        }
+                    });
+                } else {
+                    logger.error("IUCAS failed to validate");
+                    res.sendStatus("403");//Is 403:Forbidden appropriate return code?
+                }
+            } else {
+                //non 200 code...
+                next(response.data);
+            }
+        })
+        .catch(function(thrown) {
+            if (axios.isCancel(thrown)) {
+                console.log('Request canceled', thrown.message);
+            } else {
+                return next(thrown);
+            }
+        })
+});
+
 
 module.exports = router;
 

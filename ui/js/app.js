@@ -95,21 +95,44 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         controller: 'AdminController',
         requiresLogin: true,
     })
+    .when('/signin', {
+        template: '<h4>Redirecting to CAS...</h4>',
+        controller: 'SigninController',
+    })
     .otherwise({
         redirectTo: '/exams'
     });
 }]).run(function($rootScope, $location, toaster, jwtHelper, appconf) {
     $rootScope.$on("$routeChangeStart", function(event, next, current) {
-        //redirect to /login if user hasn't authenticated yet
+
+        var jwt = localStorage.getItem(appconf.jwt_id);
+        if(jwt == null || jwtHelper.isTokenExpired(jwt)) {
+            localStorage.removeItem(appconf.jwt_id);
+            localStorage.removeItem('uid');
+            localStorage.removeItem('role');
+        };
+
+        //redirect to /signin if user hasn't authenticated yet
         if(next.requiresLogin) {
-            var jwt = localStorage.getItem(appconf.jwt_id);
             if(jwt == null || jwtHelper.isTokenExpired(jwt)) {
-                sessionStorage.setItem('auth_redirect', document.location.toString());
-                toaster.error("Please signin first!");
-                document.location = appconf.auth_url;
+                toaster.warning("Please sign in first");
+                console.log(next.originalPath);
+                sessionStorage.setItem('auth_redirect', next.originalPath);
+                $location.path("/signin");
                 event.preventDefault();
             }
-        }
+        };
+
+        // //redirect to /login if user hasn't authenticated yet
+        // if(next.requiresLogin) {
+        //     var jwt = localStorage.getItem(appconf.jwt_id);
+        //     if(jwt == null || jwtHelper.isTokenExpired(jwt)) {
+        //         sessionStorage.setItem('auth_redirect', document.location.toString());
+        //         toaster.error("Please signin first!");
+        //         document.location = appconf.auth_url;
+        //         event.preventDefault();
+        //     }
+        // }
     });
 });
 
@@ -118,7 +141,7 @@ app.config(['$locationProvider', function($locationProvider) {
 }]);
 
 //configure httpProvider to send jwt unless skipAuthorization is set in config (not tested yet..)
-app.config(['appconf', '$httpProvider', 'jwtInterceptorProvider', 
+app.config(['appconf', '$httpProvider', 'jwtInterceptorProvider',
 function(appconf, $httpProvider, jwtInterceptorProvider) {
     jwtInterceptorProvider.tokenGetter = function(jwtHelper, $http, toaster) {
         //if (config.url.substr(config.url.length - 5) == '.html') { return null; }

@@ -57,8 +57,8 @@ exports.start = function(cb) {
             logger.info("QC api server listening on port %d in %s mode", port, app.settings.env);
 
             //cache profile from profile service
-            setInterval(profile.cache, 1000*300); //5 minutes?
-            profile.cache(cb);
+            // setInterval(profile.cache, 1000*300); //5 minutes?
+            // profile.cache(cb);
         });
     });
 };
