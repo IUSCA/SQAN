@@ -1,0 +1,36 @@
+<div class="modal-header">
+    <h3 class="modal-title">Delete Exam (all series)</h3>
+</div>
+
+<div class="modal-body study">
+    <ul class="list-group">
+        <li class="list-group-item">
+            <div class="row">
+                <div class="col-sm-3"><i class="fa fa-fw fa-user"></i> Subject </div>
+                <div class="col-sm-9">
+                    {{exam.subject}}
+                </div>
+            </div>
+        </li>
+        <li class="list-group-item">
+            <div class="row">
+                <div class="col-sm-3"><i class="fa fa-fw fa-calendar"></i> Study Timestamp </div>
+                <div class="col-sm-9">
+                    {{exam.StudyTimestamp | date:'medium':'-0400'}}
+                </div>
+            </div>
+        </li>
+        <li class="list-group-item">
+            <div class="row">
+                <div class="col-sm-3"><i class="fa fa-fw fa-file"></i> Reason for deletion</div>
+                <div class="col-sm-9">
+                    <textarea class="form-control" placeholder="Please write reason for deleting this exam" ng-model="comment" ng-class="{'comment-active':comment_active}" ng-focus="comment_active = true"></textarea>            
+                </div>
+            </div>
+        </li>
+</div>
+
+<div class="modal-footer">
+    <button ng-disabled="comment.length<3" class="btn btn-primary" type="button" ng-click="delete(comment)">Delete</button>
+    <button class="btn btn-warning" type="button" ng-click="cancel()">Cancel</button>
+</div>
