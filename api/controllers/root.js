@@ -37,7 +37,7 @@ router.get('/config', jwt({secret: config.express.jwt.pub, credentialsRequired: 
 });
 
 router.get('/acl/:key', jwt({secret: config.express.jwt.pub/*, credentialsRequired: false*/}), function(req, res, next) {
-    if(!~req.user.scopes.dicom.indexOf('admin')) return next(new Error("admin only"));
+    if(!~req.user.roles.indexOf('admin')) return next(new Error("admin only"));
     db.Acl.find({}, function(err, acl) {
         if(err) return next(err);
         if(!acl) return res.json({});
@@ -46,7 +46,7 @@ router.get('/acl/:key', jwt({secret: config.express.jwt.pub/*, credentialsRequir
 });
 
 router.put('/acl/:key', jwt({secret: config.express.jwt.pub/*, credentialsRequired: false*/}), function(req, res, next) {
-    if(!~req.user.scopes.dicom.indexOf('admin')) return next(new Error("admin only"));
+    if(!~req.user.roles.indexOf('admin')) return next(new Error("admin only"));
     var update_cnt = 0;
     async.eachOf(req.body, function(acl, iibisid, callback) {
         //console.log(iibisid);
@@ -119,13 +119,15 @@ router.get('/verify', function(req, res, next) {
                         if(!user) {
                             common.create_user(uid, next, function(err, _user) {
                                 if(err) return next(err);
-                                common.issue_jwt(uid, function (err, jwt) {
+                                common.issue_jwt(_user, function (err, jwt) {
                                     if (err) return next(err);
                                     res.json({jwt: jwt, uid: uid, role: _user.primary_role});
                                 });
                             })
                         } else {
-                            common.issue_jwt(uid, function (err, jwt) {
+                            user.lastLogin = Date.now();
+                            user.save();
+                            common.issue_jwt(user, function (err, jwt) {
                                 if (err) return next(err);
                                 res.json({jwt: jwt, uid: uid, role: user.primary_role});
                             });

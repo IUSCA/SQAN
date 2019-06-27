@@ -1,9 +1,132 @@
-app.controller('AdminController', 
-function($scope, appconf, toaster, $http, serverconf, groups) {
+app.controller('AdminController',
+function($scope, appconf, toaster, $http, serverconf, users, groups) {
     $scope.appconf = appconf;
     $scope.$parent.active_menu = "admin";
     $scope._selected = {};
     $scope.selectall = false;
+    $scope.users_o = [];
+    $scope.show_userform = false;
+    $scope.userform = {};
+    $scope.groupform = {};
+    $scope.active_tab = 0;
+    $scope.user_roles = [
+        'user',
+        'guest',
+        'admin',
+        'technologist',
+        'researcher'
+    ];
+
+
+    $http.get(appconf.api+'/user/all')
+        .then(function(res) {
+            $scope.users = res.data;
+            console.log($scope.users);
+        }, function(res) {
+            toaster.error(res.statusText);
+        });
+
+    $scope.editUser = function(user){
+        $scope.show_userform = true;
+        $scope.userform = user;
+    };
+
+    $scope.createUser = function(){
+        $scope.show_userform = true;
+        $scope.userform = {
+            username : '',
+            email: '',
+            fullname: '',
+            primary_role: 'user',
+            roles: ['user']
+        };
+    };
+
+    $scope.hideUserform = function(){
+        $scope.show_userform = false;
+        $scope.active_tab = 0;
+    }
+
+    $scope.hideGroupform = function(){
+        $scope.show_groupform = false;
+        $scope.active_tab = 1;
+    }
+
+    $scope.submitUserform = function(){
+        $scope.show_userform = false;
+        $scope.active_tab = 0;
+        if($scope.userform._id !== undefined) {
+            toaster.success("Updating user!");
+            $http.patch(appconf.api+'/user/'+$scope.userform._id, $scope.userform)
+                .then(function(res) {
+                console.log(res.data);
+                toaster.success("User updated!");
+            }, $scope.toast_error);
+        } else {
+            toaster.success("Creating new user!");
+            $http.post(appconf.api+'/user', $scope.userform)
+                .then(function(res) {
+                    console.log(res.data);
+                    toaster.success("New user created, refreshing user list");
+                    $http.get(appconf.api+'/user/all')
+                        .then(function(res) {
+                            var users = {};
+                            console.log(res.data);
+                            $scope.users = res.data;
+                            res.data.forEach(function(user) {
+                                users[user._id] = user;
+                            });
+                            $scope.users_o = users;
+                        }, function(res) {
+                            if(res.data && res.data.message) toaster.error(res.data.message);
+                            else toaster.error(res.statusText);
+                        });
+                }, $scope.toast_error);
+        }
+    };
+
+    $scope.editGroup = function(group){
+        $scope.show_groupform = true;
+        $scope.groupform = group;
+    };
+
+    $scope.createGroup = function(){
+        $scope.show_groupform = true;
+        $scope.groupform = {
+            name : '',
+            desc: '',
+            members: [],
+        };
+    };
+
+    $scope.submitGroupform = function(){
+        $scope.show_groupform = false;
+        $scope.active_tab = 1;
+        if($scope.groupform._id !== undefined) {
+            toaster.success("Updating group!");
+            console.log($scope.groupform);
+            $http.patch(appconf.api+'/group/'+$scope.groupform._id, $scope.groupform)
+                .then(function(res) {
+                    console.log(res.data);
+                    toaster.success("Group updated!");
+                }, $scope.toast_error);
+        } else {
+            toaster.success("Creating new group!");
+            $http.post(appconf.api+'/group', $scope.groupform)
+                .then(function(res) {
+                    console.log(res.data);
+                    toaster.success("New group created, refreshing group list");
+                    $http.get(appconf.api+'/group/all')
+                        .then(function(res) {
+                            $scope.groups = res.data;
+                        }, function(res) {
+                            if(res.data && res.data.message) toaster.error(res.data.message);
+                            else toaster.error(res.statusText);
+                        });
+                }, $scope.toast_error);
+        }
+    };
+
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
 
     $http.get(appconf.api+'/research', {params: {admin: true}})
@@ -12,6 +135,10 @@ function($scope, appconf, toaster, $http, serverconf, groups) {
         $scope.iibisids = [];
         res.data.forEach(function(research) {
             if(!~$scope.iibisids.indexOf(research.IIBISID)) $scope.iibisids.push(research.IIBISID);
+        });
+
+        users.then(function(_users) {
+            $scope.users_o = _users;
         });
 
         groups.then(function(_groups) {

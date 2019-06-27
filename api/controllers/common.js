@@ -14,18 +14,16 @@ function issue_jwt(user, cb) {
         iss: config.auth.iss,
         exp: (Date.now() + config.auth.ttl)/1000,
         //"iat": (Date.now())/1000, //this gets set automatically
-        scopes: {
-            sca: ["user"],
-            dicom: ["user"],
-        },
+        roles: user.roles,
+        primary_role: user.primary_role,
 
         //can't use user.username which might not be set
         sub: user,  //TODO - toString() this!?
 
         profile: {
-            username: user,
-            email: user + '@iu.edu',
-            fullname: user
+            username: user.username,
+            email: user.email,
+            fullname: user.fullname
         },
     };
 
@@ -114,3 +112,14 @@ exports.create_user = function(username, cb) {
     new_user.save();
     cb(null, new_user);
 };
+
+//middleware
+exports.has_role = function(role) {
+    return function(req, res, next) {
+        logger.info(req.user.roles);
+        logger.info(role);
+        logger.info(req.user.roles.indexOf(role));
+        if(~req.user.roles.indexOf(role)) next();
+        else res.status(401).send(role+" role required");
+    }
+}

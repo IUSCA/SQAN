@@ -11,7 +11,7 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
         if(!jwt) return;
         $scope.user = jwtHelper.decodeToken(jwt);
         console.log($scope.user);
-        $scope.user.isadmin = ($scope.user.scopes.dicom.indexOf('admin') !== -1)
+        $scope.user.isadmin = ($scope.user.roles.indexOf('admin') !== -1)
     }
 
     //pull old jwt..

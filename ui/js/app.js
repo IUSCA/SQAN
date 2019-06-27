@@ -11,7 +11,7 @@ var app = angular.module('app', [
     'angular-loading-bar',
     'angular-jwt',
     'ui.bootstrap',
-    'ui.bootstrap.tabs',
+    // 'ui.bootstrap.tabs',
     'ui.select',
     'sca-ng-wf',
     'sca-product-raw',
@@ -159,11 +159,13 @@ app.factory('serverconf', ['appconf', '$http', 'jwtHelper', function(appconf, $h
 }]);
 
 app.factory('users', ['appconf', '$http', 'jwtHelper', 'toaster', function(appconf, $http, jwtHelper, toaster) {
-    return $http.get(appconf.auth_api+'/profile')
+    console.log("In the user factory!");
+    return $http.get(appconf.api+'/user/all')
     .then(function(res) {
         var users = {};
-        res.data.profiles.forEach(function(user) {
-            users[user.id] = user;
+        console.log(res.data);
+        res.data.forEach(function(user) {
+            users[user._id] = user;
         });
         return users;
     }, function(res) {
@@ -173,7 +175,7 @@ app.factory('users', ['appconf', '$http', 'jwtHelper', 'toaster', function(appco
 }]);
 
 app.factory('groups', ['appconf', '$http', 'jwtHelper', 'toaster', function(appconf, $http, jwtHelper, toaster) {
-    return $http.get(appconf.auth_api+'/groups')
+    return $http.get(appconf.api+'/group/all')
     .then(function(res) {
         return res.data;
     }, function(res) {
