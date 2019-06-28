@@ -42,7 +42,10 @@ router.get('/self', jwt({secret: config.express.jwt.pub}), function(req, res, ne
     db.User.findOne({username: req.user.profile.username}).exec(function(err, _user) {
         if(err) return next(err);
         if(!_user) res.sendStatus(404);
-        res.json(_user);
+        db.Group.getUserGroups(_user, function(err, gids) {
+            console.log(gids);
+            res.json({'user':_user, 'groups': gids});
+        });
     });
 });
 

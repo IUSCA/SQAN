@@ -50,9 +50,18 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="gravtar" class="col-lg-2 control-label">Gravatar</label>
+                                <label for="groups" class="col-lg-2 control-label">Member Of</label>
                                 <div class="col-lg-10">
-                                    <img gravatar-src="self.email" gravatar-size="90" align="left" style="padding-right: 20px;"/>
+                                    <ul id="groups">
+                                        <li ng-repeat="g in self_groups">{{groups_o[g].name}}</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="gravatar" class="col-lg-2 control-label">Gravatar</label>
+                                <div class="col-lg-10">
+                                    <img id="gravatar" gravatar-src="self.email" gravatar-size="90" align="left" style="padding-right: 20px;"/>
                                     <br>
                                     <p> Your avatar is handled by <a target="_blank" href="http://gravatar.com">gravatar.com</a> using your account email address.</p>
                                     <span class="text-muted">{{self.email}}</span>
