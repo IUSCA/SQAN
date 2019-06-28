@@ -8,6 +8,7 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
 
 
     function update_jwt(jwt) {
+        console.log(jwt);
         if(!jwt) return;
         $scope.user = jwtHelper.decodeToken(jwt);
         console.log($scope.user);
@@ -18,16 +19,11 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
     var jwt = localStorage.getItem(appconf.jwt_id);
     update_jwt(jwt);
     // //but refresh it immediately
-    // refresh_jwt();
-    // function refresh_jwt() {
-    //     console.log("refreshing token");
-    //     $http.post(appconf.auth_api+'/refresh').then(function(res) {
-    //         var jwt = res.data.jwt;
-    //         localStorage.setItem(appconf.jwt_id, jwt);
-    //         update_jwt(jwt);
-    //         //$timeout(refresh_jwt, 60*1000);
-    //     }, $scope.toast_error);
-    // }
+    $timeout(function() {
+        console.log('rechecking jwt');
+        var jwt = localStorage.getItem(appconf.jwt_id);
+        update_jwt(localStorage.getItem(appconf.jwt_id))
+    }, 1000);
 
     //TODO - it doesn't make sense that these exist here..
     $scope.openstudy = function(id) {

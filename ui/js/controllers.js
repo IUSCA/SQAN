@@ -34,6 +34,14 @@ function($scope, appconf, $location, toaster, $http) {
                 localStorage.setItem('uid', res.data.uid);
                 localStorage.setItem('role', res.data.role);
                 var redirect = sessionStorage.getItem('auth_redirect');
+
+                if(res.data.role == 'technologist') {
+                    redirect = '#/exams/1';
+                }
+                if(res.data.role == 'researcher') {
+                    redirect = '#/summary';
+                }
+                console.log(redirect);
                 sessionStorage.removeItem('auth_redirect');
                 console.log("done.. redirecting "+redirect);
                 window.location = appconf.base_url + redirect;

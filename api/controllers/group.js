@@ -80,7 +80,35 @@ router.delete('/:id', jwt({secret: config.express.jwt.pub}), common.has_role("ad
         if(err) return next(err);
         if(!_group) res.sendStatus(404);
         logger.info(`Group ${_group.groupname} has been deleted`);
-        res.json(_group);
+        logger.info("Cleaning up orphaned ACLs");
+
+        db.Acl.find({}).exec(function(err, _acls) {
+            if(err) return next(err);
+            async.eachSeries(_acls, function(acl, cb) {
+
+                acl.qc.groups.forEach(function (value, i) {
+                    if(value == _group._id) {
+                        acl.qc.groups.splice(i, 1);
+                        acl.markModified('qc');
+                        console.log(`Updating QC ACLs for IIBIS ${acl.IIBISID}`);
+                    }
+                })
+
+                acl.view.groups.forEach(function (value, i) {
+                    if(value == _group._id) {
+                        acl.view.groups.splice(i, 1);
+                        acl.markModified('view');
+                        console.log(`Updating View ACLs for IIBIS ${acl.IIBISID}`);
+                    }
+                })
+                acl.save();
+                cb()
+
+            }, function(err) {
+                if(err) return next(err);
+                res.json(_group);
+            })
+        })
     });
 });
 

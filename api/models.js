@@ -266,6 +266,7 @@ var userSchema = mongoose.Schema({
     fullname: String,
     email: String,
     active: {type: Boolean, default: true},
+    prefs: mongoose.Schema.Types.Mixed,
 });
 
 exports.User  = mongoose.model('User', userSchema);
@@ -281,7 +282,20 @@ var groupSchema = mongoose.Schema({
     desc: String,
     members: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
     active: {type: Boolean, default: true},
-});
+
+}, {timestamps: {createdAt: 'createdAt', updatedAt: 'updatedAt'}, strict: false});
+
+
+groupSchema.statics.getUserGroups = function(user, cb) {
+    this.find({members: user.id}, function(err, groups) {
+        if(err) return cb(err, null);
+        var gids = [];
+        groups.forEach(function(group) {
+            gids.push(group.id);
+        });
+        cb(null, gids);
+    })
+};
 
 exports.Group  = mongoose.model('Group', groupSchema);
 
@@ -296,12 +310,12 @@ var aclSchema = mongoose.Schema({
     // key: {type: String, index: true},
     IIBISID: {type: String, index: true},
     qc: {
-        users: [Number],
-        groups: [Number]
+        users: [String],
+        groups: [String]
     },
     view: {
-        users: [Number],
-        groups: [Number]
+        users: [String],
+        groups: [String]
     }
     //
     //////////////////////////////////////////////////////////////////////////////////////////////

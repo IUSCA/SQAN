@@ -95,12 +95,17 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         controller: 'AdminController',
         requiresLogin: true,
     })
+    .when('/profile', {
+        templateUrl: 't/profile.html',
+        controller: 'ProfileController',
+        requiresLogin: true,
+    })
     .when('/signin', {
         template: '<h4>Redirecting to CAS...</h4>',
         controller: 'SigninController',
     })
     .otherwise({
-        redirectTo: '/exams'
+        redirectTo: '/exams/all'
     });
 }]).run(function($rootScope, $location, toaster, jwtHelper, appconf) {
     $rootScope.$on("$routeChangeStart", function(event, next, current) {
@@ -115,7 +120,7 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         //redirect to /signin if user hasn't authenticated yet
         if(next.requiresLogin) {
             if(jwt == null || jwtHelper.isTokenExpired(jwt)) {
-                toaster.warning("Please sign in first");
+                // toaster.warning("Please sign in first");
                 console.log(next.originalPath);
                 sessionStorage.setItem('auth_redirect', next.originalPath);
                 $location.path("/signin");

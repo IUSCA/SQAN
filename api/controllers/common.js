@@ -10,24 +10,29 @@ var logger = new winston.Logger(config.logger.winston);
 /////////AUTH/////////////////
 function issue_jwt(user, cb) {
     console.log("issuing!");
-    var claim = {
-        iss: config.auth.iss,
-        exp: (Date.now() + config.auth.ttl)/1000,
-        //"iat": (Date.now())/1000, //this gets set automatically
-        roles: user.roles,
-        primary_role: user.primary_role,
+    //get group ids
+    db.Group.getUserGroups(user, function(err, gids) {
+        if(err) return cb(err, null);
+        var claim = {
+            iss: config.auth.iss,
+            exp: (Date.now() + config.auth.ttl)/1000,
+            //"iat": (Date.now())/1000, //this gets set automatically
+            gids: gids,
+            roles: user.roles,
+            primary_role: user.primary_role,
 
-        //can't use user.username which might not be set
-        sub: user,  //TODO - toString() this!?
+            //can't use user.username which might not be set
+            sub: user,  //TODO - toString() this!?
 
-        profile: {
-            username: user.username,
-            email: user.email,
-            fullname: user.fullname
-        },
-    };
+            profile: {
+                username: user.username,
+                email: user.email,
+                fullname: user.fullname
+            },
+        };
 
-    cb(null, jsonwt.sign(claim, config.express.jwt.key, config.express.sign_opt));
+        cb(null, jsonwt.sign(claim, config.express.jwt.key, config.express.sign_opt));
+    })
 };
 
 function check_jwt(token) {

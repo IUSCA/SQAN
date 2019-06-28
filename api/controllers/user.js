@@ -37,6 +37,15 @@ router.post('/', jwt({secret: config.express.jwt.pub}), common.has_role("admin")
     });
 });
 
+//get self
+router.get('/self', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    db.User.findOne({username: req.user.profile.username}).exec(function(err, _user) {
+        if(err) return next(err);
+        if(!_user) res.sendStatus(404);
+        res.json(_user);
+    });
+});
+
 //get single user
 router.get('/:id', jwt({secret: config.express.jwt.pub}), common.has_role("admin"), function(req, res, next) {
     db.User.findById(req.params.id).exec(function(err, _user) {
@@ -45,6 +54,7 @@ router.get('/:id', jwt({secret: config.express.jwt.pub}), common.has_role("admin
         res.json(_user);
     });
 });
+
 
 //update user
 router.patch('/:id', jwt({secret: config.express.jwt.pub}), common.has_role("admin"), function(req, res, next) {
