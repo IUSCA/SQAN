@@ -1,0 +1,517 @@
+[
+  {
+    "x509dns": [],
+    "times": {
+      "iucas_login": "2016-06-02T12:44:36.643Z",
+      "password_reset": "2016-03-23T13:26:28.561Z",
+      "local_login": "2016-08-02T20:18:10.101Z",
+      "ldap_login": "2016-11-02T20:56:57.363Z"
+    },
+    "scopes": {
+      "sca": [
+        "user"
+      ],
+      "dicom": [
+        "user"
+      ]
+    },
+    "id": 1,
+    "username": "hayashis",
+    "fullname": "Soichi Hayashi",
+    "password_hash": true,
+    "email": "hayashis@iu.edu",
+    "email_confirmed": true,
+    "iucas": "hayashis",
+    "googleid": null,
+    "github": null,
+    "active": true
+  },
+  {
+    "x509dns": [],
+    "times": {
+      "iucas_login": "2019-06-10T13:56:31.022Z",
+      "ldap_login": "2017-11-09T19:30:33.618Z"
+    },
+    "scopes": {
+      "sca": [
+        "user",
+        "admin"
+      ],
+      "dicom": [
+        "user",
+        "admin"
+      ]
+    },
+    "id": 2,
+    "username": "agopu",
+    "fullname": "Arvind Gopu",
+    "password_hash": null,
+    "email": "agopu@iu.edu",
+    "email_confirmed": true,
+    "iucas": "agopu",
+    "googleid": null,
+    "github": null,
+    "active": true
+  },
+  {
+    "x509dns": [],
+    "times": {
+      "iucas_login": "2016-02-22T16:40:38.311Z"
+    },
+    "scopes": {
+      "sca": [
+        "user"
+      ],
+      "dicom": [
+        "user"
+      ]
+    },
+    "id": 3,
+    "username": "henschel",
+    "fullname": "Robert Henschel",
+    "password_hash": null,
+    "email": "henschel@iu.edu",
+    "email_confirmed": true,
+    "iucas": "henschel",
+    "googleid": null,
+    "github": null,
+    "active": true
+  },
+  {
+    "x509dns": [],
+    "times": {
+      "iucas_login": "2019-03-07T15:04:31.902Z",
+      "ldap_login": "2017-11-09T19:10:47.403Z"
+    },
+    "scopes": {
+      "sca": [
+        "user"
+      ],
+      "dicom": [
+        "user",
+        "admin"
+      ]
+    },
+    "id": 4,
+    "username": "mparamas",
+    "fullname": "Sundar Paramasivam",
+    "password_hash": null,
+    "email": "mparamas@iu.edu",
+    "email_confirmed": true,
+    "iucas": "mparamas",
+    "googleid": null,
+    "github": null,
+    "active": true
+  },
+  {
+    "x509dns": [],
+    "times": {
+      "iucas_login": "2019-06-06T14:32:41.837Z",
+      "ldap_login": "2017-11-03T14:23:21.468Z"
+    },
+    "scopes": {
+      "sca": [
+        "user"
+      ],
+      "dicom": [
+        "user",
+        "admin"
+      ]
+    },
+    "id": 5,
+    "username": "jdwest",
+    "fullname": "John West",
+    "password_hash": null,
+    "email": "jdwest@iu.edu",
+    "email_confirmed": true,
+    "iucas": "jdwest",
+    "googleid": null,
+    "github": null,
+    "active": true
+  },
+  {
+    "x509dns": [],
+    "times": {
+      "iucas_login": "2016-04-14T14:33:51.019Z",
+      "local_login": "2016-04-14T14:44:38.930Z"
+    },
+    "scopes": {
+      "sca": [
+        "user"
+      ],
+      "dicom": [
+        "user",
+        "admin"
+      ]
+    },
+    "id": 6,
+    "username": "pkgandhi",
+    "fullname": "Pratik Gandhi",
+    "password_hash": true,
+    "email": "pkgandhi@iu.edu",
+    "email_confirmed": true,
+    "iucas": "pkgandhi",
+    "googleid": null,
+    "github": null,
+    "active": false
+  },
+  {
+    "x509dns": [],
+    "times": {
+      "local_login": "2016-05-04T17:07:49.170Z",
+      "iucas_login": "2016-05-04T17:08:14.091Z"
+    },
+    "scopes": {
+      "sca": [
+        "user"
+      ],
+      "dicom": [
+        "user"
+      ]
+    },
+    "id": 7,
+    "username": "jnadkins",
+    "fullname": "Jessica N Bailey",
+    "password_hash": true,
+    "email": "jnadkins@iupui.edu",
+    "email_confirmed": true,
+    "iucas": "jnadkins",
+    "googleid": null,
+    "github": null,
+    "active": true
+  },
+  {
+    "x509dns": [],
+    "times": {
+      "local_login": "2016-05-04T17:06:31.359Z",
+      "iucas_login": "2016-05-18T14:45:39.602Z"
+    },
+    "scopes": {
+      "sca": [
+        "user"
+      ],
+      "dicom": [
+        "user"
+      ]
+    },
+    "id": 8,
+    "username": "etallman",
+    "fullname": "Eileen Tallman",
+    "password_hash": true,
+    "email": "etallman@iupui.edu",
+    "email_confirmed": true,
+    "iucas": "etallman",
+    "googleid": null,
+    "github": null,
+    "active": true
+  },
+  {
+    "x509dns": [],
+    "times": {
+      "ldap_login": "2017-11-09T19:10:36.012Z",
+      "iucas_login": "2019-06-25T17:34:22.068Z"
+    },
+    "scopes": {
+      "sca": [
+        "user",
+        "admin"
+      ],
+      "dicom": [
+        "user",
+        "admin"
+      ]
+    },
+    "id": 9,
+    "username": "youngmd",
+    "fullname": "Michael D Young",
+    "password_hash": null,
+    "email": "youngmd@iu.edu",
+    "email_confirmed": true,
+    "iucas": "youngmd",
+    "googleid": null,
+    "github": null,
+    "active": true
+  },
+  {
+    "x509dns": [],
+    "times": {
+      "iucas_login": "2019-01-18T15:10:29.482Z"
+    },
+    "scopes": {
+      "sca": [
+        "user",
+        "admin"
+      ],
+      "dicom": [
+        "user",
+        "admin"
+      ]
+    },
+    "id": 10,
+    "username": "rperigo",
+    "fullname": "Raymond Perigo",
+    "password_hash": null,
+    "email": "rperigo@iu.edu",
+    "email_confirmed": true,
+    "iucas": "rperigo",
+    "googleid": null,
+    "github": null,
+    "active": true
+  },
+  {
+    "x509dns": [],
+    "times": {
+      "iucas_login": "2018-05-10T13:05:35.106Z"
+    },
+    "scopes": {
+      "sca": [
+        "user"
+      ],
+      "dicom": [
+        "user"
+      ]
+    },
+    "id": 11,
+    "username": "mabeal",
+    "fullname": "Michele Dragoo",
+    "password_hash": null,
+    "email": "mabeal@iupui.edu",
+    "email_confirmed": true,
+    "iucas": "mabeal",
+    "googleid": null,
+    "github": null,
+    "active": true
+  },
+  {
+    "x509dns": [],
+    "times": {
+      "iucas_login": "2018-08-23T16:01:28.677Z"
+    },
+    "scopes": {
+      "sca": [
+        "user"
+      ],
+      "dicom": [
+        "user"
+      ]
+    },
+    "id": 12,
+    "username": "traday",
+    "fullname": "Traci Day",
+    "password_hash": null,
+    "email": "traday@iupui.edu",
+    "email_confirmed": true,
+    "iucas": "traday",
+    "googleid": null,
+    "github": null,
+    "active": true
+  },
+  {
+    "x509dns": [],
+    "times": {
+      "iucas_login": "2019-01-30T16:18:51.379Z"
+    },
+    "scopes": {
+      "sca": [
+        "user"
+      ],
+      "dicom": [
+        "user"
+      ]
+    },
+    "id": 13,
+    "username": "Robert Bryant",
+    "fullname": "bryantro",
+    "password_hash": null,
+    "email": "bryantro@iupui.edu",
+    "email_confirmed": true,
+    "iucas": "bryantro",
+    "googleid": null,
+    "github": null,
+    "active": true
+  },
+  {
+    "x509dns": [],
+    "times": null,
+    "scopes": {
+      "sca": [
+        "user"
+      ],
+      "dicom": [
+        "user"
+      ]
+    },
+    "id": 14,
+    "username": "wterrito",
+    "fullname": "Wendy Territo",
+    "password_hash": null,
+    "email": "wterrito@iupui.edu",
+    "email_confirmed": true,
+    "iucas": "wterrito",
+    "googleid": null,
+    "github": null,
+    "active": true
+  },
+  {
+    "x509dns": [],
+    "times": null,
+    "scopes": {
+      "sca": [
+        "user"
+      ],
+      "dicom": [
+        "user"
+      ]
+    },
+    "id": 15,
+    "username": "polsonh",
+    "fullname": "Heather Polson",
+    "password_hash": null,
+    "email": "polsonh@iupui.edu",
+    "email_confirmed": true,
+    "iucas": "polsonh",
+    "googleid": null,
+    "github": null,
+    "active": true
+  },
+  {
+    "x509dns": [],
+    "times": {
+      "iucas_login": "2018-12-12T19:55:56.741Z"
+    },
+    "scopes": {
+      "sca": [
+        "user"
+      ],
+      "dicom": [
+        "user"
+      ]
+    },
+    "id": 16,
+    "username": "mdzemidz",
+    "fullname": "Mario Dzemidzic",
+    "password_hash": null,
+    "email": "mdzemidz@iupui.edu",
+    "email_confirmed": true,
+    "iucas": "mdzemidz",
+    "googleid": null,
+    "github": null,
+    "active": true
+  },
+  {
+    "x509dns": [],
+    "times": null,
+    "scopes": {
+      "sca": [
+        "user"
+      ],
+      "dicom": [
+        "user"
+      ]
+    },
+    "id": 17,
+    "username": "srisache",
+    "fullname": "Shannon Leigh Risacher",
+    "password_hash": null,
+    "email": "srisache@iupui.edu",
+    "email_confirmed": true,
+    "iucas": "srisache",
+    "googleid": null,
+    "github": null,
+    "active": true
+  },
+  {
+    "x509dns": [],
+    "times": {
+      "iucas_login": "2019-03-21T14:02:26.126Z"
+    },
+    "scopes": {
+      "sca": [
+        "user"
+      ],
+      "dicom": [
+        "user"
+      ]
+    },
+    "id": 18,
+    "username": "kkyoder",
+    "fullname": "Karmen Yoder",
+    "password_hash": null,
+    "email": "kkyoder@iupui.edu",
+    "email_confirmed": true,
+    "iucas": "kkyoder",
+    "googleid": null,
+    "github": null,
+    "active": true
+  },
+  {
+    "x509dns": [],
+    "times": null,
+    "scopes": {
+      "sca": [
+        "user"
+      ],
+      "dicom": [
+        "user"
+      ]
+    },
+    "id": 19,
+    "username": "yucwu",
+    "fullname": "Yu-Chien Wu",
+    "password_hash": null,
+    "email": "yucwu@iu.edu",
+    "email_confirmed": true,
+    "iucas": "yucwu",
+    "googleid": null,
+    "github": null,
+    "active": true
+  },
+  {
+    "x509dns": [],
+    "times": {
+      "iucas_login": "2019-06-26T19:11:55.445Z"
+    },
+    "scopes": {
+      "sca": [
+        "user",
+        "admin"
+      ],
+      "dicom": [
+        "user",
+        "admin"
+      ]
+    },
+    "id": 44,
+    "username": "aiavenak",
+    "fullname": "Andrea",
+    "password_hash": true,
+    "email": "aiavenak@iu.edu",
+    "email_confirmed": true,
+    "iucas": "aiavenak",
+    "googleid": null,
+    "github": null,
+    "active": true
+  },
+  {
+    "x509dns": [],
+    "times": null,
+    "scopes": {
+      "sca": [
+        "user"
+      ],
+      "dicom": [
+        "user"
+      ]
+    },
+    "id": 45,
+    "username": "llnguyen",
+    "fullname": "Le Mai Weakley",
+    "password_hash": true,
+    "email": "llnguyen@iu.edu",
+    "email_confirmed": false,
+    "iucas": null,
+    "googleid": null,
+    "github": null,
+    "active": true
+  }
+]
