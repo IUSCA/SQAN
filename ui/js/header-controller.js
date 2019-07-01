@@ -50,15 +50,11 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
 
     $scope.comment_form = {
         subject: 'Question/comment re:RADY-SCA ',
-        name: $scope.user.profile.fullname,
-        email: $scope.user.profile.email,
+        name: $scope.user !== undefined ? $scope.user.profile.fullname : '',
+        email: $scope.user !== undefined ? $scope.user.profile.email : '',
         message: ''
     };
-
-    $scope.submit_comment = function(){
-        console.log($scope.comment_form);
-        toaster.success("Comment submitted");
-    }
+    
 
     $scope.submit_comment = function() {
         console.log($scope.comment_form);
