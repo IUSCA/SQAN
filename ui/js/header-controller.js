@@ -48,6 +48,41 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
         document.location = url;
     }
 
+    $scope.comment_form = {
+        subject: 'Question/comment re:RADY-SCA ',
+        name: $scope.user.profile.fullname,
+        email: $scope.user.profile.email,
+        message: ''
+    };
+
+    $scope.submit_comment = function(){
+        console.log($scope.comment_form);
+        toaster.success("Comment submitted");
+    }
+
+    $scope.submit_comment = function() {
+        console.log($scope.comment_form);
+        try {
+
+            $http.post(appconf.api+'/comment', $scope.comment_form)
+                .then(function(res) {
+                    if(res && res.data && res.data.status == "ok") {
+                        toaster.success("Your message has been sent! Thank you!");
+                        $scope.comment_form.comment = "";
+                    }
+                }, function(err) {
+                    console.log("error");
+                    console.dir(err);
+                    //if(err.statusText) toaster.error(err.statusText);
+                    if(err.data) toaster.error(err.data);
+                    else toaster.error("Sorry, something went wrong while submitting your comment. Please email sca-group@iu.edu. code:"+err.status);
+                });
+        } catch(e) {
+            console.dir(e);
+            toaster.error("Something went wrong while trying to send your comment. Please email sca-group@iu.edu");
+        }
+    }
+
     // if($scope.user) {
     //     $scope.serieses = {}; //make it easier to lookup series that needs to be updated
     //

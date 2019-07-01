@@ -104,6 +104,10 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         template: '<h4>Redirecting to CAS...</h4>',
         controller: 'SigninController',
     })
+    .when('/signout', {
+        template: '',
+        controller: 'SignoutController',
+    })
     .otherwise({
         redirectTo: '/exams/all'
     });

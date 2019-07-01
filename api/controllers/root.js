@@ -8,6 +8,7 @@ var jwt = require('express-jwt');
 var _ = require('underscore');
 var async = require('async');
 var axios = require('axios');
+var nodemailer = require('nodemailer');
 
 //mine
 var config = require('../../config');
@@ -150,6 +151,30 @@ router.get('/verify', function(req, res, next) {
             }
         })
 });
+
+//////////////////////////////////////////
+///////////////FEEDBACK///////////////////
+
+router.post('/comment', function(req, res, next) {
+    logger.info("sending comment");
+    var transporter = nodemailer.createTransport();
+    var to_address = config.contact.email;
+    var subject = req.body.subject;
+    var footer = config.contact.footer !== undefined ? config.contact.footer : '\n\n';
+    var bcc = config.contact.bcc !== undefined ? config.contact.bcc : '';
+
+    transporter.sendMail({
+        from: req.body.email,
+        to: to_address,
+        subject: subject,
+        bcc: bcc,
+        text: 'From: '+req.body.name+' ('+req.body.email+')\n\nMessage: '+req.body.message + footer,
+    }, function(err, info) {
+        if(err)  return next(err);
+        res.json({status: "ok", info: info});
+    });
+});
+
 
 
 module.exports = router;

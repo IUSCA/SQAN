@@ -21,4 +21,13 @@ app.controller('ProfileController',
                 $scope.self_groups = res.data.groups;
                 console.log(res.data);
             }, $scope.toast_error);
+
+        $scope.updateUser = function(){
+            toaster.success("Updating profile...");
+            $http.patch(appconf.api+'/user/self', $scope.self)
+                .then(function(res) {
+                    console.log(res.data);
+                    toaster.success("Profile updated!");
+                }, $scope.toast_error);
+        };
     });

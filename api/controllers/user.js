@@ -49,6 +49,27 @@ router.get('/self', jwt({secret: config.express.jwt.pub}), function(req, res, ne
     });
 });
 
+//update self
+router.patch('/self', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    db.User.findOne({username: req.user.profile.username}).exec(function(err, _user) {
+        if(err) return next(err);
+        if(!_user) res.sendStatus(404);
+
+        console.log(req.body);
+        //users are only allowed to edit fullname, email, and primary_role
+        let valid_keys = ['fullname','email','primary_role'];
+        for( let b in req.body ){
+            if(valid_keys.includes(b)){
+                _user[b] = req.body[b];
+                console.log(`Update ${b} to ${req.body[b]}`);
+            }
+        }
+
+        _user.save();
+        res.json(_user);
+    });
+});
+
 //get single user
 router.get('/:id', jwt({secret: config.express.jwt.pub}), common.has_role("admin"), function(req, res, next) {
     db.User.findById(req.params.id).exec(function(err, _user) {

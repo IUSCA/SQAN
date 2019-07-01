@@ -66,6 +66,15 @@ function($scope, appconf, $location, toaster, $http) {
 }]);
 
 
+app.controller('SignoutController',
+    function($scope, appconf) {
+        localStorage.removeItem(appconf.jwt_id);
+        localStorage.removeItem('uid');
+        localStorage.removeItem('role');
+        window.location = appconf.iucas_logout;
+    });
+
+
 
 function getParameterByName(name) {
     name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");

@@ -212,24 +212,6 @@ input:checked + .slider:before {
 
                 <table ng-show="transpose" class="table table-scroll table-header-rotated table-condensed" ng-show="subjects.length">
                     <thead>
-<<<<<<< HEAD
-                    <tr>
-                        <th><div class="row">
-                            <div class="input-group" style="width:250px;">
-                                <span class="input-group-addon input-sm"><i class="fa fa-fw fa-user"></i></span>
-                                <input type="text" class="form-control input-sm" ng-model="subfilter" placeholder="subject..." ng-model-options="{debounce: 500}">
-                            </div>
-                            </div>
-                            <div class="row">
-                            <div class="input-group" style="width:250px;">
-                                <span class="input-group-addon input-sm"><i class="fa fa-fw fa-list-alt"></i></span>
-                                <input type="text" class="form-control input-sm" ng-model="seriesfilter" placeholder="series..." ng-model-options="{debounce: 500}">
-                            </div>
-                            </div>
-                        </th>
-                        <th class="rotate-45 text-muted" ng-repeat="sub in subjects | filter:subfilter"><div style="white-space: nowrap;"><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></th>
-                    </tr>
-=======
                         <tr>
                             <th>
                                 <h6> Transpose Table</h6>
@@ -240,7 +222,6 @@ input:checked + .slider:before {
                             </th>
                             <th class="rotate-45 text-muted" ng-repeat="sub in subjects | filter:subfilter"><div style="white-space: nowrap; height:180px; left:100px"><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></th>
                         </tr>
->>>>>>> research-summary-v2
                     </thead>
                     <tbody style="border-bottom: 1px solid #ddd" ng-repeat="(mod, res) in summary">
                         <tr>
@@ -271,8 +252,3 @@ input:checked + .slider:before {
         </div>
     </div>
 </div>
-<<<<<<< HEAD
-=======
-
-
->>>>>>> research-summary-v2
