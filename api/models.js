@@ -293,6 +293,7 @@ groupSchema.statics.getUserGroups = function(user, cb) {
         groups.forEach(function(group) {
             gids.push(group.id);
         });
+        logger.error(`User ${user.username} has group memberships in ${gids}`);
         cb(null, gids);
     })
 };
@@ -325,17 +326,21 @@ var aclSchema = mongoose.Schema({
 //return true if user can do action on iibisid
 aclSchema.statics.can = function(user, action, iibisid, cb) {
 
+    logger.error(`Checking to see if user ${user.profile.username} can do ${action} on ${iibisid}`);
+
     this.findOne({IIBISID: iibisid}, function(err, acl) {
         if(err) return cb(err);
         var _acl = acl[action];
         if(_acl) {
-            for (var gid in user.gids) {
-                if (_acl.groups.indexOf(gid)) {
+            for (let gid of user.gids) {
+                if (~_acl.groups.indexOf(gid)) {
+                    logger.error(`Group match ${gid} for action ${action}!`);
                     cb(true);
                     return;
                 }
             }
             if(~_acl.users.indexOf(user.sub)) {
+                logger.error(`Sub match for action ${action}!`);
                 cb(true);
                 return;
             }

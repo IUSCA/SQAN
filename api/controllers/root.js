@@ -37,6 +37,14 @@ router.get('/config', jwt({secret: config.express.jwt.pub, credentialsRequired: 
     res.json(conf);
 });
 
+
+//See if I'm allowed to do something (to hide/show UI elements mostly)
+router.get('/self/can/:iibisid/:action', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    db.Acl.can(req.user, req.params.action, req.params.iibisid, function (can) {
+        res.json({iibis: req.params.iibisid, action: req.params.action, result: can})
+    })
+});
+
 router.get('/acl/:key', jwt({secret: config.express.jwt.pub/*, credentialsRequired: false*/}), function(req, res, next) {
     if(!~req.user.roles.indexOf('admin')) return next(new Error("admin only"));
     db.Acl.find({}, function(err, acl) {

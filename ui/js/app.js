@@ -94,6 +94,7 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         templateUrl: 't/admin.html',
         controller: 'AdminController',
         requiresLogin: true,
+        requiresAdmin: true,
     })
     .when('/profile', {
         templateUrl: 't/profile.html',
@@ -128,6 +129,16 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
                 console.log(next.originalPath);
                 sessionStorage.setItem('auth_redirect', next.originalPath);
                 $location.path("/signin");
+                event.preventDefault();
+            }
+        };
+
+        if(next.requiresAdmin) {
+            let user = jwtHelper.decodeToken(jwt);
+            console.log($scope.user);
+            let isadmin = (~user.roles.indexOf('admin'))
+            if(!isadmin){
+                toaster.warning("You are not authorized to access "+next.originalPath);
                 event.preventDefault();
             }
         };

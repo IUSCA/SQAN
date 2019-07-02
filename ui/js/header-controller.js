@@ -12,7 +12,7 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
         if(!jwt) return;
         $scope.user = jwtHelper.decodeToken(jwt);
         console.log($scope.user);
-        $scope.user.isadmin = ($scope.user.roles.indexOf('admin') !== -1)
+        $scope.user.isadmin = (~$scope.user.roles.indexOf('admin'))
     }
 
     //pull old jwt..
@@ -54,7 +54,7 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
         email: $scope.user !== undefined ? $scope.user.profile.email : '',
         message: ''
     };
-    
+
 
     $scope.submit_comment = function() {
         console.log($scope.comment_form);

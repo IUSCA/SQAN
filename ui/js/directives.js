@@ -74,6 +74,7 @@ app.component('exams', {
     bindings: {
         exam: "<",
         templates: '<',
+        qc: '<',
         mode: '<', //view mode ('wide' / 'tall')
         deprecated: '=',
         templateLookup: '<'

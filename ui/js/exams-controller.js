@@ -9,6 +9,7 @@ app.controller('ExamsController',
         $scope.view_mode = "tall";
         $scope.qc_title = 'Exams';
         $scope.qc_text = 'exams';
+        $scope.can_qc = false;
         switch($routeParams.level) {
             case "all":
                 break;
@@ -104,7 +105,17 @@ app.controller('ExamsController',
             $scope.selected_modality = modality;
             var modality_id = research.Modality+"."+research.StationName+"."+research.radio_tracer;
 
-            //console.log(where);
+
+            $scope.can_qc = false;
+            $http.get(appconf.api+'/self/can/'+research.IIBISID+'/qc')
+                .then(function(res) {
+                    console.log(res);
+                    if(res.data.result) {
+                        $scope.can_qc = true;
+                    }
+                }, function(err) {
+                    toaster.error(err);
+                })
 
             $http.get(appconf.api+'/research/'+research._id, {params: {
                     skip: 0,
