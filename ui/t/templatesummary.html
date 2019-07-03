@@ -1,7 +1,7 @@
 <style>
     table { border-collapse: collapse; }
     .sel { background-color: #bce65e; }
-    .desc { background-color: #d1e6ac; }        
+    .desc { background-color: #d1e6ac; }
 
 /* [disabled] {
   pointer-events: none;
@@ -30,8 +30,11 @@ outline:none;
             <h3><i class="fa fa-files-o"></i>  Template Summary Table</h3>
             <br>
             <div class="row">
-                <div class="col-xs-6 col-sm-4 col-md-2">
-                    <input class="form-control" type="text" placeholder="filter..." ng-model="sorting.filter">
+                <div class="col-xs-6 col-sm-4 col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-fw fa-filter"></i></span>
+                        <input type="text" class="form-control pull-right input-sm" ng-model="sorting.filter" placeholder="filter..." ng-model-options="{debounce: 400}">
+                    </div>
                 </div>
             </div>
             <br><br>
@@ -46,30 +49,30 @@ outline:none;
                     <tbody>
                         <tr ng-class="{'faded': $index!=rowNumber && fadedBackground==true}"
                             ng-repeat-start="templ in templates | filter:sorting.filter | orderBy: sorting.fieldname"  ng-click="templatesByTimestamp(templ,$index)" style="cursor: pointer;">
-                            <td ng-repeat="ff in fields" class="text-center">{{templ[ff]}}</td>  
+                            <td ng-repeat="ff in fields" class="text-center">{{templ[ff]}}</td>
                             <td class="text-center"><a href="">
                                 <i ng-show="$index!=rowNumber" class="fa fa-angle-left"></i>
                                 <i ng-show="$index==rowNumber" class="fa fa-angle-down"></i>
-                            </a></td>              
+                            </a></td>
                         </tr>
-                        <tr ng-repeat-end ng-if="$index==rowNumber">     
+                        <tr ng-repeat-end ng-if="$index==rowNumber">
                             <td colspan="6">
                                 <uib-tabset type="tabs" active="activePill" type="pills">
                                     <uib-tab ng-repeat="timestamp in templatebytimestamp" index="$index" heading="{{timestamp.date | date:'yyyy-MM-dd HH:mm:ss' }}">
-                                            
+
                                         <div class="card">
 
-                                            <div class="card-header lighten-1"> 
+                                            <div class="card-header lighten-1">
                                                 <div class="col-sm-6 col-md-6">
                                                     <br>
                                                         <div class="panel panel-default">
-                                                            <div class="panel-heading"> 
+                                                            <div class="panel-heading">
                                                                 Template Information
                                                             </div>
                                                             <div class="panel-body">
                                                                 <h5 >
                                                                     <span><i class="fa fa-clock-o" aria-hidden="true"></i></span>
-                                                                    <span>Timestamp:</span>  
+                                                                    <span>Timestamp:</span>
                                                                     <span>{{timestamp.date | date:'yyyy-MM-dd HH:mm:ss' }}</span>
                                                                 </h5>
                                                                 <h5>
@@ -90,7 +93,7 @@ outline:none;
                                                 <div class="col-sm-4">
                                                     <br>
                                                         <div class="panel panel-default">
-                                                            <div class="panel-heading"> 
+                                                            <div class="panel-heading">
                                                                 Action Links
                                                             </div>
                                                             <div class="panel-body">
@@ -125,8 +128,8 @@ outline:none;
                                                                     </h5>
                                                                 </div>
                                                             </div>
-                                                        </div>                                                       
-                                                    </br>                                                                                                                    
+                                                        </div>
+                                                    </br>
                                                 </div>
                                             </div>
 
@@ -136,28 +139,28 @@ outline:none;
                                                         <tr style="background-color:#e2eef5">
                                                             <th class="text-center" ng-repeat="dd in tseriesTable track by $index">{{dd}}</th>
                                                             <th><i class="fa fa-trash fa-lg" aria-hidden="true"></i></th>
-                                                            <tr ng-repeat-end style="background-color:#f2f7fa" ng-repeat="dd in templateSeries.series | orderBy: 'SeriesNumber'">              
+                                                            <tr ng-repeat-end style="background-color:#f2f7fa" ng-repeat="dd in templateSeries.series | orderBy: 'SeriesNumber'">
                                                                 <td class="text-center">{{dd.SeriesNumber}}</td>
                                                                 <td class="text-center" style="word-wrap: break-all;cursor:pointer" ng-click="opentemplate(dd.template_id)">{{dd.series_desc}}</td>
                                                                 <td class="text-center">{{dd.usedInQC}}</td>
-                                                                <td class="text-center">{{dd.imageCount}}</td>  
-                                                                <td><input type="checkbox" ng-click="deleteThisSeries(dd)"></td>                                       
+                                                                <td class="text-center">{{dd.imageCount}}</td>
+                                                                <td><input type="checkbox" ng-click="deleteThisSeries(dd)"></td>
                                                             </tr>
-                                                        </tr>                                               
+                                                        </tr>
                                                     </table>
                                                 <!-- </div> -->
                                             </div>
 
-                                        </div>  
+                                        </div>
                                     </uib-tab>
-                                </uib-tabset>                                                                  
+                                </uib-tabset>
                             </td>
                         </tr>
                     </tbody>
                 </table>
-            </div>                    
+            </div>
         </div>
-    </div>  
+    </div>
 </div>
 
 
