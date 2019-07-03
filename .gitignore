@@ -8,3 +8,4 @@ debug
 **/*.log
 barn
 start.sh
+bin/refresh_iibis.sh

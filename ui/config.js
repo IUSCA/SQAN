@@ -2,7 +2,7 @@ angular.module('app.config', [])
 .constant('appconf', {
     title: 'RADY QC',
     //assumes prod if not set
-    mode: 'dev',
+    mode: 'prod',
     api: '/api/qc',
 
     kibana_url: '/kibana/',
