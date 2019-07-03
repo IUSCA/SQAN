@@ -74,6 +74,34 @@ input:checked + .slider:before {
   border-radius: 50%;
 }
 
+.date-box {
+    width: 150px;
+    height: 25px;
+    vertical-align: middle;
+    text-align: right;
+    display: inline-block;
+    background-color: rgb(255, 255, 255);
+    padding-top: 6px;
+    margin-bottom: 4px;
+}
+
+.empty-box {
+    width: 25px;
+    height: 25px;
+    display: inline-block;
+    background-color: rgba(255, 255, 255, 0);
+    padding-top: 6px;
+    margin: 0;
+}
+
+.double-box {
+    height: 50px;
+}
+
+.triple-box {
+    height: 75px;
+}
+
 </style>
 
 
@@ -175,6 +203,7 @@ input:checked + .slider:before {
                                     <span class="slider round"></span>
                                 </label>
                             </th>
+                            <th></th>
                             <th ng-if="0" ng-repeat-start="(mod, res) in summary"></th>
                             <th class="rotate-45 text-muted" ng-repeat="sd in res.series_desc | filter:seriesfilter"><div style="white-space:nowrap; height:180px; left:100px"><span class="pull-right">{{sd}}&nbsp;&nbsp;</span></div></th>
                             <th ng-repeat-end ng-if="0"></th>
@@ -182,15 +211,36 @@ input:checked + .slider:before {
                     </thead>
                     <tbody style="border-bottom: 1px solid #ddd">
                         <tr>
-                            <td><h6 class="pull-right text-muted">Subjects/Modality</h6></td>
+                            <td>Subjects</td>
+                            <td>StudyTimestamp</td>
                             <td ng-repeat="(mod, res) in summary" ng-if="(res.series_desc | filter:seriesfilter).length" colspan="{{(res.series_desc | filter:seriesfilter).length}}" style="background-color: #006687; color: white">{{mod}}</td>
                         </tr>
                         <tr ng-repeat="sub in subjects | filter:subfilter">
                             <td><div class="pull-right" style="white-space: nowrap;"><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></td>
+                            <td>
+                                <table class='table borderless'>
+                                    <tr style="border-bottom: none" class='borderless' ng-repeat="(ts, objs) in subject_timestamps[sub]">
+                                        <td>
+                                            <span class="date-box" ng-class="{
+                                                'double-box': objs.max == 2,
+                                                'triple-box': objs.max == 3
+                                                }">
+                                                {{ts | date:'short':'-0400'}}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
                             <td ng-repeat="(mod, res) in summary" colspan="{{(res.series_desc | filter:seriesfilter).length}}" ng-if="(res.series_desc | filter:seriesfilter).length" style="white-space:nowrap;">
                                 <table class='table borderless'>
-                                    <tr style="border-bottom: none" class='borderless' ng-repeat="exam in res.exams[sub]">
+                                    <tr ng-repeat-start="(ts, ts_res) in subject_timestamps[sub]" ng-if="0"></tr>
+                                    <tr ng-if="!ts_res[mod].length"><td><span class="empty-box" ng-class="{
+                                                'double-box': ts_res.max == 2,
+                                                'triple-box': ts_res.max == 3
+                                                }"></span></td></tr>
+                                    <tr ng-if="ts_res[mod].length" style="border-bottom: none" class='borderless' ng-repeat="exam in ts_res[mod]">
                                         <td ng-repeat="sd in res.series_desc | filter:seriesfilter" >
+
                                                 <span style="cursor: pointer" class="color-box"
                                                     ng-click="openstudy(exam[sd]._id)"
                                                     ng-init="qcs = exam[sd].qc1_state !== undefined ? exam[sd].qc1_state : 'na' "
@@ -203,12 +253,12 @@ input:checked + .slider:before {
                                                 </span>
                                         </td>
                                     </tr>
+                                    <tr ng-repeat-end ng-if="0"></tr>
                                 </table>
                             </td>
                         </tr>
                     </tbody>
                 </table>
-
 
                 <table ng-show="transpose" class="table table-scroll table-header-rotated table-condensed" ng-show="subjects.length">
                     <thead>
