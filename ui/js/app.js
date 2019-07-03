@@ -11,7 +11,7 @@ var app = angular.module('app', [
     'angular-loading-bar',
     'angular-jwt',
     'ui.bootstrap',
-    'ui.bootstrap.tabs',
+    // 'ui.bootstrap.tabs',
     'ui.select',
     'sca-ng-wf',
     'sca-product-raw',
@@ -94,22 +94,65 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         templateUrl: 't/admin.html',
         controller: 'AdminController',
         requiresLogin: true,
+        requiresAdmin: true,
+    })
+    .when('/profile', {
+        templateUrl: 't/profile.html',
+        controller: 'ProfileController',
+        requiresLogin: true,
+    })
+    .when('/signin', {
+        template: '<h4>Redirecting to CAS...</h4>',
+        controller: 'SigninController',
+    })
+    .when('/signout', {
+        template: '',
+        controller: 'SignoutController',
     })
     .otherwise({
-        redirectTo: '/exams'
+        redirectTo: '/exams/all'
     });
 }]).run(function($rootScope, $location, toaster, jwtHelper, appconf) {
     $rootScope.$on("$routeChangeStart", function(event, next, current) {
-        //redirect to /login if user hasn't authenticated yet
+
+        var jwt = localStorage.getItem(appconf.jwt_id);
+        if(jwt == null || jwtHelper.isTokenExpired(jwt)) {
+            localStorage.removeItem(appconf.jwt_id);
+            localStorage.removeItem('uid');
+            localStorage.removeItem('role');
+        };
+
+        //redirect to /signin if user hasn't authenticated yet
         if(next.requiresLogin) {
-            var jwt = localStorage.getItem(appconf.jwt_id);
             if(jwt == null || jwtHelper.isTokenExpired(jwt)) {
-                sessionStorage.setItem('auth_redirect', document.location.toString());
-                toaster.error("Please signin first!");
-                document.location = appconf.auth_url;
+                // toaster.warning("Please sign in first");
+                console.log(next.originalPath);
+                sessionStorage.setItem('auth_redirect', next.originalPath);
+                $location.path("/signin");
                 event.preventDefault();
             }
-        }
+        };
+
+        if(next.requiresAdmin) {
+            let user = jwtHelper.decodeToken(jwt);
+            console.log($scope.user);
+            let isadmin = (~user.roles.indexOf('admin'))
+            if(!isadmin){
+                toaster.warning("You are not authorized to access "+next.originalPath);
+                event.preventDefault();
+            }
+        };
+
+        // //redirect to /login if user hasn't authenticated yet
+        // if(next.requiresLogin) {
+        //     var jwt = localStorage.getItem(appconf.jwt_id);
+        //     if(jwt == null || jwtHelper.isTokenExpired(jwt)) {
+        //         sessionStorage.setItem('auth_redirect', document.location.toString());
+        //         toaster.error("Please signin first!");
+        //         document.location = appconf.auth_url;
+        //         event.preventDefault();
+        //     }
+        // }
     });
 });
 
@@ -118,7 +161,7 @@ app.config(['$locationProvider', function($locationProvider) {
 }]);
 
 //configure httpProvider to send jwt unless skipAuthorization is set in config (not tested yet..)
-app.config(['appconf', '$httpProvider', 'jwtInterceptorProvider', 
+app.config(['appconf', '$httpProvider', 'jwtInterceptorProvider',
 function(appconf, $httpProvider, jwtInterceptorProvider) {
     jwtInterceptorProvider.tokenGetter = function(jwtHelper, $http, toaster) {
         //if (config.url.substr(config.url.length - 5) == '.html') { return null; }
@@ -136,11 +179,13 @@ app.factory('serverconf', ['appconf', '$http', 'jwtHelper', function(appconf, $h
 }]);
 
 app.factory('users', ['appconf', '$http', 'jwtHelper', 'toaster', function(appconf, $http, jwtHelper, toaster) {
-    return $http.get(appconf.auth_api+'/profile')
+    console.log("In the user factory!");
+    return $http.get(appconf.api+'/user/all')
     .then(function(res) {
         var users = {};
-        res.data.profiles.forEach(function(user) {
-            users[user.id] = user;
+        console.log(res.data);
+        res.data.forEach(function(user) {
+            users[user._id] = user;
         });
         return users;
     }, function(res) {
@@ -150,7 +195,7 @@ app.factory('users', ['appconf', '$http', 'jwtHelper', 'toaster', function(appco
 }]);
 
 app.factory('groups', ['appconf', '$http', 'jwtHelper', 'toaster', function(appconf, $http, jwtHelper, toaster) {
-    return $http.get(appconf.auth_api+'/groups')
+    return $http.get(appconf.api+'/group/all')
     .then(function(res) {
         return res.data;
     }, function(res) {

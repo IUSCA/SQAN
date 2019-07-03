@@ -74,12 +74,18 @@ app.component('exams', {
     bindings: {
         exam: "<",
         templates: '<',
+        qc: '<',
         mode: '<', //view mode ('wide' / 'tall')
         deprecated: '=',
         templateLookup: '<'
     },
-    controller: function(appconf, $window, $http, $uibModal, toaster, $interval) {
+    controller: function(appconf, $scope, $window, $http, $uibModal, toaster, $interval, users) {
         var $ctrl = this;
+
+
+
+        users.then(function(_users) { $ctrl.users = _users; });
+
 
         this.openstudy = function(id) {
             $window.open("#/series/"+id, "study:"+id);
@@ -126,51 +132,137 @@ app.component('exams', {
             });
         }
 
-        this.qcalert = function(exam,qc_type) {
+
+        this.opencomment = function () {
+            $uibModal.open({
+                templateUrl: 't/components/addcomment.html',
+                size: 'lg',
+                controller: function ($scope, $uibModalInstance) {
+                    $scope.exam = $ctrl.exam;
+                    console.log($scope.exam);
+
+                    $scope.comment = "";
+
+                    $scope.delete = function (comment) {
+                        console.log(comment);
+                        $scope.comment = comment;
+                        $uibModalInstance.close(comment);
+                    };
+
+                    $scope.cancel = function () {
+                        $uibModalInstance.dismiss('cancel2');
+                    };
+                }
+            }).result.then(function(result){
+
+                console.log($ctrl.exam._id);
+
+                console.log("deleting exam "+ $ctrl.exam._id)
+                $http.post(appconf.api+'/exam/delete/'+$ctrl.exam._id, {comment: result})
+                .then(function(res) {
+                    toaster.success(res.data.message);
+                    $ctrl.exam = res.data.exam;
+                    $scope.$emit("ExamDeletion", $ctrl.exam);
+                }, function(res) {
+                    if(res.data && res.data.message) toaster.error(res.data.message);
+                    else toaster.error(res.statusText);
+                });
+
+            }, function(result){
+                console.log('cancel or escaped');
+                console.log(result);
+            });
+        }
+
+
+        this.opendeleted = function (comment) {
+            $uibModal.open({
+                templateUrl: 't/components/viewdeleted.html',
+                size: 'lg',
+                controller: function ($scope, $uibModalInstance) {
+                    $scope.exam = $ctrl.exam;
+                    console.log($scope.exam);
+
+                    $scope.comment = comment;
+                    console.log($scope.comment)
+
+                    console.log($ctrl.users)
+                    $scope.user = $ctrl.users[comment.user_id];
+
+                    $scope.close = function () {
+                        $uibModalInstance.dismiss('close');
+                    };
+                }
+            }).result.then(function(){
+
+                console.log('nothing to do');
+
+            }, function(result){
+                console.log(result);
+            });
+        }
+
+
+        this.qcalert = function(exam,alert_tyep) {
             date = new Date(exam.StudyTimestamp);
             var StudyTimestamp = (date.getMonth()+1)+'/' + date.getDate() + '/'+date.getFullYear();
             //var StudyTimestamp = date.getFullYear()+'-' + (date.getMonth()+1) + '-'+date.getDate();
-            var alert = `Please confirm that you want to ReQC ${qc_type} series for 
+            var alert = `Please confirm that you want to ${alert_tyep} series for 
             Subject: ${exam.subject}
             Study Timestamp: ${StudyTimestamp}`
             var r = confirm(alert);
 
             if (r == true) {
-                if (qc_type=="all") {
+                if (alert_tyep=="ReQC all") {
                     console.log("ReQc-ing all!");
                     this.reqc_all(exam._id);
                 }
-                else if (qc_type=="failed"){
+                else if (alert_tyep=="ReQC failed"){
                     console.log("ReQc-ing failures!");
                     this.reqc_failed(exam._id);
                 }
+                else if (alert_tyep=="delete all"){
+                    console.log("Deleting Exam "+exam.subject);
+                    this.delete_exam(exam._id);
+                }
             } else {
-              console.log("ReQc canceled")
+              console.log("action canceled")
             }
+        }
+
+        this.delete_exam = function(exam_id, comment) {
+            console.log("deleting exam "+exam_id)
+            $http.post(appconf.api+'/exam/delete/'+exam_id, {comment: comment})
+            .then(function(res) {
+                toaster.success(res.data.message);
+            }, function(res) {
+                if(res.data && res.data.message) toaster.error(res.data.message);
+                else toaster.error(res.statusText);
+            });
+        }
+
+        this.reqc_failed = function(exam_id) {
+            console.log("reQC errored series")
+            $http.post(appconf.api+'/series/reqcerroredseries/'+exam_id)
+            .then(function(res) {
+                toaster.success(res.data.message);
+            }, function(res) {
+                if(res.data && res.data.message) toaster.error(res.data.message);
+                else toaster.error(res.statusText);
+            });
         }
 
         this.reqc_all = function(exam_id) {
             console.log("reQC all series")
             $http.post(appconf.api+'/series/reqcallseries/'+exam_id)
             .then(function(res) {
-                //$scope.$emit("exam_invalidated", {exam_id: exam_id});
                 toaster.success(res.data.message);
             }, function(res) {
                 if(res.data && res.data.message) toaster.error(res.data.message);
                 else toaster.error(res.statusText);
             });
         }
-        this.reqc_failed = function(exam_id) {
-            console.log("reQC errored series")
-            $http.post(appconf.api+'/series/reqcerroredseries/'+exam_id)
-            .then(function(res) {
-                //$scope.$emit("exam_invalidated", {exam_id: exam_id});
-                toaster.success(res.data.message);
-            }, function(res) {
-                if(res.data && res.data.message) toaster.error(res.data.message);
-                else toaster.error(res.statusText);
-            });
-        }
+
     },
 });
 

@@ -44,13 +44,14 @@ var examSchema = mongoose.Schema({
 
     StudyInstanceUID: {type: String, index: true},
     override_template_id: {type: mongoose.Schema.Types.ObjectId},  // _id of template exam if override is set
-
+    isdeleted: {type: Boolean,default: false},
     istemplate: {type: Boolean},
     StudyTimestamp: Date,
     //series: mongoose.Schema.Types.Mixed,
     qc: mongoose.Schema.Types.Mixed,
 
     comments: [ mongoose.Schema({
+        title: String,
         user_id: String, //req.user.sub
         comment: String,
         date: {type: Date, default: Date.now},
@@ -58,6 +59,33 @@ var examSchema = mongoose.Schema({
 });
 examSchema.index({research_id: 1, StudyInstanceUID:1});
 exports.Exam = mongoose.model('Exam', examSchema);
+
+
+var deletedexamSchema = mongoose.Schema({
+    ///////////////////////////////////////////////////////////////////////////
+    research_id: {type: mongoose.Schema.Types.ObjectId, index: true, ref: 'Research'},
+    subject: {type: String}, //not set if it's template
+
+    StudyInstanceUID: {type: String, index: true},
+
+    istemplate: {type: Boolean},
+    StudyTimestamp: Date,
+
+    DeletionTimestamp: {type: Date, default: Date.now},
+    //series: mongoose.Schema.Types.Mixed,
+    qc: mongoose.Schema.Types.Mixed,
+
+    comments: [ mongoose.Schema({
+        title: String,
+        user_id: String, //req.user.sub
+        comment: String,
+        date: {type: Date, default: Date.now},
+    }) ],
+});
+deletedexamSchema.index({research_id: 1, StudyInstanceUID:1});
+exports.Deletedexam = mongoose.model('Deletedexam', deletedexamSchema);
+
+
 
 //counter part for "series"
 var templateSchema = mongoose.Schema({
@@ -227,6 +255,55 @@ exports.IIBIS = mongoose.model('IIBIS', iibisSchema, 'iibis');
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+var userSchema = mongoose.Schema({
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+    username: { type: String, index: {unique: true}},
+    createDate: { type: Date, default: Date.now },
+    lastLogin: { type: Date, default: Date.now },
+    roles: [String],
+    primary_role: String,
+    fullname: String,
+    email: String,
+    active: {type: Boolean, default: true},
+    prefs: mongoose.Schema.Types.Mixed,
+});
+
+exports.User  = mongoose.model('User', userSchema);
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+var groupSchema = mongoose.Schema({
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+    name: { type: String, index: {unique: true}},
+    desc: String,
+    members: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
+    active: {type: Boolean, default: true},
+
+}, {timestamps: {createdAt: 'createdAt', updatedAt: 'updatedAt'}, strict: false});
+
+
+groupSchema.statics.getUserGroups = function(user, cb) {
+    this.find({members: user.id}, function(err, groups) {
+        if(err) return cb(err, null);
+        var gids = [];
+        groups.forEach(function(group) {
+            gids.push(group.id);
+        });
+        logger.error(`User ${user.username} has group memberships in ${gids}`);
+        cb(null, gids);
+    })
+};
+
+exports.Group  = mongoose.model('Group', groupSchema);
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 var aclSchema = mongoose.Schema({
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //key
@@ -234,12 +311,12 @@ var aclSchema = mongoose.Schema({
     // key: {type: String, index: true},
     IIBISID: {type: String, index: true},
     qc: {
-        users: [Number],
-        groups: [Number]
+        users: [String],
+        groups: [String]
     },
     view: {
-        users: [Number],
-        groups: [Number]
+        users: [String],
+        groups: [String]
     }
     //
     //////////////////////////////////////////////////////////////////////////////////////////////
@@ -249,17 +326,21 @@ var aclSchema = mongoose.Schema({
 //return true if user can do action on iibisid
 aclSchema.statics.can = function(user, action, iibisid, cb) {
 
+    logger.error(`Checking to see if user ${user.profile.username} can do ${action} on ${iibisid}`);
+
     this.findOne({IIBISID: iibisid}, function(err, acl) {
         if(err) return cb(err);
         var _acl = acl[action];
         if(_acl) {
-            for (var gid in user.gids) {
-                if (_acl.groups.indexOf(gid)) {
+            for (let gid of user.gids) {
+                if (~_acl.groups.indexOf(gid)) {
+                    logger.error(`Group match ${gid} for action ${action}!`);
                     cb(true);
                     return;
                 }
             }
             if(~_acl.users.indexOf(user.sub)) {
+                logger.error(`Sub match for action ${action}!`);
                 cb(true);
                 return;
             }
