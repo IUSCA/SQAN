@@ -6,7 +6,7 @@
             <p class="help-block" ng-if="search.recentrange == 'all'">Showing all {{qc_text}}</p>
         </div>
 
-        <input type="text" class="form-control" ng-model="research_filter" placeholder="Filter">
+        <input type="text" class="form-control" ng-model="research_filter" placeholder="Filter" ng-model-options="{debounce: 500}">
         <br>
         <div class="btn-group pull-right" style="left: 0px;top: -5px;">
             <button class="btn btn-xs btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -39,13 +39,22 @@
                         <i class="fa fa-fw fa-square-o" ng-show="!showExams"></i> Exams/Subjects</a>
                 </li>
                 <li role="separator" class="divider"></li>
-                <li class="dropdown-header">Sort By</li>
+                <li class="dropdown-header">Sort Research By</li>
                 <li ng-repeat="(sort_id, label) in sortoptions"
                     ng-click="changesort(sort_id)">
                     <a href>
                         <i class="fa fa-fw fa-check" ng-if="search.sort == sort_id"></i>
                         <i class="fa fa-fw" ng-if="search.sort !=  sort_id"></i> {{label}}</a>
                 </li>
+                <li role="separator" class="divider"></li>
+                <li class="dropdown-header">Sort Subjects By</li>
+                <li ng-repeat="(sort_id, label) in subj_sortoptions"
+                    ng-click="search.subj_sort = sort_id">
+                    <a href>
+                        <i class="fa fa-fw fa-check" ng-if="search.subj_sort == sort_id"></i>
+                        <i class="fa fa-fw" ng-if="search.subj_sort !=  sort_id"></i> {{label}}</a>
+                </li>
+                <li role="separator" class="divider"></li>
 
             </ul>
         </div>
@@ -70,13 +79,12 @@
                                 <i class="fa fa-fw fa-plus-square" ng-hide="modality.showme"></i>
                         </span>
                     <br><br>
-                    <div ng-repeat="exam in modality.exams"
+                    <div ng-repeat="exam in modality.exams | orderBy:search.subj_sort:reverse"
                          ng-click="select(modality, exam);$event.stopPropagation()"
                          ng-show="modality.showme"
-                         class="subject-label">
-                        <small style="position: absolute; color: black">{{exam.subject}}</small>
+                         class="subject-label" uib-tooltip-html="makeTooltip(exam)" tooltip-append-to-body="true" tooltip-popup-delay='200'>
+                        <small style="position: absolute;" ng-class="{'missing_images': exam.qc.total_missing_images}">{{exam.subject}}</small>
                         <div class="progress exam-state pull-right"
-                             uib-tooltip-html="makeTooltip(exam)" tooltip-append-to-body="true"
                              ng-init="total = exam.qc.series_passed + exam.qc.series_failed + exam.qc.series_passed_warning + exam.qc.series_missing.length + exam.qc.series_no_template.length">
                             <div class="progress-bar progress-bar-success" style="height: 20%; width: {{exam.qc.series_passed / total*100}}%"></div>
                             <div class="progress-bar progress-bar-danger" style="height: 20%; width: {{exam.qc.series_failed / total*100}}%"></div>
@@ -99,16 +107,23 @@
     </div>
 </div>
 <div class="subbar-content subbar-contentnew">
-    <div ng-if="!selected" class="help-block center-parent"><span class="center-child text-center"><h3><i class="fa fa-8x fa-flask faded"></i> <br>Please select a research to display</h3></span></div>
+    <div ng-if="!selected" class="help-block center-parent">
+        <span class="center-child text-center" ng-if="!loading_exam">
+            <h3><i class="fa fa-8x fa-flask faded"></i> <br>Please select a research to display</h3>
+        </span>
+        <span class="center-child text-center" ng-if="loading_exam">
+            <h3><i class="fa fa-8x fa-circle-o-notch fa-spin"></i> <br>Loading research...</h3>
+        </span>
+    </div>
     <div ng-if="selected">
         <div class="fixed-top" style="margin-left: 355px;">
             <h2 class="pull-right" style="position: relative; left: -15px;">
                 <viewmode-toggler mode="view_mode" deprecated="show_deprecated"></viewmode-toggler>
             </h2>
             <h2> <b>{{selected.IIBISID}}</b>
-                <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="QCalert(selected,'all')" tooltip-placement="right-bottom" uib-tooltip="ReQC all series in all exams in this IIBISID">ReQC all exams</button>
+                <button class="btn btn-xs btn-info" ng-if="can_qc" style="padding: 1px 2px; font-size: 80%;" ng-click="QCalert(selected,'all')" tooltip-placement="right-bottom" uib-tooltip="ReQC all series in all exams in this IIBISID">ReQC all exams</button>
 
-                <button class="btn btn-xs btn-info" style="padding: 1px 2px; font-size: 80%;" ng-click="QCalert(selected,'failed')" tooltip-placement="right-bottom" uib-tooltip="ReQC all series that have failed QC1 in this IIBISID">ReQC failures</button>
+                <button class="btn btn-xs btn-info" ng-if="can_qc" style="padding: 1px 2px; font-size: 80%;" ng-click="QCalert(selected,'failed')" tooltip-placement="right-bottom" uib-tooltip="ReQC all series that have failed QC1 in this IIBISID">ReQC failures</button>
             </h2>
             <h3>
                 Modality: <b>{{selected.Modality}}</b>
@@ -116,8 +131,11 @@
                 <small ng-show="selected.Modality == 'PT'">
                     RadioTracer: <b>{{selected.radio_tracer}}</b>
                 </small>
-                <span class="pull-right" style="width: 150px">
-                    <input type="text" class="form-control pull-right input-sm" ng-model="subject_filter" placeholder="Filter by Subject">
+                <span class="pull-right" style="width: 200px">
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-fw fa-filter"></i></span>
+                        <input type="text" class="form-control pull-right input-sm" ng-model="subject_filter" placeholder="Filter by Subject" ng-model-options="{debounce: 500}">
+                      </div>
                 </span>
 
                 <br>
@@ -131,7 +149,7 @@
                     <!-- <span class="text-muted">Subject</span> -->
                 </h3>
                 <div ng-repeat="exam in subject_exams[subject] track by exam._id" id="{{exam._id}}">
-                    <exams exam="exam" mode="view_mode" templates="selected.templates" template-lookup="selected.template_map" deprecated="show_deprecated"></exams>
+                    <exams exam="exam" qc="can_qc" mode="view_mode" templates="selected.templates" template-lookup="selected.template_map" deprecated="show_deprecated"></exams>
                 </div>
             </div>
             <div class="template">

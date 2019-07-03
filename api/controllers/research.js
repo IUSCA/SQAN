@@ -22,7 +22,7 @@ router.get('/', jwt({secret: config.express.jwt.pub}), function(req, res, next) 
     query.exec(function(err, rs) {
         if(err) return next(err);
         //if admin parameter is set and if user is admin, return all (used to list all iibisid on admin page)
-        if(req.query.admin && ~req.user.scopes.dicom.indexOf('admin')) {
+        if(req.query.admin && ~req.user.roles.indexOf('admin')) {
             return res.json(rs);
         }
         db.Acl.getCan(req.user, 'view', function(err, iibisids) {
@@ -32,7 +32,7 @@ router.get('/', jwt({secret: config.express.jwt.pub}), function(req, res, next) 
                 if(~iibisids.indexOf(r.IIBISID)) researches.push(r);
             });
             res.json(researches);
-        }); 
+        });
     });
 });
 
@@ -40,13 +40,13 @@ router.get('/summary/:id', function(req, res, next) {
     var subjects = [];
     var exams = {};
     var series_desc = [];
-    db.Exam.find({'research_id': req.params.id, 'istemplate' : false}).exec(function(err, _exams){
+    db.Exam.find({'research_id': req.params.id, 'istemplate' : false}).sort({ StudyTimestamp:-1 }).exec(function(err, _exams){
         if(err) return next(err);
         //console.log(_exams);
 
         async.each(_exams, function(exam, callback) {
             subjects.indexOf(exam.subject) === -1 && subjects.push(exam.subject);
-            db.Series.find({exam_id: exam._id}).populate('exam_id').exec(function(err, _series){
+            db.Series.find({exam_id: exam._id}).populate('exam_id').sort({ SeriesNumber:1 }).exec(function(err, _series){
                 var exam_series = {};
                 _series.forEach(function(ser){
                     series_desc.indexOf(ser.series_desc) === -1 && series_desc.push(ser.series_desc);
@@ -77,14 +77,14 @@ router.post('/reqcall/:research_id', jwt({secret: config.express.jwt.pub}), func
         //make sure user has access to this research
         db.Acl.can(req.user, 'qc', research.IIBISID, function(can) {
             if(!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:"+research.IIBISID});
-            
+
             db.Exam.find({research_id:research._id})  //new mongoose.Types.ObjectId(req.params.research_id))
             .exec(function(err, exams) {
                 if(err) return next(err);
                 if(!exams) return res.status(404).json({message: "can't find specified exams"});
-                
+
                 async.forEach(exams,function(exam,next_exam){
-                    
+
                     //find all serieses user specified
                     db.Series.find({exam_id: exam._id}).exec(function(err, serieses) {
                         if(err) return next_exam(err);
@@ -103,7 +103,7 @@ router.post('/reqcall/:research_id', jwt({secret: config.express.jwt.pub}), func
                                     title: "Research-level ReQC all",
                                     date: new Date(), //should be set by default, but UI needs this right away
                                     detail: detail,
-                                }; 
+                                };
                                 db.Series.update({_id: series._id}, {$push: { events: event }, qc1_state:"re-qcing", $unset: {qc: 1}}, function(err){
                                     if(err) return next_exam(err);
                                 });
@@ -113,7 +113,7 @@ router.post('/reqcall/:research_id', jwt({secret: config.express.jwt.pub}), func
                     });
 
                 }, function(err) {
-                    res.json({message: "Re-running QC on "+exams.length+ " exams"}); 
+                    res.json({message: "Re-running QC on "+exams.length+ " exams"});
                 })
             });
 
@@ -133,15 +133,15 @@ router.post('/reqcfailed/:research_id', jwt({secret: config.express.jwt.pub}), f
         //make sure user has access to this research
         db.Acl.can(req.user, 'qc', research.IIBISID, function(can) {
             if(!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:"+research.IIBISID});
-            
+
             db.Exam.find({research_id:research._id})  //new mongoose.Types.ObjectId(req.params.research_id))
             .exec(function(err, exams) {
                 if(err) return next(err);
                 if(!exams) return res.status(404).json({message: "can't find specified exams"});
-                
+
                 var qced_series = 0;
                 async.forEach(exams,function(exam,next_exam){
-                    
+
                     //find all serieses user specified
                     db.Series.find({exam_id: exam._id, qc1_state:{$ne:"autopass"}}).exec(function(err, serieses) {
                         if(err) return next_exam(err);
@@ -161,7 +161,7 @@ router.post('/reqcfailed/:research_id', jwt({secret: config.express.jwt.pub}), f
                                     title: "Research-level ReQC failures",
                                     date: new Date(), //should be set by default, but UI needs this right away
                                     detail: detail,
-                                }; 
+                                };
                                 db.Series.update({_id: series._id}, {$push: { events: event }, qc1_state:"re-qcing", $unset: {qc: 1}}, function(err){
                                     if(err) return next_exam(err);
                                 });
@@ -171,7 +171,7 @@ router.post('/reqcfailed/:research_id', jwt({secret: config.express.jwt.pub}), f
                     });
 
                 }, function(err) {
-                    res.json({message: "Re-running QC on "+qced_series+ " series with QC1 state failed"}); 
+                    res.json({message: "Re-running QC on "+qced_series+ " series with QC1 state failed"});
                 })
             });
 

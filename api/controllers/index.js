@@ -19,6 +19,8 @@ router.use('/event', require('./event'));
 router.use('/handler', require('./handler'));
 router.use('/dataflow', require('./dataflow'));
 router.use('/templatesummary', require('./templatesummary'));
+router.use('/user', require('./user'));
+router.use('/group', require('./group'));
 //router.use('/study', require('./series')); //deprecated .. use /series
 
 module.exports = router;

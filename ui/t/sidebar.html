@@ -27,10 +27,13 @@
         <div class="menu" ng-if="user.isadmin" ng-class="{'active':  active_menu == 'admin'}" ng-click="openpage('/admin')">
             <h3><i class="fa fa-users" aria-hidden="true"></i></h3> Access Control
         </div>
-        <div class="menu" ng-click="opentab('/profile')">
+        <div class="menu" ng-class="{'active':  active_menu == 'profile'}" ng-click="openpage('/profile')">
             <h3><i class="fa fa-cog" aria-hidden="true"></i></h3> Profile
         </div>
-        <div class="menu" ng-click="relocate('/auth/#!/signout')">
+        <div class="menu" onclick="$('#contact2').modal();">
+            <h3><i class="fa fa-envelope" aria-hidden="true"></i></h3> Contact
+        </div>
+        <div class="menu" ng-click="openpage('/signout')">
             <h3><i class="fa fa-sign-out" aria-hidden="true"></i></h3> Logout
         </div>
         <hr>
@@ -45,4 +48,40 @@
     </div>
     -->
 </div>
+
+
+<div  id="contact2" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header modal-header-info">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h3><i class="fa fa-fw fa-envelope"></i> Have questions or comments?</h3>
+            </div>
+            <div class="modal-body">
+                <form name="thisform">
+                    <div class="form-group">
+                        <label for="inputname">Full Name</label>
+                        <input type="name" class="form-control" id="inputname" ng-model="comment_form.name" placeholder="Your name" autocomplete="name" required disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputemail">Email Address</label>
+                        <input type="email" class="form-control" id="inputemail" ng-model="comment_form.email" placeholder="Your email address" autocomplete="email" required disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputsubject">Subject</label>
+                        <input type="text" class="form-control" id="inputsubject" ng-model="comment_form.subject" placeholder="Enter a subject line" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputmessage">Message</label>
+                        <textarea rows="5" class="form-control" id="inputmessage" ng-model="comment_form.message" placeholder="Enter your comment/question" required></textarea>
+                    </div>
+                </form>
+            </div><!--modal-body-->
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-info" onclick="$('#contact2').modal('toggle');" ng-disabled="thisform.$invalid" ng-click="submit_comment()">Send</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal" aria-hidden="true">Close</button>
+            </div>
+        </div><!--modal-content-->
+    </div><!--modal-dialog-->
+</div><!--modal-->
 

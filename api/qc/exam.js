@@ -38,7 +38,9 @@ function qc_exam(exam_id,cb) {
         images_errored: 0,
         images_clean:0,
         images_no_template:0,
-        fields_errored:0
+        fields_errored:0,
+        series_missing_images: 0,
+        total_missing_images: 0
     }
 
     async.series([
@@ -124,6 +126,13 @@ function qc_exam(exam_id,cb) {
                             qc.images_errored += s.qc.errored_images;
                             qc.images_clean += s.qc.clean;
                             qc.images_no_template += s.qc.notemps;
+
+
+                            console.log(`Series ${s._id} is missing ${s.qc.missing_count} images`);
+                            if (s.qc.missing_count) {
+                                qc.series_missing_images++;
+                                qc.total_missing_images += s.qc.missing_count;
+                            }
 
                             qc.fields_errored += s.qc.series_fields_errored;
                         } else qc.series_deprecated++;

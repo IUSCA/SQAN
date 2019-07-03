@@ -1,7 +1,7 @@
 #!/usr/bin/node
 'use strict';
 
-const _ = require('underscore'); 
+const _ = require('underscore');
 var async = require('async');
 
 var config = require('../../config');
@@ -39,14 +39,15 @@ function qc_series(series,images,template,cb) {
         series_fields_errored: 0,  // number of fields that errored across entire series
         template_field_count: 0,
         template_image_count: undefined,
+        missing_count: 0,
 
         template_id: template._id, //template set used to do qc for this series (sampled from one images's qc.template_id)
         date: new Date(), //series-qc time
 
         //series-qc errros / warnings / notemp count
-        errors: [], 
+        errors: [],
         warnings: [],
-        notemps: 0, 
+        notemps: 0,
     }
 
     images.forEach(function(image) {
@@ -67,7 +68,7 @@ function qc_series(series,images,template,cb) {
                 // image has warnings
                 if(image.qc.warnings.length > 0) {
                     warnings++;
-                } 
+                }
                 //image is clean
                 if(image.qc.errors.length == 0 && image.qc.warnings.length == 0) {
                     qc.clean++;
@@ -81,74 +82,75 @@ function qc_series(series,images,template,cb) {
     //if there is an image that's not yet qc-ed, series cannot be qc-ed.
     if(!all_qced) {
         //console.log("cannot qc the series because not all images have been qc-ed");
-        // This should not happen, unless a series has too many images and cannot be retrieved all at once. 
-        return 
+        // This should not happen, unless a series has too many images and cannot be retrieved all at once.
+        return
     } else {
         qc.series_fields_errored = template_mismatch + not_set + image_tag_mismatch;
         //qc.template_id = images[0].qc.template_id;
-        
-        //check for template header count 
-        db.TemplateHeader.where({template_id: qc.template_id}).count(function(err, tc) {            
+
+        //check for template header count
+        db.TemplateHeader.where({template_id: qc.template_id}).count(function(err, tc) {
             if (err) console.log(err);
 
             qc.template_image_count = tc;
-            diff = qc.template_image_count - qc.series_image_count; 
-            
+            diff = qc.template_image_count - qc.series_image_count;
+            if(diff > 0) qc.missing_count = diff;
+
             if(qc.errored_images > 0) {
                 qc.errors.push({
-                    type: "image_errors", 
-                    msg: "Series contains "+qc.errored_images+" images with qc errors", 
+                    type: "image_errors",
+                    msg: "Series contains "+qc.errored_images+" images with qc errors",
                     c: qc.errored_images,
                     per: qc.errored_images / qc.template_image_count,
-                }); 
-                
+                });
+
                 if(template_mismatch > 0) {
                     qc.errors.push({
-                        type: "template_mismatch", 
-                        msg: "Series contains "+template_mismatch+" fields with 'template_mismatch' error", 
+                        type: "template_mismatch",
+                        msg: "Series contains "+template_mismatch+" fields with 'template_mismatch' error",
                         c: template_mismatch,
                         per: template_mismatch / qc.template_field_count,
-                    });  
+                    });
                 }
-     
+
                 if(not_set > 0) {
                     qc.errors.push({
-                        type: "not_set", 
-                        msg: "Series contains "+not_set+" fields with 'not_set' error", 
+                        type: "not_set",
+                        msg: "Series contains "+not_set+" fields with 'not_set' error",
                         c: not_set,
                         per: not_set / qc.template_field_count,
-                    }); 
+                    });
                 }
 
                 if(image_tag_mismatch > 0) {
                     qc.errors.push({
-                        type: "image_tag_mismatch", 
-                        msg: "Series contains "+image_tag_mismatch+" fields with 'image_tag_mismatch' error", 
+                        type: "image_tag_mismatch",
+                        msg: "Series contains "+image_tag_mismatch+" fields with 'image_tag_mismatch' error",
                         c: image_tag_mismatch,
                         per: image_tag_mismatch / qc.series_field_count,
-                    }); 
+                    });
                 }
-              
+
             }
-    
+
             if(warnings > 0) {
                 qc.warnings.push({
-                    type: "image_warning", 
-                    msg: "Series contains "+warnings+" images with QC warnings", 
+                    type: "image_warning",
+                    msg: "Series contains "+warnings+" images with QC warnings",
                     c: warnings,
                     per: warnings / qc.template_image_count,
-                });        
+                });
             }
-                    
+
             if(diff !== 0) {
                 qc.errors.push({
-                    type: "image_count_mismatch", 
+                    type: "image_count_mismatch",
                     msg: diff > 0 ? "Series is missing "+diff+ " image headers":"Series has "+Math.abs(diff)+ " excess image headers",
-                    c: images.length, 
+                    c: images.length,
                     tc: qc.template_image_count
                 });
             }
-    
+
             series.qc1_state = (qc.errors.length > 0 ? "fail" : "autopass");
             series.qc = qc;
             // events.series(series);
@@ -158,8 +160,8 @@ function qc_series(series,images,template,cb) {
                     return cb(err);
                 }
                 cb()
-            });  
-        })      
+            });
+        })
     }
 }
 
@@ -218,12 +220,12 @@ function unQc_series(series_id,new_event,cb) {
         if (series.qc1_state) detail.qc1_state = series.qc1_state;
 
         new_event.detail = detail;
-        
+
         // Now Un-qc the series
         db.Series.update({
             _id: series._id,
-        }, {$unset:{qc:1},qc1_state:"re-qcing", $push: { events: new_event }}, 
-        function(err) {   
+        }, {$unset:{qc:1},qc1_state:"re-qcing", $push: { events: new_event }},
+        function(err) {
             if(err) return cb(err);
             // deprecate all images in that series so that they can be overwritten
             db.Image.deleteMany({
@@ -240,12 +242,12 @@ function unQc_series(series_id,new_event,cb) {
 function overwritte_template(template_id,new_event,cb) {
 
     //console.log("overwritting template "+template_id)
-        
+
     // Now Un-qc the series
     db.Template.update({
         _id: template_id,
-    }, { $push: { events: new_event }}, 
-    function(err) {   
+    }, { $push: { events: new_event }},
+    function(err) {
         if(err) return cb(err);
         // deprecate all images in that series
         db.TemplateHeader.deleteMany({
@@ -263,7 +265,7 @@ function overwritte_template(template_id,new_event,cb) {
 function deprecate_series(h,type,cb){
 
     //console.log("Moving headers from dicom-raw into dicom-deleted");
-    var path = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;              
+    var path = h.qc_iibisid+"/"+h.qc_subject+"/"+h.StudyInstanceUID+"/"+h.qc_series_desc;
     var new_dirname = config.cleaner.deleted_headers+"/"+path+"/";
 
     if (!file_exists(new_dirname)){
@@ -313,7 +315,7 @@ function delete_and_move(path,type,cb) {
         fs.rename(file2rename,config.cleaner.deleted_headers+"/"+path+"/"+type+"_"+timestamp+".tar", function(err) {
             if (err) return cb(err);
             console.log("deleting files in directory -- "+config.cleaner.raw_headers+"/"+path)
-            //rimraf(config.cleaner.raw_headers+"/"+path+"/*", function (err) { 
+            //rimraf(config.cleaner.raw_headers+"/"+path+"/*", function (err) {
                 //if (err) return cb(err);
                 tar.c({file: file2rename},['/dev/null']
                     ).then(cb);

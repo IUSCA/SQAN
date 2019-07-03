@@ -8,25 +8,22 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
 
 
     function update_jwt(jwt) {
+        console.log(jwt);
         if(!jwt) return;
         $scope.user = jwtHelper.decodeToken(jwt);
-        $scope.user.isadmin = ($scope.user.scopes.dicom.indexOf('admin') !== -1)
+        console.log($scope.user);
+        $scope.user.isadmin = (~$scope.user.roles.indexOf('admin'))
     }
 
     //pull old jwt..
     var jwt = localStorage.getItem(appconf.jwt_id);
     update_jwt(jwt);
-    //but refresh it immediately
-    refresh_jwt();
-    function refresh_jwt() {
-        console.log("refreshing token");
-        $http.post(appconf.auth_api+'/refresh').then(function(res) {
-            var jwt = res.data.jwt;
-            localStorage.setItem(appconf.jwt_id, jwt);
-            update_jwt(jwt);
-            //$timeout(refresh_jwt, 60*1000);
-        }, $scope.toast_error);
-    }
+    // //but refresh it immediately
+    $timeout(function() {
+        console.log('rechecking jwt');
+        var jwt = localStorage.getItem(appconf.jwt_id);
+        update_jwt(localStorage.getItem(appconf.jwt_id))
+    }, 1000);
 
     //TODO - it doesn't make sense that these exist here..
     $scope.openstudy = function(id) {
@@ -49,6 +46,37 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
     //relocate out of the app..
     $scope.relocate = function(url) {
         document.location = url;
+    }
+
+    $scope.comment_form = {
+        subject: 'Question/comment re:RADY-SCA ',
+        name: $scope.user !== undefined ? $scope.user.profile.fullname : '',
+        email: $scope.user !== undefined ? $scope.user.profile.email : '',
+        message: ''
+    };
+
+
+    $scope.submit_comment = function() {
+        console.log($scope.comment_form);
+        try {
+
+            $http.post(appconf.api+'/comment', $scope.comment_form)
+                .then(function(res) {
+                    if(res && res.data && res.data.status == "ok") {
+                        toaster.success("Your message has been sent! Thank you!");
+                        $scope.comment_form.comment = "";
+                    }
+                }, function(err) {
+                    console.log("error");
+                    console.dir(err);
+                    //if(err.statusText) toaster.error(err.statusText);
+                    if(err.data) toaster.error(err.data);
+                    else toaster.error("Sorry, something went wrong while submitting your comment. Please email sca-group@iu.edu. code:"+err.status);
+                });
+        } catch(e) {
+            console.dir(e);
+            toaster.error("Something went wrong while trying to send your comment. Please email sca-group@iu.edu");
+        }
     }
 
     // if($scope.user) {

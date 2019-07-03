@@ -1,9 +1,178 @@
-app.controller('AdminController', 
-function($scope, appconf, toaster, $http, serverconf, groups) {
+app.controller('AdminController',
+function($scope, appconf, toaster, $http, serverconf, users, groups) {
     $scope.appconf = appconf;
     $scope.$parent.active_menu = "admin";
     $scope._selected = {};
     $scope.selectall = false;
+    $scope.users_o = [];
+    $scope.show_userform = false;
+    $scope.userform = {};
+    $scope.groupform = {};
+    $scope.active_tab = 0;
+    $scope.user_roles = [
+        'user',
+        'guest',
+        'admin',
+        'technologist',
+        'researcher'
+    ];
+
+
+    $http.get(appconf.api+'/user/all')
+        .then(function(res) {
+            $scope.users = res.data;
+            console.log($scope.users);
+        }, function(res) {
+            toaster.error(res.statusText);
+        });
+
+    $scope.editUser = function(user){
+        $scope.show_userform = true;
+        $scope.userform = user;
+    };
+
+    $scope.deleteUser = function(user){
+        var alert = `Please confirm that you want to delete user ${user.username}`;
+
+        var r = confirm(alert);
+        if (r == true) {
+            console.log("delete confirmed");
+            $http.delete(appconf.api + '/user/'+user._id)
+                .then(function(res) {
+                    console.log("Delete successful");
+                    toaster.success(`Successfully deleted ${user.username}, refreshing user list`);
+                    $scope.refreshUsers();
+                }, function(res) {
+                    toaster.error(res.statusText);
+                });
+        } else {
+            console.log("delete canceled")
+        }
+    };
+
+    $scope.createUser = function(){
+        $scope.show_userform = true;
+        $scope.userform = {
+            username : '',
+            email: '',
+            fullname: '',
+            primary_role: 'user',
+            roles: ['user']
+        };
+    };
+
+    $scope.hideUserform = function(){
+        $scope.show_userform = false;
+        $scope.active_tab = 0;
+    }
+
+    $scope.hideGroupform = function(){
+        $scope.show_groupform = false;
+        $scope.active_tab = 1;
+    }
+
+    $scope.refreshUsers = function() {
+        $http.get(appconf.api+'/user/all')
+            .then(function(res) {
+                var users = {};
+                console.log(res.data);
+                $scope.users = res.data;
+                res.data.forEach(function(user) {
+                    users[user._id] = user;
+                });
+                $scope.users_o = users;
+            }, function(res) {
+                if(res.data && res.data.message) toaster.error(res.data.message);
+                else toaster.error(res.statusText);
+            });
+    }
+
+    $scope.submitUserform = function(){
+        $scope.show_userform = false;
+        $scope.active_tab = 0;
+        if($scope.userform._id !== undefined) {
+            toaster.success("Updating user!");
+            $http.patch(appconf.api+'/user/'+$scope.userform._id, $scope.userform)
+                .then(function(res) {
+                console.log(res.data);
+                toaster.success("User updated!");
+            }, $scope.toast_error);
+        } else {
+            toaster.success("Creating new user!");
+            $http.post(appconf.api+'/user', $scope.userform)
+                .then(function(res) {
+                    console.log(res.data);
+                    toaster.success("New user created, refreshing user list");
+                    $scope.refreshUsers();
+                }, $scope.toast_error);
+        }
+    };
+
+    $scope.editGroup = function(group){
+        $scope.show_groupform = true;
+        $scope.groupform = group;
+    };
+
+    $scope.deleteGroup = function(group){
+        var alert = `Please confirm that you want to delete group ${group.name}`;
+
+        var r = confirm(alert);
+        if (r == true) {
+            console.log("delete confirmed");
+            $http.delete(appconf.api + '/group/'+group._id)
+                .then(function(res) {
+                    console.log("Delete successful");
+                    toaster.success(`Successfully deleted ${group.name}, refreshing group list`);
+                    $scope.refreshGroups();
+                }, function(res) {
+                    toaster.error(res.statusText);
+                });
+        } else {
+            console.log("delete canceled")
+        }
+    };
+    
+    $scope.createGroup = function(){
+        $scope.show_groupform = true;
+        $scope.groupform = {
+            name : '',
+            desc: '',
+            members: [],
+        };
+    };
+
+    $scope.refreshGroups = function() {
+        $http.get(appconf.api+'/group/all')
+            .then(function(res) {
+                $scope.groups = res.data;
+            }, function(res) {
+                if(res.data && res.data.message) toaster.error(res.data.message);
+                else toaster.error(res.statusText);
+            });
+    }
+
+    $scope.submitGroupform = function(){
+        $scope.show_groupform = false;
+        $scope.active_tab = 1;
+        if($scope.groupform._id !== undefined) {
+            toaster.success("Updating group!");
+            console.log($scope.groupform);
+            $http.patch(appconf.api+'/group/'+$scope.groupform._id, $scope.groupform)
+                .then(function(res) {
+                    console.log(res.data);
+                    toaster.success("Group updated!");
+                }, $scope.toast_error);
+        } else {
+            toaster.success("Creating new group!");
+            $http.post(appconf.api+'/group', $scope.groupform)
+                .then(function(res) {
+                    console.log(res.data);
+                    toaster.success("New group created, refreshing group list");
+                    $scope.refreshGroups();
+                }, $scope.toast_error);
+        }
+    };
+
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
 
     $http.get(appconf.api+'/research', {params: {admin: true}})
@@ -14,12 +183,16 @@ function($scope, appconf, toaster, $http, serverconf, groups) {
             if(!~$scope.iibisids.indexOf(research.IIBISID)) $scope.iibisids.push(research.IIBISID);
         });
 
+        users.then(function(_users) {
+            $scope.users_o = _users;
+        });
+
         groups.then(function(_groups) {
             $scope.groups = _groups;
             //conver to easy to lookup object
             $scope.groups_o = [];
             $scope.groups.forEach(function(group) {
-                $scope.groups_o[group.id] = group;
+                $scope.groups_o[group._id] = group;
             });
         });
 
@@ -36,7 +209,7 @@ function($scope, appconf, toaster, $http, serverconf, groups) {
             });
 
             $scope.iibisids.forEach(function(id) {
-                console.log(id);
+                // console.log(id);
                 //deal with case where acl is not set at all..
                 if($scope.acl[id] == undefined) {
                     $scope.acl[id] = {
@@ -51,9 +224,13 @@ function($scope, appconf, toaster, $http, serverconf, groups) {
                 };
 
                 //convert group id to object
+
+                console.log($scope.groups_o);
                 for(var action in $scope.acl[id]) {
                     var acl = $scope.acl[id][action];
                     if(acl.groups) acl.groups.forEach(function(gid) {
+                        console.log($scope.groups_o[gid]);
+                        console.log(gid);
                         $scope._acl[id][action].groups.push($scope.groups_o[gid]);
                     });
                 }
@@ -69,7 +246,7 @@ function($scope, appconf, toaster, $http, serverconf, groups) {
                 var acl = $scope._acl[id][action];
                 var ids = [];
                 acl.groups.forEach(function(group) {
-                    ids.push(group.id);
+                    ids.push(group._id);
                 });
                 $scope.acl[id][action] = {groups: ids, users: []}; //TODO with users
             }
@@ -77,7 +254,7 @@ function($scope, appconf, toaster, $http, serverconf, groups) {
 
         $http.put(appconf.api+'/acl/iibisid', $scope.acl)
         .then(function(res) {
-            $scope.form.$setPristine();
+            // $scope.form.$setPristine();
             toaster.success("Updated Successfully!");
         }, $scope.toast_error);
     };

@@ -1,46 +1,190 @@
+
+<style>
+.table
+{
+    margin-bottom: 0;
+}
+ .borderless tr td {
+    border-bottom: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    margin: 0px !important;
+    border: 0px !important;
+    padding: 0px !important;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 25px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 19px;
+  width: 19px;
+  left: 4px;
+  bottom: 3px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 20px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+.date-box {
+    width: 150px;
+    height: 25px;
+    vertical-align: middle;
+    text-align: right;
+    display: inline-block;
+    background-color: rgb(255, 255, 255);
+    padding-top: 6px;
+    margin-bottom: 4px;
+}
+
+.empty-box {
+    width: 25px;
+    height: 25px;
+    display: inline-block;
+    background-color: rgba(255, 255, 255, 0);
+    padding-top: 6px;
+    margin: 0;
+}
+
+.double-box {
+    height: 50px;
+}
+
+.triple-box {
+    height: 75px;
+}
+
+</style>
+
+
 <div class="container">
     <div class="row">
         <div class="col-sm-12">
-            <h2><i class="fa fa-flask"></i> Research Summary</h2>
+            <h3><i class="fa fa-flask"></i> Research Summary</h3>
 
             <div class="row">
-                <div class="col-sm-7">
+                <div class="col-sm-4">
                     <div class="row">
-                    <form class="form">
-                        <div class="form-group">
-                            <label class="col-sm-4 control-label">Select Research</label>
-                            <div class="col-xs-12 col-sm-12">
-                                <ui-select
-                                        ng-model="research.selected"
-                                        ng-change="getSummary()">
-                                    <ui-select-match placeholder="Select IIBISID from the list...">{{$select.selected.id}}</ui-select-match>
-                                    <ui-select-choices repeat="option in researches | filter: $select.search">
-                                        <div ng-bind-html="trustAsHtml((option.id | highlight: $select.search))"></div>
-                                        <small><span ng-repeat="m in option.studies">{{m.Modality}} | </span></small>
-                                    </ui-select-choices>
-                                </ui-select>
+                        <form class="form">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">Select Research</label>
+                                <div class="col-xs-12 col-sm-12">
+                                    <ui-select
+                                            ng-model="research.selected"
+                                            ng-change="getSummary()">
+                                        <ui-select-match placeholder="Select IIBISID from the list...">{{$select.selected.id}}</ui-select-match>
+                                        <ui-select-choices repeat="option in researches | filter: $select.search">
+                                            <div ng-bind-html="trustAsHtml((option.id | highlight: $select.search))"></div>
+                                            <small><span ng-repeat="m in option.studies">{{m.Modality}} | </span></small>
+                                        </ui-select-choices>
+                                    </ui-select>
+                                </div>
+                            </div>
+                        </form>
+                    </div><p></p>
+                    <hr>
+                    <div class="row" ng-show="research.selected">
+                        <div class="row">
+                            <div class="col-sm-1"></div>
+                            <label class="col-sm-4 control-label">Filter by </label>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-1"></div>
+                            <div class="input-group" style="width:250px;">
+                                <span class="input-group-addon input-sm"><i class="fa fa-fw fa-user"></i></span>
+                                <input type="text" class="form-control input-sm" ng-model="subfilter" placeholder="subject..." ng-model-options="{debounce: 500}">
                             </div>
                         </div>
-                    </form>
+                        <div class="row">
+                            <div class="col-sm-1"></div>
+                            <div class="input-group" style="width:250px;">
+                                <span class="input-group-addon input-sm"><i class="fa fa-fw fa-list-alt"></i></span>
+                                <input type="text" class="form-control input-sm" ng-model="seriesfilter" placeholder="series description..." ng-model-options="{debounce: 500}">
+                            </div>
+                        </div>
                     </div><p></p>
-                    <div class="panel">
-                        <!--<div class="panel-heading">-->
-                            <!--<h3 class="panel-title">{{research_detail.iibis_project_id}} - {{research_detail.short_title}}</h3>-->
-                        <!--</div>-->
+                    <div class="row" ng-show="research.selected">
+                        <div class="row">
+                            <div class="col-sm-1"></div>
+                            <label class="col-sm-4 control-label">Download Summary</label>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-1"></div>
+                            <button class="btn btn-xs btn-info" ng-csv="export" filename="{{research_detail.iibis_project_id}}.csv" ng-if="subjects.length"><i class="fa fa-fw fa-download"></i> (csv)</button>
+                            <a class="btn btn-xs btn-info" role="button" ng-href="data:text/json;charset=utf-8,{{exportJSON}}" download="{{research_detail.iibis_project_id}}.json" ng-if="subjects.length" ><i class="fa fa-fw fa-download"></i> (json)</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-1"></div>
+                <div class="col-sm-6">
+                    <div class="panel" ng-show="research.selected">
                         <div class="panel-body">
-                            <h4>{{research_detail.iibis_project_id}} - {{research_detail.short_title}}</h4>
-                            <h5><i class="fa fa-fw fa-user"></i> <b>PI</b>: {{research_detail.pi_first_name}} {{research_detail.pi_last_name}} ({{research_detail.email_address}})</h5>
-                            <h5><i class="fa fa-fw fa-calendar"></i> <b>Dates</b>: {{research_detail.start_date | date: 'mediumDate'}} - {{research_detail.end_date | date: 'mediumDate'}}</h5>
-                            <h5><i class="fa fa-fw fa-check"></i> <b>Status</b>: {{research_detail.project_status}}</h5>
-                            <h5><i class="fa fa-fw fa-flask"></i> <b>Study Type</b>: {{research_detail.study_type}}</h5>
-                            <h5><i class="fa fa-fw fa-area-chart"></i> <b>Area of Study</b>: {{research_detail.area_of_study}}</h5>
-                            <h5><i class="fa fa-fw fa-sitemap"></i> <b>Modality/Lab</b>: {{research_detail.modality_or_laboratory}}</h5>
-                            <h5><i class="fa fa-fw fa-ellipsis-v"></i> <b>Full Title</b>: {{research_detail.full_title}}</h5>
+                            <h5>{{research_detail.iibis_project_id}} - {{research_detail.short_title}}</h5>
+                            <h6><i class="fa fa-fw fa-user"></i> <b>PI</b>: {{research_detail.pi_first_name}} {{research_detail.pi_last_name}} ({{research_detail.email_address}})</h6>
+                            <h6><i class="fa fa-fw fa-calendar"></i> <b>Dates</b>: {{research_detail.start_date | date: 'mediumDate'}} - {{research_detail.end_date | date: 'mediumDate'}}</h6>
+                            <h6><i class="fa fa-fw fa-check"></i> <b>Status</b>: {{research_detail.project_status}}</h6>
+                            <h6><i class="fa fa-fw fa-flask"></i> <b>Study Type</b>: {{research_detail.study_type}}</h6>
+                            <h6><i class="fa fa-fw fa-area-chart"></i> <b>Area of Study</b>: {{research_detail.area_of_study}}</h6>
+                            <h6><i class="fa fa-fw fa-sitemap"></i> <b>Modality/Lab</b>: {{research_detail.modality_or_laboratory}}</h6>
+                            <!-- <h6><i class="fa fa-fw fa-ellipsis-v"></i> <b>Full Title</b>: {{research_detail.full_title | limitTo: 55}} {{research_detail.full_title.length > 55 ? '...' : ''}}</h6> -->
+                            <h6 style="cursor: pointer" ng-click="showfull=!showfull"><i class="fa fa-fw fa-ellipsis-v"></i> <b>Full Title</b>
+                                <span ng-if="showfull" >{{research_detail.full_title}}</span>
+                                <span ng-if="!showfull">: {{research_detail.full_title | limitTo: 45}} [<b>...</b>]</span>
+                            </h6>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col-xs-10">
+            <div ng-show="!research.selected" class="col-xs-10 help-block center-parent"><span class="center-child text-center"><h3><i class="fa fa-8x fa-flask faded"></i> <br>Please select a research to display</h3></span></div>
+            <div ng-show="research.selected" class="col-xs-10">
                 <div class="text-center" ng-show="loading">
                     <h4><i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>
                         <span class="sr-only">Loading...</span></h4>
@@ -48,51 +192,110 @@
                 <div class="alert alert-warning" ng-show="!subjects.length && !loading">
                     <h4><i class="fa fa-info-circle fa-2x"></i> No exam records have been received for IIBISID <b>{{research.selected.id}}</b></h4>
                 </div>
-                <button class="btn btn-xs btn-info" ng-csv="export" filename="{{research_detail.iibis_project_id}}.csv" ng-if="subjects.length"><i class="fa fa-fw fa-download"></i> (csv)</button>
-                <a class="btn btn-xs btn-info" role="button" ng-href="data:text/json;charset=utf-8,{{exportJSON}}" download="{{research_detail.iibis_project_id}}.json" ng-if="subjects.length" ><i class="fa fa-fw fa-download"></i> (json)</a>
-                <table class="table table-header-rotated table-condensed" ng-show="subjects.length">
-                    <thead>
-                    <tr>
-                        <th><div class="row">
-                            <div class="input-group" style="width:250px;">
-                                <span class="input-group-addon input-sm"><i class="fa fa-fw fa-user"></i></span>
-                                <input type="text" class="form-control input-sm" ng-model="subfilter" placeholder="subject...">
-                            </div>
-                            </div>
-                            <div class="row">
-                            <div class="input-group" style="width:250px;">
-                                <span class="input-group-addon input-sm"><i class="fa fa-fw fa-list-alt"></i></span>
-                                <input type="text" class="form-control input-sm" ng-model="seriesfilter" placeholder="series...">
-                            </div>
-                            </div>
-                        </th>
-                        <th class="rotate-45 text-muted" ng-repeat="sub in subjects | filter:subfilter"><div style="white-space: nowrap;"><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></th>
-                    </tr>
+
+                <table ng-show="!transpose" class="table table-scroll table-header-rotated table-condensed" ng-show="subjects.length">
+                    <thead style="table-layout: fixed;">
+                        <tr>
+                            <th>
+                                <h6> Transpose Table</h6>
+                                <label class="switch">
+                                    <input type="checkbox" ng-click="transpose = !transpose" ng-model="transpose">
+                                    <span class="slider round"></span>
+                                </label>
+                            </th>
+                            <th></th>
+                            <th ng-if="0" ng-repeat-start="(mod, res) in summary"></th>
+                            <th class="rotate-45 text-muted" ng-repeat="sd in res.series_desc | filter:seriesfilter"><div style="white-space:nowrap; height:180px; left:100px"><span class="pull-right">{{sd}}&nbsp;&nbsp;</span></div></th>
+                            <th ng-repeat-end ng-if="0"></th>
+                        </tr>
                     </thead>
-                    <tbody ng-repeat="(mod, res) in summary">
-                    <tr>
-                        <td colspan="100" style="background-color: #006687; color: white"><h5><b>{{mod}}</b></h5></td>
-                    </tr>
-                    <tr>
-                        <th><h6 class="pull-right text-muted">Series Descriptions</h6></th>
-                        <td colspan="100"></td>
-                    </tr>
-                    <tr ng-repeat="sd in res.series_desc | filter:seriesfilter">
-                        <td><span class="pull-right">{{sd}}&nbsp;&nbsp;</span></td>
-                        <td style="white-space:nowrap" ng-repeat="sub in subjects | filter:subfilter">
-                              <span style="cursor: pointer" class="color-box"
-                                ng-repeat="exam in res.exams[sub]"
-                                   ng-click="openstudy(exam[sd]._id)"
-                                   ng-init="qcs = exam[sd].qc1_state !== undefined ? exam[sd].qc1_state : 'na' "
-                                   ng-class="{'pass': qcs == 'autopass',
-                                        'fail' : qcs == 'fail',
-                                        'warning' : qcs == 'accept',
-                                        'reject' : qcs == 'reject',
-                                        'na': qcs == 'na'}"
-                                  uib-tooltip-html="makeTooltip(sub, exam[sd])" tooltip-append-to-body="true"></span>
-                        </td>
-                    </tr>
-                    <tr><td colspan="100"> </td></tr>
+                    <tbody style="border-bottom: 1px solid #ddd">
+                        <tr>
+                            <td>Subjects</td>
+                            <td>StudyTimestamp</td>
+                            <td ng-repeat="(mod, res) in summary" ng-if="(res.series_desc | filter:seriesfilter).length" colspan="{{(res.series_desc | filter:seriesfilter).length}}" style="background-color: #006687; color: white">{{mod}}</td>
+                        </tr>
+                        <tr ng-repeat="sub in subjects | filter:subfilter">
+                            <td><div class="pull-right" style="white-space: nowrap;"><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></td>
+                            <td>
+                                <table class='table borderless'>
+                                    <tr style="border-bottom: none" class='borderless' ng-repeat="(ts, objs) in subject_timestamps[sub]">
+                                        <td>
+                                            <span class="date-box" ng-class="{
+                                                'double-box': objs.max == 2,
+                                                'triple-box': objs.max == 3
+                                                }">
+                                                {{ts | date:'short':'-0400'}}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td ng-repeat="(mod, res) in summary" colspan="{{(res.series_desc | filter:seriesfilter).length}}" ng-if="(res.series_desc | filter:seriesfilter).length" style="white-space:nowrap;">
+                                <table class='table borderless'>
+                                    <tr ng-repeat-start="(ts, ts_res) in subject_timestamps[sub]" ng-if="0"></tr>
+                                    <tr ng-if="!ts_res[mod].length"><td><span class="empty-box" ng-class="{
+                                                'double-box': ts_res.max == 2,
+                                                'triple-box': ts_res.max == 3
+                                                }"></span></td></tr>
+                                    <tr ng-if="ts_res[mod].length" style="border-bottom: none" class='borderless' ng-repeat="exam in ts_res[mod]">
+                                        <td ng-repeat="sd in res.series_desc | filter:seriesfilter" >
+
+                                                <span style="cursor: pointer" class="color-box"
+                                                    ng-click="openstudy(exam[sd]._id)"
+                                                    ng-init="qcs = exam[sd].qc1_state !== undefined ? exam[sd].qc1_state : 'na' "
+                                                    ng-class="{'pass': qcs == 'autopass',
+                                                            'fail' : qcs == 'fail',
+                                                            'warning' : qcs == 'accept',
+                                                            'reject' : qcs == 'reject',
+                                                            'na': qcs == 'na'}"
+                                                    uib-tooltip-html="makeTooltip(sub, exam[sd])" tooltip-append-to-body="true">
+                                                </span>
+                                        </td>
+                                    </tr>
+                                    <tr ng-repeat-end ng-if="0"></tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <table ng-show="transpose" class="table table-scroll table-header-rotated table-condensed" ng-show="subjects.length">
+                    <thead>
+                        <tr>
+                            <th>
+                                <h6> Transpose Table</h6>
+                                <label class="switch">
+                                    <input type="checkbox" ng-model="transpose" ng-click="transpose = !transpose">
+                                    <span class="slider round"></span>
+                                </label>
+                            </th>
+                            <th class="rotate-45 text-muted" ng-repeat="sub in subjects | filter:subfilter"><div style="white-space: nowrap; height:180px; left:100px"><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></th>
+                        </tr>
+                    </thead>
+                    <tbody style="border-bottom: 1px solid #ddd" ng-repeat="(mod, res) in summary">
+                        <tr>
+                            <td colspan="100" style="background-color: #006687; color: white"><h5><b>{{mod}}</b></h5></td>
+                        </tr>
+                        <tr>
+                            <th><h6 class="pull-right text-muted">Series Descriptions</h6></th>
+                            <td colspan="100"></td>
+                        </tr>
+                        <tr ng-repeat="sd in res.series_desc | filter:seriesfilter">
+                            <td><span class="pull-right">{{sd}}&nbsp;&nbsp;</span></td>
+                            <td style="white-space:nowrap" ng-repeat="sub in subjects | filter:subfilter">
+                                <span style="cursor: pointer" class="color-box"
+                                    ng-repeat="exam in res.exams[sub]"
+                                    ng-click="openstudy(exam[sd]._id)"
+                                    ng-init="qcs = exam[sd].qc1_state !== undefined ? exam[sd].qc1_state : 'na' "
+                                    ng-class="{'pass': qcs == 'autopass',
+                                            'fail' : qcs == 'fail',
+                                            'warning' : qcs == 'accept',
+                                            'reject' : qcs == 'reject',
+                                            'na': qcs == 'na'}"
+                                    uib-tooltip-html="makeTooltip(sub, exam[sd])" tooltip-append-to-body="true"></span>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>

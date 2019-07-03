@@ -9,6 +9,7 @@ app.controller('ExamsController',
         $scope.view_mode = "tall";
         $scope.qc_title = 'Exams';
         $scope.qc_text = 'exams';
+        $scope.can_qc = false;
         switch($routeParams.level) {
             case "all":
                 break;
@@ -56,12 +57,32 @@ app.controller('ExamsController',
             'iibis': 'IIBISID'
         };
 
+        $scope.subj_sortoptions = {
+            '-StudyTimestamp': 'Exam Date',
+            'subject' : 'Subject ID'
+        };
+
         $scope.selected_subjects = [];
         $scope.subject_filter = "";
 
+        $scope.loading_exam = false;
 
+        $scope.$on("ExamDeletion", function(evt, exam) {
+            console.log("Exam deleted!");
+            console.log(exam);
+            var research = $scope.org[exam.research_id.IIBISID][exam.research_id._id];
+            angular.forEach(research.exams, function(_exam) {
+                if(_exam._id == exam._id) {
+                    console.log("Found it, clearing!");
+                    _exam.qc = undefined;
+                }
+            });
+        });
 
         $scope.select = function(modality, exam) {
+
+            $scope.selected = null;
+            $scope.loading_exam = true;
 
             $scope.subject_filter = "";
             $scope.selected_subjects = [];
@@ -84,7 +105,17 @@ app.controller('ExamsController',
             $scope.selected_modality = modality;
             var modality_id = research.Modality+"."+research.StationName+"."+research.radio_tracer;
 
-            //console.log(where);
+
+            $scope.can_qc = false;
+            $http.get(appconf.api+'/self/can/'+research.IIBISID+'/qc')
+                .then(function(res) {
+                    console.log(res);
+                    if(res.data.result) {
+                        $scope.can_qc = true;
+                    }
+                }, function(err) {
+                    toaster.error(err);
+                })
 
             $http.get(appconf.api+'/research/'+research._id, {params: {
                     skip: 0,
@@ -119,6 +150,7 @@ app.controller('ExamsController',
                         }
                     });
 
+                    $scope.loading_exam = false;
                     $scope.selected = res.data;
 
                     handle_scroll();
@@ -219,7 +251,8 @@ app.controller('ExamsController',
 
         $scope.search = {
             recentrange : (appconf.recent_study_days||30),
-            sort: 'dateup'
+            sort: 'dateup',
+            subj_sort: '-StudyTimestamp',
         };
 
         $scope.changerange($scope.search.recentrange);
@@ -237,7 +270,7 @@ app.controller('ExamsController',
             if(!$scope.research_filter) return true;
             if(~iibisid.toLowerCase().indexOf($scope.research_filter.toLowerCase())) return true;
             if(~modality.toLowerCase().indexOf($scope.research_filter.toLowerCase())) return true;
-            console.log(radio_tracer);
+            //console.log(radio_tracer);
             if(radio_tracer && ~radio_tracer.toLowerCase().indexOf($scope.research_filter.toLowerCase())) return true;
             for(var exam in exams) {
                 if(~exams[exam].subject.toLowerCase().indexOf($scope.research_filter.toLowerCase())) return true;
@@ -254,6 +287,7 @@ app.controller('ExamsController',
                 return tooltip;
             }
             let total = exam.qc.series_failed + exam.qc.series_passed + exam.qc.series_passed_warning;
+            tooltip += '<br>Missing Images: '+ exam.qc.total_missing_images;
             tooltip += '<br>Series Failed: '+ ((exam.qc.series_failed / total) * 100).toFixed(1) + '\%';
             tooltip += '<br>Series Passed w/Warnings: '+ ((exam.qc.series_passed_warning / total) * 100).toFixed(1) + '\%';
             tooltip += '<br>Images w/Errors: '+ ((exam.qc.images_errored / exam.qc.image_count) * 100).toFixed(1) + '\%';
