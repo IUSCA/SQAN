@@ -48,7 +48,8 @@ SQAN (formerly RADY-SCA) is a full-stack system solution for the harvesting, arc
 
 Sample nginx configuration to serve UI and API
   
-```location /sqan {
+```
+    location /sqan {
         alias /opt/sca/sqan-demo/ui;
         index index.html;
     }
