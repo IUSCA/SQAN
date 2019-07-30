@@ -1,33 +1,20 @@
 <!--
 <sca-menutab fluid="true" menu="appconf.menu" active="'about'" user="user"></sca-menutab>
 -->
-<div class="container">
-    <h2>RADY Quality Control Portal</h2>
-    <br>
-    <br>
-    <p>Welcome to the RADY-QC portal!</p>
-    <p>You can review the status of automated protocol QC(QC1), and perform image QC(QC2) on this portal. </p>
-    <p>In the future, this portal is expected to allow execution of pipelines on datasets that have be approved for protocol and imaging QC.</p>
-    <p>You will need to sign in, and be authorized by an administrator to access data and perform various actions on this portal.</p>
-    <br><br>
-    <h3>Process Flow for incoming JSON headers</h3>
-    <br>
-    <p>
-        <img src="https://docs.google.com/a/iu.edu/drawings/d/e/2PACX-1vRsIwo_6kIsj3xReCKBhyw0j9ZAALNu66PGe7FoRKqx3Wt_PqdNHMgHEW56U5aGJcFcrcpvPBKxVU7i/pub?w=720&amp;h=540">
-    </p>
-    <br><br>
-    <h3>Process Flow for automated quality control (QC1) </h3>
-    <br>
-    <p>
-        <img src="https://docs.google.com/a/iu.edu/drawings/d/e/2PACX-1vT4aC9BCtfQ6wYE7k-vhpo00DQvM_7cF-26z4QhgCgA_fL-jYnIuj54GzAsLEae6xnkWic3C8kntgDX/pub?w=720&amp;h=540">
-    </p>
-    <br><br>
-    <h3> Datastructure -- MongoDB database </h3>
-    <br>
-    <p>
-	<img src="https://docs.google.com/a/iu.edu/drawings/d/e/2PACX-1vQBu5nNzHWQ5I9tAUUeFoc0I4Et3P25x_SpxKu47boN4IgLpt2npi5x-rAw4Rapr8fjhIOG2RDRFxY8/pub?w=960&amp;h=720">
-    </p>
-    <br><br>
-    <ng-include src="'t/footer.html'"></ng-include>
+<style>
+    .infographic {
+        position: fixed;
+        top: 20px;
+        left: 0px;
+        width:100%;
+        overflow:hidden;
+
+    }
+</style>
+<div class="container infographic">
+
+    <a href="#/signin" class="btn btn-primary pull-left" ng-show="$parent.showLogin"><i class="fa fa-fw fa-sign-in"></i> Login</a>
+    <a ng-click="goBack()" class="btn btn-primary pull-left" ng-hide="$parent.showLogin"><i class="fa fa-fw fa-undo"></i> Back</a>
+    <img class="img-responsive" src="images/sqan_infographic.png">
 </div>
 

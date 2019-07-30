@@ -11,8 +11,8 @@ angular.module('app.config', [])
 
     iucas_url: 'https://cas.iu.edu/cas/login',
     iucas_logout: 'https://cas.iu.edu/cas/logout',
-    base_url: '',
-    default_redirect_url: '/exams',
+    base_url: '/sqan',
+    default_redirect_url: '/#/exams',
     //shared servive api and ui urls (for menus and stuff)
     shared_api: '/api/shared',
     shared_url: '/shared',

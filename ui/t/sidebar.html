@@ -1,8 +1,8 @@
-<div class="sca-sidebar">
+<div class="sca-sidebar" ng-if="!hideSidebar">
     <!--<h2 class="text-muted"><i class="fa fa-check-square-o" aria-hidden="true"></i></h2>-->
     <h2 class="text-muted">
         <img style="cursor: pointer" src="images/radyqc.png" width="48" ng-click="openpage('/about')" ng-if="appmode == 'prod'">
-        <img style="cursor: pointer" src="images/radyqc_dev.png" width="48" ng-click="openpage('/about')" ng-if="appmode !== 'prod'">
+        <img style="cursor: pointer" src="images/sqan_logo.png" width="48" ng-click="openpage('/about')" ng-if="appmode !== 'prod'">
     </h2>
     <br>
     <br>
@@ -27,7 +27,7 @@
         <div class="menu" ng-if="user.isadmin" ng-class="{'active':  active_menu == 'admin'}" ng-click="openpage('/admin')">
             <h3><i class="fa fa-users" aria-hidden="true"></i></h3> Access Control
         </div>
-        <div class="menu" ng-class="{'active':  active_menu == 'profile'}" ng-click="openpage('/profile')">
+        <div class="menu" ng-if="!isguest" ng-class="{'active':  active_menu == 'profile'}" ng-click="openpage('/profile')">
             <h3><i class="fa fa-cog" aria-hidden="true"></i></h3> Profile
         </div>
         <div class="menu" onclick="$('#contact2').modal();">

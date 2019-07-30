@@ -97,6 +97,23 @@ router.get('/stats', function(req, res, next) {
 /////////////////////////////////////////////
 
 
+router.get('/guestLogin', function(req, res, next) {
+    db.User.findOne({username: 'guest'}).exec(function(err, user) {
+        if(err) return next(err);
+        if(!user) {
+            res.sendStatus('403').json({msg: 'Guest user not found'});
+        } else {
+            user.lastLogin = Date.now();
+            user.save();
+            common.issue_jwt(user, function (err, jwt) {
+                if (err) return next(err);
+                res.json({jwt: jwt, uid: user.username, role: user.primary_role});
+            });
+        }
+    });
+});
+
+
 router.get('/verify', function(req, res, next) {
     var ticket = req.query.casticket;
 

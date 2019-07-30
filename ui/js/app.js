@@ -43,7 +43,8 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
     $routeProvider.
     when('/about', {
         templateUrl: 't/about.html',
-        controller: 'AboutController'
+        controller: 'AboutController',
+        hideSidebar: true
     })
     .when('/series/:seriesid', {
         templateUrl: 't/series.html',
@@ -102,8 +103,9 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         requiresLogin: true,
     })
     .when('/signin', {
-        template: '<h4>Redirecting to CAS...</h4>',
+        templateUrl: 't/signin.html',
         controller: 'SigninController',
+        hideSidebar: true
     })
     .when('/signout', {
         template: '',
@@ -121,6 +123,12 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
             localStorage.removeItem('uid');
             localStorage.removeItem('role');
         };
+
+        if(typeof(next.hideSidebar) !== 'undefined') {
+            $rootScope.hideSidebar = next.hideSidebar;
+        } else {
+            $rootScope.hideSidebar = false;
+        }
 
         //redirect to /signin if user hasn't authenticated yet
         if(next.requiresLogin) {
