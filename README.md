@@ -1,7 +1,5 @@
-# SQAN
-## Scalable Quality Assurance for Neuroimaging
-
-### Web based instrumental & protocol quality control for medical imaging
+# Scalable Quality Assurance for Neuroimaging - (SQAN)
+## Web based instrumental & protocol quality control for medical imaging
 
 ## Introduction
 
@@ -13,7 +11,7 @@ SQAN (formerly RADY-SCA) is a full-stack system solution for the harvesting, arc
 * Quality Control (node.js)
   * Performs protocol and exam-level verification on newly arrived data, and on existing data as requested
 * API (node.js/ExpressJS)
-  * Provides authorized access to metadata and QC resuls
+  * Provides authorized access to metadata and QC results
 * UI (AngularJS)
   * Allows authorized users to view stored data, QC results, modify QC templates and access controls, comment on QC issues, alert affected researchers, and re-run QC tests
   
