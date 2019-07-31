@@ -12,8 +12,9 @@ const config = require('../../config');
 const logger = new winston.Logger(config.logger.winston);
 const db = require('../models');
 const qc = require('../qc');
-const profile = require('../profile');
-const events = require('../events');
+const common = require('./common');
+// const profile = require('../profile');
+// const events = require('../events');
 
 //should I store this somewhere common?
 function compose_modalityid(research_detail) {
@@ -161,7 +162,7 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
     //console.log(r_id);
     var timerange = where.StudyTimestamp ? where.StudyTimestamp : null;
 
-    profile.isUserAllowed(req.user,'view', r_id, function(err, isallowed) {
+    common.isUserAllowed(req.user,'view', r_id, function(err, isallowed) {
         if (err) return res.status(404).json({message:"there was an error during authorization - please contact SCA team"})
         if(!isallowed) return res.status(401).json({message: "you are not authorized to view this study"});
 

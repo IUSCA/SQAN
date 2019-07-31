@@ -15,7 +15,7 @@ var config = require('../../config');
 var common = require('./common');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
-var profile = require('../profile');
+// var profile = require('../profile');
 
 /**
  * @api {get} /health Get current service status
@@ -71,9 +71,9 @@ router.put('/acl/:key', jwt({secret: config.express.jwt.pub/*, credentialsRequir
     });
 });
 
-router.get('/profiles', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-    res.json(profile.getall());
-});
+// router.get('/profiles', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+//     res.json(profile.getall());
+// });
 
 router.get('/stats', function(req, res, next) {
     db.Image.count({}, function(err, img_cnt){
@@ -102,6 +102,7 @@ router.get('/guestLogin', function(req, res, next) {
         if(err) return next(err);
         if(!user) {
             res.sendStatus('403').json({msg: 'Guest user not found'});
+            return;
         } else {
             user.lastLogin = Date.now();
             user.save();
