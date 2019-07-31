@@ -3,7 +3,8 @@
 
 ## Introduction
 
-SQAN (formerly RADY-SCA) is a full-stack system solution for the harvesting, archiving, and quality-control verification of DICOM-format medical imaging data and metadata.  SQAN consists of four principle components:
+SQAN (formerly RADY-SCA) is a full-stack system solution for extracting, translating, and logging (ETL) + modern web portal-based quality-control verification of DICOM-format medical imaging data and metadata. SQAN consists of four principle components:
+
 
 * Incoming (node.js)
   * Watches for and retrieves imaging data from a transfer service (e.g. an Orthanc instance)
@@ -35,12 +36,13 @@ SQAN (formerly RADY-SCA) is a full-stack system solution for the harvesting, arc
 5. `cd ../ui && cp config.sample.js config.js`
   * Modify ui/config.js as needed
 6.  Launch API
-  * `node api/dicom.js` or use `pm2` or similiar process manager to run API
+  * `node api/dicom.js` 
 7.  Configure nginx to serve API/UI 
 8.  (optional) Load sample dataset (available upon request)
 9.  (optional) Initiate Incoming and QC processes
   * `node bin/incoming.js`
   * `node bin/qc.js`
+10. (optional) Use `pm2` or similiar process manager to run API and other required processes listed above.
 
 ## nginx configuration
 
