@@ -61,11 +61,6 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         controller: 'TemplateController',
         requiresLogin: true
     })
-    // .when('/qc/:level/:researchid?/:subjectid?', {
-    //     templateUrl: 't/qc.html',
-    //     controller: 'QCController',
-    //     requiresLogin: true
-    // })
     .when('/exams/:level?', {
         templateUrl: 't/exams.html',
         controller: 'ExamsController',
@@ -135,7 +130,7 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
             if(jwt == null || jwtHelper.isTokenExpired(jwt)) {
                 // toaster.warning("Please sign in first");
                 console.log(next.originalPath);
-                sessionStorage.setItem('auth_redirect', next.originalPath);
+                sessionStorage.setItem('auth_redirect', '');
                 $location.path("/signin");
                 event.preventDefault();
             }

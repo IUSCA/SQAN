@@ -1,8 +1,7 @@
 <div class="sca-sidebar" ng-if="!hideSidebar">
     <!--<h2 class="text-muted"><i class="fa fa-check-square-o" aria-hidden="true"></i></h2>-->
     <h2 class="text-muted">
-        <img style="cursor: pointer" src="images/radyqc.png" width="48" ng-click="openpage('/about')" ng-if="appmode == 'prod'">
-        <img style="cursor: pointer" src="images/sqan_logo.png" width="48" ng-click="openpage('/about')" ng-if="appmode !== 'prod'">
+        <img style="cursor: pointer" ng-src="{{logo}}" width="48" ng-click="openpage('/about')">
     </h2>
     <br>
     <br>

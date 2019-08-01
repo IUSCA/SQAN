@@ -3,6 +3,7 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
     $scope.title = appconf.title;
     $scope.active_menu = "unknown";
     $scope.$parent.appmode = appconf.mode !== undefined ? appconf.mode : 'prod';
+    $scope.$parent.logo = appconf.small_logo;
 
     serverconf.then(function(_c) { $scope.serverconf = _c; });
 
@@ -50,7 +51,7 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
     }
 
     $scope.comment_form = {
-        subject: 'Question/comment re:RADY-SCA ',
+        subject: 'Question/comment re:SQAN ',
         name: $scope.user !== undefined ? $scope.user.profile.fullname : '',
         email: $scope.user !== undefined ? $scope.user.profile.email : '',
         message: ''

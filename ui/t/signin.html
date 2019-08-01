@@ -11,7 +11,7 @@
 </style>
 <div class="container signin">
 
-    <div class="row">
+    <div class="row" ng-if="mode === 'demo'">
          <div class="col-md-8 col-md-offset-2">
              <div class="center-block">
                  <img class="img-responsive" src="images/sqan_logo_full.png"/>
@@ -40,6 +40,17 @@
                  -->
              </div>
          </div>
+    </div>
+    <div class="row" ng-if="mode !== 'demo'">
+        <div class="col-md-8 col-md-offset-2">
+            <div class="center-block">
+                <h3>Redirecting you to IU CAS login...</h3>
+                <!--
+                <pre ng-show="jwt_dump">{{jwt_dump}}</pre>
+                <p ng-show="!jwt_dump" class="muted">You are not logged in.</p>
+                -->
+            </div>
+        </div>
     </div>
 </div>
 

@@ -26,6 +26,7 @@ function($scope, appconf, toaster, $http, serverconf) {
 app.controller('SigninController', ['$scope', 'appconf', '$location', 'toaster', '$http',
 function($scope, appconf, $location, toaster, $http) {
 
+    $scope.mode = appconf.mode;
 
     $scope.begin_iucas = function() {
         window.location = appconf.iucas_url+'?cassvc=IU&casurl='+window.location;
@@ -35,7 +36,10 @@ function($scope, appconf, $location, toaster, $http) {
         window.location = appconf.base_url + '#/about';
     }
 
+
+    //guest login only available in demo mode
     $scope.guest_login = function() {
+        if($scope.mode !== 'demo') return;
         $http.get(appconf.api +'/guestLogin')
             .then(function(res) {
                 toaster.success("Logging you in as Guest");
@@ -80,10 +84,14 @@ function($scope, appconf, $location, toaster, $http) {
             });
     }
 
-    console.log("iucascb::app.run ref:"+document.referrer);
     var casticket = getParameterByName('casticket');
+
     if(casticket !== undefined && casticket !== ''){
         $scope.validate(casticket);
+    } else {
+        if($scope.mode !== 'demo'){
+            $scope.begin_iucas();
+        }
     }
 
 }]);

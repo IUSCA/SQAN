@@ -1,11 +1,12 @@
 angular.module('app.config', [])
 .constant('appconf', {
     title: 'SQAN QC',
-    //assumes prod if not set
-    mode: 'dev',
-    api: '/api/qc',
 
-    // kibana_url: '/kibana/',
+    mode: 'demo', //one of dev,prod,demo
+    api: '/api/qc',
+    small_logo: 'images/sqan_logo.png',
+    big_logo: 'images/sqan_logo_full.png',
+
 
     recent_study_days: "all", //default 60 days
 
@@ -13,16 +14,9 @@ angular.module('app.config', [])
     iucas_logout: 'https://cas.iu.edu/cas/logout',
     base_url: '',
     default_redirect_url: '/#/exams',
-    //shared servive api and ui urls (for menus and stuff)
-    // shared_api: '/api/shared',
-    // shared_url: '/shared',
-    //
-    // //authentcation service API to refresh token, etc.
-    // auth_api: '/api/auth',
-    // auth_url: '/auth',
+
 
     jwt_id: 'jwt',
-    //
-    // event_api: '/api/event',
+
 });
 

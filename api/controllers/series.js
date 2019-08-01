@@ -13,47 +13,12 @@ const logger = new winston.Logger(config.logger.winston);
 const db = require('../models');
 const qc = require('../qc');
 const common = require('./common');
-// const profile = require('../profile');
-// const events = require('../events');
 
 //should I store this somewhere common?
 function compose_modalityid(research_detail) {
     return research_detail.Modality+"."+research_detail.StationName+"."+research_detail.radio_tracer;
 }
 
-
-//organize flat data received from server into hierarchical data structure
-//  org: {
-//      "<IIBISID>": {
-//          "<modality_id>": {
-//              _detail: <ressearch_detail>,
-//              exams: { //exams for subjects only..
-//                  "<subject>": {
-//                      <exam_id>: <exam>
-//                  }
-//              }
-//              subjects: {
-//                  "<subject>": {
-//                      serieses: {
-//                          <series_desc>: { //here is the sticky part... I am organizing exams under each series_desc!
-//                              exams: {
-//                                  <exam_id>: [ <series> ]
-//                              }
-//                          }
-//                      },
-//                      missing_serieses: {},
-//                      missing: 0, //counter.. should I move the counting logic from recent to here?
-//                  }
-//              },
-//              templates_times: [template_date1, template_date2, template_date3 ],
-//              templates: {
-//                  <series_desc>: {
-//                      <time>: [ template1, template2 ]
-//                  }
-//              }
-//          }
-//      }
-//  }
 
 function reorg(data) {
     //console.log("----------------beginning of reorg ----------------")
