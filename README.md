@@ -36,12 +36,12 @@ SQAN (formerly RADY-SCA) is a full-stack system solution for extracting, transla
 5. `cd ../ui && cp config.sample.js config.js`
   * Modify ui/config.js as needed
 6.  Launch API
-  * `node api/dicom.js` 
+  * `npm start` 
 7.  Configure nginx to serve API/UI 
 8.  (optional) Load sample dataset (available upon request)
 9.  (optional) Initiate Incoming and QC processes
-  * `node bin/incoming.js`
-  * `node bin/qc.js`
+  * `npm run incoming`
+  * `npm run qc`
 10. (optional) Use `pm2` or similar process manager to run API and other required processes listed above.
 
 ## nginx configuration
