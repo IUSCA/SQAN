@@ -129,8 +129,9 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         if(next.requiresLogin) {
             if(jwt == null || jwtHelper.isTokenExpired(jwt)) {
                 // toaster.warning("Please sign in first");
+                console.log("Original path: ",next.OriginalPath);
                 console.log(next.originalPath);
-                sessionStorage.setItem('auth_redirect', '');
+                sessionStorage.setItem('auth_redirect', next.originalPath);
                 $location.path("/signin");
                 event.preventDefault();
             }
