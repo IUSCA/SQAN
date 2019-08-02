@@ -107,7 +107,7 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         controller: 'SignoutController',
     })
     .otherwise({
-        redirectTo: '/exams/all'
+        redirectTo: 'exams/all'
     });
 }]).run(function($rootScope, $location, toaster, jwtHelper, appconf) {
     $rootScope.$on("$routeChangeStart", function(event, next, current) {
@@ -132,7 +132,7 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
                 console.log("Original path: ",next.OriginalPath);
                 console.log(next.originalPath);
                 sessionStorage.setItem('auth_redirect', next.originalPath);
-                $location.path("/signin");
+                $location.path("signin");
                 event.preventDefault();
             }
         };
@@ -161,7 +161,7 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
 });
 
 app.config(['$locationProvider', function($locationProvider) {
-    $locationProvider.hashPrefix('');
+    $locationProvider.html5Mode(true);
 }]);
 
 //configure httpProvider to send jwt unless skipAuthorization is set in config (not tested yet..)

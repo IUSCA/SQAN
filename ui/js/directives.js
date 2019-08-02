@@ -88,11 +88,11 @@ app.component('exams', {
 
 
         this.openstudy = function(id) {
-            $window.open("#/series/"+id, "study:"+id);
+            $window.open("series/"+id, "study:"+id);
         }
 
         this.opentemplate = function(id) {
-            $window.open("#/template/"+id);
+            $window.open("template/"+id);
         }
 
         this.openmodal = function () {
@@ -273,7 +273,7 @@ app.component('templates', {
         var $ctrl = this;
         console.log("init templates");
         this.opentemplate = function(id) {
-            $window.open("#/template/"+id, "template:"+id);
+            $window.open("template/"+id, "template:"+id);
         }
         this.keys = function(obj){
             return obj? Object.keys(obj) : [];
