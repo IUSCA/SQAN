@@ -13,7 +13,7 @@ angular.module('app.config', [])
             iucas_url: 'https://cas.iu.edu/cas/login',
             iucas_logout: 'https://cas.iu.edu/cas/logout',
             base_url: '',
-            default_redirect_url: '/#/exams',
+            default_redirect_url: 'exams/all',
 
 
             jwt_id: 'jwt',
