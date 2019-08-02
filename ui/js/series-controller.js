@@ -75,7 +75,7 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
 
                 if (e.user_id !== undefined && $scope.users[e.user_id]) {
                     $scope.data.series.events[index].username = $scope.users[e.user_id].fullname;
-                } else $scope.data.series.events[index].username = "RADY-SCA";
+                } else $scope.data.series.events[index].username = "SQAN";
             })
             //reload if qc is not yet loaded
             if(res.data.series.qc1_state != "no template" && !res.data.series.qc) {

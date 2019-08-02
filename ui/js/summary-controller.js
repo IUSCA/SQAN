@@ -19,7 +19,7 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
     $scope.toggle.switch = false;
 
     $scope.openstudy = function(id) {
-        $window.open("#/series/"+id, "study:"+id);
+        $window.open("series/"+id, "study:"+id);
     }
 
     $http.get(appconf.api+'/research')

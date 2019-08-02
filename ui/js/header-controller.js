@@ -3,6 +3,7 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
     $scope.title = appconf.title;
     $scope.active_menu = "unknown";
     $scope.$parent.appmode = appconf.mode !== undefined ? appconf.mode : 'prod';
+    $scope.$parent.logo = appconf.small_logo;
 
     serverconf.then(function(_c) { $scope.serverconf = _c; });
 
@@ -12,7 +13,8 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
         if(!jwt) return;
         $scope.user = jwtHelper.decodeToken(jwt);
         console.log($scope.user);
-        $scope.user.isadmin = (~$scope.user.roles.indexOf('admin'))
+        $scope.user.isadmin = (~$scope.user.roles.indexOf('admin'));
+        $scope.isguest = (~$scope.user.roles.indexOf('guest'));
     }
 
     //pull old jwt..
@@ -27,10 +29,10 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
 
     //TODO - it doesn't make sense that these exist here..
     $scope.openstudy = function(id) {
-        $window.open("#/series/"+id, "study:"+id);
+        $window.open("series/"+id, "study:"+id);
     }
     $scope.opentemplate = function(id) {
-        $window.open("#/template/"+id,  "tepmlate:"+id);
+        $window.open("template/"+id,  "tepmlate:"+id);
     }
 
     $scope.opentab = function(page) {
@@ -49,7 +51,7 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
     }
 
     $scope.comment_form = {
-        subject: 'Question/comment re:RADY-SCA ',
+        subject: 'Question/comment re:SQAN ',
         name: $scope.user !== undefined ? $scope.user.profile.fullname : '',
         email: $scope.user !== undefined ? $scope.user.profile.email : '',
         message: ''

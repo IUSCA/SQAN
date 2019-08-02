@@ -28,7 +28,7 @@ SQAN (formerly RADY-SCA) is a full-stack system solution for extracting, transla
 ## Deployment
 
 1.  Clone this repository
-2.  `cd sqan && npm install && cd api && npm install && cd ../ui && npm install && cd ..`
+2.  `cd sqan && npm install`
 3.  `cd config && ./genkey.sh`
   * generates public/private keys for JSON Web Token signing/verification
 4.  `cp index.sample.js index.js`
@@ -36,22 +36,23 @@ SQAN (formerly RADY-SCA) is a full-stack system solution for extracting, transla
 5. `cd ../ui && cp config.sample.js config.js`
   * Modify ui/config.js as needed
 6.  Launch API
-  * `node api/dicom.js` 
+  * `npm start` 
 7.  Configure nginx to serve API/UI 
 8.  (optional) Load sample dataset (available upon request)
 9.  (optional) Initiate Incoming and QC processes
-  * `node bin/incoming.js`
-  * `node bin/qc.js`
-10. (optional) Use `pm2` or similiar process manager to run API and other required processes listed above.
+  * `npm run incoming`
+  * `npm run qc`
+10. (optional) Use `pm2` or similar process manager to run API and other required processes listed above.
 
 ## nginx configuration
 
 Sample nginx configuration to serve UI and API
   
 ```
-    location /sqan {
-        alias /opt/sca/sqan-demo/ui;
+    location / {
+        alias /usr/local/sqan/ui;
         index index.html;
+        try_files $uri $uri/ /index.html =404;
     }
     
     location /api/qc/ {

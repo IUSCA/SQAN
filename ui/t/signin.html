@@ -1,0 +1,56 @@
+<style>
+    body {
+        /*TODO Let background image customizable? */
+        background-color: #484f56;
+    }
+
+    .signin {
+        padding-right: 80px;
+    }
+
+</style>
+<div class="container signin">
+
+    <div class="row" ng-if="mode === 'demo'">
+         <div class="col-md-8 col-md-offset-2">
+             <div class="center-block">
+                 <img class="img-responsive" src="images/sqan_logo_full.png"/>
+                 <hr>
+
+                 <div class="form-group">
+                     <button type="button" class="btn btn-primary btn-block" ng-click="guest_login()">
+                         <i class="fa fa-user"></i><br>Guest Login
+                     </button>
+                 </div>
+
+                 <div class="form-group">
+                     <button type="button" class="btn btn-success btn-block" ng-click="begin_iucas()">
+                         <img src="images/trident.png"/><br>Login with IU Account
+                     </button>
+                 </div>
+
+                 <div class="form-group">
+                     <button type="button" class="btn btn-info btn-block" ng-click="open_about()" >
+                         <i class="fa fa-info-circle"></i><br>About SQAN
+                     </button>
+                 </div>
+                 <!--
+                 <pre ng-show="jwt_dump">{{jwt_dump}}</pre>
+                 <p ng-show="!jwt_dump" class="muted">You are not logged in.</p>
+                 -->
+             </div>
+         </div>
+    </div>
+    <div class="row" ng-if="mode !== 'demo'">
+        <div class="col-md-8 col-md-offset-2">
+            <div class="center-block">
+                <h3>Redirecting you to IU CAS login...</h3>
+                <!--
+                <pre ng-show="jwt_dump">{{jwt_dump}}</pre>
+                <p ng-show="!jwt_dump" class="muted">You are not logged in.</p>
+                -->
+            </div>
+        </div>
+    </div>
+</div>
+

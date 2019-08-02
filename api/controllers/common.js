@@ -128,3 +128,41 @@ exports.has_role = function(role) {
         else res.status(401).send(role+" role required");
     }
 }
+
+
+//return true if user can do action on iibisid
+function isUserAllowed(user, action, research_id, cb) {
+
+    getUserCan(user,action,function(err, researchids){
+        if (err) return cb(err);
+        // console.log(researchids);
+        // console.log(research_id);
+        // console.log(researchids.indexOf(research_id));
+        for (var i=0;i<=researchids.length;i++){
+            if(researchids[i] == research_id) return cb(null,true);
+        }
+        cb(null,false);
+    })
+}
+
+
+function getUserCan(user,action,cb) {
+
+    db.Acl.getCan(user, action, function(err, iibisids) {
+        if(err) return cb(err);
+
+        db.Research.find({"IIBISID":{$in:iibisids}},function(err,rr){
+            if(err) return cb(err);
+            var researchids = [];
+            rr.forEach(function(r){
+                researchids.push(r._id);
+            });
+            //console.log(researchids);
+            cb(null,researchids);
+        });
+    })
+}
+
+
+exports.getUserCan = getUserCan;
+exports.isUserAllowed = isUserAllowed;

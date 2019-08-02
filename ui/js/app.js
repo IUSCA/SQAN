@@ -43,7 +43,8 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
     $routeProvider.
     when('/about', {
         templateUrl: 't/about.html',
-        controller: 'AboutController'
+        controller: 'AboutController',
+        hideSidebar: true
     })
     .when('/series/:seriesid', {
         templateUrl: 't/series.html',
@@ -60,11 +61,6 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         controller: 'TemplateController',
         requiresLogin: true
     })
-    // .when('/qc/:level/:researchid?/:subjectid?', {
-    //     templateUrl: 't/qc.html',
-    //     controller: 'QCController',
-    //     requiresLogin: true
-    // })
     .when('/exams/:level?', {
         templateUrl: 't/exams.html',
         controller: 'ExamsController',
@@ -102,15 +98,16 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         requiresLogin: true,
     })
     .when('/signin', {
-        template: '<h4>Redirecting to CAS...</h4>',
+        templateUrl: 't/signin.html',
         controller: 'SigninController',
+        hideSidebar: true
     })
     .when('/signout', {
         template: '',
         controller: 'SignoutController',
     })
     .otherwise({
-        redirectTo: '/exams/all'
+        redirectTo: 'exams/all'
     });
 }]).run(function($rootScope, $location, toaster, jwtHelper, appconf) {
     $rootScope.$on("$routeChangeStart", function(event, next, current) {
@@ -122,13 +119,20 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
             localStorage.removeItem('role');
         };
 
+        if(typeof(next.hideSidebar) !== 'undefined') {
+            $rootScope.hideSidebar = next.hideSidebar;
+        } else {
+            $rootScope.hideSidebar = false;
+        }
+
         //redirect to /signin if user hasn't authenticated yet
         if(next.requiresLogin) {
             if(jwt == null || jwtHelper.isTokenExpired(jwt)) {
                 // toaster.warning("Please sign in first");
+                console.log("Original path: ",next.OriginalPath);
                 console.log(next.originalPath);
                 sessionStorage.setItem('auth_redirect', next.originalPath);
-                $location.path("/signin");
+                $location.path("signin");
                 event.preventDefault();
             }
         };
@@ -157,7 +161,7 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
 });
 
 app.config(['$locationProvider', function($locationProvider) {
-    $locationProvider.hashPrefix('');
+    $locationProvider.html5Mode(true);
 }]);
 
 //configure httpProvider to send jwt unless skipAuthorization is set in config (not tested yet..)

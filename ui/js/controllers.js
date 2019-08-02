@@ -4,6 +4,10 @@ function($scope, appconf, toaster, $http, serverconf) {
     $scope.$parent.active_menu = "about";
     //scaMessage.show(toaster);
     serverconf.then(function(_serverconf) { $scope.serverconf = _serverconf; });
+
+    $scope.goBack = function() {
+        window.history.back();
+    }
 });
 
 
@@ -22,29 +26,56 @@ function($scope, appconf, toaster, $http, serverconf) {
 app.controller('SigninController', ['$scope', 'appconf', '$location', 'toaster', '$http',
 function($scope, appconf, $location, toaster, $http) {
 
+    $scope.mode = appconf.mode;
+
     $scope.begin_iucas = function() {
         window.location = appconf.iucas_url+'?cassvc=IU&casurl='+window.location;
+    };
+
+    $scope.open_about = function() {
+        window.location = appconf.base_url + 'about';
+    }
+
+
+    //guest login only available in demo mode
+    $scope.guest_login = function() {
+        if($scope.mode !== 'demo') return;
+        $http.get(appconf.api +'/guestLogin')
+            .then(function(res) {
+                toaster.success("Logging you in as Guest");
+                localStorage.setItem(appconf.jwt_id, res.data.jwt);
+                $scope.$parent.isguest = true;
+                $scope.$parent.showLogin = false;
+                localStorage.setItem('uid', res.data.uid);
+                localStorage.setItem('role', res.data.role);
+                window.location = appconf.base_url + appconf.default_redirect_url;
+            }, function(err) {
+                toaster.error("Guest Login failed");
+            })
     };
 
     $scope.validate = function(casticket) {
         $http.get(appconf.api +'/verify?casticket='+casticket)
             .then(function(res) {
                 // console.log(res);
+                $location.search({});
                 localStorage.setItem(appconf.jwt_id, res.data.jwt);
                 localStorage.setItem('uid', res.data.uid);
                 localStorage.setItem('role', res.data.role);
-                var redirect = sessionStorage.getItem('auth_redirect');
+                var redirect = 'exams/all';
 
                 if(res.data.role == 'technologist') {
-                    redirect = '#/exams/1';
+                    redirect = 'exams/1';
                 }
                 if(res.data.role == 'researcher') {
-                    redirect = '#/summary';
+                    redirect = 'summary';
                 }
                 console.log(redirect);
+                $scope.$parent.showLogin = false;
                 sessionStorage.removeItem('auth_redirect');
                 console.log("done.. redirecting "+redirect);
-                window.location = appconf.base_url + redirect;
+                console.log(window.location);
+                $location.path(redirect);
             }, function(res) {
                 console.dir(res);
                 if(res.data && res.data.path) {
@@ -55,12 +86,14 @@ function($scope, appconf, $location, toaster, $http) {
             });
     }
 
-    console.log("iucascb::app.run ref:"+document.referrer);
     var casticket = getParameterByName('casticket');
-    if(casticket === undefined || casticket === ''){
-        $scope.begin_iucas();
-    } else {
+
+    if(casticket !== undefined && casticket !== ''){
         $scope.validate(casticket);
+    } else {
+        if($scope.mode !== 'demo'){
+            $scope.begin_iucas();
+        }
     }
 
 }]);
@@ -71,7 +104,12 @@ app.controller('SignoutController',
         localStorage.removeItem(appconf.jwt_id);
         localStorage.removeItem('uid');
         localStorage.removeItem('role');
-        window.location = appconf.iucas_logout;
+
+        if($scope.$parent.isguest) {
+            window.location = appconf.base_url + '#/signin';
+        } else {
+            window.location = appconf.iucas_logout;
+        }
     });
 
 
