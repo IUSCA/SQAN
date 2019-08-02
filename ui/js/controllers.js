@@ -33,7 +33,7 @@ function($scope, appconf, $location, toaster, $http) {
     };
 
     $scope.open_about = function() {
-        window.location = appconf.base_url + '#/about';
+        window.location = appconf.base_url + 'about';
     }
 
 
@@ -58,22 +58,24 @@ function($scope, appconf, $location, toaster, $http) {
         $http.get(appconf.api +'/verify?casticket='+casticket)
             .then(function(res) {
                 // console.log(res);
+                $location.search({});
                 localStorage.setItem(appconf.jwt_id, res.data.jwt);
                 localStorage.setItem('uid', res.data.uid);
                 localStorage.setItem('role', res.data.role);
-                var redirect = sessionStorage.getItem('auth_redirect');
+                var redirect = 'exams/all';
 
                 if(res.data.role == 'technologist') {
-                    redirect = '#/exams/1';
+                    redirect = 'exams/1';
                 }
                 if(res.data.role == 'researcher') {
-                    redirect = '#/summary';
+                    redirect = 'summary';
                 }
                 console.log(redirect);
                 $scope.$parent.showLogin = false;
                 sessionStorage.removeItem('auth_redirect');
                 console.log("done.. redirecting "+redirect);
-                window.location = appconf.base_url + redirect;
+                console.log(window.location);
+                $location.path(redirect);
             }, function(res) {
                 console.dir(res);
                 if(res.data && res.data.path) {

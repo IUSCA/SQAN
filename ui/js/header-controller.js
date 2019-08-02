@@ -29,10 +29,10 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
 
     //TODO - it doesn't make sense that these exist here..
     $scope.openstudy = function(id) {
-        $window.open("#/series/"+id, "study:"+id);
+        $window.open("series/"+id, "study:"+id);
     }
     $scope.opentemplate = function(id) {
-        $window.open("#/template/"+id,  "tepmlate:"+id);
+        $window.open("template/"+id,  "tepmlate:"+id);
     }
 
     $scope.opentab = function(page) {

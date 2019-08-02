@@ -1,22 +1,22 @@
 app.controller('TemplateSummaryController',
 function($scope, appconf, toaster, $http, $window, $location, serverconf) {
-    
+
     $scope.$parent.active_menu = "tsummary";
 
     $scope.fields = ['IIBISID','Modality','StationName','radio_tracer','count'];
     $scope.fieldnames = ['IIBISID','Modality','Station Name','Radio Tracer','# Study Instances'];
-    
+
     $scope.tseriesTable = ['Series Number','Series Description','Times used for QC','# Images'];
 
     $scope.sorting = {
         filter: '',
-        fieldname: $scope.fieldnames[0]        
+        fieldname: $scope.fieldnames[0]
     };
 
     $scope.opentemplate = function(tid) {
         console.log(tid);
-        $window.open("#/template/"+tid);
-        
+        $window.open("template/"+tid);
+
     }
 
     $scope.getTemplateSummary = function() {
@@ -27,22 +27,22 @@ function($scope, appconf, toaster, $http, $window, $location, serverconf) {
         }, function(err) {
             console.log("Error contacting API");
             console.dir(err);
-        });       
+        });
     };
     $scope.getTemplateSummary();
 
     $scope.rowNumber = -1;
-    $scope.indexShowSeries=-1; 
+    $scope.indexShowSeries=-1;
     $scope.fadedBackground = false;
 
     $scope.templatesByTimestamp = function(research,index){
-       
+
         $scope.indexShowSeries=-1;
 
         if($scope.rowNumber!==index){
-            
+
             $scope.fadedBackground = true;
-               
+
             $scope.templatebytimestamp = [];
             $scope.templatesUsed = [];
             $scope.rowNumber=index;
@@ -53,31 +53,31 @@ function($scope, appconf, toaster, $http, $window, $location, serverconf) {
                     //if ($scope.templatebytimestamp.length == research.exam_id.length) {
                     //    $scope.rowNumber=index;
                     //}
-                })                
-            })               
+                })
+            })
 
         } else {
             $scope.rowNumber=-1;
             $scope.fadedBackground = false;
-        };      
-    }   
+        };
+    }
 
     $scope.getTemplateSeries = function(timestamp,index){
         console.log('index  ' + index)
-        console.log('indexShowSeries ' + $scope.indexShowSeries)   
+        console.log('indexShowSeries ' + $scope.indexShowSeries)
 
         $scope.series2delete = [];
-        
-        if($scope.indexShowSeries!==index){  
-            $scope.indexShowSeries=index; 
-            console.log(timestamp)           
-            $scope.templateSeries = timestamp; 
-            
+
+        if($scope.indexShowSeries!==index){
+            $scope.indexShowSeries=index;
+            console.log(timestamp)
+            $scope.templateSeries = timestamp;
+
         } else {
             $scope.indexShowSeries=-1;
             $scope.templateSeries = [];
         }
-    } 
+    }
 
     $scope.deleteThisSeries = function(templateSeries){
         console.log(templateSeries);
@@ -90,7 +90,7 @@ function($scope, appconf, toaster, $http, $window, $location, serverconf) {
 
     $scope.deleteSelectedSeries = function(timestamp,index) {
 
-        var alert = `Please confirm that you want to delete ${$scope.series2delete.length} selected series in this Template`;                                
+        var alert = `Please confirm that you want to delete ${$scope.series2delete.length} selected series in this Template`;
         var r = confirm(alert);
         if (r == true) {
             console.log(timestamp);
@@ -116,18 +116,18 @@ function($scope, appconf, toaster, $http, $window, $location, serverconf) {
             });
         } else {
           console.log("Deletion canceled")
-        }      
+        }
     }
 
 
     $scope.deleteTemplate = function(timestamp,index) {
-        var alert = `Please confirm that you want to Delete all the series in this Template`;                               
+        var alert = `Please confirm that you want to Delete all the series in this Template`;
         var r = confirm(alert);
         if (r == true) {
             var texam_id = timestamp.exam_id;
             console.log("Deleting template exam "+texam_id);
             $http.get(appconf.api+'/templatesummary/deleteall/'+texam_id,{}).then(function(res) {
-                console.log(res.data) 
+                console.log(res.data)
                 $scope.templatebytimestamp.splice(index,1);
             })
         } else {

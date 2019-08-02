@@ -6,33 +6,33 @@
     <br>
     <br>
 
-    <div class="menu" ng-class="{'active':  active_menu == 'examsall'}" ng-click="openpage('/exams/all');">
+    <div class="menu" ng-class="{'active':  active_menu == 'examsall'}" ng-click="openpage('exams/all');">
         <h3><i class="fa fa-list-alt" aria-hidden="true"></i></h3> Exams
     </div>
     <!--<div class="menu" ng-class="{'active':  active_menu == 'qcrecent'}" ng-click="openpage('/qc/recent')">-->
         <!--<h3><i class="fa fa-newspaper-o" aria-hidden="true"></i></h3> Recent Exams-->
     <!--</div>-->
-    <div class="menu" ng-class="{'active':  active_menu == 'exams1'}" ng-click="openpage('/exams/1')">
+    <div class="menu" ng-class="{'active':  active_menu == 'exams1'}" ng-click="openpage('exams/1')">
         <h3><i class="fa fa-check-square" aria-hidden="true"></i></h3> QC1 Pending
     </div>
-    <div class="menu" ng-class="{'active':  active_menu == 'tsummary'}" ng-click="openpage('/templatesummary')">
+    <div class="menu" ng-class="{'active':  active_menu == 'tsummary'}" ng-click="openpage('templatesummary')">
         <h3><i class="fa fa-files-o" aria-hidden="true"></i></h3> Template Summary
     </div>
-    <div class="menu" ng-class="{'active':  active_menu == 'rsummary'}" ng-click="openpage('/summary')">
+    <div class="menu" ng-class="{'active':  active_menu == 'rsummary'}" ng-click="openpage('summary')">
         <h3><i class="fa fa-flask" aria-hidden="true"></i></h3> Research Summary
     </div>
 
     <div class="bottom">
-        <div class="menu" ng-if="user.isadmin" ng-class="{'active':  active_menu == 'admin'}" ng-click="openpage('/admin')">
+        <div class="menu" ng-if="user.isadmin" ng-class="{'active':  active_menu == 'admin'}" ng-click="openpage('admin')">
             <h3><i class="fa fa-users" aria-hidden="true"></i></h3> Access Control
         </div>
-        <div class="menu" ng-if="!isguest" ng-class="{'active':  active_menu == 'profile'}" ng-click="openpage('/profile')">
+        <div class="menu" ng-if="!isguest" ng-class="{'active':  active_menu == 'profile'}" ng-click="openpage('profile')">
             <h3><i class="fa fa-cog" aria-hidden="true"></i></h3> Profile
         </div>
         <div class="menu" onclick="$('#contact2').modal();">
             <h3><i class="fa fa-envelope" aria-hidden="true"></i></h3> Contact
         </div>
-        <div class="menu" ng-click="openpage('/signout')">
+        <div class="menu" ng-click="openpage('signout')">
             <h3><i class="fa fa-sign-out" aria-hidden="true"></i></h3> Logout
         </div>
         <hr>
