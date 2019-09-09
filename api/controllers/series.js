@@ -554,5 +554,27 @@ router.post('/reqcerroredseries/:exam_id', jwt({secret: config.express.jwt.pub})
     });
 });
 
+
+router.post('/contactpi', function(req, res, next) {
+    logger.info("sending email to PI");
+    console.log(req.body.subject)
+    var transporter = nodemailer.createTransport();
+    var to_address = config.contact.email;  // This email needs to be changed to the actual contact person
+    var subject = req.body.subject;
+    var footer = config.contact.footer !== undefined ? config.contact.footer : '\n\n';
+    var bcc = config.contact.bcc !== undefined ? config.contact.bcc : '';
+
+    transporter.sendMail({
+        from: req.body.email,
+        to: to_address,
+        subject: subject,
+        bcc: bcc,
+        text: 'From: '+req.body.name+' ('+req.body.email+')\n\nMessage: '+req.body.message + footer,
+    }, function(err, info) {
+        if(err)  return next(err);
+        res.json({status: "ok", info: info});
+    });
+});
+
 module.exports = router;
 

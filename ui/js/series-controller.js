@@ -15,6 +15,13 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
         key: ''
     };
 
+    $scope.comment_form = {
+        subject:' ',
+        name: $scope.user !== undefined ? $scope.user.profile.fullname : '',
+        email: $scope.user !== undefined ? $scope.user.profile.email : '',
+        message: ''
+    };
+
     const mergeByInstanceNumber = (a1, a2) =>
         a1.map(itm => ({
             image: a2.find((item) => (item.headers.InstanceNumber === itm.InstanceNumber) && item),
@@ -29,6 +36,9 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
             $scope.data = res.data;
             $scope.data.template_images = [];
             console.log($scope.data)
+
+            $scope.comment_form.subject = 'Query on SUBJECT: '+$scope.data.series.exam_id.subject+ ' -- SERIES DESCRIPTION: '+$scope.data.series.series_desc
+
             if($scope.data.images) {
                 $scope.data.images.forEach(computeColor);
             }
@@ -197,13 +207,14 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
         $location.path("/template/"+id);
     }
 
-    $scope.addcomment = function() {
-        $http.post(appconf.api+'/series/comment/'+$routeParams.seriesid, {comment: $scope.newcomment})
-        .then(function(res) {
-            $scope.data.series.comments.push(res.data);
-            $scope.newcomment = "";
-        }, $scope.toast_error);
-    }
+    // $scope.addcomment = function() {
+    //     $http.post(appconf.api+'/series/comment/'+$routeParams.seriesid, {comment: $scope.newcomment})
+    //     .then(function(res) {
+    //         $scope.data.series.comments.push(res.data);
+    //         $scope.newcomment = "";
+    //     }, $scope.toast_error);
+    // }
+
     $scope.changestate = function(level, state, $event) {
         var comment = null;
         //TODO - user can disable prompt via browser.. also, canceling doesn't prevent user from switching the ui-button state
@@ -271,4 +282,31 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
             toaster.success(res.data.message);
         }, $scope.toast_error);
     }
+
+
+    $scope.contact_PI = function() {
+        console.log($scope.comment_form);
+        try {
+
+            $http.post(appconf.api+'/series/contactpi', $scope.comment_form)
+                .then(function(res) {
+                    if(res && res.data && res.data.status == "ok") {
+                        toaster.success("Your message has been sent! Thank you!");
+                        $scope.comment_form.comment = "";
+                    }
+                }, function(err) {
+                    console.log("error");
+                    console.dir(err);
+                    //if(err.statusText) toaster.error(err.statusText);
+                    if(err.data) toaster.error(err.data);
+                    else toaster.error("Sorry, something went wrong while submitting your comment. Please email sca-group@iu.edu. code:"+err.status);
+                });
+        } catch(e) {
+            console.dir(e);
+            toaster.error("Something went wrong while trying to send your comment. Please email sca-group@iu.edu");
+        }
+    }
+
+
+
 });
