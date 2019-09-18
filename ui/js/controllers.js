@@ -18,7 +18,23 @@ function($scope, appconf, toaster, $http, serverconf) {
 
     $http.get(appconf.api+'/dataflow')
         .then(function(res) {
-            $scope.datasends = res.data;
+            angular.forEach(res.data, function(ds, key) {
+                ds['received'] = {};
+                ds['received_count'] = 0;
+                ds['expected_count'] = 0;
+                ds.series.forEach(function(s) {
+                    ds['expected_count'] += s.image_count;
+                })
+                $http.get(appconf.api+'/dataflow/imgcount?iibis='+ds.iibis+'&subject='+ds.subject+'&StudyTimestamp='+ds.date)
+                    .then(function(_res) {
+                        console.log(_res.data);
+                        ds.received = _res.data;
+                        angular.forEach(_res.data, function(s, key) {
+                            ds.received_count += s
+                        });
+                        $scope.datasends.push(ds);
+                    }, $scope.toast_error)
+            })
         }, $scope.toast_error);
 });
 

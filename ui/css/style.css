@@ -483,6 +483,16 @@ h3 {
   height: 18px;
   width: 110px;
 }
+
+.progress.dataflow-state {
+  display: inline-block;
+  border: none;
+  margin: 0px;
+  padding: 0px;
+  height: 18px;
+  width: 200px;
+}
+
 .subject-label {
   line-height: 100%;
   display: inline-block;
