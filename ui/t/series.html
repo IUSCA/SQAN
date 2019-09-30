@@ -292,26 +292,10 @@
                     </div>
                 </div>
             </div>
-
-<!--
-            <hr>
-            <h4 class="text-muted">Comments</h4>
-            <div class="activity" ng-repeat="comment in data.series.comments" ng-init="user = users[comment.user_id]">
-                <div class="row">
-                    <div class="col-md-2"><img gravatar-src="user.email" gravatar-size="32"></img></div>
-                    <div class="col-md-10">
-                        <time class="pull-right text-muted">{{comment.date|date:'short'}}</time>
-                        <b>{{user.fullname}}</b>
-                        <p>{{comment.comment}}</p>
-                    </div>
-                </div>
-            </div>
-            <textarea class="form-control" placeholder="Add a comment" ng-model="newcomment"></textarea>
-            <button type="button" class="btn btn-xs" ng-click="addcomment()" ng-if="newcomment"><i class="fa fa-check"></i></button>
-            -->
         </div>
     </div>
 </div>
+
 
 <div  id="contactpi" class="modal fade">
     <div class="modal-dialog">
@@ -339,11 +323,11 @@
                         <textarea rows="5" class="form-control" id="inputmessage" ng-model="comment_form.message" placeholder="Enter your comment/question" required></textarea>
                     </div>
                 </form>
-            </div><!--modal-body-->
+            </div>
             <div class="modal-footer">
                 <button type="submit" class="btn btn-info" onclick="$('#contact2').modal('toggle');" ng-disabled="thisform.$invalid" ng-click="contact_PI()">Send</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal" aria-hidden="true">Close</button>
             </div>
-        </div><!--modal-content-->
-    </div><!--modal-dialog-->
-</div><!--modal-->
+        </div>
+    </div>
+</div>

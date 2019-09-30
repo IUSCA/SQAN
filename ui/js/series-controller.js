@@ -32,12 +32,12 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
     function load_series() {
         if(!$routeParams.seriesid) return; //probably the route changed since last time
         $http.get(appconf.api+'/series/id/'+$routeParams.seriesid)
+
         .then(function(res) {
             $scope.data = res.data;
             $scope.data.template_images = [];
             console.log($scope.data)
 
-            $scope.comment_form.subject = 'Query on SUBJECT: '+$scope.data.series.exam_id.subject+ ' -- SERIES DESCRIPTION: '+$scope.data.series.series_desc
 
             if($scope.data.images) {
                 $scope.data.images.forEach(computeColor);
@@ -87,6 +87,23 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
                     $scope.data.series.events[index].username = $scope.users[e.user_id].fullname;
                 } else $scope.data.series.events[index].username = "SQAN";
             })
+
+            $scope.comment_form.subject = 'Query on SUBJECT: '+$scope.data.series.exam_id.subject
+
+            $scope.comment_form.message = 'IIBISID: '+ $scope.data.series.exam_id.research_id.IIBISID +'\n' + 
+            'SUBJECT: '+$scope.data.series.exam_id.subject+'\n' +
+            'STUDY TIMESTAMP: '+$scope.data.series.exam_id.StudyTimestamp+'\n' +
+            'SERIES DESCRIPTION: '+$scope.data.series.series_desc
+
+            if ($scope.data.series.qc1_state != "no template") {
+                $scope.comment_form.message = $scope.comment_form.message + '\n' + 
+                'TEMPLATE USED: '+ $scope.data.template.exam_id.StudyTimestamp        
+            }
+             
+            $scope.comment_form.message = $scope.comment_form.message + '\n' + 
+            'QC-STATUS: '+ $scope.data.series.qc1_state+'\n'   
+
+            
             //reload if qc is not yet loaded
             if(res.data.series.qc1_state != "no template" && !res.data.series.qc) {
                 $timeout(load_series, 1000);
