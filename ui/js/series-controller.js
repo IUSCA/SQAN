@@ -103,7 +103,18 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
             $scope.comment_form.message = $scope.comment_form.message + '\n' + 
             'QC-STATUS: '+ $scope.data.series.qc1_state+'\n'   
 
+            $scope.comment_form.message = $scope.comment_form.message+ `
+            Dear PI,
             
+            I have the following query about this dataset:
+            
+            
+            
+            
+            Kind regards,
+            ${$scope.comment_form.name}
+            `
+
             //reload if qc is not yet loaded
             if(res.data.series.qc1_state != "no template" && !res.data.series.qc) {
                 $timeout(load_series, 1000);

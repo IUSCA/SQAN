@@ -6,6 +6,8 @@ const router = express.Router();
 const winston = require('winston');
 const jwt = require('express-jwt');
 const async = require('async');
+var nodemailer = require('nodemailer');
+
 
 //mine
 const config = require('../../config');
@@ -559,7 +561,8 @@ router.post('/contactpi', function(req, res, next) {
     logger.info("sending email to PI");
     console.log(req.body.subject)
     var transporter = nodemailer.createTransport();
-    var to_address = config.contact.email;  // This email needs to be changed to the actual contact person
+    var to_address = req.body.piemail;
+    //var to_address_sca = config.contact.email;  // This email needs to be changed to the actual contact person
     var subject = req.body.subject;
     var footer = config.contact.footer !== undefined ? config.contact.footer : '\n\n';
     var bcc = config.contact.bcc !== undefined ? config.contact.bcc : '';
@@ -567,6 +570,7 @@ router.post('/contactpi', function(req, res, next) {
     transporter.sendMail({
         from: req.body.email,
         to: to_address,
+        //cc: to_address_sca,
         subject: subject,
         bcc: bcc,
         text: 'From: '+req.body.name+' ('+req.body.email+')\n\nMessage: '+req.body.message + footer,

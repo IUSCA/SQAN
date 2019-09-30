@@ -296,7 +296,6 @@
     </div>
 </div>
 
-
 <div  id="contactpi" class="modal fade">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -306,13 +305,17 @@
             </div>
             <div class="modal-body">
                 <form name="thisform">
+                    <h4>FROM</h4>
                     <div class="form-group">
                         <label for="inputname">Full Name</label>
-                        <input type="name" class="form-control" id="inputname" ng-model="comment_form.name" placeholder="Your name" autocomplete="name" required disabled>
-                    </div>
-                    <div class="form-group">
+                        <input type="name" class="form-control" ng-model="comment_form.name" placeholder="Your name" autocomplete="name" required disabled>
                         <label for="inputemail">Email Address</label>
-                        <input type="email" class="form-control" id="inputemail" ng-model="comment_form.email" placeholder="Your email address" autocomplete="email" required disabled>
+                        <input type="email" class="form-control" ng-model="comment_form.email" placeholder="Your email address" autocomplete="email" required disabled>
+                    </div>
+                    <h4>TO</h4>
+                    <div class="form-group">
+                            <label for="inputemail">Email Address</label>
+                            <input type="email" class="form-control" id="inputemail" ng-model="comment_form.piemail" placeholder="Your email address" autocomplete="email" required>
                     </div>
                     <div class="form-group">
                         <label for="inputsubject">Subject</label>
@@ -320,7 +323,7 @@
                     </div>
                     <div class="form-group">
                         <label for="inputmessage">Message</label>
-                        <textarea rows="5" class="form-control" id="inputmessage" ng-model="comment_form.message" placeholder="Enter your comment/question" required></textarea>
+                        <textarea rows="20" class="form-control" id="inputmessage" ng-model="comment_form.message" placeholder="Enter your comment/question" required></textarea>
                     </div>
                 </form>
             </div>
@@ -331,3 +334,4 @@
         </div>
     </div>
 </div>
+
