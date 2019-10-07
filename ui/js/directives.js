@@ -208,22 +208,48 @@ app.component('exams', {
                 controller: function ($scope, $uibModalInstance) {
                     $scope.exam = $ctrl.exam;
                     console.log($scope.exam);
-                    
+                    console.log($scope.exam.subject);
+
                     $scope.users = $ctrl.users;
                     console.log( $scope.users) 
 
                     $scope.comment_form = {
                         subject:' ',
-                        name: $scope.users !== undefined ? $scope.users.profile.fullname : '',
-                        email: $scope.users !== undefined ? $scope.users.profile.email : '',
+                        name: 'Your Name',
+                        email: 'Your Email',
                         message: ''
                     };
 
-                    $scope.comment = "";
+                    
+                    $scope.comment_form.subject = 'Query on SUBJECT: '+$scope.exam.subject
 
-                    $scope.delete = function (comment) {
-                        console.log(comment);
-                        $scope.comment = comment;
+                    // $scope.comment_form.message = 'IIBISID: '+ $scope.data.series.exam_id.research_id.IIBISID +'\n' + 
+                    // 'SUBJECT: '+$scope.data.series.exam_id.subject+'\n' +
+                    // 'STUDY TIMESTAMP: '+$scope.data.series.exam_id.StudyTimestamp+'\n' +
+                    // 'SERIES DESCRIPTION: '+$scope.data.series.series_desc
+
+                    // if ($scope.data.series.qc1_state != "no template") {
+                    //     $scope.comment_form.message = $scope.comment_form.message + '\n' + 
+                    //     'TEMPLATE USED: '+ $scope.data.template.exam_id.StudyTimestamp        
+                    // }
+                    
+                    // $scope.comment_form.message = $scope.comment_form.message + '\n' + 
+                    // 'QC-STATUS: '+ $scope.data.series.qc1_state+'\n'   
+
+                    // $scope.comment_form.message = $scope.comment_form.message+ `
+                    // Dear PI,
+                    
+                    // I have the following query about this dataset:
+                    
+                    
+                    
+                    
+                    // Kind regards,
+                    // ${$scope.comment_form.name}
+                    // `
+
+                    $scope.contact_PI = function (comment) {
+
                         $uibModalInstance.close(comment);
                     };
 
