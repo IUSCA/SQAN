@@ -219,34 +219,8 @@ app.component('exams', {
                         email: 'Your Email',
                         message: ''
                     };
-
                     
                     $scope.comment_form.subject = 'Query on SUBJECT: '+$scope.exam.subject
-
-                    // $scope.comment_form.message = 'IIBISID: '+ $scope.data.series.exam_id.research_id.IIBISID +'\n' + 
-                    // 'SUBJECT: '+$scope.data.series.exam_id.subject+'\n' +
-                    // 'STUDY TIMESTAMP: '+$scope.data.series.exam_id.StudyTimestamp+'\n' +
-                    // 'SERIES DESCRIPTION: '+$scope.data.series.series_desc
-
-                    // if ($scope.data.series.qc1_state != "no template") {
-                    //     $scope.comment_form.message = $scope.comment_form.message + '\n' + 
-                    //     'TEMPLATE USED: '+ $scope.data.template.exam_id.StudyTimestamp        
-                    // }
-                    
-                    // $scope.comment_form.message = $scope.comment_form.message + '\n' + 
-                    // 'QC-STATUS: '+ $scope.data.series.qc1_state+'\n'   
-
-                    // $scope.comment_form.message = $scope.comment_form.message+ `
-                    // Dear PI,
-                    
-                    // I have the following query about this dataset:
-                    
-                    
-                    
-                    
-                    // Kind regards,
-                    // ${$scope.comment_form.name}
-                    // `
 
                     $scope.contact_PI = function (comment) {
 
@@ -259,18 +233,24 @@ app.component('exams', {
                 }
             }).result.then(function(result){
 
-                console.log($ctrl.exam._id);
-
-                console.log("deleting exam "+ $ctrl.exam._id)
-                $http.post(appconf.api+'/exam/delete/'+$ctrl.exam._id, {comment: result})
-                .then(function(res) {
-                    toaster.success(res.data.message);
-                    $ctrl.exam = res.data.exam;
-                    $scope.$emit("ExamDeletion", $ctrl.exam);
-                }, function(res) {
-                    if(res.data && res.data.message) toaster.error(res.data.message);
-                    else toaster.error(res.statusText);
-                });
+                try {
+                    $http.post(appconf.api+'/series/contactpi', $scope.comment_form)
+                        .then(function(res) {
+                            if(res && res.data && res.data.status == "ok") {
+                                toaster.success("Your message has been sent! Thank you!");
+                                $scope.comment_form.comment = "";
+                            }
+                        }, function(err) {
+                            console.log("error");
+                            console.dir(err);
+                            //if(err.statusText) toaster.error(err.statusText);
+                            if(err.data) toaster.error(err.data);
+                            else toaster.error("Sorry, something went wrong while submitting your comment. Please email sca-group@iu.edu. code:"+err.status);
+                        });
+                } catch(e) {
+                    console.dir(e);
+                    toaster.error("Something went wrong while trying to send your comment. Please email sca-group@iu.edu");
+                }
 
             }, function(result){
                 console.log('cancel or escaped');
