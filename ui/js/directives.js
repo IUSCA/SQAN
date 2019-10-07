@@ -84,8 +84,7 @@ app.component('exams', {
 
 
 
-        users.then(function(_users) { $ctrl.users = _users; });
-
+        users.then(function(_users) { $ctrl.users = _users; });        
 
         this.openstudy = function(id) {
             $window.open("series/"+id, "study:"+id);
@@ -198,6 +197,57 @@ app.component('exams', {
                 console.log('nothing to do');
 
             }, function(result){
+                console.log(result);
+            });
+        }
+
+        this.opencontactpi = function () {
+            $uibModal.open({
+                templateUrl: 't/components/contactpi.html',
+                size: 'lg',
+                controller: function ($scope, $uibModalInstance) {
+                    $scope.exam = $ctrl.exam;
+                    console.log($scope.exam);
+                    
+                    $scope.users = $ctrl.users;
+                    console.log( $scope.users) 
+
+                    $scope.comment_form = {
+                        subject:' ',
+                        name: $scope.users !== undefined ? $scope.users.profile.fullname : '',
+                        email: $scope.users !== undefined ? $scope.users.profile.email : '',
+                        message: ''
+                    };
+
+                    $scope.comment = "";
+
+                    $scope.delete = function (comment) {
+                        console.log(comment);
+                        $scope.comment = comment;
+                        $uibModalInstance.close(comment);
+                    };
+
+                    $scope.cancel = function () {
+                        $uibModalInstance.dismiss('cancel2');
+                    };
+                }
+            }).result.then(function(result){
+
+                console.log($ctrl.exam._id);
+
+                console.log("deleting exam "+ $ctrl.exam._id)
+                $http.post(appconf.api+'/exam/delete/'+$ctrl.exam._id, {comment: result})
+                .then(function(res) {
+                    toaster.success(res.data.message);
+                    $ctrl.exam = res.data.exam;
+                    $scope.$emit("ExamDeletion", $ctrl.exam);
+                }, function(res) {
+                    if(res.data && res.data.message) toaster.error(res.data.message);
+                    else toaster.error(res.statusText);
+                });
+
+            }, function(result){
+                console.log('cancel or escaped');
                 console.log(result);
             });
         }
