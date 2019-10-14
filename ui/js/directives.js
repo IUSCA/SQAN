@@ -173,6 +173,46 @@ app.component('exams', {
             });
         }
 
+        this.openaddtemplate = function () {
+            $uibModal.open({
+                templateUrl: 't/components/addtemplate.html',
+                size: 'lg',
+                controller: function ($scope, $uibModalInstance) {
+                    $scope.exam = $ctrl.exam;
+                    console.log($scope.exam);
+
+                    $scope.comment = "";
+
+                    $scope.addtemplate = function (comment) {
+                        console.log(comment);
+                        $scope.comment = comment;
+                        $uibModalInstance.close(comment);
+                    };
+
+                    $scope.cancel = function () {
+                        $uibModalInstance.dismiss('cancel add exam');
+                    };
+                }
+            }).result.then(function(result){
+
+                console.log($ctrl.exam._id);
+
+                console.log("adding exam "+ $ctrl.exam._id + " as a template")
+                $http.post(appconf.api+'/exam/maketemplate/'+$ctrl.exam._id, {comment: result})
+                .then(function(res) {
+                    toaster.success(res.data.message);
+                    $ctrl.exam = res.data.exam;
+                   // $scope.$emit("ExamDeletion", $ctrl.exam);
+                }, function(res) {
+                    if(res.data && res.data.message) toaster.error(res.data.message);
+                    else toaster.error(res.statusText);
+                });
+
+            }, function(result){
+                console.log('cancel or escaped');
+                console.log(result);
+            });
+        }
 
         this.opendeleted = function (comment) {
             $uibModal.open({
@@ -211,7 +251,7 @@ app.component('exams', {
                     console.log($scope.exam.subject);
 
                     $scope.users = $ctrl.users;
-                    console.log( $scope.users) 
+                    console.log($scope.users) 
 
                     $scope.comment_form = {
                         subject:' ',

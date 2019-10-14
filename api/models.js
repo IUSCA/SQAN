@@ -45,6 +45,7 @@ var examSchema = mongoose.Schema({
     override_template_id: {type: mongoose.Schema.Types.ObjectId},  // _id of template exam if override is set
     isdeleted: {type: Boolean,default: false},
     istemplate: {type: Boolean},
+    converted_to_template: {type: Boolean,default: false}, // set this to TRUE if exam is added as a template
     StudyTimestamp: Date,
     //series: mongoose.Schema.Types.Mixed,
     qc: mongoose.Schema.Types.Mixed,
