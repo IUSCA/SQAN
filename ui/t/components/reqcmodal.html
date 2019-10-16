@@ -1,10 +1,10 @@
 <div class="modal-header">
-    <h3 class="modal-title">ReQC Exam (all series)</h3>
+    <h3 class="modal-title"><i class="fa fa-fw fa-recycle"></i> ReQC {{exam !== undefined ? 'Exam' : 'All Exams'}} </h3>
 </div>
 
 <div class="modal-body study">
     <ul class="list-group">
-        <li class="list-group-item">
+        <li class="list-group-item" ng-if="exam !== undefined">
             <div class="row">
                 <div class="col-sm-3"><i class="fa fa-fw fa-user"></i> Subject </div>
                 <div class="col-sm-9">
@@ -12,7 +12,15 @@
                 </div>
             </div>
         </li>
-        <li class="list-group-item">
+        <li class="list-group-item" ng-if="research !== undefined">
+            <div class="row">
+                <div class="col-sm-3"><i class="fa fa-fw fa-user"></i> IIBIS </div>
+                <div class="col-sm-9">
+                    {{research.IIBISID}}
+                </div>
+            </div>
+        </li>
+        <li class="list-group-item" ng-if="exam !== undefined">
             <div class="row">
                 <div class="col-sm-3"><i class="fa fa-fw fa-calendar"></i> Study Timestamp </div>
                 <div class="col-sm-9">
@@ -36,6 +44,17 @@
                             {{template.StudyTimestamp | date:'medium':'-0400'}} ({{template.series.length}} series)
                         </ui-select-choices>
                     </ui-select>
+                </div>
+            </div>
+        </li>
+        <li class="list-group-item">
+            <div class="row">
+                <div class="col-sm-3"><i class="fa fa-fw fa-times-circle text-danger"></i> Only re-run QC failures </div>
+                <div class="col-sm-9">
+                    <label class="switch">
+                        <input type="checkbox" ng-click="failed_only = !failed_only" ng-model="failed_only">
+                        <span class="slider round"></span>
+                    </label>
                 </div>
             </div>
         </li>
