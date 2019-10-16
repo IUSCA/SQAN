@@ -1,0 +1,211 @@
+
+<style>
+    .table
+    {
+        margin-bottom: 0;
+    }
+    .borderless tr td {
+        border-bottom: none;
+        border-top: none;
+        border-left: none;
+        border-right: none;
+        margin: 0px !important;
+        border: 0px !important;
+        padding: 0px !important;
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 25px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 19px;
+        width: 19px;
+        left: 4px;
+        bottom: 3px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+    }
+
+    input:checked + .slider {
+        background-color: #2196F3;
+    }
+
+    input:focus + .slider {
+        box-shadow: 0 0 1px #2196F3;
+    }
+
+    input:checked + .slider:before {
+        -webkit-transform: translateX(26px);
+        -ms-transform: translateX(26px);
+        transform: translateX(26px);
+    }
+
+    /* Rounded sliders */
+    .slider.round {
+        border-radius: 20px;
+    }
+
+    .slider.round:before {
+        border-radius: 50%;
+    }
+
+    .date-box {
+        width: 150px;
+        height: 25px;
+        vertical-align: middle;
+        text-align: right;
+        display: inline-block;
+        background-color: rgb(255, 255, 255);
+        padding-top: 6px;
+        margin-bottom: 4px;
+    }
+
+    .empty-box {
+        width: 25px;
+        height: 25px;
+        display: inline-block;
+        background-color: rgba(255, 255, 255, 0);
+        padding-top: 6px;
+        margin: 0;
+    }
+
+    .double-box {
+        height: 50px;
+    }
+
+    .triple-box {
+        height: 75px;
+    }
+
+</style>
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <h3><i class="fa fa-clipboard"></i> Research Report</h3>
+
+            <div class="row">
+                <div class="col-xs-8">
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-5 control-label">Select Research</label>
+                            <div class="col-sm-7">
+                                <ui-select
+                                        ng-model="research.selected">
+                                    <ui-select-match placeholder="Select IIBISID from the list...">{{$select.selected.id}}</ui-select-match>
+                                    <ui-select-choices repeat="option in researches | filter: $select.search">
+                                        <div ng-bind-html="trustAsHtml((option.id | highlight: $select.search))"></div>
+                                        <small><span ng-repeat="m in option.studies">{{m.Modality}} | </span></small>
+                                    </ui-select-choices>
+                                </ui-select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-5 control-label">Select Keywords</label>
+                            <div class="col-sm-7">
+
+                                <ui-select ng-model="form.selected_keywords" multiple title="Choose a keyword">
+                                    <ui-select-match placeholder="Select or search a keyword in the list...">{{$item}}</ui-select-match>
+                                    <ui-select-choices repeat="item in header_keywords | filter: $select.search">
+                                        <div ng-bind-html="item | highlight: $select.search"></div>
+                                    </ui-select-choices>
+                                </ui-select>
+
+                            </div>
+                        </div>
+
+                        <button class="btn btn-info pull-right" ng-click="getReport()">Submit</button>
+                    </form>
+                </div>
+            </div>
+            <div>
+                <uib-tabset active="active">
+                    <uib-tab ng-repeat="(research, data) in report" ng-if="report !== {}" index="$index + 1" heading="{{research}} ({{data.summary.length}})">
+
+                        <uib-tabset>
+                            <uib-tab index="research + '_summary'" heading="Summary">
+                                <a class="btn btn-info btn-xs" href="#" ng-click="download_table_as_csv('table_'+$index+'_summary', research);"><i class="fa fa-fw fa-download"></i> Download as CSV</a>
+                                <table class="table table-condensed" id="table_{{$index}}_summary">
+                                    <thead>
+                                    <th ng-repeat="col in summary_cols">{{col}}</th>
+                                    </thead>
+                                    <tbody>
+                                    <tr ng-repeat="(key, sub) in data.summary">
+                                        <td ng-repeat="col in summary_cols">{{sub[col]}}</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </uib-tab>
+                            <uib-tab index="research + '_series'" heading="Series">
+                                <a class="btn btn-info btn-xs" href="#" ng-click="download_table_as_csv('table_'+$index+'_series', research+'_series');"><i class="fa fa-fw fa-download"></i> Download as CSV</a>
+                                <table class="table table-bordered table-condensed" id="table_{{$index}}_series">
+                                    <thead>
+                                    <tr>
+                                        <th>Subject</th>
+                                        <th>StudyTimestamp</th>
+                                        <th ng-repeat-start="ser in data.series" ng-if="false"></th>
+                                        <th>{{ser}}</th>
+                                        <th></th>
+                                        <th ng-repeat="key in table_keywords"></th>
+                                        <th ng-repeat-end ng-if="false"></th>
+                                    </tr>
+                                    <tr>
+                                        <th></th>
+                                        <th></th>
+                                        <th ng-repeat-start="ser in data.series" ng-if="false"></th>
+                                        <th>scan_count</th>
+                                        <th>image_count</th>
+                                        <th ng-repeat="key in table_keywords">{{key}}</th>
+                                        <th ng-repeat-end ng-if="false"></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr ng-repeat-start="(sub, exams) in data.subjects" ng-if="false"></tr>
+                                    <tr ng-repeat="exam in exams">
+                                        <td class="text-nowrap">{{sub}}</td>
+                                        <td class="text-nowrap">{{exam.StudyTimestamp}}</td>
+                                        <td ng-repeat-start="ser in data.series" ng-if="false"></td>
+                                        <td>{{exam.series[ser].scan_count}}</td>
+                                        <td>{{exam.series[ser].img_count}}</td>
+                                        <td ng-repeat="key in table_keywords">{{exam.series[ser][key]}}</td>
+                                        <td ng-repeat-end ng-if="false"></td>
+                                    </tr>
+                                    <tr ng-repeat-end ng-if="false"></tr>
+                                    </tbody>
+                                </table>
+                            </uib-tab>
+                        </uib-tabset>
+                    </uib-tab>
+                </uib-tabset>
+
+            </div>
+        </div>
+    </div>
+</div>
