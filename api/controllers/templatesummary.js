@@ -106,6 +106,16 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(r
 });
 
 
+// get a list of Researches with no available templates
+router.get('/notemplate', function(req, res, next) {
+    db.Exam.find({istemplate: true}).distinct('research_id', function(err, has_templates) {
+        if(err) return next(err);
+        db.Research.find({_id: {$nin: has_templates}}).exec(function(err, no_templates) {
+            if(err) return next(err);
+            res.json(no_templates);
+        })
+    })
+});
 
 // delete a template series
 
