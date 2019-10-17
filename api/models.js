@@ -46,6 +46,7 @@ var examSchema = mongoose.Schema({
     isdeleted: {type: Boolean,default: false},
     istemplate: {type: Boolean},
     converted_to_template: {type: Boolean,default: false}, // set this to TRUE if exam is added as a template
+    parent_exam_id:{type: mongoose.Schema.Types.ObjectId}, // only set if an exam is converted into a template through the portal; this is the id of the original exam
     StudyTimestamp: Date,
     //series: mongoose.Schema.Types.Mixed,
     qc: mongoose.Schema.Types.Mixed,
