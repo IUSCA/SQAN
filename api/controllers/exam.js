@@ -298,6 +298,8 @@ router.post('/maketemplate/:exam_id', jwt({secret: config.express.jwt.pub}), fun
                     istemplate:true,
                     //isdeleted: false,
                     converted_to_template:true,
+                    parent_exam_id: exam._id,
+
                 }, function(err, _texam) {
                     if(err) return next(err);
                     
@@ -323,83 +325,85 @@ router.post('/maketemplate/:exam_id', jwt({secret: config.express.jwt.pub}), fun
                             db.Template.create({
                                 exam_id: _texam._id,
                                 series_desc: ss.series_desc ,
-                                SeriesNumber:ss.SeriesNumber ,
+                                SeriesNumber:ss.SeriesNumber,
+                                //deprecated_by: ss.deprecated_by,
                             }, function(err,tt){
-
                                 if(err) console.log(err);
-                            
-                                // find the primary header h1 for series ss
-                                db.Image.findOne({series_id:ss._id, _id:ss.primary_image},function(err,h1){
-                                    if (err) console.log(err);
 
-                                    // remove subject name
-                                    console.log("remove subject name")
-                                    h1.headers.qc_subject = undefined;
+                                checkDeprecated(tt, function() {
+                                    // find the primary header h1 for series ss
+                                    db.Image.findOne({series_id:ss._id, _id:ss.primary_image},function(err,h1){
+                                        if (err) console.log(err);
 
-                                    // series prim header becomes template prim header
-                                    db.TemplateHeader.create({
-                                        template_id: tt._id,
-                                        SOPInstanceUID: h1.SOPInstanceUID,
-                                        InstanceNumber: h1.InstanceNumber,
-                                        EchoNumbers: h1.EchoNumbers,
-                                        primary_image: null,
-                                        headers: h1.headers,
-                                    }, function (err, primary_template) {
-                                        if (err) return next(err);
+                                        // remove subject name
+                                        console.log("remove subject name")
+                                        h1.headers.qc_subject = undefined;
 
-                                        // insert primary_template._id into the template document and add a event
-                                        console.log("insert primary template id into template")
-                                        db.Template.updateOne({_id: tt._id},
-                                        {
-                                            primary_image: primary_template._id,
-                                            $push: {events: ee},
-                                        }, function (err) {
+                                        // series prim header becomes template prim header
+                                        db.TemplateHeader.create({
+                                            template_id: tt._id,
+                                            SOPInstanceUID: h1.SOPInstanceUID,
+                                            InstanceNumber: h1.InstanceNumber,
+                                            EchoNumbers: h1.EchoNumbers,
+                                            primary_image: null,
+                                            headers: h1.headers,
+                                        }, function (err, primary_template) {
                                             if (err) return next(err);
 
-                                            // find all other non-primary headers from series ss
-                                            console.log("find all series non-prim images")
-                                            db.Image.find({series_id:ss._id, primary_image:ss.primary_image},function(err,h){
-                                                if (err) console.log(err);
-                                                console.log("series has "+h.length+ " non-prim images")
-                                                // insert each series header into templateheaders
-                                                h.forEach(function(hh){
+                                            // insert primary_template._id into the template document and add a event
+                                            console.log("insert primary template id into template")
+                                            db.Template.updateOne({_id: tt._id},
+                                            {
+                                                primary_image: primary_template._id,
+                                                $push: {events: ee},
+                                            }, function (err) {
+                                                if (err) return next(err);
 
-                                                    // remove subject name    
-                                                    hh.headers.qc_subject = undefined;
+                                                // find all other non-primary headers from series ss
+                                                console.log("find all series non-prim images")
+                                                db.Image.find({series_id:ss._id, primary_image:ss.primary_image},function(err,h){
+                                                    if (err) console.log(err);
+                                                    console.log("series has "+h.length+ " non-prim images")
+                                                    // insert each series header into templateheaders
+                                                    h.forEach(function(hh){
 
-                                                    db.TemplateHeader.create({
-                                                        template_id: tt._id,
-                                                        SOPInstanceUID: hh.SOPInstanceUID,
-                                                        InstanceNumber: hh.InstanceNumber,
-                                                        EchoNumbers: hh.EchoNumbers,
-                                                        primary_image: primary_template._id,
-                                                        headers: hh.headers,
-                                                    }, function (err, th) {
-                                                        if (err) return next(err);
+                                                        // remove subject name    
+                                                        hh.headers.qc_subject = undefined;
 
-                                                        // finally, save original exam with flag indicating that it was added as template
-                                                        // exam.converted_to_template = true;
-                                                        // exam.save(function(err, _exam) {
-                                                        //     if (err) console.log(err);
-                                                        //     return res.json({message: series.length + " series converted to templates ", exam: _exam});
-                                                        // });
+                                                        db.TemplateHeader.create({
+                                                            template_id: tt._id,
+                                                            SOPInstanceUID: hh.SOPInstanceUID,
+                                                            InstanceNumber: hh.InstanceNumber,
+                                                            EchoNumbers: hh.EchoNumbers,
+                                                            primary_image: primary_template._id,
+                                                            headers: hh.headers,
+                                                        }, function (err, th) {
+                                                            if (err) return next(err);
 
-                                                        db.Exam.update({_id: exam._id}, {converted_to_template:true, $push: { comments: comment }}, function(err,_exam){
-                                                            if (err) console.log(err);
-                                                            return res.json({message: series.length + " series converted to templates ", exam: _exam});
+                                                            // finally, save original exam with flag indicating that it was added as template
+
+                                                            // exam.comments = exam.comments ? exam.comments : [];
+                                                            // console.log(exam.comments);
+
+                                                            db.Exam.update({_id: exam._id}, 
+                                                                {$set:{converted_to_template:true, $push: { comments: comment }}}, 
+                                                                function(err,_exam){
+                                                                if (err) console.log(err);
+                                                                return res.json({message: series.length + " series converted to templates ", exam: _exam});
+                                                            });
+
                                                         });
 
-                                                    });
+                                                    })
 
-                                                })
+                                                })                                            
 
-                                            })                                            
+                                            });
+                                        })
 
-                                        });
                                     })
-
-                                })
-
+                                    
+                                })                    
                             });
 
                         })
@@ -411,6 +415,34 @@ router.post('/maketemplate/:exam_id', jwt({secret: config.express.jwt.pub}), fun
         });
     });
 });
+
+
+function checkDeprecated(doc, cb) {
+    db.Template.update({
+        exam_id: doc.exam_id,
+        series_desc: doc.series_desc,
+        SeriesNumber: { $lt: doc.SeriesNumber },
+    }, {
+        deprecated_by: doc._id,
+    },{multi: true}, function(err,numdeprecated) {
+        if (err) logger.warn("error deprecating older template");
+        //console.log(numdeprecated);
+        db.Template.findOne({
+            exam_id: doc.exam_id,
+            series_desc: doc.series_desc,
+            SeriesNumber: { $gt: doc.SeriesNumber },
+        }, function(err, _doc){
+            if(err) logger.warn("error deprecating current series");
+            if(_doc) {
+                doc.deprecated_by = _doc._id;
+            } else {
+                doc.deprecated_by = null;
+            }
+            doc.save();
+            cb();
+        });
+    });
+}
 
 
 module.exports = router;
