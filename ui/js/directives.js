@@ -69,6 +69,94 @@ app.directive('errorpanel', function() {
 });
 
 
+app.component('reqc', {
+    templateUrl: 't/components/reqc.html',
+    bindings: {
+        exam: "<?",
+        research: "<?",
+        templates: "<"
+    },
+    controller: function(appconf, $scope, $http, $uibModal, toaster) {
+        var $ctrl = this;
+
+        this.doReqc = function(result) {
+
+            let url = appconf.api;
+
+// <<<<<<< HEAD
+//         users.then(function(_users) { $ctrl.users = _users; });        
+
+//         this.openstudy = function(id) {
+//             $window.open("series/"+id, "study:"+id);
+//         }
+// =======
+            if($ctrl.research !== undefined) {
+                url += '/research/reqc/';
+                if(result.failed_only) {
+                    url += 'failed/'
+                } else {
+                    url += 'all/'
+                }
+                url += $ctrl.research._id;
+            } else {
+                if(result.failed_only) {
+                    url += '/series/reqcerroredseries/'
+                } else {
+                    url += '/exam/template/'
+                }
+                url += $ctrl.exam._id;
+            }
+// >>>>>>> master
+
+            console.log(`reQC with URL: ${url}`);
+            $http.post(url, {template_id: result.template._id})
+                .then(function(res) {
+                    toaster.success(res.data.message);
+                }, function(res) {
+                    if(res.data && res.data.message) toaster.error(res.data.message);
+                    else toaster.error(res.statusText);
+                });
+        }
+
+        this.launch = function() {
+            $uibModal.open({
+                templateUrl: 't/components/reqcmodal.html',
+                size: 'lg',
+                controller: function ($scope, $uibModalInstance) {
+                    $scope.templates = $ctrl.templates;
+                    var $mctrl = this;
+                    $scope.exam = $ctrl.exam;
+                    $scope.research = $ctrl.research;
+                    this.overridetemplate = '';
+                    $scope.failed_only = false;
+
+                    $scope.select_template = function(item) {
+                        $mctrl.overridetemplate = item;
+                    }
+
+                    $scope.ok = function () {
+                        $uibModalInstance.close({
+                            template: $mctrl.overridetemplate,
+                            failed_only: $scope.failed_only
+                        });
+                    };
+
+                    $scope.cancel = function () {
+                        $uibModalInstance.dismiss('cancel');
+                    };
+                }
+            }).result.then(function(result){
+                console.log(result);
+                $ctrl.doReqc(result);
+
+            }, function(result){
+                console.log('cancel or escaped');
+                console.log(result);
+            });
+        }
+    }
+});
+
 app.component('exams', {
     templateUrl: 't/components/exams.html',
     bindings: {
@@ -84,7 +172,8 @@ app.component('exams', {
 
 
 
-        users.then(function(_users) { $ctrl.users = _users; });        
+        users.then(function(_users) { $ctrl.users = _users; });
+
 
         this.openstudy = function(id) {
             $window.open("series/"+id, "study:"+id);
@@ -92,43 +181,6 @@ app.component('exams', {
 
         this.opentemplate = function(id) {
             $window.open("template/"+id);
-        }
-
-        this.openmodal = function () {
-            $uibModal.open({
-                templateUrl: 't/components/overridemodal.html',
-                size: 'lg',
-                controller: function ($scope, $uibModalInstance) {
-                    $scope.templates = $ctrl.templates;
-                    var $mctrl = this;
-                    $scope.exam = $ctrl.exam;
-                    this.overridetemplate = '';
-
-                    $scope.select_template = function(item) {
-                        $mctrl.overridetemplate = item;
-                    }
-
-                    $scope.ok = function () {
-                        $uibModalInstance.close($mctrl.overridetemplate);
-                    };
-
-                    $scope.cancel = function () {
-                        $uibModalInstance.dismiss('cancel');
-                    };
-                }
-            }).result.then(function(result){
-                console.log(result);
-                $http.post(appconf.api+'/exam/template/'+$ctrl.exam._id, {template_id: result._id})
-                    .then(function(res) {
-                        toaster.success(res.data.message);
-                    }, function(res) {
-                        if(res.data && res.data.message) toaster.error(res.data.message);
-                        else toaster.error(res.statusText);
-                    });
-            }, function(result){
-                console.log('cancel or escaped');
-                console.log(result);
-            });
         }
 
 

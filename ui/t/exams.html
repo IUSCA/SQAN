@@ -121,9 +121,7 @@
                 <viewmode-toggler mode="view_mode" deprecated="show_deprecated"></viewmode-toggler>
             </h2>
             <h2> <b>{{selected.IIBISID}}</b>
-                <button class="btn btn-xs btn-info" ng-if="can_qc" style="padding: 1px 2px; font-size: 80%;" ng-click="QCalert(selected,'all')" tooltip-placement="right-bottom" uib-tooltip="ReQC all series in all exams in this IIBISID">ReQC all exams</button>
-
-                <button class="btn btn-xs btn-info" ng-if="can_qc" style="padding: 1px 2px; font-size: 80%;" ng-click="QCalert(selected,'failed')" tooltip-placement="right-bottom" uib-tooltip="ReQC all series that have failed QC1 in this IIBISID">ReQC failures</button>
+                <reqc research="selected" templates="selected.templates" ng-if="can_qc && selected"></reqc>
             </h2>
             <h3>
                 Modality: <b>{{selected.Modality}}</b>
