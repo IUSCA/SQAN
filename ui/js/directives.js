@@ -83,13 +83,6 @@ app.component('reqc', {
 
             let url = appconf.api;
 
-// <<<<<<< HEAD
-//         users.then(function(_users) { $ctrl.users = _users; });        
-
-//         this.openstudy = function(id) {
-//             $window.open("series/"+id, "study:"+id);
-//         }
-// =======
             if($ctrl.research !== undefined) {
                 url += '/research/reqc/';
                 if(result.failed_only) {
@@ -106,7 +99,6 @@ app.component('reqc', {
                 }
                 url += $ctrl.exam._id;
             }
-// >>>>>>> master
 
             console.log(`reQC with URL: ${url}`);
             $http.post(url, {template_id: result.template._id})
@@ -254,6 +246,7 @@ app.component('exams', {
                 .then(function(res) {
                     toaster.success(res.data.message);
                     $ctrl.exam = res.data.exam;
+                    console.log(res.data.exam)
                    // $scope.$emit("ExamDeletion", $ctrl.exam);
                 }, function(res) {
                     if(res.data && res.data.message) toaster.error(res.data.message);
