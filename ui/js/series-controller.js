@@ -316,7 +316,7 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
         console.log($scope.comment_form);
         try {
 
-            $http.post(appconf.api+'/series/contactpi', $scope.comment_form)
+            $http.post(appconf.api+'/contactpi', $scope.comment_form)
                 .then(function(res) {
                     if(res && res.data && res.data.status == "ok") {
                         toaster.success("Your message has been sent! Thank you!");
