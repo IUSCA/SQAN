@@ -31,10 +31,13 @@
                 <td style="padding: 0px;">
                     <div>
                         <!--search for series.qc.template_id-->
-                        <div ng-init="template = $ctrl.templateLookup[s.qc.template_id]" class="studynote" ng-if="::s.qc1_state !== 'no template'" style="background-color: {{::template.bgcolor}}">
-                            {{::template.StudyTimestamp | date:'short':'-0400'}}
+                        <div ng-init="template = $ctrl.templateLookup[s.qc.template_id]" class="studynote" ng-if="::s.qc1_state !== 'no template'" style="background-color: {{::template.bgcolor}}">                            
+                            {{::template.StudyTimestamp | date:'short':'-0400'}} {{::template.converted_to_template}}
                             <!--<span class="text-muted">{{template.series_desc}}</span>-->
                             <span class="text-muted">(#{{::template.SeriesNumber}})</span>
+                            <span ng-if="::template.converted_to_template"> <i class="fa fa-clone"></i></span>
+                           
+                            
                         </div>
                     </div>
                 </td>

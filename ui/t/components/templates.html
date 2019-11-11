@@ -2,7 +2,7 @@
     <p class="text-muted" ng-if="$ctrl.templates.length == 0">No templates received</p>
     <uib-tabset type="tabs" active="activePill" type="pills" ng-if="!$ctrl.templates.length == 0">
         <uib-tab ng-repeat="t in $ctrl.templates" index="$index" heading="{{t.StudyTimestamp | date:'short':'-0400'}}" style="background-color: {{t.bgcolor}}">
-            <uib-tab-heading><i class="fa fa-fw fa-file-o"></i> {{t.StudyTimestamp | date:'short':'-0400'}}</uib-tab-heading>
+            <uib-tab-heading><i ng-if="t.converted_to_template == true" class="fa fa-clone"></i><i ng-if="t.converted_to_template == false" class="fa fa-fw fa-file-o"></i> {{t.StudyTimestamp | date:'short':'-0400'}}</uib-tab-heading>
         <div>
             <table class="table table-condensed">
                 <thead><tr><th width="30%" style="color: #333;">Series Description</th>

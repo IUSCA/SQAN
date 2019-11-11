@@ -63,6 +63,7 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(r
     var template_instance = {
         date: null,
         exam_id: null,
+        converted_to_template:false,
         series: [],
         usedInQC:0
     };
@@ -71,6 +72,7 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(r
         if (err) return next(err);
         template_instance.date = texam.StudyTimestamp;
         template_instance.exam_id = texam._id;
+        template_instance.converted_to_template = texam.converted_to_template ? texam.converted_to_template : false;
 
         db.Template.find({"exam_id":texam._id},function(err,templates){
             if (err) return next(err);

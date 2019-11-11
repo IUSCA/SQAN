@@ -152,6 +152,7 @@ app.controller('ExamsController',
 
                     $scope.loading_exam = false;
                     $scope.selected = res.data;
+                    console.log($scope.selected)
 
                     handle_scroll();
 
@@ -305,7 +306,9 @@ app.controller('ExamsController',
                             StudyTimestamp: template.StudyTimestamp,
                             series_desc: series.series_desc,
                             SeriesNumber: series.SeriesNumber,
-                            bgcolor : template.bgcolor};
+                            bgcolor : template.bgcolor,
+                            converted_to_template : template.converted_to_template};
+
                     }
                 }
             }
