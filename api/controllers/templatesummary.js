@@ -166,29 +166,48 @@ router.get('/deleteall/:exam_id', jwt({secret: config.express.jwt.pub}), functio
     //console.log(req.user.sub);
     var user = req.user.sub;
 
-    db.Template.find({"exam_id":new mongoose.Types.ObjectId(req.params.exam_id)},function(err,templates){
-        if (err) return next(err);
-
-        async.forEach(templates, function(temp, next_temp) {
-
-            deleteTemplate(temp._id,function(err){
-                if (err) return next(err);
-                unQC_series(temp._id, user, function(err,images_modified){
-                    if (err) return next(err);
-                    //console.log("images modified -- "+ images_modified);
-                    //console.log(temp.series_desc+ " deleted!!");
-                    next_temp();
-                });
-            });
-        }, function(err){
-            //total_modified += images_modified;
-            console.log("Deleting Template-Exam "+req.params.exam_id);
-            db.Exam.deleteOne({_id:new mongoose.Types.ObjectId(req.params.exam_id)}, function(err){
-                if(err) return next(err);
-                res.send("Template deleted successfully!")
-            })
-        })
+    db.Exam.findById(req.params.exam_id)
+    .populate({
+        path: 'research_id',
     })
+    .exec(function (err, texam) {
+        if (err) return next(err);
+        if (!texam) return res.status(404).json({message: "no such template exam:" + req.params.exam_id});
+        db.Acl.can(req.user, 'qc', texam.research_id.IIBISID, function (can) {
+            if (!can) return res.status(401).json({message: "you are not authorized to modify data in this IIBISID:" + texam.research_id.IIBISID});
+
+
+            db.Template.find({"exam_id":new mongoose.Types.ObjectId(req.params.exam_id)},function(err,templates){
+                if (err) return next(err);
+        
+                async.forEach(templates, function(temp, next_temp) {
+        
+                    deleteTemplate(temp._id,function(err){
+                        if (err) return next(err);
+                        unQC_series(temp._id, user, function(err,images_modified){
+                            if (err) return next(err);
+                            //console.log("images modified -- "+ images_modified);
+                            //console.log(temp.series_desc+ " deleted!!");
+                            next_temp();
+                        });
+                    });
+                }, function(err){
+                    //total_modified += images_modified;
+                    console.log("Deleting Template-Exam "+req.params.exam_id);
+                    if (texam.converted_to_template) {
+                        db.Exam.update({_id:texam.parent_exam_id}, {converted_to_template:false}, function(err){
+                            if (err) return next(err);                            
+                        })
+                    }
+                    db.Exam.deleteOne({_id:new mongoose.Types.ObjectId(req.params.exam_id)}, function(err){
+                        if(err) return next(err);
+                        res.send("Template deleted successfully!")
+                    })
+                })
+            })
+        })        
+    })
+
 })
 
 
