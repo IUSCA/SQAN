@@ -124,38 +124,61 @@ router.get('/notemplate', function(req, res, next) {
 // delete a template series
 router.get('/deleteselected/:template_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
 
-    console.log("Deleting Template-Series "+req.params.template_id);
 
-    //console.log(req.user.sub);
-    var user = req.user.sub;
-
-    db.Template.findById(new mongoose.Types.ObjectId(req.params.template_id),function(err,template){
-        if (err) return next(err);
-        //console.log("TEMPLATE FOUND "+ template.series_desc)
-        deleteTemplate(template._id,function(err){
-            if (err) return next(err);
-            //console.log("TEMPLATE DELETED")
-            unQC_series(template._id, user, function(err,images_modified){
-                if (err) return next(err);
-                //console.log("RETURNED FROM UN_ QC_SERIES FUNCTION WITH "+images_modified+ "IMAGES MODIFIED")
-                // check if there are any template series remainging in this template exam.
-                db.Template.find({"exam_id":template.exam_id},function(err,templates){
-                    if (err) return next(err);
-                    //console.log("templates left "+templates.length)
-                    if (!templates || templates.length == 0){
-                        // this was the last template, so we delete the Template exam
-                        //console.log("Empty template exam to delete "+template.exam_id)
-                        db.Exam.deleteOne({_id: template.exam_id}, function(err){
-                            if (err) return next(err);
-                            res.send("Template series "+template.series_desc+"deleted successfully! Template exam has also been deleted as this was the only template in this exam")
-                        })
-                    } else {
-                        res.send("Template series "+template.series_desc+"deleted successfully! There are "+templates.length+ " series in this template exam")
-                    }
-                })
-            });
-        });
+    db.Template.findById(req.params.template_id)
+    .populate({
+        path: 'exam_id',
+        populate: {
+            path: 'research_id'
+        }
     })
+    .exec(function (err, template) {
+        if (err) return next(err);
+        if (!template) return res.status(404).json({message: "no such template:" + req.params.template_id});
+        db.Acl.can(req.user, 'qc', template.exam_id.research_id.IIBISID, function (can) {
+            if (!can) return res.status(401).json({message: "you are not authorized to modify this IIBISID:" + template.exam_id.research_id.IIBISID});
+
+            console.log("Deleting Template-Series "+req.params.template_id);
+
+            //console.log(req.user.sub);
+            var user = req.user.sub;
+
+            deleteTemplate(template._id,function(err){
+                if (err) return next(err);
+                //console.log("TEMPLATE DELETED")
+                unQC_series(template._id, user, function(err,images_modified){
+                    if (err) return next(err);
+                    //console.log("RETURNED FROM UN_ QC_SERIES FUNCTION WITH "+images_modified+ "IMAGES MODIFIED")
+                    // check if there are any template series remainging in this template exam.
+                    db.Template.find({"exam_id":template.exam_id},function(err,templates){
+                        if (err) return next(err);
+                        //console.log("templates left "+templates.length)
+                        if (!templates || templates.length == 0){
+                            // this was the last template, so we delete the Template exam
+                            //console.log("Empty template exam to delete "+template.exam_id)
+
+                            // but first check if this template exam is a clone of an existing exam
+                            if (template.exam_id.converted_to_template) {
+                                db.Exam.update({_id:template.exam_id.parent_exam_id}, {converted_to_template:false}, function(err){
+                                    if (err) return next(err);                            
+                                })
+                            }
+
+                            db.Exam.deleteOne({_id: template.exam_id}, function(err){
+                                if (err) return next(err);
+                                res.send("Template series "+template.series_desc+"deleted successfully! Template exam has also been deleted as this was the only template in this exam")
+                            })
+                        } else {
+                            res.send("Template series "+template.series_desc+"deleted successfully! There are "+templates.length+ " series in this template exam")
+                        }
+                    })
+                });
+            });
+
+
+        })
+    })
+
 })
 
 
@@ -194,6 +217,8 @@ router.get('/deleteall/:exam_id', jwt({secret: config.express.jwt.pub}), functio
                 }, function(err){
                     //total_modified += images_modified;
                     console.log("Deleting Template-Exam "+req.params.exam_id);
+
+                    // check if this template exam is a clone of an existing exam
                     if (texam.converted_to_template) {
                         db.Exam.update({_id:texam.parent_exam_id}, {converted_to_template:false}, function(err){
                             if (err) return next(err);                            
