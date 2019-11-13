@@ -135,7 +135,8 @@ app.controller('ExamsController',
                                 StudyTimestamp: t.StudyTimestamp,
                                 series_desc: ts.series_desc,
                                 SeriesNumber: ts.SeriesNumber,
-                                bgcolor : t.bgcolor
+                                bgcolor : t.bgcolor,
+                                converted_to_template: t.converted_to_template
                             };
                         });
                     });
@@ -307,7 +308,7 @@ app.controller('ExamsController',
                             series_desc: series.series_desc,
                             SeriesNumber: series.SeriesNumber,
                             bgcolor : template.bgcolor,
-                            converted_to_template : template.converted_to_template};
+                            converted_to_template : true};
 
                     }
                 }

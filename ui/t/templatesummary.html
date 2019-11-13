@@ -83,7 +83,11 @@ outline:none;
                             <td colspan="6">
                                 <uib-tabset type="tabs" active="activePill" type="pills">
                                     <uib-tab ng-repeat="timestamp in templatebytimestamp" index="$index" heading="{{timestamp.date | date:'short':'-0400'}}">
-                                            <uib-tab-heading><i ng-if="timestamp.converted_to_template == true" class="fa fa-clone"></i> {{timestamp.date | date:'short':'-0400'}}</uib-tab-heading>
+                                            <uib-tab-heading>
+                                                <i ng-if="timestamp.converted_to_template" class="fa fa-clone"></i>
+                                                <i ng-if="!timestamp.converted_to_template" class="fa fa-fw fa-file-o"></i>
+                                                 {{timestamp.date | date:'short':'-0400'}}
+                                                </uib-tab-heading>
                                         <div class="card">
 
                                             <div class="card-header lighten-1">
@@ -112,7 +116,7 @@ outline:none;
                                                                 <span ng-if="timestamp.converted_to_template == true">
                                                                     <h5>
                                                                         <h5><i class="fa fa-clone" aria-hidden="true"></i></span>
-                                                                        <span> This template was created in the portal </span>                                                                  
+                                                                        <span> This template was cloned from Subject <b>{{timestamp.parent_exam}}</b> </span>                                                                  
                                                                     </h5>
                                                                 </span>
 

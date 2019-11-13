@@ -65,7 +65,8 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(r
         exam_id: null,
         converted_to_template:false,
         series: [],
-        usedInQC:0
+        usedInQC:0,
+        parent_exam: undefined,
     };
 
     db.Exam.findById(new mongoose.Types.ObjectId(req.params.exam_id), function(err,texam) {
@@ -73,6 +74,16 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(r
         template_instance.date = texam.StudyTimestamp;
         template_instance.exam_id = texam._id;
         template_instance.converted_to_template = texam.converted_to_template ? texam.converted_to_template : false;
+
+        if (texam.converted_to_template) {
+            console.log(texam)
+            db.Exam.findById(texam.parent_exam_id, function(err,pexam){
+                if(err) return next(err);
+                console.log("INSIDE THE API CONTROLLER")
+                console.log(pexam)
+                template_instance.parent_exam = pexam.subject;
+            })
+        }
 
         db.Template.find({"exam_id":texam._id},function(err,templates){
             if (err) return next(err);

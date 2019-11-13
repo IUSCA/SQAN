@@ -449,104 +449,104 @@ app.component('viewmodeToggler', {
 
 
 
-app.component('contactpi', {
-    template: '<button class="btn btn-xs" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.launch()" uib-tooltip="Contact the research PI"><i class="fa fa-envelope fa-sm" aria-hidden="true"></i>  Contact PI</button>',
-    bindings: {
-        exam: "<?",
-        series: "<?",
-    },
-    controller: function(appconf, $scope, $http, $uibModal, toaster) {
-        var $ctrl = this;
+// app.component('contactpi', {
+//     template: '<button class="btn btn-xs" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.launch()" uib-tooltip="Contact the research PI"><i class="fa fa-envelope fa-sm" aria-hidden="true"></i>  Contact PI</button>',
+//     bindings: {
+//         exam: "<?",
+//         series: "<?",
+//     },
+//     controller: function(appconf, $scope, $http, $uibModal, toaster) {
+//         var $ctrl = this;
 
-        this.sendemail = function(result) {
+//         this.sendemail = function(result) {
 
-            //let data = {};
+//             //let data = {};
 
-            if($ctrl.exam !== undefined) {
+//             if($ctrl.exam !== undefined) {
 
-                // fill in email header for series
-                data = $ctrl.exam;
-                console.log("exams")
+//                 // fill in email header for series
+//                 data = $ctrl.exam;
+//                 console.log("exams")
 
-            } else {
+//             } else {
 
-                // fill in email header for exam
-                data = $ctrl.series;
-                console.log("series")
+//                 // fill in email header for exam
+//                 data = $ctrl.series;
+//                 console.log("series")
 
 
-            }
-            console.log("who knows")
+//             }
+//             console.log("who knows")
 
-            //console.log(data);
+//             //console.log(data);
 
-            // try {
-            //     $http.post(appconf.api+'/series/contactpi', $scope.comment_form)
-            //         .then(function(res) {
-            //             if(res && res.data && res.data.status == "ok") {
-            //                 toaster.success("Your message has been sent! Thank you!");
-            //                 $scope.comment_form.comment = "";
-            //             }
-            //         }, function(err) {
-            //             console.log("error");
-            //             console.dir(err);
-            //             //if(err.statusText) toaster.error(err.statusText);
-            //             if(err.data) toaster.error(err.data);
-            //             else toaster.error("Sorry, something went wrong while submitting your comment. Please email sca-group@iu.edu. code:"+err.status);
-            //         });
-            // } catch(e) {
-            //     console.dir(e);
-            //     toaster.error("Something went wrong while trying to send your comment. Please email sca-group@iu.edu");
-            // }
-        }
+//             // try {
+//             //     $http.post(appconf.api+'/series/contactpi', $scope.comment_form)
+//             //         .then(function(res) {
+//             //             if(res && res.data && res.data.status == "ok") {
+//             //                 toaster.success("Your message has been sent! Thank you!");
+//             //                 $scope.comment_form.comment = "";
+//             //             }
+//             //         }, function(err) {
+//             //             console.log("error");
+//             //             console.dir(err);
+//             //             //if(err.statusText) toaster.error(err.statusText);
+//             //             if(err.data) toaster.error(err.data);
+//             //             else toaster.error("Sorry, something went wrong while submitting your comment. Please email sca-group@iu.edu. code:"+err.status);
+//             //         });
+//             // } catch(e) {
+//             //     console.dir(e);
+//             //     toaster.error("Something went wrong while trying to send your comment. Please email sca-group@iu.edu");
+//             // }
+//         }
 
-        this.launch = function() {
-            $uibModal.open({
-                templateUrl: 't/components/contactpimodal.html',
-                size: 'lg',
-                controller: function ($scope, $uibModalInstance) {
+//         this.launch = function() {
+//             $uibModal.open({
+//                 templateUrl: 't/components/contactpimodal.html',
+//                 size: 'lg',
+//                 controller: function ($scope, $uibModalInstance) {
                 
-                    // $http.get(appconf.api+'/user/self')
-                    // .then(function(res) {
-                    //     $scope.self = res.data.user;
-                    //     $scope.self_groups = res.data.groups;
-                    //     console.log(res.data);
-                    // }, $scope.toast_error);
+//                     // $http.get(appconf.api+'/user/self')
+//                     // .then(function(res) {
+//                     //     $scope.self = res.data.user;
+//                     //     $scope.self_groups = res.data.groups;
+//                     //     console.log(res.data);
+//                     // }, $scope.toast_error);
 
-                    // $scope.users = res.data;
-                    // console.log($scope.users);
+//                     // $scope.users = res.data;
+//                     // console.log($scope.users);
 
-                    // $scope.comment_form = {
-                    //     subject:' ',
-                    //     name: $scope.user !== undefined ? $scope.user.profile.fullname : '',
-                    //     email: $scope.user !== undefined ? $scope.user.profile.email : '',
-                    //     message: ''
-                    // };
+//                     // $scope.comment_form = {
+//                     //     subject:' ',
+//                     //     name: $scope.user !== undefined ? $scope.user.profile.fullname : '',
+//                     //     email: $scope.user !== undefined ? $scope.user.profile.email : '',
+//                     //     message: ''
+//                     // };
                     
-                    // $scope.comment_form.subject = 'Query on SUBJECT: '//+$scope.exam.subject
+//                     // $scope.comment_form.subject = 'Query on SUBJECT: '//+$scope.exam.subject
 
-                    $scope.submit = function () {
-                        $uibModalInstance.close({
-                            template: $mctrl.overridetemplate,                   
-                        });
-                    };
+//                     $scope.submit = function () {
+//                         $uibModalInstance.close({
+//                             template: $mctrl.overridetemplate,                   
+//                         });
+//                     };
 
-                    $scope.cancel = function () {
-                        $uibModalInstance.dismiss('cancel');
-                    };
+//                     $scope.cancel = function () {
+//                         $uibModalInstance.dismiss('cancel');
+//                     };
 
-                }
-            }).result.then(function(result){
-                console.log(result);
-                $ctrl.sendemail(result);
+//                 }
+//             }).result.then(function(result){
+//                 console.log(result);
+//                 $ctrl.sendemail(result);
 
-            }, function(result){
-                console.log('cancel or escaped');
-                console.log(result);
-            });
-        }
-    }
-});
+//             }, function(result){
+//                 console.log('cancel or escaped');
+//                 console.log(result);
+//             });
+//         }
+//     }
+// });
 
 
 
