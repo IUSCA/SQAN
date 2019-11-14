@@ -1,10 +1,10 @@
 <div class="modal-header">
-    <h3 class="modal-title">ReQC Exam (all series)</h3>
+    <h3 class="modal-title"><i class="fa fa-fw fa-recycle"></i> ReQC {{exam !== undefined ? 'Exam' : 'All Exams'}} </h3>
 </div>
 
 <div class="modal-body study">
     <ul class="list-group">
-        <li class="list-group-item">
+        <li class="list-group-item" ng-if="exam !== undefined">
             <div class="row">
                 <div class="col-sm-3"><i class="fa fa-fw fa-user"></i> Subject </div>
                 <div class="col-sm-9">
@@ -12,7 +12,15 @@
                 </div>
             </div>
         </li>
-        <li class="list-group-item">
+        <li class="list-group-item" ng-if="research !== undefined">
+            <div class="row">
+                <div class="col-sm-3"><i class="fa fa-fw fa-user"></i> IIBIS </div>
+                <div class="col-sm-9">
+                    {{research.IIBISID}}
+                </div>
+            </div>
+        </li>
+        <li class="list-group-item" ng-if="exam !== undefined">
             <div class="row">
                 <div class="col-sm-3"><i class="fa fa-fw fa-calendar"></i> Study Timestamp </div>
                 <div class="col-sm-9">
@@ -28,14 +36,27 @@
                                on-select="select_template($item, $model)"
                                ng-model="$mctrl.overridetemplate">
                         <ui-select-match placeholder="Specify a template or leave it blank to auto select the latest template" allow-clear-dis="true">
-                            <div class_dis="studynote">
+                            <div class_dis="studynote" ng-if="$select.selected.converted_to_template == true" class="fa fa-clone">
                                 {{$select.selected.StudyTimestamp | date:'medium':'-0400'}} ({{$select.selected.series.length}} series)
                             </div>
                         </ui-select-match>
                         <ui-select-choices repeat="template in templates">
                             {{template.StudyTimestamp | date:'medium':'-0400'}} ({{template.series.length}} series)
+                            <span ng-if="template.converted_to_template"> <i class="fa fa-clone"></i></span>
+                            <span ng-if="!template.converted_to_template"> <i class="fa fa-fw fa-file-o"></i></span>
                         </ui-select-choices>
                     </ui-select>
+                </div>
+            </div>
+        </li>
+        <li class="list-group-item">
+            <div class="row">
+                <div class="col-sm-3"><i class="fa fa-fw fa-times-circle text-danger"></i> Only re-run QC failures </div>
+                <div class="col-sm-9">
+                    <label class="switch">
+                        <input type="checkbox" ng-click="failed_only = !failed_only" ng-model="failed_only">
+                        <span class="slider round"></span>
+                    </label>
                 </div>
             </div>
         </li>

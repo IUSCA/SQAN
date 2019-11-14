@@ -19,6 +19,10 @@ function($scope, appconf, toaster, $http, $window, $location, serverconf) {
 
     }
 
+    $scope.templates = [];
+    $scope.noTemplates = [];
+    $scope.showNoTemplates = false;
+
     $scope.getTemplateSummary = function() {
         $http.get(appconf.api+'/templatesummary/istemplate').then(function(res) {
             $scope.templates = res.data;
@@ -29,7 +33,19 @@ function($scope, appconf, toaster, $http, $window, $location, serverconf) {
             console.dir(err);
         });
     };
+
+    $scope.getNoTemplates = function() {
+        $http.get(appconf.api+'/templatesummary/notemplate').then(function(res) {
+            $scope.noTemplates = res.data;
+            console.log(res.data.length + ' researches have no templates!');
+        }, function(err) {
+            console.log("Error contacting API");
+            console.dir(err);
+        });
+    }
+
     $scope.getTemplateSummary();
+    $scope.getNoTemplates();
 
     $scope.rowNumber = -1;
     $scope.indexShowSeries=-1;
@@ -53,9 +69,9 @@ function($scope, appconf, toaster, $http, $window, $location, serverconf) {
                     //if ($scope.templatebytimestamp.length == research.exam_id.length) {
                     //    $scope.rowNumber=index;
                     //}
+                    console.log($scope.templatebytimestamp)
                 })
             })
-
         } else {
             $scope.rowNumber=-1;
             $scope.fadedBackground = false;

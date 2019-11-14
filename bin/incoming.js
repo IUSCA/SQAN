@@ -436,7 +436,6 @@ function incoming(tags, fromFile, cb) {
                                     headers: h
                                 }, function (err, primary_template) {
                                     if (err) return next(err);
-                                    // console.log("deprecated_by " + deprecated_by)
                                     // finally, insert primary_template._id into the template document and add a "created" event
                                     var event = {
                                         service_id: 'incoming', //if event was performeed by a system, this is set
@@ -565,55 +564,6 @@ function incoming(tags, fromFile, cb) {
     });
 }
 
-// var series_deprecatedBy = function(series) {
-//     db.Series.update({
-//         exam_id: series.exam_id,
-//         series_desc: series.series_desc,
-//         SeriesNumber: { $lt: series.SeriesNumber },
-//     }, {
-//         deprecated_by: series._id,
-//     },{multi: true}, function(err) {
-//         if (err) logger.warn("error deprecating older series");
-//         db.Series.findOne({
-//             exam_id: series.exam_id,
-//             series_desc: series.series_desc,
-//             SeriesNumber: { $gt: series.SeriesNumber },
-//         }, function(err, _series){
-//             if(err) {
-//                 logger.warn("error deprecating current series");
-//                 return (null);
-//             }
-//             if(!_series) return (undefined); //series.deprecated_by = null;
-//             if(_series) return (_series._id); //series.deprecated_by = _series._id;
-//         });
-//     });
-
-// }
-
-// var template_deprecatedBy = function(template) {
-//     db.Template.update({
-//         exam_id: template.exam_id,
-//         series_desc: template.series_desc,
-//         SeriesNumber: { $lt: template.SeriesNumber },
-//     }, {
-//         deprecated_by: template._id,
-//     },{multi: true}, function(err,numdeprecated) {
-//         if (err) logger.warn("error deprecating older template");
-//         console.log(numdeprecated);
-//         db.Template.findOne({
-//             exam_id: template.exam_id,
-//             series_desc: template.series_desc,
-//             SeriesNumber: { $gt: template.SeriesNumber },
-//         }, function(err, _template){
-//             if(err) {
-//                 logger.warn("error deprecating current series");
-//                 return (null);
-//             }
-//             if(!_template) return (undefined); //series.deprecated_by = null;
-//             if(_template) return (_template._id); //series.deprecated_by = _series._id;
-//         });
-//     });
-// }
 
 function checkDeprecated(doc, isTemplate, cb) {
     var mod = db.Series;
