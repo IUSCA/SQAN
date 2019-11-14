@@ -13,12 +13,12 @@ function maskFields(h) {
     if(h.qc_PatientAge && h.qc_PatientAge > 89) {
         h.qc_PatientAgeMasked = true;
         //sundar wants to do set it to 89 years - instead of removing them
-        h.qc_PatientAge = 89; 
-        h.PatientAge = "089Y"; 
+        h.qc_PatientAge = 89;
+        h.PatientAge = "089Y";
     }
     */
-    
-    //soichi's arbitrary decision to remove some large fields containing relationship to other images 
+
+    //soichi's arbitrary decision to remove some large fields containing relationship to other images
     //TODO - maybe store this relationship in the DB?
     if(h.SourceImageSequence) h.SourceImageSequence = "(masked)";
     if(h.ReferencedImageSequence) h.ReferencedImageSequence = "(masked)";
@@ -27,14 +27,14 @@ function maskFields(h) {
 //convert string fields to int / float
 function convertTypes(h) {
 
-    //convert values that contain backslash into array of values 
+    //convert values that contain backslash into array of values
     for(var key in h) {
         var v = h[key];
         if(v != null && v.indexOf && v.indexOf("\\") !== -1) {
             h[key] = v.split('\\');
         }
     }
-    
+
     //convert field types
     var int_fields = [
         "AcquisitionMatrix",
@@ -123,7 +123,7 @@ function convertTypes(h) {
         "p_Bmatrix",
         "p_BandwidthPerPixelPhaseEncode"
     ].forEach(function(f) {
-        if(h[f] === "") { 
+        if(h[f] === "") {
             //console.log("unsetting "+f+" of value "+h[f]);
             delete h[f];
         }
@@ -151,7 +151,7 @@ function convertTypes(h) {
 //         h.qc_WindowWidthMax = h.WindowWidth[1];
 //         //delete h.WindowWidth;
 //     }
-    
+
 //     //for PixelSpacing / ImagePositionPatient, ImageOrientationPatient fields
 //     //http://nipy.org/nibabel/dicom/dicom_orientation.html
 
@@ -226,7 +226,7 @@ function parseFields(h) {
         case "M": h.qc_PatientAge = num/12; break;
         case "Y": h.qc_PatientAge = num; break;
         default:
-            console.error("unknown PatientAge unit:"+h.PatientAge); 
+            console.error("unknown PatientAge unit:"+h.PatientAge);
         }
     }
 }
@@ -240,9 +240,9 @@ function toTimestamp(date, time, offset) {
         offset = "-0400";
     }
 
-    var year = date.substring(0,4);   
-    var mon = date.substring(4,6);   
-    var day = date.substring(6,8);   
+    var year = date.substring(0,4);
+    var mon = date.substring(4,6);
+    var day = date.substring(6,8);
     var h = time.substring(0,2);
     var m = time.substring(2,4);
     var s = time.substring(4,10);
@@ -325,7 +325,7 @@ var isEqual = function (field1, field2) {
             if (item1 !== item2) return false;
 		}
     };
-    
+
 	if (type === '[object Array]') {
 		for (var i = 0; i < len1; i++) {
 			if (compare(field1[i], field2[i]) === false) return false;
@@ -353,7 +353,7 @@ function convertToArray(v) {
 exports.parseMeta = function(h) {
     //default
     var meta = {
-        iibisid: null, 
+        iibisid: null,
         subject: null,
         template: false,
 	    EchoNumbers: null,
@@ -364,7 +364,7 @@ exports.parseMeta = function(h) {
         meta.iibisid = ts[0];
         meta.subject = ts[1]; //subject will be undefined if there is only 1 token.
     }
-    
+
     //this is deprecated by meta.subject
     if(h.OtherPatientIDs &&  h.OtherPatientIDs == "TEMPLATE") {
         meta.template = true;
@@ -375,7 +375,7 @@ exports.parseMeta = function(h) {
     }
 
     //TODO.. it looks like Radiologist won't be able to consistently use ^ as version number separator.
-    //we've discussed an alternative to strip all trailing number instead.. but I need to discuss a bit 
+    //we've discussed an alternative to strip all trailing number instead.. but I need to discuss a bit
     //more on this again
     if(h.SeriesDescription) {
         var ts = h.SeriesDescription.split("^");
@@ -419,7 +419,7 @@ exports.composeESIndex = function(h) {
 //function to run during clean up
 exports.clean = function(h) {
     convertTypes(h); //"2.34" => 2.34
-    //splitFields(h); 
+    //splitFields(h);
     mergeFields(h); //date+time => timestamp
     parseFields(h); //PatientAge -> qc_PatientAge
     maskFields(h);
@@ -428,37 +428,37 @@ exports.clean = function(h) {
 
 exports.compare_with_primary = function(primaryImg,h,cb) {
 
-    for (var k in primaryImg) {     
-        let v = primaryImg[k];  
+    for (var k in primaryImg) {
+        let v = primaryImg[k];
         if (h.hasOwnProperty(k) && h[k] !== undefined) {
-            if (['qc_istemplate','InstanceNumber'].indexOf(k) < 0) { 
-                if (!Array.isArray(v) && !isObject(v) && h[k] === v) {  
+            if (['qc_istemplate','InstanceNumber'].indexOf(k) < 0) {
+                if (!Array.isArray(v) && !isObject(v) && h[k] === v) {
                     //console.log('deleting field: '+k +' -- ' + h[k]);
                     delete h[k]
-                } 
+                }
                 else if (Array.isArray(v) || isObject(v)) {
                     if (isEqual(v,h[k]) == true) delete h[k];
                 }
-            }  
+            }
         } else {//if (!h[k]) {
             h[k] = "not_set"; // label fields that are not in the primary
         }
-   
+
     }
     cb();
 }
 
 exports.reconstruct_header = function(_header,_primary_image,cb) {
-    
+
     if (_header.SOPInstanceUID !== _primary_image.SOPInstanceUID) { //image is not primary image
-        for (var k in _primary_image.headers) {     
-            let v = _primary_image.headers[k]; 
+        for (var k in _primary_image.headers) {
+            let v = _primary_image.headers[k];
             if (_header.headers[k] == undefined) {
                 _header.headers[k] = v;
-            } 
+            }
             if (_header.headers[k] == "not_set") {
-               delete _header.headers[k];                                
-            }            
+               delete _header.headers[k];
+            }
         }
         cb()
     } else {
@@ -471,17 +471,17 @@ exports.reconstruct_header = function(_header,_primary_image,cb) {
 
 exports.check_tarball_mtime = function(primimage,cb) {
     // check for the last modified date on the coresponding tar file
-    var path2tar = config.cleaner.raw_headers+"/"+primimage.qc_iibisid+"/"+primimage.qc_subject+"/"+primimage.StudyInstanceUID+"/"+primimage.qc_series_desc+".tar"; 
-    
+    var path2tar = config.cleaner.raw_headers+"/"+primimage.qc_iibisid+"/"+primimage.qc_subject+"/"+primimage.StudyInstanceUID+"/"+primimage.qc_series_desc+".tar";
+
     if(file_exists(path2tar)){
         fs.stat(path2tar,function(err,stats){
-            if (err) cb(err); 
+            if (err) cb(err);
             var mtime = (parseInt((new Date).getTime()) - parseInt(new Date(stats.mtime).getTime()))/1000;
             cb(null,mtime);
         });
     } else{
         cb(null,-1);
-    }    
+    }
 }
 
 
@@ -496,3 +496,5 @@ var file_exists = function(path2file){
         return false;
       }
 }
+
+exports.toTimestamp = toTimestamp;

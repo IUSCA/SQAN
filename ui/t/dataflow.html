@@ -1,29 +1,51 @@
 <div class="container">
-    <h2>Dataflow</h2>
+    <h2><i class="fa fa-fw fa-paper-plane" /> Dataflow</h2>
 
     <table class="table">
         <thead>
-            <tr>
-                <th>Manual?</th>
-                <th>Requested</th>
-                <th>Sent</th>
-                <th>Arrival</th>
-                <th>Ingestion</th>
-                <th>QC1</th>
-                <th>QC1 State</th>
-                <th>Images Sent/Received</th>
-            </tr>
+        <tr>
+            <th></th>
+            <th>StudyTimestamp <small>EST</small></th>
+            <th>IIBIS</th>
+            <th>Modality</th>
+            <th>Subject</th>
+            <th>Images Received/Expected</th>
+        </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="ds in datasends">
-            <td>{{ds.isManual}}</td>
-            <td>{{ds.requestedAt}}</td>
-            <td>{{ds.sentAt}}</td>
-            <td>{{ds.arrivalAt}}</td>
-            <td>{{ds.ingestedAt}}</td>
-            <td>{{ds.qc1At}}</td>
-            <td>{{ds.qc1State}}</td>
-            <td>{{ds.imagesSent}}/{{ds.imagesReceived}}</td>
+        <tr ng-repeat-start="ds in datasends | orderBy: '-date'" ng-init="ds.showDetails = false;"
+                ng-class="{
+                'warning': ds.received_count > 0 && ds.received_count < ds.expected_count,
+                'danger': !ds.received_count
+                }">
+            <td ng-click="ds.showDetails = !ds.showDetails">
+                <i class="fa fa-fw fa-plus-circle text-success" ng-show="!ds.showDetails"></i>
+                <i class="fa fa-fw fa-minus-circle text-warning" ng-show="ds.showDetails"></i>
+            </td>
+            <td>{{ds.date | date: 'medium' : '-0400'}}</td>
+            <td>{{ds.iibis}}</td>
+            <td>{{ds.modality}}</td>
+            <td>{{ds.subject}}</td>
+            <td>{{ds.received_count}} / {{ds.expected_count}}</td>
+        </tr>
+        <tr class="animate-show-hide" ng-repeat-end ng-show="ds.showDetails">
+            <td><b>Series</b></td>
+            <td colspan="100">
+                <div ng-repeat="s in ds.series" class="subject-label">
+                    <small style="position: absolute;" >{{s.series_name}} - {{ds.received[s.series_number] ? ds.received[s.series_number] : 0}} / {{s.image_count}} </small>
+                    <div class="progress dataflow-state pull-right">
+                        <div class="progress-bar"
+                             style="height: 20%; width: {{(ds.received ? ds.received[s.series_number] : 0) / s.image_count * 100}}%"
+                             ng-if="ds.received[s.series_number] !== undefined"
+                             ng-class="{
+                                'progress-bar-success': ds.received[s.series_number] === s.image_count,
+                                'progress-bar-warning': ds.received[s.series_number] > (s.image_count / 2.0) && ds.received[s.series_number] < s.image_count,
+                                'progress-bar-danger': ds.received[s.series_number] <= (s.image_count / 2.0) && ds.received[s.series_number] < s.image_count,
+                                }">
+                        </div>
+                    </div>
+                </div>
+            </td>
         </tr>
         </tbody>
     </table>

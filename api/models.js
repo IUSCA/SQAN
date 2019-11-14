@@ -207,17 +207,22 @@ var dataflowSchema = mongoose.Schema({
     //
     // keys
     //
-    isManual: {type: Boolean, index: true},
-    requestedAt: {type: Date, default: Date.now, index: true},
-    sentAt: {type: Date},
-    imagesSent: {type: Number},
-    arrivalAt: {type: Date},
-    imagesReceived: {type: Number},
-    ingestionAt: {type: Date},
-    qc1At: {type: Date},
-    qc1State: Boolean
+    date: Date,
+    iibis: String,
+    modality: String,
+    station_name: String,
+    radio_tracer: String,
+    subject: String,
+    series: [
+        {
+            series_number: Number,
+            series_name: String,
+            image_count: Number
+        }
+    ]
+
 });
-dataflowSchema.index({requestedAt: 1, isManual: 1});
+dataflowSchema.index({iibis: 1, date: 1});
 exports.Dataflow = mongoose.model('Dataflow', dataflowSchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
