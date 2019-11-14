@@ -151,15 +151,15 @@
                     </thead>
                     <tbody style="border-bottom: 1px solid #ddd">
                         <tr>
-                            <td>Subjects</td>
-                            <td>StudyTimestamp</td>
+                            <td ng-click="orderBy = 'subjects'">Subjects <span ng-if="orderBy === 'subjects'">x</span></td>
+                            <td ng-click="orderBy = 'studyTimestamp'">StudyTimestamp <span ng-if="orderBy === 'studyTimestamp'">x</span></td>
                             <td ng-repeat="(mod, res) in summary" ng-if="(res.series_desc | filter:seriesfilter).length" colspan="{{(res.series_desc | filter:seriesfilter).length}}" style="background-color: #006687; color: white">{{mod}}</td>
                         </tr>
                         <tr ng-repeat="sub in subjects | filter:subfilter">
-                            <td><div class="pull-right" style="white-space: nowrap;"><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></td>
+                            <td><div class="pull-right" style="white-space: nowrap;"><span><i class="fa fa-fw fa-user"></i> {{sub.subject}}</span></div></td>
                             <td>
                                 <table class='table borderless'>
-                                    <tr style="border-bottom: none" class='borderless' ng-repeat="(ts, objs) in subject_timestamps[sub]">
+                                    <tr style="border-bottom: none" class='borderless' ng-repeat="(ts, objs) in subject_timestamps[sub.subject]">
                                         <td>
                                             <span class="date-box" ng-class="{
                                                 'double-box': objs.max == 2,
@@ -173,7 +173,7 @@
                             </td>
                             <td ng-repeat="(mod, res) in summary" colspan="{{(res.series_desc | filter:seriesfilter).length}}" ng-if="(res.series_desc | filter:seriesfilter).length" style="white-space:nowrap;">
                                 <table class='table borderless'>
-                                    <tr ng-repeat-start="(ts, ts_res) in subject_timestamps[sub]" ng-if="0"></tr>
+                                    <tr ng-repeat-start="(ts, ts_res) in subject_timestamps[sub.subject]" ng-if="0"></tr>
                                     <tr ng-if="!ts_res[mod].length"><td><span class="empty-box" ng-class="{
                                                 'double-box': ts_res.max == 2,
                                                 'triple-box': ts_res.max == 3
@@ -189,7 +189,7 @@
                                                             'warning' : qcs == 'accept',
                                                             'reject' : qcs == 'reject',
                                                             'na': qcs == 'na'}"
-                                                    uib-tooltip-html="makeTooltip(sub, exam[sd])" tooltip-append-to-body="true">
+                                                    uib-tooltip-html="makeTooltip(sub.subject, exam[sd])" tooltip-append-to-body="true">
                                                 </span>
                                         </td>
                                     </tr>
@@ -210,7 +210,7 @@
                                     <span class="slider round"></span>
                                 </label>
                             </th>
-                            <th class="rotate-45 text-muted" ng-repeat="sub in subjects | filter:subfilter"><div style="white-space: nowrap; height:180px; left:100px"><span><i class="fa fa-fw fa-user"></i> {{sub}}</span></div></th>
+                            <th class="rotate-45 text-muted" ng-repeat="sub in subjects | filter:subfilter"><div style="white-space: nowrap; height:180px; left:100px"><span><i class="fa fa-fw fa-user"></i> {{sub.subject}}</span></div></th>
                         </tr>
                     </thead>
                     <tbody style="border-bottom: 1px solid #ddd" ng-repeat="(mod, res) in summary">
@@ -225,7 +225,7 @@
                             <td><span class="pull-right">{{sd}}&nbsp;&nbsp;</span></td>
                             <td style="white-space:nowrap" ng-repeat="sub in subjects | filter:subfilter">
                                 <span style="cursor: pointer" class="color-box"
-                                    ng-repeat="exam in res.exams[sub]"
+                                    ng-repeat="exam in res.exams[sub.subject]"
                                     ng-click="openstudy(exam[sd]._id)"
                                     ng-init="qcs = exam[sd].qc1_state !== undefined ? exam[sd].qc1_state : 'na' "
                                     ng-class="{'pass': qcs == 'autopass',
@@ -233,7 +233,7 @@
                                             'warning' : qcs == 'accept',
                                             'reject' : qcs == 'reject',
                                             'na': qcs == 'na'}"
-                                    uib-tooltip-html="makeTooltip(sub, exam[sd])" tooltip-append-to-body="true"></span>
+                                    uib-tooltip-html="makeTooltip(sub.subject, exam[sd])" tooltip-append-to-body="true"></span>
                             </td>
                         </tr>
                     </tbody>

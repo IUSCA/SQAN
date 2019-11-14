@@ -9,10 +9,8 @@ function($scope, appconf, $route, toaster, $http, jwtHelper, serverconf, $window
 
 
     function update_jwt(jwt) {
-        console.log(jwt);
         if(!jwt) return;
         $scope.user = jwtHelper.decodeToken(jwt);
-        console.log($scope.user);
         $scope.user.isadmin = (~$scope.user.roles.indexOf('admin'));
         $scope.isguest = (~$scope.user.roles.indexOf('guest'));
     }

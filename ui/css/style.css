@@ -3,6 +3,24 @@ html { margin-left: calc(100vw - 100%); }
 .sca-sidebar-page {
   padding-left: 80px;
 }
+
+.sca-footer {
+  position: fixed;
+  background-color: #eee;
+  right: 0px;
+  bottom: 0px;
+  width: 100%;
+  padding-left: 80px;
+  padding-right: 10px;
+  height: 33px;
+  border-top: 1px solid #ddd;
+}
+
+.footer-text {
+  margin-bottom: 5px;
+  margin-top: 5px;
+}
+
 .sca-sidebar {
   position: fixed;
   top: 0px;
