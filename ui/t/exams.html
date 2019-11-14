@@ -62,7 +62,7 @@
     </div>
     <div class="subbar-list subbar-listnew" style="margin-top: 59px; bottom: 34px">
         <div ng-repeat="(iibisid, research) in org" ng-show="show_iibis(iibisid, research)">
-            <div class="subbar-list-header"><small class="text-muted">{{$index + 1}}. </small> {{iibisid}}</div>
+            <div class="subbar-list-header"><small class="text-muted">{{$index + 1}}. </small> <a href="/summary/{{iibisid}}" target="_blank" tooltip-append-to-body="true" tooltip-placement="right" uib-tooltip="Click to view in research summary">{{iibisid}}</a></div>
             <div class="subbar-list-item"
                  ng-repeat="modality in research"
                  ng-show="show_modality(iibisid, modality.research.Modality, modality.research.radio_tracer, modality.exams)"

@@ -76,7 +76,7 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         controller: 'DataflowController',
         requiresLogin: true,
     })
-    .when('/summary', {
+    .when('/summary/:iibisid?', {
         templateUrl: 't/summary.html',
         controller: 'SummaryController',
         requiresLogin: true,
