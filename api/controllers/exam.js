@@ -286,7 +286,7 @@ router.post('/maketemplate/:exam_id', jwt({secret: config.express.jwt.pub}), fun
             db.Exam.create({
                     research_id: exam.research_id,
                     subject: null,
-                    StudyInstanceUID: exam.StudyInstanceUID,                    
+                    StudyInstanceUID: exam.StudyInstanceUID,
                     StudyTimestamp: exam.StudyTimestamp,
                     istemplate:true,
                     isdeleted: false,
@@ -301,22 +301,23 @@ router.post('/maketemplate/:exam_id', jwt({secret: config.express.jwt.pub}), fun
                     var commentarr = exam.comments ? exam.comments : [];
                     commentarr.push(comment)
 
-                    db.Exam.update({_id: exam._id}, 
+                    db.Exam.update({_id: exam._id},
                         {$set:{
-                            converted_to_template:true, 
+                            converted_to_template:true,
                             comments: commentarr
                         }}, function(err,_exam){
 
                         if (err) console.log(err);
                         console.log(_exam)
-                        
+
                         // find all the series for this exam
                         db.Series.find({exam_id:exam._id},function(err,series){
                             if(err) console.log(err);
                             if(!series) return res.status(404).json({message: "no series found for such exam:"+req.params.exam_id});
 
                             // for each series, ss
-                            series.forEach(function(ss){
+                            async.each(series, function(ss, cb_ss) {
+                            // series.forEach(function(ss){
 
                                 var ee = {
                                     service_id: "SCA",
@@ -324,8 +325,8 @@ router.post('/maketemplate/:exam_id', jwt({secret: config.express.jwt.pub}), fun
                                     title: "Received",
                                     detail: "Series added as Template: Exam " + exam.id+ "=> "+ _texam._id,
                                     date: new Date(),
-                                }   
-                                
+                                }
+
                                 console.log("Series added as Template: Exam " + exam.id+ "=> "+ _texam._id)
 
                                 // create the corresponding template-series, tt
@@ -372,9 +373,10 @@ router.post('/maketemplate/:exam_id', jwt({secret: config.express.jwt.pub}), fun
                                                         if (err) console.log(err);
                                                         console.log("series has "+h.length+ " non-prim images")
                                                         // insert each series header into templateheaders
-                                                        h.forEach(function(hh){
+                                                        async.each(h, function(hh, cb_hh){
+                                                        // h.forEach(function(hh){
 
-                                                            // remove subject name    
+                                                            // remove subject name
                                                             hh.headers.qc_subject = undefined;
 
                                                             db.TemplateHeader.create({
@@ -385,28 +387,35 @@ router.post('/maketemplate/:exam_id', jwt({secret: config.express.jwt.pub}), fun
                                                                 primary_image: primary_template._id,
                                                                 headers: hh.headers,
                                                             }, function (err, th) {
-                                                                if (err) return next(err);
+                                                                if (err) cb_hh(err);
+                                                                cb_hh()
 
-                                                                return res.json({message: series.length + " series converted to templates ", exam: _exam});
-                                                            
+                                                                // return res.json({message: series.length + " series converted to templates ", exam: _exam});
+
                                                             });
 
+                                                        }, function(err) {
+                                                            if(err) cb_ss(err);
+                                                            cb_ss()
                                                         })
 
-                                                    })                                            
+                                                    })
 
                                                 });
                                             })
 
                                         })
-                                        
-                                    })                    
+
+                                    })
                                 });
 
+                            }, function(err){
+                                if(err) return next(err);
+                                return res.json({message: series.length + " series converted to templates ", exam: _exam});
                             })
-            
+
                         })
-                    });                    
+                    });
                 });
         });
     });
