@@ -36,12 +36,14 @@
                                on-select="select_template($item, $model)"
                                ng-model="$mctrl.overridetemplate">
                         <ui-select-match placeholder="Specify a template or leave it blank to auto select the latest template" allow-clear-dis="true">
-                            <div class_dis="studynote">
+                            <div class_dis="studynote" ng-if="$select.selected.converted_to_template == true" class="fa fa-clone">
                                 {{$select.selected.StudyTimestamp | date:'medium':'-0400'}} ({{$select.selected.series.length}} series)
                             </div>
                         </ui-select-match>
                         <ui-select-choices repeat="template in templates">
                             {{template.StudyTimestamp | date:'medium':'-0400'}} ({{template.series.length}} series)
+                            <span ng-if="template.converted_to_template"> <i class="fa fa-clone"></i></span>
+                            <span ng-if="!template.converted_to_template"> <i class="fa fa-fw fa-file-o"></i></span>
                         </ui-select-choices>
                     </ui-select>
                 </div>

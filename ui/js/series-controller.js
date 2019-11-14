@@ -15,6 +15,13 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
         key: ''
     };
 
+    $scope.comment_form = {
+        subject:' ',
+        name: $scope.user !== undefined ? $scope.user.profile.fullname : '',
+        email: $scope.user !== undefined ? $scope.user.profile.email : '',
+        message: ''
+    };
+
     const mergeByInstanceNumber = (a1, a2) =>
         a1.map(itm => ({
             image: a2.find((item) => (item.headers.InstanceNumber === itm.InstanceNumber) && item),
@@ -25,10 +32,13 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
     function load_series() {
         if(!$routeParams.seriesid) return; //probably the route changed since last time
         $http.get(appconf.api+'/series/id/'+$routeParams.seriesid)
+
         .then(function(res) {
             $scope.data = res.data;
             $scope.data.template_images = [];
             console.log($scope.data)
+
+
             if($scope.data.images) {
                 $scope.data.images.forEach(computeColor);
             }
@@ -77,6 +87,34 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
                     $scope.data.series.events[index].username = $scope.users[e.user_id].fullname;
                 } else $scope.data.series.events[index].username = "SQAN";
             })
+
+            $scope.comment_form.subject = 'Query on SUBJECT: '+$scope.data.series.exam_id.subject
+
+            $scope.comment_form.message = 'IIBISID: '+ $scope.data.series.exam_id.research_id.IIBISID +'\n' + 
+            'SUBJECT: '+$scope.data.series.exam_id.subject+'\n' +
+            'STUDY TIMESTAMP: '+$scope.data.series.exam_id.StudyTimestamp+'\n' +
+            'SERIES DESCRIPTION: '+$scope.data.series.series_desc
+
+            if ($scope.data.series.qc1_state != "no template") {
+                $scope.comment_form.message = $scope.comment_form.message + '\n' + 
+                'TEMPLATE USED: '+ $scope.data.template.exam_id.StudyTimestamp        
+            }
+             
+            $scope.comment_form.message = $scope.comment_form.message + '\n' + 
+            'QC-STATUS: '+ $scope.data.series.qc1_state+'\n'   
+
+            $scope.comment_form.message = $scope.comment_form.message+ `
+            Dear PI,
+            
+            I have the following query about this dataset:
+            
+            
+            
+            
+            Kind regards,
+            ${$scope.comment_form.name}
+            `
+
             //reload if qc is not yet loaded
             if(res.data.series.qc1_state != "no template" && !res.data.series.qc) {
                 $timeout(load_series, 1000);
@@ -197,13 +235,14 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
         $location.path("/template/"+id);
     }
 
-    $scope.addcomment = function() {
-        $http.post(appconf.api+'/series/comment/'+$routeParams.seriesid, {comment: $scope.newcomment})
-        .then(function(res) {
-            $scope.data.series.comments.push(res.data);
-            $scope.newcomment = "";
-        }, $scope.toast_error);
-    }
+    // $scope.addcomment = function() {
+    //     $http.post(appconf.api+'/series/comment/'+$routeParams.seriesid, {comment: $scope.newcomment})
+    //     .then(function(res) {
+    //         $scope.data.series.comments.push(res.data);
+    //         $scope.newcomment = "";
+    //     }, $scope.toast_error);
+    // }
+
     $scope.changestate = function(level, state, $event) {
         var comment = null;
         //TODO - user can disable prompt via browser.. also, canceling doesn't prevent user from switching the ui-button state
@@ -271,4 +310,31 @@ function($scope, appconf, toaster, $http,  $location, serverconf, $routeParams, 
             toaster.success(res.data.message);
         }, $scope.toast_error);
     }
+
+
+    $scope.contact_PI = function() {
+        console.log($scope.comment_form);
+        try {
+
+            $http.post(appconf.api+'/contactpi', $scope.comment_form)
+                .then(function(res) {
+                    if(res && res.data && res.data.status == "ok") {
+                        toaster.success("Your message has been sent! Thank you!");
+                        $scope.comment_form.comment = "";
+                    }
+                }, function(err) {
+                    console.log("error");
+                    console.dir(err);
+                    //if(err.statusText) toaster.error(err.statusText);
+                    if(err.data) toaster.error(err.data);
+                    else toaster.error("Sorry, something went wrong while submitting your comment. Please email sca-group@iu.edu. code:"+err.status);
+                });
+        } catch(e) {
+            console.dir(e);
+            toaster.error("Something went wrong while trying to send your comment. Please email sca-group@iu.edu");
+        }
+    }
+
+
+
 });

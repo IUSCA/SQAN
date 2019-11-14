@@ -6,6 +6,8 @@ const router = express.Router();
 const winston = require('winston');
 const jwt = require('express-jwt');
 const async = require('async');
+var nodemailer = require('nodemailer');
+
 
 //mine
 const config = require('../../config');
@@ -553,6 +555,8 @@ router.post('/reqcerroredseries/:exam_id', jwt({secret: config.express.jwt.pub})
         });
     });
 });
+
+
 
 module.exports = router;
 

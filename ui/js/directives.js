@@ -217,6 +217,47 @@ app.component('exams', {
             });
         }
 
+        this.openaddtemplate = function () {
+            $uibModal.open({
+                templateUrl: 't/components/addtemplate.html',
+                size: 'lg',
+                controller: function ($scope, $uibModalInstance) {
+                    $scope.exam = $ctrl.exam;
+                    console.log($scope.exam);
+
+                    $scope.comment = "";
+
+                    $scope.addtemplate = function (comment) {
+                        console.log(comment);
+                        $scope.comment = comment;
+                        $uibModalInstance.close(comment);
+                    };
+
+                    $scope.cancel = function () {
+                        $uibModalInstance.dismiss('cancel add exam');
+                    };
+                }
+            }).result.then(function(result){
+
+                console.log($ctrl.exam._id);
+
+                console.log("adding exam "+ $ctrl.exam._id + " as a template")
+                $http.post(appconf.api+'/exam/maketemplate/'+$ctrl.exam._id, {comment: result})
+                .then(function(res) {
+                    toaster.success(res.data.message);
+                    $ctrl.exam.converted_to_template = true;
+                    console.log(res.data.exam)
+                   // $scope.$emit("ExamDeletion", $ctrl.exam);
+                }, function(res) {
+                    if(res.data && res.data.message) toaster.error(res.data.message);
+                    else toaster.error(res.statusText);
+                });
+
+            }, function(result){
+                console.log('cancel or escaped');
+                console.log(result);
+            });
+        }
 
         this.opendeleted = function (comment) {
             $uibModal.open({
@@ -241,6 +282,63 @@ app.component('exams', {
                 console.log('nothing to do');
 
             }, function(result){
+                console.log(result);
+            });
+        }
+
+        this.opencontactpi = function () {
+            $uibModal.open({
+                templateUrl: 't/components/contactpi.html',
+                size: 'lg',
+                controller: function ($scope, $uibModalInstance) {
+                    $scope.exam = $ctrl.exam;
+                    console.log($scope.exam);
+                    console.log($scope.exam.subject);
+
+                    $scope.users = $ctrl.users;
+                    console.log($scope.users) 
+
+                    $scope.comment_form = {
+                        subject:' ',
+                        name: 'Your Name',
+                        email: 'Your Email',
+                        message: ''
+                    };
+                    
+                    $scope.comment_form.subject = 'Query on SUBJECT: '+$scope.exam.subject
+
+                    $scope.contact_PI = function (comment) {
+
+                        $uibModalInstance.close(comment);
+                    };
+
+                    $scope.cancel = function () {
+                        $uibModalInstance.dismiss('cancel2');
+                    };
+                }
+            }).result.then(function(result){
+
+                try {
+                    $http.post(appconf.api+'/series/contactpi', $scope.comment_form)
+                        .then(function(res) {
+                            if(res && res.data && res.data.status == "ok") {
+                                toaster.success("Your message has been sent! Thank you!");
+                                $scope.comment_form.comment = "";
+                            }
+                        }, function(err) {
+                            console.log("error");
+                            console.dir(err);
+                            //if(err.statusText) toaster.error(err.statusText);
+                            if(err.data) toaster.error(err.data);
+                            else toaster.error("Sorry, something went wrong while submitting your comment. Please email sca-group@iu.edu. code:"+err.status);
+                        });
+                } catch(e) {
+                    console.dir(e);
+                    toaster.error("Something went wrong while trying to send your comment. Please email sca-group@iu.edu");
+                }
+
+            }, function(result){
+                console.log('cancel or escaped');
                 console.log(result);
             });
         }
@@ -348,6 +446,113 @@ app.component('viewmodeToggler', {
         deprecated: '='
     }
 });
+
+
+
+// app.component('contactpi', {
+//     template: '<button class="btn btn-xs" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.launch()" uib-tooltip="Contact the research PI"><i class="fa fa-envelope fa-sm" aria-hidden="true"></i>  Contact PI</button>',
+//     bindings: {
+//         exam: "<?",
+//         series: "<?",
+//     },
+//     controller: function(appconf, $scope, $http, $uibModal, toaster) {
+//         var $ctrl = this;
+
+//         this.sendemail = function(result) {
+
+//             //let data = {};
+
+//             if($ctrl.exam !== undefined) {
+
+//                 // fill in email header for series
+//                 data = $ctrl.exam;
+//                 console.log("exams")
+
+//             } else {
+
+//                 // fill in email header for exam
+//                 data = $ctrl.series;
+//                 console.log("series")
+
+
+//             }
+//             console.log("who knows")
+
+//             //console.log(data);
+
+//             // try {
+//             //     $http.post(appconf.api+'/series/contactpi', $scope.comment_form)
+//             //         .then(function(res) {
+//             //             if(res && res.data && res.data.status == "ok") {
+//             //                 toaster.success("Your message has been sent! Thank you!");
+//             //                 $scope.comment_form.comment = "";
+//             //             }
+//             //         }, function(err) {
+//             //             console.log("error");
+//             //             console.dir(err);
+//             //             //if(err.statusText) toaster.error(err.statusText);
+//             //             if(err.data) toaster.error(err.data);
+//             //             else toaster.error("Sorry, something went wrong while submitting your comment. Please email sca-group@iu.edu. code:"+err.status);
+//             //         });
+//             // } catch(e) {
+//             //     console.dir(e);
+//             //     toaster.error("Something went wrong while trying to send your comment. Please email sca-group@iu.edu");
+//             // }
+//         }
+
+//         this.launch = function() {
+//             $uibModal.open({
+//                 templateUrl: 't/components/contactpimodal.html',
+//                 size: 'lg',
+//                 controller: function ($scope, $uibModalInstance) {
+                
+//                     // $http.get(appconf.api+'/user/self')
+//                     // .then(function(res) {
+//                     //     $scope.self = res.data.user;
+//                     //     $scope.self_groups = res.data.groups;
+//                     //     console.log(res.data);
+//                     // }, $scope.toast_error);
+
+//                     // $scope.users = res.data;
+//                     // console.log($scope.users);
+
+//                     // $scope.comment_form = {
+//                     //     subject:' ',
+//                     //     name: $scope.user !== undefined ? $scope.user.profile.fullname : '',
+//                     //     email: $scope.user !== undefined ? $scope.user.profile.email : '',
+//                     //     message: ''
+//                     // };
+                    
+//                     // $scope.comment_form.subject = 'Query on SUBJECT: '//+$scope.exam.subject
+
+//                     $scope.submit = function () {
+//                         $uibModalInstance.close({
+//                             template: $mctrl.overridetemplate,                   
+//                         });
+//                     };
+
+//                     $scope.cancel = function () {
+//                         $uibModalInstance.dismiss('cancel');
+//                     };
+
+//                 }
+//             }).result.then(function(result){
+//                 console.log(result);
+//                 $ctrl.sendemail(result);
+
+//             }, function(result){
+//                 console.log('cancel or escaped');
+//                 console.log(result);
+//             });
+//         }
+//     }
+// });
+
+
+
+
+
+
 
 
 //http://stackoverflow.com/questions/14852802/detect-unsaved-changes-and-alert-user-using-angularjs

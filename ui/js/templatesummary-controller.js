@@ -69,9 +69,9 @@ function($scope, appconf, toaster, $http, $window, $location, serverconf) {
                     //if ($scope.templatebytimestamp.length == research.exam_id.length) {
                     //    $scope.rowNumber=index;
                     //}
+                    console.log($scope.templatebytimestamp)
                 })
             })
-
         } else {
             $scope.rowNumber=-1;
             $scope.fadedBackground = false;

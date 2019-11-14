@@ -135,7 +135,8 @@ app.controller('ExamsController',
                                 StudyTimestamp: t.StudyTimestamp,
                                 series_desc: ts.series_desc,
                                 SeriesNumber: ts.SeriesNumber,
-                                bgcolor : t.bgcolor
+                                bgcolor : t.bgcolor,
+                                converted_to_template: t.converted_to_template
                             };
                         });
                     });
@@ -152,6 +153,7 @@ app.controller('ExamsController',
 
                     $scope.loading_exam = false;
                     $scope.selected = res.data;
+                    console.log($scope.selected)
 
                     handle_scroll();
 
@@ -305,7 +307,9 @@ app.controller('ExamsController',
                             StudyTimestamp: template.StudyTimestamp,
                             series_desc: series.series_desc,
                             SeriesNumber: series.SeriesNumber,
-                            bgcolor : template.bgcolor};
+                            bgcolor : template.bgcolor,
+                            converted_to_template : true};
+
                     }
                 }
             }
