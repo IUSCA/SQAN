@@ -11,7 +11,7 @@ var winston = require('winston');
 var async = require('async');
 var mkdirp = require('mkdirp');
 var split = require('split');
-
+var dicom = require('dicom');
 
 //mine
 var config = require('../config');
@@ -154,7 +154,11 @@ function incoming(tags, fromFile, cb) {
         function(next) {
             if (isHeader) return next();
             async.each(tags, function(tag, _cb) {
-                h[tag.Name] = tag.Value;
+                let val = tag.Value;
+                if(typeof val === 'object' && Array.isArray(val) && val.length === 1){
+                    val = val[0]
+                }
+                h[tag.Name] = val;
                 _cb();
             }, function(err) {
                 next(err);
@@ -393,7 +397,7 @@ function incoming(tags, fromFile, cb) {
             db.Exam.findOneAndUpdate({
                     research_id: research._id,
                     subject: (h.qc_istemplate?null:h.qc_subject),
-                    StudyInstanceUID: h.StudyInstanceUID,                    
+                    StudyInstanceUID: h.StudyInstanceUID,
                 },
                 {
                     StudyTimestamp: h.qc_StudyTimestamp,
@@ -643,14 +647,28 @@ function dir2Incoming(dir, cb){ //}, cb){
     async.eachSeries(filelist, function(file, next) {
         //console.log("file --  " +file);
         file = path.resolve(dir, file);
-        var jsoni = validateJSON(file.toString());
-        if (jsoni) {
-            incoming(jsoni, true, function(){
-                console.log(file +" --> processed!!");
-                next();
+        ext = path.extname(file);
+        if(ext === '.dcm') {
+            dicom.json.file2json(file, function(err, jsoni) {
+                if(err) return next(err);
+                assignTags(jsoni, function(err, dJson) {
+                    if(err) return next(err);
+                    incoming(dJson, true, function(){
+                        console.log(file +" --> processed!!");
+                        next();
+                    });
+                })
             });
         } else {
-            next();
+            var jsoni = validateJSON(file.toString());
+            if (jsoni) {
+                incoming(jsoni, true, function(){
+                    console.log(file +" --> processed!!");
+                    next();
+                });
+            } else {
+                next();
+            }
         }
     }, function(err) {
         if(err) return cb(err);
@@ -658,6 +676,19 @@ function dir2Incoming(dir, cb){ //}, cb){
         cb()
         //process.exit(0);
     });
+};
+
+
+function assignTags(dJson, cb) {
+    async.each(Object.keys(dJson), function(key, cb_e){
+        let tag = dicom.tags.for_tag(key);
+        if(tag === undefined) return cb_e();
+        dJson[key]['Name'] = tag.name;
+        cb_e();
+    }, function(err) {
+        if(err) return cb(err, dJson);
+        return cb(null, dJson);
+    })
 }
 
 
