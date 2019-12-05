@@ -648,8 +648,10 @@ function dir2Incoming(dir, cb){ //}, cb){
         //console.log("file --  " +file);
         file = path.resolve(dir, file);
         ext = path.extname(file);
-        if(ext === '.dcm') {
-            dicom.json.file2json(file, function(err, jsoni) {
+        if(ext === '.dcm' || ext === '.gz') {
+            let read_func = dicom.json.file2json;
+            if(ext === '.gz') read_func = dicom.json.gunzip2json;
+            read_func(file, function(err, jsoni) {
                 if(err) return next(err);
                 assignTags(jsoni, function(err, dJson) {
                     if(err) return next(err);
