@@ -652,7 +652,10 @@ function dir2Incoming(dir, cb){ //}, cb){
             let read_func = dicom.json.file2json;
             if(ext === '.gz') read_func = dicom.json.gunzip2json;
             read_func(file, function(err, jsoni) {
-                if(err) return next(err);
+                if(err) {
+                    console.log(`Can't read file ${file}`);
+                    return next();
+                }
                 assignTags(jsoni, function(err, dJson) {
                     if(err) return next(err);
                     incoming(dJson, true, function(){
