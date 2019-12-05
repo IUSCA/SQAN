@@ -6,17 +6,6 @@ const winston = require('winston');
 
 //const shostname = os.hostname().split('.')[0]; //grab first hostname
 
-exports.dicom = {
-    //profile_api: 'http://localhost:12402',
-
-    //jwt needed to access profile service
-    //use auth/bin/signjwt.js to create the token
-    //profile_jwt: fs.readFileSync(__dirname+'/profile.jwt'),
-
-    auth_api: 'http://localhost:22000',
-    auth_jwt: fs.readFileSync(__dirname+'/auth.jwt'),
-}
-
 // exports.events = {
 //     //warning.. you don't get error message if your user/pass etc. are incorrect (it just keeps retrying silently..)
 //     amqp: {url: "amqp://dicom:dicompass123@localhost:5672/sca"},
