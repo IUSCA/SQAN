@@ -41,7 +41,43 @@
              </div>
          </div>
     </div>
-    <div class="row" ng-if="mode !== 'demo'">
+
+    <div class="row" ng-if="mode === 'harvard'">
+        <div class="col-md-8 col-md-offset-2">
+            <div class="center-block">
+                <img class="img-responsive" src="images/sqan_logo_full.png"/>
+                <hr>
+
+
+                <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+                    <div class="card card-signin my-5">
+                        <div class="card-body">
+                            <h5 class="card-title text-center">Sign In</h5>
+                            <form class="form-signin">
+                                <div class="form-label-group">
+                                    <input type="text" id="inputUsername" class="form-control" placeholder="username" ng-model="form.username" required autofocus>
+                                    <label for="inputUsername">Username</label>
+                                </div>
+
+                                <div class="form-label-group">
+                                    <input type="password" id="inputPassword" class="form-control" placeholder="Password" ng-model="form.password" required>
+                                    <label for="inputPassword">Password</label>
+                                </div>
+
+                                <button class="btn btn-lg btn-primary btn-block text-uppercase" type="submit" ng-click="username_login()">Sign in</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <!--
+                <pre ng-show="jwt_dump">{{jwt_dump}}</pre>
+                <p ng-show="!jwt_dump" class="muted">You are not logged in.</p>
+                -->
+            </div>
+        </div>
+    </div>
+
+    <div class="row" ng-if="mode !== 'demo' && mode !== 'harvard'">
         <div class="col-md-8 col-md-offset-2">
             <div class="center-block">
                 <h3>Redirecting you to IU CAS login...</h3>
