@@ -43,7 +43,7 @@ function runScript(scriptPath, args, callback) {
 
 //return list of all ingestions
 router.get('/all', jwt({secret: config.express.jwt.pub}), common.has_role("admin"), function(req, res, next) {
-    db.Ingest.find({}).exec(function(err, ingestions) {
+    db.Ingest.find({}).populate('user').exec(function(err, ingestions) {
         if(err) return next(err);
         logger.info(`Fetched list of ${ingestions.length} ingestions`);
         res.json(ingestions);

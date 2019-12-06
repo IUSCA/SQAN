@@ -359,8 +359,6 @@ exports.parseMeta = function(h) {
 	    EchoNumbers: null,
     };
 
-    console.log(h.PatientName)
-
     if(h.PatientName && typeof h.PatientName === 'string') {
         var ts = h.PatientName.split("^");
         meta.iibisid = ts[0];
