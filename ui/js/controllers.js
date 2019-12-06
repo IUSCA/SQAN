@@ -53,6 +53,11 @@ function($scope, appconf, $location, toaster, $http) {
     }
 
 
+    $scope.form = {
+        username: '',
+        password: ''
+    };
+
     //guest login only available in demo mode
     $scope.guest_login = function() {
         if($scope.mode !== 'demo') return;
@@ -67,6 +72,22 @@ function($scope, appconf, $location, toaster, $http) {
                 window.location = appconf.base_url + appconf.default_redirect_url;
             }, function(err) {
                 toaster.error("Guest Login failed");
+            })
+    };
+
+    $scope.username_login = function() {
+        if($scope.mode !== 'harvard') return;
+        $http.post(appconf.api +'/userLogin', $scope.form)
+            .then(function(res) {
+                toaster.success(`Logging you in as user ${$scope.form.username}`);
+                localStorage.setItem(appconf.jwt_id, res.data.jwt);
+                $scope.$parent.isguest = true;
+                $scope.$parent.showLogin = false;
+                localStorage.setItem('uid', res.data.uid);
+                localStorage.setItem('role', res.data.role);
+                window.location = appconf.base_url + appconf.default_redirect_url;
+            }, function(err) {
+                toaster.error("User Login failed");
             })
     };
 
@@ -107,7 +128,7 @@ function($scope, appconf, $location, toaster, $http) {
     if(casticket !== undefined && casticket !== ''){
         $scope.validate(casticket);
     } else {
-        if($scope.mode !== 'demo'){
+        if($scope.mode !== 'demo' && $scope.mode !== 'harvard'){
             $scope.begin_iucas();
         }
     }
