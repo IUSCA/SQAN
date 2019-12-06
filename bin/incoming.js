@@ -24,9 +24,15 @@ var qc_func = require('../api/qc');
 db.init(function(err) {
     if(err) throw err; //will crash
 
-    // process.argv.forEach((val, index) => {console.log(`${index}: ${val}`);});
+    process.argv.forEach((val, index) => {console.log(`${index}: ${val}`);});
 
-    var fpath = process.argv.slice(2).toString();
+    var fpath = process.argv[2].toString();
+    var studyName = process.argv[3].toString();
+    var subject = process.argv[4].toString();
+
+    if(studyName && subject) {
+        logger.info(`Using override study ${studyName} and override subject ${subject}`);
+    }
 
     if (fpath && file_exists(fpath)) {
         logger.info("Running in file mode, will exit when processing is complete.");
@@ -35,7 +41,7 @@ db.init(function(err) {
             if (err) throw err;
             async.eachSeries(dirs, function(dir, next) {
             // dirs.forEach(function(dir){
-                dir2Incoming(dir, next) //,function(err){
+                dir2Incoming(dir, next, studyName, subject) //,function(err){
                 //     if (err) throw err;
                 //   console.log("directory processed -- "+dir);
                 // });
@@ -126,7 +132,7 @@ function process_instance(change, next) {
 }
 
 //here is the main business logic
-function incoming(tags, fromFile, cb) {
+function incoming(tags, fromFile, studyName, subject, cb) {
     var research = null;
     var exam = null;
     var series = null;
@@ -176,6 +182,10 @@ function incoming(tags, fromFile, cb) {
                 var meta = qc_func.instance.parseMeta(h);
                 h.qc_iibisid = meta.iibisid;
                 h.qc_subject = meta.subject;
+                if(subject && studyName) {
+                    h.qc_iibisid = studyName;
+                    h.qc_subject = subject;
+                }
                 h.qc_istemplate = meta.template;
                 h.qc_series_desc = meta.series_desc;
 
@@ -343,31 +353,40 @@ function incoming(tags, fromFile, cb) {
                     }
                 }
 
-                for( let a of config.acl.actions) {
-                    if(acl[a] === undefined) { //action not defined, create it
-                        update = true;
-                        acl[a] = {
-                            users: [],
-                            groups: config.acl.default_groups
-                        }
-                    } else {
-                        for( let gid of config.acl.default_groups) {
-                            if(acl[a].groups.indexOf(gid) < 0) { //default group not found, add it
-                                acl[a].groups.push(gid);
-                                update = true;
+                //give all groups privileges by default
+                //TODO FIX THIS
+                db.Group.find({}, function(err, groups) {
+
+                    let gids = [];
+                    groups.forEach(function(grp) {
+                        gids.push(grp._id);
+                    });
+                    for( let a of config.acl.actions) {
+                        if(acl[a] === undefined) { //action not defined, create it
+                            update = true;
+                            acl[a] = {
+                                users: [],
+                                groups: gids
+                            }
+                        } else {
+                            for( let gid of gids) {
+                                if(acl[a].groups.indexOf(gid) < 0) { //default group not found, add it
+                                    acl[a].groups.push(gid);
+                                    update = true;
+                                }
                             }
                         }
                     }
-                }
 
-                if(update) {
-                    db.Acl.findOneAndUpdate({IIBISID: h.qc_iibisid}, acl, {upsert: true}, function (err, doc) {
-                        if (err) console.log('error updating ACLs');
+                    if(update) {
+                        db.Acl.findOneAndUpdate({IIBISID: h.qc_iibisid}, acl, {upsert: true}, function (err, doc) {
+                            if (err) console.log('error updating ACLs');
+                            return next();
+                        });
+                    } else {
                         return next();
-                    });
-                } else {
-                    return next();
-                }
+                    }
+                })
             });
         },
 
@@ -644,7 +663,7 @@ function filewalker(dir, done) {
 };
 
 
-function dir2Incoming(dir, cb){ //}, cb){
+function dir2Incoming(dir, cb, studyName, subject){ //}, cb){
 
     filelist = fs.readdirSync(dir);
     async.eachSeries(filelist, function(file, next) {
@@ -661,7 +680,7 @@ function dir2Incoming(dir, cb){ //}, cb){
                 }
                 assignTags(jsoni, function(err, dJson) {
                     if(err) return next(err);
-                    incoming(dJson, true, function(){
+                    incoming(dJson, true, studyName, subject, function(){
                         console.log(file +" --> processed!!");
                         next();
                     });
@@ -670,7 +689,7 @@ function dir2Incoming(dir, cb){ //}, cb){
         } else {
             var jsoni = validateJSON(file.toString());
             if (jsoni) {
-                incoming(jsoni, true, function(){
+                incoming(jsoni, true,  studyName, subject,function(){
                     console.log(file +" --> processed!!");
                     next();
                 });
