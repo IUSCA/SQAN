@@ -318,15 +318,15 @@ function incoming(tags, fromFile, cb) {
         function(next) {
             //ignore all image/template with SeriesNumber > 200
             // AAK - large SeriesNumber's identify reconstructed images which should not be inserted in the database
-            if(h.Modality == "MR") {
-                if(h.SeriesNumber > 200) {
-                    return next("MR image SeriesNumber is >200:"+h.SeriesNumber);
-                }
-            } else {
-                if(h.SeriesNumber > 100) {
-                    return next("image SeriesNumber is >100:"+h.SeriesNumber);
-                }
-            }
+            // if(h.Modality == "MR") {
+            //     if(h.SeriesNumber > 200) {
+            //         return next("MR image SeriesNumber is >200:"+h.SeriesNumber);
+            //     }
+            // } else {
+            //     if(h.SeriesNumber > 100) {
+            //         return next("image SeriesNumber is >100:"+h.SeriesNumber);
+            //     }
+            // }
             next();
         },
 
