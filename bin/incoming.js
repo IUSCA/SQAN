@@ -139,19 +139,22 @@ function incoming(tags, fromFile, cb) {
     async.series([
 
         function(next) {
-            var testag = tags[Object.keys(tags)[0]];
-            if (testag.Name == undefined) {
-                isHeader = true;
-                h = tags;
-                return next();
-            } else {
-                isHeader = false;
-                return next();
-            }
+            isHeader = false;
+            return next();
+            // var testag = tags[Object.keys(tags)[0]];
+            // if (testag.Name == undefined) {
+            //     isHeader = true;
+            //     h = tags;
+            //     return next();
+            // } else {
+            //     isHeader = false;
+            //     return next();
+            // }
         },
 
         //process tags into key/value pairs for database
         function(next) {
+            console.log(isHeader);
             if (isHeader) return next();
             async.each(tags, function(tag, _cb) {
                 let val = tag.Value;

@@ -23,6 +23,9 @@
     </div>
 
     <div class="bottom">
+        <div class="menu" ng-if="user.isadmin" ng-class="{'active':  active_menu == 'ingest'}" ng-click="openpage('ingest')">
+            <h3><i class="fa fa-upload" aria-hidden="true"></i></h3> Ingest Data
+        </div>
         <div class="menu" ng-if="user.isadmin" ng-class="{'active':  active_menu == 'admin'}" ng-click="openpage('admin')">
             <h3><i class="fa fa-users" aria-hidden="true"></i></h3> Access Control
         </div>

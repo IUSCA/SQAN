@@ -97,6 +97,12 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         controller: 'ProfileController',
         requiresLogin: true,
     })
+    .when('/ingest', {
+        templateUrl: 't/ingest.html',
+        controller: 'IngestController',
+        requiresLogin: true,
+        requiresAdmin: true,
+    })
     .when('/signin', {
         templateUrl: 't/signin.html',
         controller: 'SigninController',
@@ -139,7 +145,7 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
 
         if(next.requiresAdmin) {
             let user = jwtHelper.decodeToken(jwt);
-            console.log($scope.user);
+            console.log(user);
             let isadmin = (~user.roles.indexOf('admin'))
             if(!isadmin){
                 toaster.warning("You are not authorized to access "+next.originalPath);

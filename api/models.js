@@ -406,3 +406,19 @@ aclSchema.statics.getCan = function(user, action, cb) {
 exports.Acl = mongoose.model('Acl', aclSchema);
 
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+var ingestSchema = mongoose.Schema({
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+    user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+    createDate: { type: Date, default: Date.now },
+    path: String,
+    studyname: String,
+    status: String,
+    files_ingested: Number
+});
+
+exports.Ingest  = mongoose.model('Ingest', ingestSchema);
