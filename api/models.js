@@ -417,6 +417,7 @@ var ingestSchema = mongoose.Schema({
     createDate: { type: Date, default: Date.now },
     path: String,
     studyname: String,
+    subject: String,
     status: String,
     files_ingested: Number
 });
