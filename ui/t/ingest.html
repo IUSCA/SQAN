@@ -36,6 +36,27 @@
                     </form>
                 </div>
             </div>
+
+            <div class="row">
+                <table class="table table-bordered">
+                    <thead>
+                        <th>User</th>
+                        <th>Path</th>
+                        <th>Date</th>
+                        <th>StudyName</th>
+                        <th>Subject</th>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="ing in ingestions">
+                            <td>{{ing.user.username}}</td>
+                            <td>{{ing.path}}</td>
+                            <td>{{ing.createDate}}</td>
+                            <td>{{ing.studyname}}</td>
+                            <td>{{ing.subject}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

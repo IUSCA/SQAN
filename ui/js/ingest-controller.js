@@ -7,6 +7,8 @@ app.controller('IngestController',
             path: "",
         };
 
+        $scope.ingestions = [];
+
 
         $scope.verifyIngestion = function(){
             toaster.success("Submitting Ingestion...");
@@ -16,4 +18,14 @@ app.controller('IngestController',
                     toaster.success("Path found and sent to incoming service");
                 }, $scope.toast_error);
         };
+
+        $scope.getIngestions = function(){
+            $http.get(appconf.api+'/ingest/all')
+                .then(function(res) {
+                    console.log(res.data);
+                    $scope.ingestions = res.data;
+                }, $scope.toast_error);
+        };
+
+        $scope.getIngestions();
     });

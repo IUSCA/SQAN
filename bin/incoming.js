@@ -160,7 +160,6 @@ function incoming(tags, fromFile, studyName, subject, cb) {
 
         //process tags into key/value pairs for database
         function(next) {
-            console.log(isHeader);
             if (isHeader) return next();
             async.each(tags, function(tag, _cb) {
                 let val = tag.Value;
@@ -670,7 +669,7 @@ function dir2Incoming(dir, cb, studyName, subject){ //}, cb){
         //console.log("file --  " +file);
         file = path.resolve(dir, file);
         ext = path.extname(file);
-        if(ext === '.dcm' || ext === '.gz') {
+        if(ext === '.dcm' || ext === '.gz' || ext === '.IMA') {
             let read_func = dicom.json.file2json;
             if(ext === '.gz') read_func = dicom.json.gunzip2json;
             read_func(file, function(err, jsoni) {
