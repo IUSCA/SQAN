@@ -9,8 +9,10 @@ var email = process.argv[5].toString();
 
 let user = {
     username: username,
+    fullname: username,
     password: password,
-    roles: [role],
+    email: email,
+    roles: ['user', role],
     primary_role: role,
 
 }
@@ -24,6 +26,7 @@ db.init(function(err) {
 
     newUser.save()
         .then(finalResult => {
+            db.Group
             console.log(finalResult);
         });
 

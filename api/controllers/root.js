@@ -146,20 +146,23 @@ router.post('/userLogin', function(req, res, next) {
 
         if(passportUser) {
 
+            console.log("User found");
             passportUser.lastLogin = Date.now();
             passportUser.save();
-            common.issue_jwt(user, function (err, jwt) {
+            common.issue_jwt(passportUser, function (err, jwt) {
                 if (err) return next(err);
-                res.json({jwt: jwt, uid: passportUser.username, role: passportUser.primary_role});
+                console.log(passportUser);
+                return res.json({jwt: jwt, uid: passportUser.username, role: passportUser.primary_role});
             });
 
             // const user = passportUser;
             // user.token = passportUser.generateJWT();
             //
             // return res.json({ user: user.toAuthJSON() });
+        } else {
+            return res.status(400).info;
         }
 
-        return res.status(400).info;
     })(req, res, next);
 });
 
