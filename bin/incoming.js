@@ -669,7 +669,7 @@ function dir2Incoming(dir, cb, studyName, subject){ //}, cb){
         //console.log("file --  " +file);
         file = path.resolve(dir, file);
         ext = path.extname(file);
-        if(ext === '.dcm' || ext === '.gz' || ext === '.IMA') {
+        if(ext !== '.js' && ext !== '.json') {
             let read_func = dicom.json.file2json;
             if(ext === '.gz') read_func = dicom.json.gunzip2json;
             read_func(file, function(err, jsoni) {
