@@ -18,7 +18,9 @@ var config = require('../config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../api/models');
 var qc_func = require('../api/qc');
+var private_tags = require('./private_tags');
 
+console.log(private_tags.dictionary);
 
 //connect to db and start process loop
 db.init(function(err) {
@@ -27,8 +29,10 @@ db.init(function(err) {
     process.argv.forEach((val, index) => {console.log(`${index}: ${val}`);});
 
     var fpath = process.argv[2].toString();
-    var studyName = process.argv[3].toString();
-    var subject = process.argv[4].toString();
+    var studyName = null;
+    var subject = null;
+    if(process.argv[3] !== undefined) studyName = process.argv[3].toString();
+    if(process.argv[4] !== undefined) subject = process.argv[4].toString();
 
     if(studyName && subject) {
         logger.info(`Using override study ${studyName} and override subject ${subject}`);
@@ -708,9 +712,18 @@ function dir2Incoming(dir, cb, studyName, subject){ //}, cb){
 function assignTags(dJson, cb) {
     async.each(Object.keys(dJson), function(key, cb_e){
         let tag = dicom.tags.for_tag(key);
-        if(tag === undefined) return cb_e();
-        dJson[key]['Name'] = tag.name;
-        cb_e();
+        if(tag.name === undefined) {
+            let pTag = private_tags.dictionary[key];
+            if(pTag !== undefined) {
+                console.log(`Found pTag ${pTag[1]}`);
+                dJson[key]['Name'] = pTag[1];
+            }
+            cb_e();
+        } else {
+            dJson[key]['Name'] = tag.name;
+            cb_e();
+        }
+
     }, function(err) {
         if(err) return cb(err, dJson);
         return cb(null, dJson);

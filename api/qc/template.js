@@ -32,6 +32,7 @@ var common_customs = {
     },
 
     "MedComHistoryInformation": skip,
+    "MediaStorageSOPInstanceUID": skip,
 
     "SeriesDate": skip,
     "SeriesInstanceUID": skip,
@@ -68,7 +69,7 @@ var common_customs = {
     "ReferringPhysicianName": skip,
 
     "Unknown Tag & Data": skip,
-    "p_CoilString": skip,
+    // "p_CoilString": skip,
     "p_SlicePosition": skip,
     "p_SlicePositionPCS": skip,
     "p_ImaRelTablePosition": skip,
@@ -320,12 +321,12 @@ exports.match = function(image, template, qc) {
         qc.errors.push({type: 'unknown_modality', msg: "unknown modality "+image.headers.Modality+" found for image:"+image.id});
         return;
     }
-    
+
     // find fileds that are in image and not in template
     var tl = Object.keys(template.headers).length;
     var il = Object.keys(image.headers).length;
-    
-    // first check if image header has fields that are not in the template    
+
+    // first check if image header has fields that are not in the template
     var keydiff = [];
     for (var kk in image.headers) {
         if(template.headers[kk] === undefined && cus[k] !== undefined) keydiff.push({ik:kk,v:image.headers[kk]})
@@ -338,6 +339,7 @@ exports.match = function(image, template, qc) {
         var v = image.headers[k];
         var tv = template.headers[k];
         if(k.indexOf("qc_") === 0) continue;//ignore all qc fields
+        if(k.indexOf("UID") !== -1 ) continue; //ignore all UID fields //foo
         if(cus[k]) {
             cus[k](k, v, tv, qc);
         } else {
@@ -352,11 +354,11 @@ exports.match = function(image, template, qc) {
     })
 
     var error_stats = {
-        template_mismatch: template_mismatch,        
+        template_mismatch: template_mismatch,
         not_set: not_set,
         template_field_count: tl,
         image_field_count: il,
-        image_tag_mismatch: lengthdiff 
+        image_tag_mismatch: lengthdiff
     }
 
     qc.error_stats = error_stats;
@@ -367,12 +369,12 @@ exports.match = function(image, template, qc) {
 function overwritte_template(template_id,new_event,cb) {
 
     //console.log("overwriting template "+template_id)
-        
+
     // Now Un-qc the series
     db.Template.update({
         _id: template_id,
-    }, { $push: { events: new_event }}, 
-    function(err) {   
+    }, { $push: { events: new_event }},
+    function(err) {
         if(err) return cb(err);
         // deprecate all images in that series
         db.TemplateHeader.deleteMany({
