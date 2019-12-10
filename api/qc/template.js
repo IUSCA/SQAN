@@ -1,25 +1,11 @@
 
 var _ = require('underscore');
+var async = require('async');
+var db = require('../models');
+
 
 //custom QC logics to be applied to all modality (unless overridden)
 var common_customs = {
-    "AcquisitionNumber": skip, //not yet OK-ed by all of us..
-    "AcquisitionDate": skip,
-    "AcquisitionTime": skip,
-    "AcquisitionDateTime": skip, //from CT..
-
-    "FrameOfReferenceUID": skip,
-
-    "ContentDate": skip,
-    "ContentTime": skip,
-    "CSAImageHeaderVersion": skip,
-    "CSASeriesHeaderVersion": skip,
-
-    "DateOfLastCalibration": skip,
-    "DeidentificationMethod": skip,
-    "DeidentificationMethodCodeSequence": skip,
-
-    "ImagePositionPatient": skip,
     "ImageOrientationPatient" : function(k, v, tv, qc) {
         if(!check_set(k, v, tv, qc)) return;
         if(v.constructor === Array && tv.constructor === Array && v.length == tv.length) {
@@ -30,138 +16,24 @@ var common_customs = {
             qc.errors.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "template and value do not match in type or length"});
         }
     },
-
-    "MedComHistoryInformation": skip,
-    "MediaStorageSOPInstanceUID": skip,
-
-    "SeriesDate": skip,
-    "SeriesInstanceUID": skip,
-    "SeriesNumber": skip,
-    "SeriesTime": skip,
-
-    //SeriesDescription is used to find a template, so there is no point of QC-ing this
-    "SeriesDescription": skip,
-
-    "StudyDate": skip,
-    "StudyID": skip,
-    "StudyInstanceUID": skip,
-    "StudyTime": skip,
-
-    "SOPInstanceUID": skip,
-    "SOPClassUID": skip,
-
-    "PatientAge": skip,
-    "PatientBirthDate": skip,
-    "PatientComments": skip,
-    "PatientID": skip,
-    "PatientName": skip,
-    "PatientSex": skip,
-    "PatientSize": skip,
-    "PatientWeight": skip,
-    "PatientIdentityRemoved": skip,
-
-    "PixelData": skip,
-    "PaletteColorLookupTableUID": skip,
-    "RelatedSeriesSequence": skip, //we are receiving unhashed SOPInstanceUID inside this field. Sundar told me to skip this for now
-    "SliceLocation": skip,
-    "TableHeight": skip,
-    "TimeOfLastCalibration": skip,
-    "ReferringPhysicianName": skip,
-
-    "Unknown Tag & Data": skip,
-    // "p_CoilString": skip,
-    "p_SlicePosition": skip,
-    "p_SlicePositionPCS": skip,
-    "p_ImaRelTablePosition": skip,
-    "p_RelTablePosition": skip,
-    "p_SliceOrientation": skip,
-    "p_TimeAfterStart": skip,
-    "p_MeasDuration": skip,
-    "p_RBMocoRot": skip,
-    "p_RBMocoTrans": skip,
 }
-
 //custom QC logics specific to each modality
 var customs = {
     "MR": _.extend({
-        "AccessionNumber": skip,
-
-        "BluePaletteColorLookupTableData": skip,
-        "BluePaletteColorLookupTableDescriptor": skip,
-        "CodeMeaning": skip,
-        "CodeValue": skip,
-        "CodingSchemeDesignator": skip,
-        "CodingSchemeVersion": skip,
-        "CommentsOnThePerformedProcedureStep": skip,
-
-        "ContinuityOfContent": skip,
-        "dBdt": skip,
-        "GenericGroupLength": skip,
-        "GreenPaletteColorLookupTableData": skip,
-        "GreenPaletteColorLookupTableDescriptor": skip,
-        "ImageComments": skip,
-        "ImagingFrequency": skip,
-        "ImplementationVersionName": skip,
-        "InstanceCreationDate": skip,
-        "InstanceCreationTime": skip,
-        "LargestImagePixelValue": skip,
-        "MappingResource": skip,
-        "NumericValue": skip,
-        "OperatorsName": skip,
-        "PerformedProcedureStepDescription": skip,
-        "PerformedProcedureStepID": skip,
-        "PerformedProcedureStepStartDate": skip,
-        "PerformedProcedureStepStartTime": skip,
-        "PerformingPhysicianName": skip,
-        "PersonName": skip,
-        "PhotometricInterpretation": skip,
-        "PrivateCreator": skip,
-        "PrivateGroupLength": skip,
-        "RedPaletteColorLookupTableData": skip,
-        "RedPaletteColorLookupTableDescriptor": skip,
-        "RelationshipType": skip,
-        "SequenceName": skip,
-        "SequenceVariant": skip,
-        "SmallestImagePixelValue": skip,
-        "SpecificCharacterSet": skip,
-        "StudyDate": skip,
-        "StudyDescription": skip,
-        "StudyID": skip,
-        "StudyTime": skip,
-        "TextValue": skip,
         "TriggerTime" : function(k, v, tv, qc) {
             if(!check_set(k, v, tv, qc)) return;
             var fv = convertToFloat(v, k);
             var ftv = convertToFloat(tv, k);
             check_absolute_diff(k, fv, ftv, qc, 'errors', 3);
         },
-        "ValueType": skip,
-        "VerificationFlag": skip,
-        "WindowCenter": skip,
-        "WindowCenterWidthExplanation": skip,
-        "WindowWidth": skip,
-
-        "SAR": skip,
 
     }, common_customs),
 
     "CT": _.extend({
-        "CTDIPhantomTypeCodeSequence": skip,
-        "CTDIvol": skip,
-        "DataCollectionCenterPatient": skip,
-        "EstimatedDoseSaving": skip,
-        "Exposure": skip,
-        "ExposureTime": skip,
-        "IrradiationEventUID": skip,
-        "ReconstructionTargetCenterPatient": skip,
+
     }, common_customs),
 
     "PT": _.extend({
-        "ActualFrameDuration": skip,
-        "DoseCalibrationFactor": skip,
-        "FrameReferenceTime": skip,
-        "ImagePositionPatient": skip,
-        "LargestImagePixelValue": skip,
         "NumberOfTimeSlices ": function(k, v, tv, qc) {
             if(v === undefined) return; //ok if it doesn't exist This tag appears in dynamic PET scans only.
             check_equal(k, v, tv, qc);
@@ -182,26 +54,6 @@ var customs = {
             }
             check_equal(k, v, tv, qc);
         },
-
-        /*
-         "RelatedSeriesSequence": function(k, v, tv, qc) {
-         if(!check_set(k, v, tv, qc)) return;
-         delete tv[0].StudyInstanceUID;
-         delete v[0].StudyInstanceUID;
-         delete tv[0].SeriesInstanceUID;
-         delete v[0].SeriesInstanceUID;
-         check_equal(k, v, tv, qc);
-         },
-         */
-
-        "RescaleIntercept": skip,
-        "RescaleSlope": skip,
-        "ScatterFractionFactor": skip,
-        "SmallestImagePixelValue": skip,
-        "WindowCenter": skip,
-        "WindowWidth": skip,
-
-        //"InstanceNumber": skip,
     }, common_customs)
 };
 
@@ -308,7 +160,7 @@ function check_percent_diff(k, v, tv, qc, r, th, a_tv) {
 };
 
 //compare image headers against template headers
-exports.match = function(image, template, qc) {
+exports.match = function(image, template, qc, cb_m) {
 
     var template_mismatch = 0;
     var not_set = 0;
@@ -316,52 +168,95 @@ exports.match = function(image, template, qc) {
     // console.log("QC-ing image " + image.InstanceNumber + " with template " + template.InstanceNumber);
 
     //find exclusion list
-    var cus = customs[image.headers.Modality];
-    if(!cus) {
-        qc.errors.push({type: 'unknown_modality', msg: "unknown modality "+image.headers.Modality+" found for image:"+image.id});
-        return;
-    }
+    var handler_list = [];
 
-    // find fileds that are in image and not in template
-    var tl = Object.keys(template.headers).length;
-    var il = Object.keys(image.headers).length;
+    db.init(function(err) {
+        if(err) throw err;
 
-    // first check if image header has fields that are not in the template
-    var keydiff = [];
-    for (var kk in image.headers) {
-        if(template.headers[kk] === undefined && cus[k] !== undefined) keydiff.push({ik:kk,v:image.headers[kk]})
-    }
-    var lengthdiff = keydiff.length;
-    if (lengthdiff > 0) qc.warnings.push({type: 'image_tag_mismatch', k: keydiff, c: lengthdiff, msg: "image has "+ lengthdiff + " fields that are not found in the template"});
+        db.QCkeyword.find({modality: 'common'}).exec(function(err, c_keys) {
+            if(err) return next(err);
+            db.QCkeyword.find({modality: image.headers.modality}).exec(function(err, m_keys) {
+                if(err) return next(err);
 
-    //compare each field of the template with the corresponding filed in the image
-    for(var k in template.headers) {
-        var v = image.headers[k];
-        var tv = template.headers[k];
-        if(k.indexOf("qc_") === 0) continue;//ignore all qc fields
-        if(k.indexOf("UID") !== -1 ) continue; //ignore all UID fields //foo
-        if(cus[k]) {
-            cus[k](k, v, tv, qc);
-        } else {
-            if(!check_set(k, v, tv, qc)) continue;
-            check_equal(k, v, tv, qc);
-        }
-    };
+                async.each(m_keys, function(mk, cb){
+                    let res = c_keys.findIndex(ck => ck.key === mk.key);
+                    if(res > -1) {
+                        c_keys[res] = mk;
+                        console.log(`Found modality override ${mk.key} ${res} ${ck.key}`);
+                    } else {
+                        c_keys.push(mk);
+                    }
+                    cb();
+                }, function(err){
+                    if(err) console.log(err);
+                    var cus = customs[image.headers.Modality];
+                    if(!cus) {
+                        qc.errors.push({type: 'unknown_modality', msg: "unknown modality "+image.headers.Modality+" found for image:"+image.id});
+                        return;
+                    }
 
-    qc.errors.forEach(function(e) {
-        if (e.type == 'template_mismatch') template_mismatch++;
-        if (e.type == 'not_set') not_set++;
-    })
+                    // find fileds that are in image and not in template
+                    var tl = Object.keys(template.headers).length;
+                    var il = Object.keys(image.headers).length;
 
-    var error_stats = {
-        template_mismatch: template_mismatch,
-        not_set: not_set,
-        template_field_count: tl,
-        image_field_count: il,
-        image_tag_mismatch: lengthdiff
-    }
+                    // first check if image header has fields that are not in the template
+                    var keydiff = [];
+                    for (var kk in image.headers) {
+                        if(template.headers[kk] === undefined && cus[k] !== undefined) keydiff.push({ik:kk,v:image.headers[kk]})
+                    }
+                    var lengthdiff = keydiff.length;
+                    if (lengthdiff > 0) qc.warnings.push({type: 'image_tag_mismatch', k: keydiff, c: lengthdiff, msg: "image has "+ lengthdiff + " fields that are not found in the template"});
 
-    qc.error_stats = error_stats;
+                    //compare each field of the template with the corresponding filed in the image
+                    for(var k in template.headers) {
+                        let handler = c_keys.find(ck => ck.key == k);
+                        if(handler === undefined) {
+                            console.log(`Unknown key: ${k}`)
+                            continue;
+                        }
+
+                        if(handler.skip) {
+                            console.log(`skipping key ${k}`)
+                            continue;
+                        }
+
+                        var v = image.headers[k];
+                        var tv = template.headers[k];
+                        if(k.indexOf("qc_") === 0) continue;//ignore all qc fields
+                        if(k.indexOf("UID") !== -1 ) continue; //ignore all UID fields
+
+                        if(cus[k]) {
+                            console.log("Evaluating custom");
+                            cus[k](k, v, tv, qc);
+                        } else {
+                            console.log("Evaluating standard");
+                            if(!check_set(k, v, tv, qc)) continue;
+                            check_equal(k, v, tv, qc);
+                        }
+                    };
+
+                    qc.errors.forEach(function(e) {
+                        if (e.type == 'template_mismatch') template_mismatch++;
+                        if (e.type == 'not_set') not_set++;
+                    })
+
+                    var error_stats = {
+                        template_mismatch: template_mismatch,
+                        not_set: not_set,
+                        template_field_count: tl,
+                        image_field_count: il,
+                        image_tag_mismatch: lengthdiff
+                    }
+
+                    console.log(error_stats);
+
+                    qc.error_stats = error_stats;
+                    cb_m();
+                })
+            })
+        })
+    });
+
 
 }
 

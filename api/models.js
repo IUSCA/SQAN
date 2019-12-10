@@ -3,6 +3,10 @@
 //contrib
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
+mongoose.set('useNewUrlParser', true);
+mongoose.set('useFindAndModify', false);
+mongoose.set('useCreateIndex', true);
+mongoose.set('useUnifiedTopology', true);
 const winston = require('winston');
 const crypto = require('crypto');
 
@@ -436,3 +440,18 @@ var ingestSchema = mongoose.Schema({
 });
 
 exports.Ingest  = mongoose.model('Ingest', ingestSchema);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+var qckeywordSchema = mongoose.Schema({
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+    key: String,
+    skip: {type: Boolean,default:false},
+    custom: {type: Boolean,default:false},
+    modality: String,
+},{timestamps: {createdAt: 'createdAt', updatedAt: 'updatedAt'}, strict: false});
+
+
+exports.QCkeyword  = mongoose.model('QCkeyword', qckeywordSchema);
