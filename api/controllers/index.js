@@ -22,6 +22,8 @@ router.use('/templatesummary', require('./templatesummary'));
 router.use('/user', require('./user'));
 router.use('/group', require('./group'));
 router.use('/ingest', require('./ingest'));
+router.use('/qc_keywords', require('./qckeywords'));
+
 //router.use('/study', require('./series')); //deprecated .. use /series
 
 module.exports = router;

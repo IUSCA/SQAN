@@ -103,6 +103,12 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         requiresLogin: true,
         requiresAdmin: true,
     })
+    .when('/qckeys', {
+        templateUrl: 't/qckeys.html',
+        controller: 'QckeyController',
+        requiresLogin: true,
+        requiresAdmin: true,
+    })
     .when('/signin', {
         templateUrl: 't/signin.html',
         controller: 'SigninController',

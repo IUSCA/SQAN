@@ -9,12 +9,14 @@ var _ = require('underscore');
 var async = require('async');
 var axios = require('axios');
 var nodemailer = require('nodemailer');
+var passport = require('passport');
 
 //mine
 var config = require('../../config');
 var common = require('./common');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
+require('../passport');
 // var profile = require('../profile');
 
 /**
@@ -115,25 +117,74 @@ router.get('/guestLogin', function(req, res, next) {
 });
 
 
+
+
 router.post('/userLogin', function(req, res, next) {
-    db.User.findOne({username: req.body.username}).exec(function(err, user) {
-        if(err) return next(err);
-        if(!user) {
-            res.sendStatus('403').json({msg: 'User not found'});
-            return;
-        } else {
-            if(req.body.password !== config.auth.admin_pass) {
-                res.sendStatus('403').json({msg: 'Incorrect password'});
-            }
-            user.lastLogin = Date.now();
-            user.save();
-            common.issue_jwt(user, function (err, jwt) {
-                if (err) return next(err);
-                res.json({jwt: jwt, uid: user.username, role: user.primary_role});
-            });
+
+    const { body: { user } } = req;
+
+    if(!user.username) {
+        return res.status(422).json({
+            errors: {
+                email: 'is required',
+            },
+        });
+    }
+
+    if(!user.password) {
+        return res.status(422).json({
+            errors: {
+                password: 'is required',
+            },
+        });
+    }
+
+    return passport.authenticate('local', { session: false }, (err, passportUser, info) => {
+        if(err) {
+            return next(err);
         }
-    });
+
+        if(passportUser) {
+
+            console.log("User found");
+            passportUser.lastLogin = Date.now();
+            passportUser.save();
+            common.issue_jwt(passportUser, function (err, jwt) {
+                if (err) return next(err);
+                console.log(passportUser);
+                return res.json({jwt: jwt, uid: passportUser.username, role: passportUser.primary_role});
+            });
+
+            // const user = passportUser;
+            // user.token = passportUser.generateJWT();
+            //
+            // return res.json({ user: user.toAuthJSON() });
+        } else {
+            return res.status(400).info;
+        }
+
+    })(req, res, next);
 });
+
+
+    // db.User.findOne({username: req.body.username}).exec(function(err, user) {
+    //     if(err) return next(err);
+    //     if(!user) {
+    //         res.sendStatus('403').json({msg: 'User not found'});
+    //         return;
+    //     } else {
+    //         if(req.body.password !== config.auth.admin_pass) {
+    //             res.sendStatus('403').json({msg: 'Incorrect password'});
+    //         }
+    //         user.lastLogin = Date.now();
+    //         user.save();
+    //         common.issue_jwt(user, function (err, jwt) {
+    //             if (err) return next(err);
+    //             res.json({jwt: jwt, uid: user.username, role: user.primary_role});
+    //         });
+    //     }
+    // });
+// });
 
 
 

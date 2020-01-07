@@ -76,8 +76,8 @@ function($scope, appconf, $location, toaster, $http) {
     };
 
     $scope.username_login = function() {
-        if($scope.mode !== 'harvard') return;
-        $http.post(appconf.api +'/userLogin', $scope.form)
+        if($scope.mode !== 'harvard' && $scope.mode !== 'dartmouth') return;
+        $http.post(appconf.api +'/userLogin', {user: $scope.form})
             .then(function(res) {
                 toaster.success(`Logging you in as user ${$scope.form.username}`);
                 localStorage.setItem(appconf.jwt_id, res.data.jwt);
@@ -128,7 +128,7 @@ function($scope, appconf, $location, toaster, $http) {
     if(casticket !== undefined && casticket !== ''){
         $scope.validate(casticket);
     } else {
-        if($scope.mode !== 'demo' && $scope.mode !== 'harvard'){
+        if($scope.mode !== 'demo' && $scope.mode !== 'harvard' && $scope.mode !== 'dartmouth'){
             $scope.begin_iucas();
         }
     }
