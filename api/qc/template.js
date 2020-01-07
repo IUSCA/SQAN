@@ -141,6 +141,8 @@ var customs = {
         "WindowWidth": skip,
 
         "SAR": skip,
+        "MediaStorageSOPInstanceUID": skip,
+        "RequestAttributesSequence": skip,
 
     }, common_customs),
 
