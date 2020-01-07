@@ -18,6 +18,11 @@ var config = require('../config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../api/models');
 var qc_func = require('../api/qc');
+var private_tags = require('./private_tags');
+
+console.log(private_tags.dictionary);
+
+var qckeywords = null;
 
 
 //connect to db and start process loop
@@ -27,39 +32,48 @@ db.init(function(err) {
     process.argv.forEach((val, index) => {console.log(`${index}: ${val}`);});
 
     var fpath = process.argv[2].toString();
-    var studyName = process.argv[3].toString();
-    var subject = process.argv[4].toString();
+    var studyName = null;
+    var subject = null;
+    if(process.argv[3] !== undefined) studyName = process.argv[3].toString();
+    if(process.argv[4] !== undefined) subject = process.argv[4].toString();
 
-    if(studyName && subject) {
-        logger.info(`Using override study ${studyName} and override subject ${subject}`);
-    }
 
-    if (fpath && file_exists(fpath)) {
-        logger.info("Running in file mode, will exit when processing is complete.");
+    db.QCkeyword.find({},function(err,_keys){
+        if (err) throw err;
+        qckeywords = _keys;
 
-        filewalker(fpath, function(err,dirs){
-            if (err) throw err;
-            async.eachSeries(dirs, function(dir, next) {
-            // dirs.forEach(function(dir){
-                dir2Incoming(dir, next, studyName, subject) //,function(err){
-                //     if (err) throw err;
-                //   console.log("directory processed -- "+dir);
-                // });
-            }, function(err) {
-                if(err) logger.error(err);
-                process.exit(0)
+        if(studyName && subject) {
+            logger.info(`Using override study ${studyName} and override subject ${subject}`);
+        }
+
+        if (fpath && file_exists(fpath)) {
+            logger.info("Running in file mode, will exit when processing is complete.");
+
+            filewalker(fpath, function(err,dirs){
+                if (err) throw err;
+                async.eachSeries(dirs, function(dir, next) {
+                // dirs.forEach(function(dir){
+                    dir2Incoming(dir, next, studyName, subject) //,function(err){
+                    //     if (err) throw err;
+                    //   console.log("directory processed -- "+dir);
+                    // });
+                }, function(err) {
+                    if(err) logger.error(err);
+                    process.exit(0)
+                })
+                //db.disconnect(function(){})
             })
-            //db.disconnect(function(){})
-        })
-    }
-    else if (fpath && !file_exists(fpath)){
-        logger.error("Path not found --> "+ fpath);
-        process.exit(0);
-    }
-    else {
-        logger.info("Running in batch mode");
-        process0(0)
-    }
+        }
+        else if (fpath && !file_exists(fpath)){
+            logger.error("Path not found --> "+ fpath);
+            process.exit(0);
+        }
+        else {
+            logger.info("Running in batch mode");
+            process0(0)
+        }
+
+    })
 
 });
 
@@ -166,8 +180,30 @@ function incoming(tags, fromFile, studyName, subject, cb) {
                 if(typeof val === 'object' && Array.isArray(val) && val.length === 1){
                     val = val[0]
                 }
+                if(tag.Name == '' || tag.Name === undefined) console.log(tag);
                 h[tag.Name] = val;
-                _cb();
+
+                let kk = qckeywords.find(x => x.key === tag.Name);
+                // console.log("Key lookup is "+kk)
+
+                if (kk == undefined && tag.Name !== undefined) {
+                    var newkey = {
+                        key: tag.Name,
+                        modality: "common",
+                    };
+
+                    db.QCkeyword.create({
+                        key: newkey.key,
+                        modality: newkey.modality,
+                    }, function(err, _qckeyword) {
+                        if(err) return next(err);
+                        console.log("new key found: "+newkey.key)
+                        qckeywords.push(newkey);
+                        _cb();
+                    });
+                } else {
+                    _cb();
+                }
             }, function(err) {
                 next(err);
             });
@@ -669,11 +705,12 @@ function dir2Incoming(dir, cb, studyName, subject){ //}, cb){
         //console.log("file --  " +file);
         file = path.resolve(dir, file);
         ext = path.extname(file);
-        if(ext === '.dcm' || ext === '.gz' || ext === '.IMA') {
+        if(ext !== '.js' && ext !== '.json') {
             let read_func = dicom.json.file2json;
             if(ext === '.gz') read_func = dicom.json.gunzip2json;
             read_func(file, function(err, jsoni) {
                 if(err) {
+                    console.log(err);
                     console.log(`Can't read file ${file}`);
                     return next();
                 }
@@ -708,9 +745,18 @@ function dir2Incoming(dir, cb, studyName, subject){ //}, cb){
 function assignTags(dJson, cb) {
     async.each(Object.keys(dJson), function(key, cb_e){
         let tag = dicom.tags.for_tag(key);
-        if(tag === undefined) return cb_e();
-        dJson[key]['Name'] = tag.name;
-        cb_e();
+        if(tag.name === undefined) {
+            let pTag = private_tags.dictionary[key];
+            if(pTag !== undefined) {
+                //console.log(`Found pTag ${pTag[1]}`);
+                dJson[key]['Name'] = pTag[1];
+            }
+            cb_e();
+        } else {
+            dJson[key]['Name'] = tag.name;
+            cb_e();
+        }
+
     }, function(err) {
         if(err) return cb(err, dJson);
         return cb(null, dJson);

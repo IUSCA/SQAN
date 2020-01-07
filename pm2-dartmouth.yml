@@ -1,0 +1,18 @@
+apps:
+  - script   :  sqan.js
+    cwd      :  /opt/sca/sqan/api
+    name     : 'sqan-api'
+    watch    : true
+    exec_mode: fork
+    out_file : /opt/sca/var/log/api.log
+    err_file : /opt/sca/var/log/api.log
+    combine_logs : false
+
+  - script   :  ../bin/qc.js
+    cwd      :  /opt/sca/sqan/api
+    name     : 'sqan-qc'
+    watch    : true
+    exec_mode: fork
+    out_file : /opt/sca/var/log/qc.log
+    err_file : /opt/sca/var/log/qc.log
+    combine_logs : false

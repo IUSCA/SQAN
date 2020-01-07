@@ -4,8 +4,26 @@
         background-color: #484f56;
     }
 
-    .signin {
-        padding-right: 80px;
+    .login-form {
+        width: 340px;
+        margin: 50px auto;
+    }
+    .login-form form {
+        margin-bottom: 15px;
+        background: #f7f7f7;
+        box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
+        padding: 30px;
+    }
+    .login-form h2 {
+        margin: 0 0 15px;
+    }
+    .form-control, .btn {
+        min-height: 38px;
+        border-radius: 2px;
+    }
+    .btn {
+        font-size: 15px;
+        font-weight: bold;
     }
 
 </style>
@@ -42,33 +60,53 @@
          </div>
     </div>
 
-    <div class="row" ng-if="mode === 'harvard'">
+    <div class="row" ng-if="mode === 'harvard' || mode === 'dartmouth'">
         <div class="col-md-8 col-md-offset-2">
             <div class="center-block">
                 <img class="img-responsive" src="images/sqan_logo_full.png"/>
                 <hr>
 
-
-                <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
-                    <div class="card card-signin my-5">
-                        <div class="card-body">
-                            <h5 class="card-title text-center">Sign In</h5>
-                            <form class="form-signin">
-                                <div class="form-label-group">
-                                    <input type="text" id="inputUsername" class="form-control" placeholder="username" ng-model="form.username" required autofocus>
-                                    <label for="inputUsername">Username</label>
-                                </div>
-
-                                <div class="form-label-group">
-                                    <input type="password" id="inputPassword" class="form-control" placeholder="Password" ng-model="form.password" required>
-                                    <label for="inputPassword">Password</label>
-                                </div>
-
-                                <button class="btn btn-lg btn-primary btn-block text-uppercase" type="submit" ng-click="username_login()">Sign in</button>
-                            </form>
+                <div class="login-form">
+                    <form>
+                        <h2 class="text-center">Log in</h2>
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="Username" ng-model="form.username" required="required">
                         </div>
-                    </div>
+                        <div class="form-group">
+                            <input type="password" class="form-control" placeholder="Password" ng-model="form.password" required="required">
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary btn-block" ng-click="username_login()">Log in</button>
+                        </div>
+<!--                        <div class="clearfix">-->
+<!--                            <label class="pull-left checkbox-inline"><input type="checkbox"> Remember me</label>-->
+<!--                            <a href="#" class="pull-right">Forgot Password?</a>-->
+<!--                        </div>-->
+                    </form>
+<!--                    <p class="text-center"><a href="#">Create an Account</a></p>-->
                 </div>
+
+
+<!--                <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">-->
+<!--                    <div class="card card-signin my-5">-->
+<!--                        <div class="card-body">-->
+<!--                            <h5 class="card-title text-center">Sign In</h5>-->
+<!--                            <form class="form-signin">-->
+<!--                                <div class="form-label-group">-->
+<!--                                    <input type="text" id="inputUsername" class="form-control" ng-model="form.username" required autofocus>-->
+<!--                                    <label for="inputUsername">Username</label>-->
+<!--                                </div>-->
+
+<!--                                <div class="form-label-group">-->
+<!--                                    <input type="password" id="inputPassword" class="form-control" ng-model="form.password" required>-->
+<!--                                    <label for="inputPassword">Password</label>-->
+<!--                                </div>-->
+
+<!--                                <button class="btn btn-lg btn-primary btn-block text-uppercase" type="submit" ng-click="username_login()">Sign in</button>-->
+<!--                            </form>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
                 <!--
                 <pre ng-show="jwt_dump">{{jwt_dump}}</pre>
                 <p ng-show="!jwt_dump" class="muted">You are not logged in.</p>
@@ -77,7 +115,7 @@
         </div>
     </div>
 
-    <div class="row" ng-if="mode !== 'demo' && mode !== 'harvard'">
+    <div class="row" ng-if="mode !== 'demo' && mode !== 'harvard' && mode !== 'dartmouth'">
         <div class="col-md-8 col-md-offset-2">
             <div class="center-block">
                 <h3>Redirecting you to IU CAS login...</h3>

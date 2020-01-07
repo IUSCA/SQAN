@@ -28,7 +28,7 @@ function run(cb) {
                 {qc: {$exists: false}},
                 {qc1_state: {$ne: 'no template'}}
             ],
-            updatedAt: {$lt: new Date(new Date().getTime() - 1000 * 30)} //wait for 30 seconds since last update
+            updatedAt: {$lt: new Date(new Date().getTime() - 1000 * 5)} //wait for 30 seconds since last update
         }},{$sample: {size:config.qc.series_batch_size}}
     ]).exec(function(err,series){
 
@@ -153,8 +153,10 @@ function qc_one_image(image,primimage,primtemplate,cb) {
 
                     if (templateheader) {
                         //console.log("matching template header "+ templateheader.InstanceNumber+ " with image header " + image.InstanceNumber);
-                        qc_funcs.template.match(image,templateheader,qc);
-                        next()
+                        qc_funcs.template.match(image,templateheader,qc, function(err){
+                            if(err) return next(err)
+                            next();
+                        });
                     }
                     else {
                         //console.log("No template");
@@ -163,8 +165,10 @@ function qc_one_image(image,primimage,primtemplate,cb) {
                     }  // template header is missing for this instance number
                 })
             } else {
-                qc_funcs.template.match(image,primtemplate,qc);
-                next()
+                qc_funcs.template.match(image,primtemplate,qc, function(err){
+                    if(err) return next(err)
+                    next();
+                });
             }
         },
 
