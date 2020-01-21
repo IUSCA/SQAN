@@ -7,7 +7,8 @@ const winston = require('winston');
 const jwt = require('express-jwt');
 const async = require('async');
 var nodemailer = require('nodemailer');
-
+var SSE = require('express-sse');
+var sse = new SSE([]);
 
 //mine
 const config = require('../../config');
@@ -229,6 +230,18 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
     });
 });
 
+router.get('/livefeed', sse.init);
+
+router.get('/feedtest', function(req, res, next) {
+    let data = {
+        foo: 'bar',
+        bar: 'foo'
+    };
+    sse.send(data, 'message');
+    console.log('sending message');
+    res.json({'msg': 'ok'});
+})
+
 
 
 router.get('/id/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
@@ -280,7 +293,6 @@ router.get('/id/:series_id', jwt({secret: config.express.jwt.pub}), function(req
         })
     })
 });
-
 
 router.post('/comment/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     db.Series.findById(req.params.series_id)
@@ -354,7 +366,6 @@ router.post('/qcstate/:series_id', jwt({secret: config.express.jwt.pub}), functi
         });
     });
 });
-
 
 router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     db.Series.findById(req.params.series_id)

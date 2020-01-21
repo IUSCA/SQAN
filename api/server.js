@@ -14,7 +14,7 @@ var bodyParser = require('body-parser');
 var expressValidator = require('express-validator');
 var winston = require('winston');
 var expressWinston = require('express-winston');
-var compress = require('compression');
+// var compress = require('compression');
 
 //mine
 var config = require('../config');
@@ -27,7 +27,7 @@ require('passport');
 var app = express();
 app.use(bodyParser.json()); //parse application/json
 app.use(bodyParser.urlencoded({ extended: false})); //parse application/x-www-form-urlencoded
-app.use(compress());
+// app.use(compress());
 app.use('/', require('./controllers'));
 
 //error handling

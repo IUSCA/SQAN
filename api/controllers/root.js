@@ -5,6 +5,7 @@ var express = require('express');
 var router = express.Router();
 var winston = require('winston');
 var jwt = require('express-jwt');
+var jsonwt = require('jsonwebtoken');
 var _ = require('underscore');
 var async = require('async');
 var axios = require('axios');
@@ -121,6 +122,7 @@ router.get('/guestLogin', function(req, res, next) {
 
 router.post('/userLogin', function(req, res, next) {
 
+
     const { body: { user } } = req;
 
     if(!user.username) {
@@ -140,9 +142,11 @@ router.post('/userLogin', function(req, res, next) {
     }
 
     return passport.authenticate('local', { session: false }, (err, passportUser, info) => {
+
         if(err) {
             return next(err);
         }
+
 
         if(passportUser) {
 
@@ -152,7 +156,8 @@ router.post('/userLogin', function(req, res, next) {
             common.issue_jwt(passportUser, function (err, jwt) {
                 if (err) return next(err);
                 console.log(passportUser);
-                return res.json({jwt: jwt, uid: passportUser.username, role: passportUser.primary_role});
+                var decoded = jsonwt.verify(jwt, config.express.jwt.pub);
+                return res.json({jwt: jwt, uid: passportUser.username, role: passportUser.primary_role, jwt_exp: decoded.exp});
             });
 
             // const user = passportUser;
@@ -160,7 +165,7 @@ router.post('/userLogin', function(req, res, next) {
             //
             // return res.json({ user: user.toAuthJSON() });
         } else {
-            return res.status(400).info;
+            return res.status(400).send(info);
         }
 
     })(req, res, next);

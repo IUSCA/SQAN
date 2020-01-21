@@ -133,6 +133,23 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
     })
 });
 
+
+router.get('/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+    db.Exam.findById(req.params.exam_id).populate('research_id').exec(function(err, exam) {
+        if(err) return next(err);
+        if(!exam) return res.status(404).json({message: "no such exam:"+req.params.exam_id});
+        db.Series.find({exam_id: exam._id}).exec(function(err, serieses) {
+            if(err) return next(err);
+            let data = {
+                exam: exam,
+                series: serieses
+            }
+            res.json(data);
+        });
+    });
+});
+
+
 router.post('/template/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
 
     db.Exam.findById(req.params.exam_id).populate('research_id').exec(function(err, exam) {
