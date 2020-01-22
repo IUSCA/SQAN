@@ -46,11 +46,21 @@
                         console.log(res.data);
                         self.login(res.data);
                         setTimeout(() => {
-                            console.log('pushing route');
+                            self.$notify({
+                                group: 'main',
+                                title: 'Signin successful',
+                                type: 'success',
+                                text: 'Logging you in'
+                            });
                             self.$router.push({path: '/exams'});
                         }, 300)
                     }, function(err) {
-                        console.log(err);
+                        self.$notify({
+                            group: 'main',
+                            title: 'Signin Failed',
+                            type: 'error',
+                            text: err
+                        });
                     })
             },
         }

@@ -27,12 +27,22 @@ Axios.interceptors.request.use(
 
 //Bootstrap
 import { BootstrapVue, BootstrapVueIcons } from 'bootstrap-vue'
-
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 
 Vue.use(BootstrapVue)
 Vue.use(BootstrapVueIcons)
+
+
+//Notifications
+import Notifications from 'vue-notification';
+
+Vue.use(Notifications);
+
+
+//Filters
+import './filters.js';
+
 
 new Vue({
   router,
