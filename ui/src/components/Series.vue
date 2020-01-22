@@ -3,8 +3,6 @@
         <slot name="close"></slot>
         <h4>{{series.series.series_desc}}</h4>
 
-        {{message}}
-
         <b-list-group>
             <b-list-group-item variant="info">
                 <b-row>
@@ -39,21 +37,33 @@
                 </b-row>
             </b-list-group-item>
         </b-list-group>
-        <div v-for="img in series.images" class="block" :key="img._id" :class="{ error: img.qc.errors.length, warning: img.qc.warnings.length, success: !(img.qc.errors.length + img.qc.warnings.length) }"></div>
+        <div
+                v-for="img in series.images"
+                class="block"
+                :key="img._id"
+                :class="{ error: img.qc.errors.length, warning: img.qc.warnings.length, success: !(img.qc.errors.length + img.qc.warnings.length) }"
+                @click="selectImage(img._id)"
+        ></div>
+
+        <image-header :img="selected_img" v-if="selected_img"></image-header>
     </div>
 </template>
 
 <script>
 
+    import ImageHeader from '@/components/ImageHeader.vue';
+
     export default {
         name: 'Series',
+        components: {ImageHeader},
         props: {
             series_id: String
         },
         data() {
             return {
                 series: {},
-                message: ''
+                message: '',
+                selected_img: null
             }
         },
         methods: {
@@ -67,6 +77,17 @@
                         console.log(err);
                     });
 
+            },
+            selectImage(img_id) {
+                let self = this;
+
+                this.$http.get(`/api/qc/image/${img_id}`)
+                    .then(res => {
+                        console.log(res.data);
+                        self.selected_img = res.data;
+                    }, err => {
+                        console.log(err);
+                    })
             },
             monitorSeries() {
                 let es = new EventSource(`/api/qc/series/livefeed/`);

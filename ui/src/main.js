@@ -29,6 +29,7 @@ Axios.interceptors.request.use(
 import { BootstrapVue, BootstrapVueIcons } from 'bootstrap-vue'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
+import 'bootswatch/dist/yeti/bootstrap.min.css'; 
 
 Vue.use(BootstrapVue)
 Vue.use(BootstrapVueIcons)

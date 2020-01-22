@@ -1,23 +1,18 @@
 <template>
+    <b-row>
+        <b-col cols="3">
 
-    <b-container>
-        <b-row>
-            <b-col cols="3">
-                <b-button variant="info" @click="query">Click to load exam data</b-button>
-
-                <div v-for="(researches, idx) in results" :key="idx">
-                    <div v-for="(rs, _idx) in researches" :key="_idx">
-                        <h5>{{rs.research.Modality}} / {{rs.research.IIBISID}} / {{rs.research.StationName}}</h5>
-                        <div v-for="exam in rs.exams" :key="exam._id" @click="selectExam(exam._id)"><SubjectBlock :subject="exam"></SubjectBlock></div>
-                    </div>
+            <div v-for="(researches, idx) in results" :key="idx">
+                <div v-for="(rs, _idx) in researches" :key="_idx">
+                    <h5>{{rs.research.Modality}} / {{rs.research.IIBISID}} / {{rs.research.StationName}}</h5>
+                    <div v-for="exam in rs.exams" :key="exam._id" @click="selectExam(exam._id)"><SubjectBlock :subject="exam"></SubjectBlock></div>
                 </div>
-            </b-col>
-            <b-col cols="9">
-                {{selected}}
-                <Exam :exam_id="selected" v-if="selected"/>
-            </b-col>
-        </b-row>
-    </b-container>
+            </div>
+        </b-col>
+        <b-col cols="9">
+            <Exam :exam_id="selected" v-if="selected"/>
+        </b-col>
+    </b-row>
 </template>
 
 <script>
@@ -100,6 +95,9 @@
                         console.log(err);
                     });
             }
+        },
+        mounted() {
+            this.query();
         }
     }
 </script>
