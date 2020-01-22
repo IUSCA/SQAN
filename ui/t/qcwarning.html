@@ -1,9 +1,0 @@
-<div class="alert alert-warning qcalert" role="alert" ng-switch="warning.type">
-    <div ng-switch-when="qc_warning">
-        <strong>{{warning.msg}}</strong> | Warning Rate: <b>{{warning.per * 100 | number}}%</b>
-    </div>
-    <div ng-switch-default>
-        <strong>{{warning.type}}</strong>
-        <pre>{{warning}}</pre>
-    </div>
-</div>
