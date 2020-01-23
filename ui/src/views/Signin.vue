@@ -41,7 +41,7 @@
 
             userLogin: function() {
                 let self = this;
-                this.$http.post('http://sqan-test.sca.iu.edu/api/qc/userLogin', {user: self.form})
+                this.$http.post('/api/qc/userLogin', {user: self.form})
                     .then(function(res) {
                         console.log(res.data);
                         self.login(res.data);
