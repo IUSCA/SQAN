@@ -25,6 +25,7 @@ require('passport');
 
 //init express
 var app = express();
+
 app.use(bodyParser.json()); //parse application/json
 app.use(bodyParser.urlencoded({ extended: false})); //parse application/x-www-form-urlencoded
 // app.use(compress());

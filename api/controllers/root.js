@@ -122,7 +122,6 @@ router.get('/guestLogin', function(req, res, next) {
 
 router.post('/userLogin', function(req, res, next) {
 
-
     const { body: { user } } = req;
 
     if(!user.username) {
@@ -165,7 +164,7 @@ router.post('/userLogin', function(req, res, next) {
             //
             // return res.json({ user: user.toAuthJSON() });
         } else {
-            return res.status(400).send(info);
+            return res.status(401).send(info);
         }
 
     })(req, res, next);
