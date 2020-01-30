@@ -42,7 +42,30 @@ function($scope, appconf, toaster, $http, $window, $location, serverconf) {
             console.log("Error contacting API");
             console.dir(err);
         });
-    }
+    };
+
+    $scope.export = function() {
+        var data = [
+            {"IIBISID":"IIBISID","Modality":"Modality","StationName":"StationName","radio_tracer":"radio_tracer","pi":"PI","email":"email"}];
+        //console.log($scope.summary);
+
+        $scope.noTemplates.forEach(function(nt) {
+            let pi = nt.iibis ? nt.iibis.pi_last_name + ', ' + nt.iibis.pi_first_name : 'n/a';
+            let email = nt.iibis ? nt.iibis.coordinator_email : 'n/a';
+            let row = {
+                IIBISID: nt.research.IIBISID,
+                Modality: nt.research.Modality,
+                StationName: nt.research.StationName,
+                radio_tracer: nt.research.radio_tracer,
+                pi: pi,
+                email: email
+            }
+            data.push(row);
+        })
+
+        console.log(data);
+        return data;
+    };
 
     $scope.getTemplateSummary();
     $scope.getNoTemplates();
