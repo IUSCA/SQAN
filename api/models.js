@@ -2,18 +2,17 @@
 
 //contrib
 const mongoose = require('mongoose');
+mongoose.Promise = global.Promise;
 const winston = require('winston');
 
 //mine
 const config = require('../config');
 const logger = new winston.Logger(config.logger.winston);
-//const events = require('./events');
+
 
 exports.init = function(cb) {
     if(config.debug) mongoose.set('debug', true);
-    mongoose.connect(config.mongodb, {
-        useMongoClient: true
-    }, function(err) {
+    mongoose.connect(config.mongodb.url, config.mongodb.params, function(err) {
         if(err) return cb(err);
         cb();
     });
@@ -361,7 +360,7 @@ aclSchema.statics.getCan = function(user, action, cb) {
         if(acls) for(let acl of acls) {
             var _acl = acl[action];
             if(_acl) {
-                console.log(_acl.groups);
+                // console.log(_acl.groups);
                 var inter = _acl.groups.filter(function(gid) {
                     return ~user.gids.indexOf(gid);
                 });

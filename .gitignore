@@ -9,3 +9,4 @@ debug
 barn
 start.sh
 bin/refresh_iibis.sh
+package-lock.json
