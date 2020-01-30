@@ -38,7 +38,7 @@ html { margin-left: calc(100vw - 100%); }
   transition: 0.5s ease all;
   cursor: pointer;
   margin: 3px 0px;
-  padding: 8px;
+  padding: 5px;
   font-size: 8pt;
 }
 .sca-sidebar .menu h2 {
@@ -51,7 +51,7 @@ html { margin-left: calc(100vw - 100%); }
   margin-bottom: 5px;
   color: #666;
   text-transform: uppercase;
-  font-size: 18px;
+  font-size: 14px;
 }
 .sca-sidebar .menu:hover {
   background-color: #ddd;

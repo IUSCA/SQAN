@@ -26,6 +26,9 @@
         <div class="menu" ng-if="user.isadmin" ng-class="{'active':  active_menu == 'admin'}" ng-click="openpage('admin')">
             <h3><i class="fa fa-users" aria-hidden="true"></i></h3> Access Control
         </div>
+        <div class="menu" ng-if="user.isadmin" ng-class="{'active':  active_menu == 'dataflow'}" ng-click="openpage('dataflow')">
+            <h3><i class="fa fa-paper-plane" aria-hidden="true"></i></h3> Dataflow
+        </div>
         <div class="menu" ng-if="!isguest" ng-class="{'active':  active_menu == 'profile'}" ng-click="openpage('profile')">
             <h3><i class="fa fa-cog" aria-hidden="true"></i></h3> Profile
         </div>

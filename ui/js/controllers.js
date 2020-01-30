@@ -14,6 +14,8 @@ function($scope, appconf, toaster, $http, serverconf) {
 
 app.controller('DataflowController',
 function($scope, appconf, toaster, $http, serverconf) {
+
+    $scope.$parent.active_menu = "dataflow";
     $scope.datasends = [];
 
     $http.get(appconf.api+'/dataflow')
