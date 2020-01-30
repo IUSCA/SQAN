@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Signin from '../views/Signin.vue'
+import About from '../views/About.vue'
 
 Vue.use(VueRouter)
 
@@ -13,11 +14,16 @@ const router = new VueRouter({
             component: Signin
         },
         {
+            path: '/about',
+            name: 'about',
+            component: About
+        },
+        {
             path: '/exams',
             name: 'exams',
             meta: {
                 requiresAuth: true,
-                is_admin: true
+                is_admin: false
             },
             component: () => import(/* webpackChunkName: "exams" */ '../views/Exams.vue')
         }
