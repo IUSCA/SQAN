@@ -1,5 +1,5 @@
 app.controller('SummaryController',
-function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf) {
+function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf, $routeParams, $route) {
     $scope.$parent.active_menu = "rsummary";
     $scope.researches = [];
     $scope.subject_timestamps = {};
@@ -22,6 +22,9 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
         $window.open("series/"+id, "study:"+id);
     }
 
+    $scope.orderBy = 'studyTimestamp';
+    $scope.reverse_order = true;
+
     $http.get(appconf.api+'/research')
         .then(function(res) {
             //$scope.researches = res.data;
@@ -36,9 +39,16 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
             });
 
             angular.forEach(res_temp, function(v, k){
-                $scope.researches.push({id: k, studies: v})
+                let option = {id: k, studies: v};
+                var length = $scope.researches.push(option)
+                //select user specified research or first one if not specified
+                if($routeParams.iibisid) {
+                    if(k == $routeParams.iibisid) {
+                        $scope.research.selected = $scope.researches[length - 1];
+                        $scope.getSummary();
+                    }
+                }
             });
-            $scope.getSummary();
         }, $scope.toast_error);
 
 
@@ -108,9 +118,7 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
 
                     $scope.summary[label] = res.data;
                     res.data.subjects.forEach(function(k){
-                        if($scope.subjects.indexOf(k) < 0){
-                            $scope.subjects.push(k);
-                        }
+
                         res.data.exams[k].forEach(function(subj_exam){
                             if(subj_exam[Object.keys(subj_exam)[0]] === undefined) return;
                             let ts = subj_exam[Object.keys(subj_exam)[0]].exam_id.StudyTimestamp;
@@ -119,6 +127,15 @@ function($scope, appconf, toaster, $http, $window, $sce, $filter, $q, serverconf
                             ($scope.subject_timestamps[k][ts][label] = $scope.subject_timestamps[k][ts][label] || []).push(subj_exam);
                             $scope.subject_timestamps[k][ts].max = Math.max($scope.subject_timestamps[k][ts][label].length, $scope.subject_timestamps[k][ts].max);
                         });
+
+                        if($scope.subjects.indexOf(k) < 0){
+                            $scope.subjects.push(
+                                {
+                                    subject: k,
+                                    max_ts: $scope.subject_timestamps[k][0],
+                                    min_ts: $scope.subject_timestamps[k][0]
+                                });
+                        }
                     });
                     $scope.loading = false;
                     $scope.exportJSON = encodeURIComponent(JSON.stringify($scope.export()));

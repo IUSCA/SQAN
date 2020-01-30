@@ -63,14 +63,27 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(r
     var template_instance = {
         date: null,
         exam_id: null,
+        converted_to_template:false,
         series: [],
-        usedInQC:0
+        usedInQC:0,
+        parent_exam: undefined,
     };
 
     db.Exam.findById(new mongoose.Types.ObjectId(req.params.exam_id), function(err,texam) {
         if (err) return next(err);
         template_instance.date = texam.StudyTimestamp;
         template_instance.exam_id = texam._id;
+        template_instance.converted_to_template = texam.converted_to_template ? texam.converted_to_template : false;
+
+        if (texam.converted_to_template) {
+            console.log(texam)
+            db.Exam.findById(texam.parent_exam_id, function(err,pexam){
+                if(err) return next(err);
+                console.log("INSIDE THE API CONTROLLER")
+                console.log(pexam)
+                template_instance.parent_exam = pexam.subject;
+            })
+        }
 
         db.Template.find({"exam_id":texam._id},function(err,templates){
             if (err) return next(err);
@@ -106,44 +119,91 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(r
 });
 
 
+// get a list of Researches with no available templates
+router.get('/notemplate', function(req, res, next) {
+    db.Exam.find({istemplate: true}).distinct('research_id', function(err, has_templates) {
+        if(err) return next(err);
+        db.Research.find({_id: {$nin: has_templates}}).exec(function(err, no_templates) {
+            if(err) return next(err);
+            let ds = [];
+            async.forEach(no_templates, function(r_nt, cb){
+                db.IIBIS.findOne({iibis_project_id: r_nt.IIBISID}).exec(function (err, _iibis){
+                    if (err) return cb(err);
+                    let rec = {
+                        research: r_nt,
+                        iibis: _iibis
+                    }
+                    ds.push(rec);
+                    cb();
+                });
+            }, function(err) {
+                if(err) return next(err);
+                res.json(ds);
+            })
+        })
+    })
+});
 
 // delete a template series
 
 // delete a template series
 router.get('/deleteselected/:template_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
 
-    console.log("Deleting Template-Series "+req.params.template_id);
 
-    //console.log(req.user.sub);
-    var user = req.user.sub;
-
-    db.Template.findById(new mongoose.Types.ObjectId(req.params.template_id),function(err,template){
-        if (err) return next(err);
-        //console.log("TEMPLATE FOUND "+ template.series_desc)
-        deleteTemplate(template._id,function(err){
-            if (err) return next(err);
-            //console.log("TEMPLATE DELETED")
-            unQC_series(template._id, user, function(err,images_modified){
-                if (err) return next(err);
-                //console.log("RETURNED FROM UN_ QC_SERIES FUNCTION WITH "+images_modified+ "IMAGES MODIFIED")
-                // check if there are any template series remainging in this template exam.
-                db.Template.find({"exam_id":template.exam_id},function(err,templates){
-                    if (err) return next(err);
-                    //console.log("templates left "+templates.length)
-                    if (!templates || templates.length == 0){
-                        // this was the last template, so we delete the Template exam
-                        //console.log("Empty template exam to delete "+template.exam_id)
-                        db.Exam.deleteOne({_id: template.exam_id}, function(err){
-                            if (err) return next(err);
-                            res.send("Template series "+template.series_desc+"deleted successfully! Template exam has also been deleted as this was the only template in this exam")
-                        })
-                    } else {
-                        res.send("Template series "+template.series_desc+"deleted successfully! There are "+templates.length+ " series in this template exam")
-                    }
-                })
-            });
-        });
+    db.Template.findById(req.params.template_id)
+    .populate({
+        path: 'exam_id',
+        populate: {
+            path: 'research_id'
+        }
     })
+    .exec(function (err, template) {
+        if (err) return next(err);
+        if (!template) return res.status(404).json({message: "no such template:" + req.params.template_id});
+        db.Acl.can(req.user, 'qc', template.exam_id.research_id.IIBISID, function (can) {
+            if (!can) return res.status(401).json({message: "you are not authorized to modify this IIBISID:" + template.exam_id.research_id.IIBISID});
+
+            console.log("Deleting Template-Series "+req.params.template_id);
+
+            //console.log(req.user.sub);
+            var user = req.user.sub;
+
+            deleteTemplate(template._id,function(err){
+                if (err) return next(err);
+                //console.log("TEMPLATE DELETED")
+                unQC_series(template._id, user, function(err,images_modified){
+                    if (err) return next(err);
+                    //console.log("RETURNED FROM UN_ QC_SERIES FUNCTION WITH "+images_modified+ "IMAGES MODIFIED")
+                    // check if there are any template series remainging in this template exam.
+                    db.Template.find({"exam_id":template.exam_id},function(err,templates){
+                        if (err) return next(err);
+                        //console.log("templates left "+templates.length)
+                        if (!templates || templates.length == 0){
+                            // this was the last template, so we delete the Template exam
+                            //console.log("Empty template exam to delete "+template.exam_id)
+
+                            // but first check if this template exam is a clone of an existing exam
+                            if (template.exam_id.converted_to_template) {
+                                db.Exam.update({_id:template.exam_id.parent_exam_id}, {converted_to_template:false}, function(err){
+                                    if (err) return next(err);
+                                })
+                            }
+
+                            db.Exam.deleteOne({_id: template.exam_id}, function(err){
+                                if (err) return next(err);
+                                res.send("Template series "+template.series_desc+"deleted successfully! Template exam has also been deleted as this was the only template in this exam")
+                            })
+                        } else {
+                            res.send("Template series "+template.series_desc+"deleted successfully! There are "+templates.length+ " series in this template exam")
+                        }
+                    })
+                });
+            });
+
+
+        })
+    })
+
 })
 
 
@@ -154,29 +214,50 @@ router.get('/deleteall/:exam_id', jwt({secret: config.express.jwt.pub}), functio
     //console.log(req.user.sub);
     var user = req.user.sub;
 
-    db.Template.find({"exam_id":new mongoose.Types.ObjectId(req.params.exam_id)},function(err,templates){
+    db.Exam.findById(req.params.exam_id)
+    .populate({
+        path: 'research_id',
+    })
+    .exec(function (err, texam) {
         if (err) return next(err);
+        if (!texam) return res.status(404).json({message: "no such template exam:" + req.params.exam_id});
+        db.Acl.can(req.user, 'qc', texam.research_id.IIBISID, function (can) {
+            if (!can) return res.status(401).json({message: "you are not authorized to modify data in this IIBISID:" + texam.research_id.IIBISID});
 
-        async.forEach(templates, function(temp, next_temp) {
 
-            deleteTemplate(temp._id,function(err){
+            db.Template.find({"exam_id":new mongoose.Types.ObjectId(req.params.exam_id)},function(err,templates){
                 if (err) return next(err);
-                unQC_series(temp._id, user, function(err,images_modified){
-                    if (err) return next(err);
-                    //console.log("images modified -- "+ images_modified);
-                    //console.log(temp.series_desc+ " deleted!!");
-                    next_temp();
-                });
-            });
-        }, function(err){
-            //total_modified += images_modified;
-            console.log("Deleting Template-Exam "+req.params.exam_id);
-            db.Exam.deleteOne({_id:new mongoose.Types.ObjectId(req.params.exam_id)}, function(err){
-                if(err) return next(err);
-                res.send("Template deleted successfully!")
+
+                async.forEach(templates, function(temp, next_temp) {
+
+                    deleteTemplate(temp._id,function(err){
+                        if (err) return next(err);
+                        unQC_series(temp._id, user, function(err,images_modified){
+                            if (err) return next(err);
+                            //console.log("images modified -- "+ images_modified);
+                            //console.log(temp.series_desc+ " deleted!!");
+                            next_temp();
+                        });
+                    });
+                }, function(err){
+                    //total_modified += images_modified;
+                    console.log("Deleting Template-Exam "+req.params.exam_id);
+
+                    // check if this template exam is a clone of an existing exam
+                    if (texam.converted_to_template) {
+                        db.Exam.update({_id:texam.parent_exam_id}, {converted_to_template:false}, function(err){
+                            if (err) return next(err);
+                        })
+                    }
+                    db.Exam.deleteOne({_id:new mongoose.Types.ObjectId(req.params.exam_id)}, function(err){
+                        if(err) return next(err);
+                        res.send("Template deleted successfully!")
+                    })
+                })
             })
         })
     })
+
 })
 
 

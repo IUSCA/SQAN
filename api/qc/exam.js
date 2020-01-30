@@ -128,7 +128,7 @@ function qc_exam(exam_id,cb) {
                             qc.images_no_template += s.qc.notemps;
 
 
-                            console.log(`Series ${s._id} is missing ${s.qc.missing_count} images`);
+                            //console.log(`Series ${s._id} is missing ${s.qc.missing_count} images`);
                             if (s.qc.missing_count) {
                                 qc.series_missing_images++;
                                 qc.total_missing_images += s.qc.missing_count;

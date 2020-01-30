@@ -29,6 +29,36 @@ outline:none;
         <div class="col-sm-11 col-offset-1">
             <h3><i class="fa fa-files-o"></i>  Template Summary Table</h3>
             <br>
+            <div class="row" ng-if="noTemplates.length">
+                <button class="btn btn-xs btn-danger" ng-click="showNoTemplates = !showNoTemplates"><i class="fa fa-fw fa-exclamation-triangle"></i> {{noTemplates.length}} researches have no template (click to {{showNoTemplates ? 'hide' : 'inspect'}})</button>
+
+
+                <button class="btn btn-xs btn-info" ng-csv="export" filename="sqan_notemplates.csv"><i class="fa fa-fw fa-download"></i> (csv)</button>
+                <table class="table table-striped table-hover table-bordered info" width="100%" cellspacing="0" ng-show="showNoTemplates">
+                    <thead>
+                        <tr>
+                            <th>IIBIS</th>
+                            <th>Modality</th>
+                            <th>Station Name</th>
+                            <th>RadioTracer</th>
+                            <th>PI</th>
+                            <th>Coordinator email</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="res in noTemplates">
+                            <td>{{res.research.IIBISID}}</td>
+                            <td>{{res.research.Modality}}</td>
+                            <td>{{res.research.StationName}}</td>
+                            <td>{{res.research.radio_tracer}}</td>
+                            <td>{{res.iibis.pi_last_name}}, {{res.iibis.pi_first_name}}</td>
+                            <td>{{res.iibis.coordinator_email}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <br>
+
             <div class="row">
                 <div class="col-xs-6 col-sm-4 col-md-3">
                     <div class="input-group">
@@ -58,8 +88,12 @@ outline:none;
                         <tr ng-repeat-end ng-if="$index==rowNumber">
                             <td colspan="6">
                                 <uib-tabset type="tabs" active="activePill" type="pills">
-                                    <uib-tab ng-repeat="timestamp in templatebytimestamp" index="$index" heading="{{timestamp.date | date:'yyyy-MM-dd HH:mm:ss' }}">
-
+                                    <uib-tab ng-repeat="timestamp in templatebytimestamp" index="$index" heading="{{timestamp.date | date:'short':'-0400'}}">
+                                            <uib-tab-heading>
+                                                <i ng-if="timestamp.converted_to_template" class="fa fa-clone"></i>
+                                                <i ng-if="!timestamp.converted_to_template" class="fa fa-fw fa-file-o"></i>
+                                                 {{timestamp.date | date:'short':'-0400'}}
+                                                </uib-tab-heading>
                                         <div class="card">
 
                                             <div class="card-header lighten-1">
@@ -76,7 +110,7 @@ outline:none;
                                                                     <span>{{timestamp.date | date:'yyyy-MM-dd HH:mm:ss' }}</span>
                                                                 </h5>
                                                                 <h5>
-                                                                    <span><i class="fa fa-files-o" aria-hidden="true"></i></span>
+                                                                    <span><i class="fa fa-list-ol" aria-hidden="true"></i></span>
                                                                     <span>Number of Series: </span>
                                                                     <span>{{timestamp.series.length}}</span>
                                                                 </h5>
@@ -85,6 +119,13 @@ outline:none;
                                                                     <span>Series used for QC: </span>
                                                                     <span>{{timestamp.usedInQC}}</span>
                                                                 </h5>
+                                                                <span ng-if="timestamp.converted_to_template == true">
+                                                                    <h5>
+                                                                        <h5><i class="fa fa-clone" aria-hidden="true"></i></span>
+                                                                        <span> This template was cloned from Subject <b>{{timestamp.parent_exam}}</b> </span>
+                                                                    </h5>
+                                                                </span>
+
                                                             </div>
                                                         </div>
                                                     </br>

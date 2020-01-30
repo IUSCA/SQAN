@@ -45,6 +45,8 @@ var examSchema = mongoose.Schema({
     override_template_id: {type: mongoose.Schema.Types.ObjectId},  // _id of template exam if override is set
     isdeleted: {type: Boolean,default: false},
     istemplate: {type: Boolean},
+    converted_to_template: {type: Boolean, default: false}, // set this to TRUE if exam is added as a template
+    parent_exam_id:{type: mongoose.Schema.Types.ObjectId}, // only set if an exam is converted into a template through the portal; this is the id of the original exam
     StudyTimestamp: Date,
     //series: mongoose.Schema.Types.Mixed,
     qc: mongoose.Schema.Types.Mixed,
@@ -205,17 +207,22 @@ var dataflowSchema = mongoose.Schema({
     //
     // keys
     //
-    isManual: {type: Boolean, index: true},
-    requestedAt: {type: Date, default: Date.now, index: true},
-    sentAt: {type: Date},
-    imagesSent: {type: Number},
-    arrivalAt: {type: Date},
-    imagesReceived: {type: Number},
-    ingestionAt: {type: Date},
-    qc1At: {type: Date},
-    qc1State: Boolean
+    date: Date,
+    iibis: String,
+    modality: String,
+    station_name: String,
+    radio_tracer: String,
+    subject: String,
+    series: [
+        {
+            series_number: Number,
+            series_name: String,
+            image_count: Number
+        }
+    ]
+
 });
-dataflowSchema.index({requestedAt: 1, isManual: 1});
+dataflowSchema.index({iibis: 1, date: 1});
 exports.Dataflow = mongoose.model('Dataflow', dataflowSchema);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

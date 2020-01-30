@@ -19,6 +19,10 @@ function($scope, appconf, toaster, $http, $window, $location, serverconf) {
 
     }
 
+    $scope.templates = [];
+    $scope.noTemplates = [];
+    $scope.showNoTemplates = false;
+
     $scope.getTemplateSummary = function() {
         $http.get(appconf.api+'/templatesummary/istemplate').then(function(res) {
             $scope.templates = res.data;
@@ -29,7 +33,42 @@ function($scope, appconf, toaster, $http, $window, $location, serverconf) {
             console.dir(err);
         });
     };
+
+    $scope.getNoTemplates = function() {
+        $http.get(appconf.api+'/templatesummary/notemplate').then(function(res) {
+            $scope.noTemplates = res.data;
+            console.log(res.data.length + ' researches have no templates!');
+        }, function(err) {
+            console.log("Error contacting API");
+            console.dir(err);
+        });
+    };
+
+    $scope.export = function() {
+        var data = [
+            {"IIBISID":"IIBISID","Modality":"Modality","StationName":"StationName","radio_tracer":"radio_tracer","pi":"PI","email":"email"}];
+        //console.log($scope.summary);
+
+        $scope.noTemplates.forEach(function(nt) {
+            let pi = nt.iibis ? nt.iibis.pi_last_name + ', ' + nt.iibis.pi_first_name : 'n/a';
+            let email = nt.iibis ? nt.iibis.coordinator_email : 'n/a';
+            let row = {
+                IIBISID: nt.research.IIBISID,
+                Modality: nt.research.Modality,
+                StationName: nt.research.StationName,
+                radio_tracer: nt.research.radio_tracer,
+                pi: pi,
+                email: email
+            }
+            data.push(row);
+        })
+
+        console.log(data);
+        return data;
+    };
+
     $scope.getTemplateSummary();
+    $scope.getNoTemplates();
 
     $scope.rowNumber = -1;
     $scope.indexShowSeries=-1;
@@ -53,9 +92,9 @@ function($scope, appconf, toaster, $http, $window, $location, serverconf) {
                     //if ($scope.templatebytimestamp.length == research.exam_id.length) {
                     //    $scope.rowNumber=index;
                     //}
+                    console.log($scope.templatebytimestamp)
                 })
             })
-
         } else {
             $scope.rowNumber=-1;
             $scope.fadedBackground = false;

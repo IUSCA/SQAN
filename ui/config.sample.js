@@ -2,7 +2,7 @@ angular.module('app.config', [])
     .constant('appconf', {
             title: 'SQAN QC',
 
-            mode: 'demo', //one of dev,prod,demo
+            mode: 'dev', //one of dev,prod,demo
             api: '/api/qc',
             small_logo: 'images/sqan_logo.png',
             big_logo: 'images/sqan_logo_full.png',
