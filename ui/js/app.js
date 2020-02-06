@@ -81,6 +81,11 @@ app.config(['$routeProvider', 'appconf', function($routeProvider, appconf) {
         controller: 'SummaryController',
         requiresLogin: true,
     })
+    .when('/report', {
+        templateUrl: 't/report.html',
+        controller: 'ReportController',
+        requiresLogin: true,
+    })
     .when('/templatesummary', {
         templateUrl: 't/templatesummary.html',
         controller: 'TemplateSummaryController',
