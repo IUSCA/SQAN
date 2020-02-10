@@ -2,10 +2,10 @@
   <div id="app">
     <div class="main container-fluid">
       <b-row>
-        <b-col cols="2">
+        <b-col v-if="this.$route.name !== 'signin'" cols="1">
           <Sidebar />
         </b-col>
-        <b-col cols="9">
+        <b-col>
           <transition
             name="fade"
             mode="out-in"
@@ -25,7 +25,7 @@
 </template>
 
 <script>
-import Sidebar from "@/components/Sidebar.vue";
+import Sidebar from "@/components/Sidebar";
 export default {
   name: "app",
   components: { Sidebar },
@@ -66,4 +66,5 @@ export default {
 .fade-leave-active {
   opacity: 0;
 }
+
 </style>

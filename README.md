@@ -13,7 +13,7 @@ SQAN (formerly RADY-SCA) is a full-stack system solution for extracting, transla
   * Performs protocol and exam-level verification on newly arrived data, and on existing data as requested
 * API (node.js/ExpressJS)
   * Provides authorized access to metadata and QC results
-* UI (AngularJS)
+* UI (VueJS)
   * Allows authorized users to view stored data, QC results, modify QC templates and access controls, comment on QC issues, alert affected researchers, and re-run QC tests
   
   

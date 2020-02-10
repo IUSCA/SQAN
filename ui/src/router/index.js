@@ -2,6 +2,12 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Signin from '../views/Signin.vue'
 import About from '../views/About.vue'
+import QC from '../views/QC.vue'
+import TemplateSummary from '../views/TemplateSummary.vue'
+import ResearchSummary from '../views/ResearchSummary.vue'
+import Admin from '../views/Admin.vue'
+import Profile from '../views/Profile.vue'
+import Signout from '../views/Signout.vue'
 
 Vue.use(VueRouter)
 
@@ -26,7 +32,64 @@ const router = new VueRouter({
                 is_admin: false
             },
             component: () => import(/* webpackChunkName: "exams" */ '../views/Exams.vue')
-        }
+        },
+        {
+            path: '/qc',
+            name: 'qc',
+            component: QC,
+            meta: {
+                requiresAuth: true,
+                is_admin: false
+            },
+        },
+        {
+            path: '/templatesummary',
+            name: 'templatesummary',
+            component: TemplateSummary,
+            meta: {
+                requiresAuth: true,
+                is_admin: false
+            },
+        },
+        {
+            path: '/researchsummary',
+            name: 'researchsummary',
+            component: ResearchSummary,
+            meta: {
+                requiresAuth: true,
+                is_admin: false
+            },
+        },
+        {
+            path: '/admin',
+            name: 'admin',
+            component: Admin,
+            meta: {
+                requiresAuth: true,
+                is_admin: true
+            },
+        },
+        {
+            path: '/profile',
+            name: 'profile',
+            component: Profile,
+            meta: {
+                requiresAuth: true,
+                is_admin: false
+            },
+        },
+        {
+            path: '/signout',
+            name: 'signout',
+            component: Signout,
+            meta: {
+                requiresAuth: true,
+                is_admin: false
+            },
+        },
+
+
+
     ]
 });
 
