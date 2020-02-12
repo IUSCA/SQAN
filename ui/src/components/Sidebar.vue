@@ -11,41 +11,40 @@
     <router-link to="exams">
       <div class="menu" :class="{ active: this.$route.name == 'exams' }">
         <h3>
-          <b-icon-list-check aria-hidden="true" />
-          <i class="fa fa-list-alt" aria-hidden="true"></i>
+          <font-awesome-icon icon="list-alt" aria-hidden="true" />
         </h3>
         Exams
       </div>
     </router-link>
+
     <router-link to="qc">
       <div class="menu" :class="{ active: this.$route.name == 'qc' }">
         <h3>
-          <b-icon-check-box aria-hidden="true" />
-          <i class="fa fa-check-square" aria-hidden="true"></i>
+          <font-awesome-icon icon="check-square" aria-hidden="true" />
         </h3>
         QC1 Pending
       </div>
     </router-link>
+
     <router-link to="templatesummary">
       <div
         class="menu"
         :class="{ active: this.$route.name == 'templatesummary' }"
       >
         <h3>
-          <b-icon-images aria-hidden="true" />
-          <i class="fa fa-files-o" aria-hidden="true"></i>
+          <font-awesome-icon :icon="['far', 'clone']" aria-hidden="true" />
         </h3>
         Template Summary
       </div>
     </router-link>
+
     <router-link to="researchsummary">
       <div
         class="menu"
         :class="{ active: this.$route.name == 'researchsummary' }"
       >
         <h3>
-          <b-icon-pie-chart-fill aria-hidden="true" />
-          <i class="fa fa-flask" aria-hidden="true"></i>
+          <font-awesome-icon icon="flask" aria-hidden="true" />
         </h3>
         Research Summary
       </div>
@@ -59,7 +58,7 @@
           :class="{ active: this.$route.name == 'admin' }"
         >
           <h3>
-            <b-icon-people-fill aria-hidden="true" />
+            <font-awesome-icon icon="users" aria-hidden="true" />
           </h3>
           Access Control
         </div>
@@ -72,7 +71,7 @@
           ng-class="{'active':  active_menu == 'profile'}"
         >
           <h3>
-            <b-icon-gear-fill aria-hidden="true" />
+            <font-awesome-icon icon="cog" aria-hidden="true" />
           </h3>
           Profile
         </div>
@@ -80,7 +79,7 @@
 
       <div class="menu" onclick="$('#contact2').modal();">
         <h3>
-          <i class="fa fa-envelope" aria-hidden="true"></i>
+          <font-awesome-icon icon="envelope" aria-hidden="true" />
         </h3>
         Contact
       </div>
@@ -88,7 +87,7 @@
       <router-link to="signout">
         <div class="menu">
           <h3>
-            <i class="fa fa-sign-out" aria-hidden="true"></i>
+            <font-awesome-icon icon="sign-out-alt" aria-hidden="true" />
           </h3>
           Logout
         </div>
@@ -98,24 +97,8 @@
 </template>
 
 <script>
-import {
-  BIconListCheck,
-  BIconCheckBox,
-  BIconPeopleFill,
-  BIconPieChartFill,
-  BIconImages,
-  BIconGearFill
-} from "bootstrap-vue";
-
 export default {
-  components: {
-    BIconListCheck,
-    BIconCheckBox,
-    BIconPeopleFill,
-    BIconPieChartFill,
-    BIconImages,
-    BIconGearFill
-  },
+  components: {},
   data() {
     //TODO: configure access to user object for admin check
     return {
