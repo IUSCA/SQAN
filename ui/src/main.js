@@ -54,7 +54,9 @@ import {
   faUsers,
   faFlask,
   faCheckSquare,
-  faListAlt
+  faListAlt,
+  faFilter,
+  faArrowUp
 } from "@fortawesome/free-solid-svg-icons";
 
 library.add(
@@ -64,7 +66,9 @@ library.add(
   faUsers,
   faFlask,
   faCheckSquare,
-  faListAlt
+  faListAlt,
+  faFilter,
+  faArrowUp
 );
 
 import { faClone } from "@fortawesome/free-regular-svg-icons";
