@@ -22,18 +22,53 @@
                   v-for="fieldname in fieldnames"
                   v-bind:key="fieldname"
                 >
-                  <span v-on:click="sorting.fieldname = fieldname">
+                  <span v-on:click="updateSort(fieldname)">
                     {{ fieldname }}
                   </span>
                   <font-awesome-icon
-                    icon="arrow-up"
-                    v-if="sorting.fieldname == fieldname"
+                    v-if="sortIcon(fieldname)"
+                    :icon="sortIcon(fieldname)"
                   />
                 </th>
                 <th>View</th>
               </tr>
             </thead>
-            <tbody></tbody>
+            <tbody>
+              <template
+                v-for="(summary, index) in templates"
+                v-bind:summary="summary"
+                v-bind:index="index"
+              >
+                <tr
+                  v-on:click="selectTemplate(summary.IIBISID)"
+                  v-bind:key="summary.IIBISID"
+                >
+                  <td
+                    v-for="field in fields"
+                    v-bind:field="field"
+                    v-bind:key="field"
+                    class="text-center"
+                  >
+                    {{ summary[field] }}
+                  </td>
+                  <td class="text-center">
+                    <font-awesome-icon
+                      icon="angle-left"
+                      v-if="summary.IIBISID != selected"
+                    />
+                    <font-awesome-icon
+                      icon="angle-down"
+                      v-if="summary.IIBISID == selected"
+                    />
+                  </td>
+                </tr>
+                <tr v-if="summary.IIBISID == selected">
+                  <td colspan="6">
+                    <template-detail></template-detail>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
           </table>
         </div>
       </div>
@@ -43,10 +78,12 @@
 
 <script>
 import FilterInput from "@/components/FilterInput.vue";
+import TemplateDetail from "@/components/templates/TemplateDetail.vue";
 
 export default {
   name: "templatesummary",
-  components: { FilterInput },
+  components: { FilterInput, TemplateDetail },
+
   data() {
     return {
       fields: ["IIBISID", "Modality", "StationName", "radio_tracer", "count"],
@@ -64,17 +101,50 @@ export default {
         "# Images"
       ],
       sorting: {
-        filter: "",
+        filter: "ascending",
         fieldname: "IIBISID"
       },
-      templates: []
+      templates: [],
+      selected: ""
     };
   },
+
   methods: {
     selectTemplate(_id) {
-      this.selected = _id;
-      console.log(this.selected);
+      if (_id == this.selected) {
+        this.selected = "";
+      } else {
+        this.selected = _id;
+      }
+      //console.log(this.selected);
     },
+
+    updateSort(field) {
+      if (field == this.sorting.fieldname) {
+        // toggle the order
+        if (this.sorting.filter == "ascending") {
+          this.sorting.filter = "descending";
+        } else {
+          this.sorting.filter = "ascending";
+        }
+      } else {
+        this.sorting.fieldname = field;
+        this.sorting.filter = "ascending";
+      }
+      //console.log(this.selected);
+    },
+    sortIcon(field) {
+      if (field == this.sorting.fieldname) {
+        if (this.sorting.filter == "ascending") {
+          return "arrow-down";
+        } else {
+          return "arrow-up";
+        }
+      } else {
+        return "";
+      }
+    },
+
     query: function() {
       this.$http.get("/api/qc/templatesummary/istemplate").then(
         res => {
@@ -89,9 +159,17 @@ export default {
           console.dir(err);
         }
       );
-
     }
   },
+
+  computed: {
+    sortedTemplates: function() {
+      return this.numbers.filter(function(number) {
+        return number % 2 === 0;
+      });
+    }
+  },
+
   mounted() {
     // console.log("Component has been created!");
     // console.log("Process.env", process.env);
