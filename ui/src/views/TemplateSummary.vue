@@ -62,9 +62,12 @@
                     />
                   </td>
                 </tr>
-                <tr v-if="summary.IIBISID == selected">
+                <tr
+                  v-if="summary.IIBISID == selected"
+                  v-bind:key="summary.IIBISID + '-details'"
+                >
                   <td colspan="6">
-                    <template-detail></template-detail>
+                    <template-detail v-bind:summary="summary"></template-detail>
                   </td>
                 </tr>
               </template>
@@ -110,6 +113,22 @@ export default {
   },
 
   methods: {
+    query: function() {
+      this.$http.get("/api/qc/templatesummary/istemplate").then(
+        res => {
+          this.templates = res.data;
+          console.log(
+            this.templates.length + " templates retrieved from exam db"
+          );
+          console.log(this.templates);
+        },
+        err => {
+          console.log("Error contacting API");
+          console.dir(err);
+        }
+      );
+    },
+
     selectTemplate(_id) {
       if (_id == this.selected) {
         this.selected = "";
@@ -143,22 +162,6 @@ export default {
       } else {
         return "";
       }
-    },
-
-    query: function() {
-      this.$http.get("/api/qc/templatesummary/istemplate").then(
-        res => {
-          this.templates = res.data;
-          console.log(
-            this.templates.length + " templates retrieved from exam db"
-          );
-          console.log(this.templates);
-        },
-        err => {
-          console.log("Error contacting API");
-          console.dir(err);
-        }
-      );
     }
   },
 
