@@ -48,38 +48,46 @@ Vue.component("font-awesome-layers", FontAwesomeLayers);
 Vue.component("font-awesome-layers-text", FontAwesomeLayersText);
 
 import {
-  faSignOutAlt,
-  faEnvelope,
-  faCog,
-  faUsers,
-  faFlask,
-  faCheckSquare,
-  faListAlt,
-  faFilter,
+  faAngleDown,
+  faAngleLeft,
   faArrowUp,
   faArrowDown,
-  faAngleLeft,
-  faAngleDown
+  faCheckSquare,
+  faCog,
+  faEnvelope,
+  faEye,
+  faFlask,
+  faList,
+  faListAlt,
+  faListOl,
+  faFilter,
+  faSignOutAlt,
+  faTrashAlt,
+  faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 
 library.add(
-  faSignOutAlt,
-  faEnvelope,
-  faCog,
-  faUsers,
-  faFlask,
-  faCheckSquare,
-  faListAlt,
-  faFilter,
+  faAngleDown,
+  faAngleLeft,
   faArrowUp,
   faArrowDown,
-  faAngleLeft,
-  faAngleDown
+  faCheckSquare,
+  faCog,
+  faEnvelope,
+  faEye,
+  faFlask,
+  faList,
+  faListAlt,
+  faListOl,
+  faFilter,
+  faSignOutAlt,
+  faTrashAlt,
+  faUsers,
 );
 
-import { faClone } from "@fortawesome/free-regular-svg-icons";
+import { faClock, faClone } from "@fortawesome/free-regular-svg-icons";
 
-library.add(faClone);
+library.add(faClock, faClone);
 
 //Notifications
 import Notifications from "vue-notification";
