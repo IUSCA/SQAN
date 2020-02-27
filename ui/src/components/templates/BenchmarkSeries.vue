@@ -1,0 +1,63 @@
+<template>
+  <div class="container">
+    <table
+      class="table table-striped table-hover info"
+      width="100%"
+      cellspacing="0"
+    >
+      <!-- <tr style="background-color:#e2eef5"> -->
+      <th class="text-center" v-for="dd in tseriesTable" v-bind:key="dd">
+        {{ dd }}
+      </th>
+      <th>
+        <font-awesome-icon icon="trash-alt" aria-hidden="true" />
+      </th>
+      <tr
+        style="background-color:#f2f7fa"
+        v-for="dd in orderedSeries"
+        v-bind:key="dd.SeriesNumber"
+      >
+        <td class="text-center">{{ dd.SeriesNumber }}</td>
+        <td
+          class="text-center"
+          style="word-wrap: break-all;cursor:pointer"
+          ng-click="opentemplate(dd.template_id)"
+        >
+          {{ dd.series_desc }}
+        </td>
+        <td class="text-center">{{ dd.usedInQC }}</td>
+        <td class="text-center">{{ dd.imageCount }}</td>
+        <td><input type="checkbox" v-on:click="deleteThisSeries(dd)" /></td>
+      </tr>
+    </table>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    series: Array
+  },
+  data() {
+    return {
+      tseriesTable: [
+        "Series Number",
+        "Series Description",
+        "Times used for QC",
+        "# Images"
+      ]
+    };
+  },
+  computed: {
+    orderedSeries: function() {
+      return this._.orderBy(this.series, "SeriesNumber");
+    }
+  },
+  mounted() {
+    // console.log("Component has been created!");
+    console.log("series", this.series);
+  }
+};
+</script>
+
+<style></style>

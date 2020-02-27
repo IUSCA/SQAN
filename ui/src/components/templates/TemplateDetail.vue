@@ -1,81 +1,57 @@
 <template>
-  <b-container v-if="benchmark">
+  <b-container v-if="benchmarkData">
     <b-row>
       <b-col>
-        <b-card title="Benchmark Information">
-          <div class="card">
-            <div class="card-header lighten-1">
-              <br />
-              <div class="panel panel-default">
-                <div class="panel-body">
-                  <h5>
-                    <span>
-                      <font-awesome-icon
-                        :icon="['far', 'clock']"
-                        aria-hidden="true"
-                      />
-                    </span>
-                    <span>Timestamp:</span>
-                    <span>{{
-                      format(parseISO(benchmark.date), "yyyy-MM-dd HH:mm:ss")
-                    }}</span>
-                  </h5>
-                  <h5>
-                    <span>
-                      <font-awesome-icon icon="list-ol" aria-hidden="true" />
-                    </span>
-                    <span>Number of Series: </span>
-                    <span>{{ benchmark.series.length }}</span>
-                  </h5>
-                  <h5>
-                    <span>
-                      <font-awesome-icon
-                        icon="check-square"
-                        aria-hidden="true"
-                      />
-                    </span>
-                    <span>Series used for QC: </span>
-                    <span>{{ benchmark.usedInQC }}</span>
-                  </h5>
-                  <span v-if="benchmark.converted_to_template == true">
-                    <h5>
-                      <h5>
-                        <font-awesome-icon
-                          :icon="['far', 'clone']"
-                          aria-hidden="true"
-                        />
-                      </h5>
-                      <span>
-                        This benchmark was cloned from Subject
-                        <b>{{ benchmark.parent_exam }}</b>
-                      </span>
-                    </h5>
-                  </span>
-                </div>
-              </div>
-            </div>
+        <b-card header="Benchmark Information">
+          <div>
+            <span>
+              <font-awesome-icon :icon="['far', 'clock']" aria-hidden="true" />
+            </span>
+            <span>Timestamp:</span>
+            <span>{{
+              format(parseISO(benchmarkData.date), "yyyy-MM-dd HH:mm:ss")
+            }}</span>
+          </div>
+          <div>
+            <span>
+              <font-awesome-icon icon="list-ol" aria-hidden="true" />
+            </span>
+            <span>Number of Series: </span>
+            <span>{{ benchmarkData.series.length }}</span>
+          </div>
+          <div>
+            <span>
+              <font-awesome-icon icon="check-square" aria-hidden="true" />
+            </span>
+            <span>Series used for QC: </span>
+            <span>{{ benchmarkData.usedInQC }}</span>
+          </div>
+          <div v-if="benchmarkData.converted_to_template == true">
+            <span>
+              <font-awesome-icon :icon="['far', 'clone']" aria-hidden="true" />
+            </span>
+            <span>
+              This benchmark was cloned from Subject
+              <b>{{ benchmarkData.parent_exam }}</b>
+            </span>
           </div>
         </b-card>
       </b-col>
 
       <b-col>
-        <br />
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            Action Links
-          </div>
-          <div class="panel-body">
+        <b-card header="Action Links">
+          <div class="panel panel-default">
             <div
               v-b-tooltip.hover
               title="All series in this benchmark will be deleted"
               class="text-danger"
               style="cursor:pointer;"
-              v-on="deleteBenchmark()"
+              v-on:click="deleteBenchmark()"
             >
-              <h5>
+              <span>
                 <font-awesome-icon icon="trash-alt" aria-hidden="true" />
                 Delete All Series
-              </h5>
+              </span>
             </div>
             <div
               v-b-tooltip.hover
@@ -83,49 +59,53 @@
               class="text-warning"
               style="cursor:pointer;"
               ng-class="{'faded': !(seriesToDelete.length > 0)}"
-              v-on="deleteSelectedSeries()"
+              v-on:click="deleteSelectedSeries()"
             >
-              <h5>
+              <span>
                 <font-awesome-icon icon="trash-alt" aria-hidden="true" />
                 Delete {{ seriesToDelete.length }} Selected Series
-              </h5>
+              </span>
             </div>
             <div
               class="text-info"
               style="cursor:pointer;"
-              v-on="getBenchmarkSeries()"
+              v-on:click="toggleSeriesVisible()"
             >
-              <h5>
-                <span
-                  v-b-tooltip.hover
-                  title="Show table listing all series in this Benchmark"
-                  v-if="!seriesVisible"
-                >
-                  <font-awesome-icon icon="eye" aria-hidden="true" />
-                  Show Series</span
-                >
-                <span
-                  v-b-tooltip.hover
-                  title="Hide the table"
-                  v-if="seriesVisible"
-                  ><i class="fa fa-eye-slash" aria-hidden="true"></i> Hide
-                  Series</span
-                >
-              </h5>
+              <span
+                v-b-tooltip.hover
+                title="Show table listing all series in this Benchmark"
+                v-if="!seriesVisible"
+              >
+                <font-awesome-icon icon="eye" aria-hidden="true" />
+                Show Series</span
+              >
+              <span
+                v-b-tooltip.hover
+                title="Hide the table"
+                v-if="seriesVisible"
+                ><i class="fa fa-eye-slash" aria-hidden="true"></i> Hide
+                Series</span
+              >
             </div>
           </div>
-        </div>
+        </b-card>
       </b-col>
+    </b-row>
+
+    <b-row v-if="seriesVisible">
+      <BenchmarkSeries :series=benchmarkData.series />
     </b-row>
   </b-container>
 </template>
 
 <script>
+import BenchmarkSeries from "@/components/templates/BenchmarkSeries.vue";
+
 import { format, parseISO } from "date-fns";
 
 export default {
-  // components: { BenchmarkSeries },
-  name: "benchmark",
+  components: { BenchmarkSeries },
+  name: "BenchmarkDetail",
 
   props: {
     summary: Object
@@ -137,11 +117,12 @@ export default {
       current_benchmark_id: this.summary.exam_id[0],
       // keep track of benchmarks once we have loaded them from api
       benchmarks: {},
-      benchmark: "",
+      benchmarkData: "",
       seriesVisible: false,
       seriesToDelete: [],
       format,
-      parseISO
+      parseISO,
+      BenchmarkSeries
     };
   },
 
@@ -151,8 +132,8 @@ export default {
         .get("/api/qc/templatesummary/texams/" + this.current_benchmark_id)
         .then(
           res => {
-            this.benchmark = res.data;
-            console.log("benchmark:", this.benchmark);
+            this.benchmarkData = res.data;
+            console.log("benchmark:", this.benchmarkData);
           },
           err => {
             console.log("Error contacting API");
@@ -173,8 +154,12 @@ export default {
       console.log("deleteSelectedSeries called");
     },
 
-    getBenchmarkSeries() {
-      console.log("getBenchmarkSeries called");
+    toggleSeriesVisible() {
+      if (!this.seriesVisible) {
+        this.seriesVisible = true;
+      } else {
+        this.seriesVisible = false;
+      }
     }
   },
   mounted() {
@@ -186,8 +171,7 @@ export default {
 </script>
 
 <style>
-h4,
-h5 {
-  font-size: 12px;
+span {
+  padding-right: 5px;
 }
 </style>

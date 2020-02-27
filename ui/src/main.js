@@ -25,6 +25,11 @@ Axios.interceptors.request.use(
   }
 );
 
+//Lodash
+import Lodash from "lodash"
+Object.defineProperty(Vue.prototype, '_', { value: Lodash });
+
+
 //Bootstrap
 import { BootstrapVue, BootstrapVueIcons } from "bootstrap-vue";
 import "bootstrap/dist/css/bootstrap.css";
