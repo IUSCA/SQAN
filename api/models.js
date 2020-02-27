@@ -49,6 +49,9 @@ var examSchema = mongoose.Schema({
     parent_exam_id:{type: mongoose.Schema.Types.ObjectId}, // only set if an exam is converted into a template through the portal; this is the id of the original exam
     StudyTimestamp: Date,
     //series: mongoose.Schema.Types.Mixed,
+
+    is_linked:{type: mongoose.Schema.Types.ObjectId, ref: 'Exam'},  // _id of matching/linked exam from other Modality
+    
     qc: mongoose.Schema.Types.Mixed,
 
     comments: [ mongoose.Schema({
@@ -72,6 +75,8 @@ var deletedexamSchema = mongoose.Schema({
     istemplate: {type: Boolean},
     StudyTimestamp: Date,
 
+    is_linked:{type: mongoose.Schema.Types.ObjectId, ref: 'Exam'},  // _id of matching/linked exam from other Modality
+    
     DeletionTimestamp: {type: Date, default: Date.now},
     //series: mongoose.Schema.Types.Mixed,
     qc: mongoose.Schema.Types.Mixed,

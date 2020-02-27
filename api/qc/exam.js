@@ -188,7 +188,16 @@ function qc_exam(exam_id,cb) {
     });
 }
 
+exports.isLinked = function(StudyInstanceUID,modality) {
 
+    db.Exam.find({StudyInstanceUID:StudyInstanceUID,modality:{ $ne:modality }},function(ex,err){
+        if (err) return null;
+
+
+    })
+
+
+}
 
 
 exports.qc_exam = qc_exam;

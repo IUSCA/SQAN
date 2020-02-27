@@ -3,7 +3,7 @@
     <div ng-if="!$ctrl.exam.isdeleted" class="subject-tall">
         <p>
             <time style="position: relative; top: 5px"><b>{{::$ctrl.exam.StudyTimestamp|date:'short':'-0400'}} <small>(EST)</small></b></time> &nbsp;
-
+            <span ng-if="$ctrl.exam.is_linked" uib-tooltip="This exam has a matching exam in a different modality"><b><i class="fa fa-link"></i></b></span>
             <reqc exam="$ctrl.exam" templates="$ctrl.templates" ng-if="$ctrl.qc && $ctrl.exam"></reqc>
             <button ng-if="$ctrl.qc" class="pull-right btn btn-xs btn-warning" style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.opencomment()" uib-tooltip="Delete all series in this exam"><i class="fa fa-trash fa-sm" aria-hidden="true"></i>  Delete Exam</button>
             <button ng-disabled="$ctrl.exam.converted_to_template==true" class="btn btn-xs " style="padding: 1px 2px; font-size: 80%;" ng-click="$ctrl.openaddtemplate()" uib-tooltip="Make a copy of this exam and add it as an available template to QC studies from this IIBISID"><i class="fa fa-files-o fa-sm" aria-hidden="true"></i> Add as Template</button>

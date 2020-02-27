@@ -27,9 +27,9 @@ app.controller('ExamsController',
         $scope.show_deprecated = true;
         $scope.serieses_count = 0;
         $scope.modalities = {
-            MR: {display: true, count: 0},
-            CT: {display: false, count: 0},
-            PT: {display: false, count: 0}
+            MR: {display: false, count: 0},
+            CT: {display: true, count: 0},
+            PT: {display: true, count: 0}
         };
 
         $scope.showExams = true;

@@ -407,6 +407,43 @@ function incoming(tags, fromFile, cb) {
                 });
         },
 
+        // check if this exam is linked ot another exam aquired with a different modality 
+        function(next) {
+            
+            if(h.qc_istemplate) return next();  //skip if it is a template; templates don't need to be linked 
+
+            if (exam.is_linked) {
+                console.log("This exam is linked to "+exam.is_linked);
+                next();
+            }
+            else {
+                console.log("This exam is NOT linked ");
+                db.Exam.findOneAndUpdate({
+                    research_id: {$ne:research._id},
+                    subject: h.qc_subject,
+                    StudyInstanceUID: h.StudyInstanceUID,                    
+                    isdeleted: false,
+                },{is_linked: exam._id}, {upsert:false, 'new': true},
+                function(err, linked_exam) {
+                    if(err) return next(err);
+                    console.log(linked_exam)
+                    if (linked_exam == undefined || linked_exam == null) {
+                        console.log("NO MATCHING EXAMS WERE FOUND")
+                        return next();
+                    }
+                    else {
+                        db.Exam.updateOne({_id: exam._id},
+                            {
+                                is_linked:linked_exam._id,
+                            }, function(err) {
+                                if (err) return next(err);
+                                return next();
+                            });
+                    } 
+                });
+            }            
+        },        
+
         //make sure we know about this template and insert template header
         function(next) {
             if(!h.qc_istemplate) return next();  //if not a template then skip
