@@ -1,5 +1,23 @@
 <template>
   <b-container v-if="benchmarkData">
+    <b-tabs type="tabs" active="activePill">
+      <b-tab
+        v-for="(benchmark, index) in benchmarks"
+        v-bind:benchmark="benchmark"
+        v-bind:index="index"
+        v-bind:key="benchmark.exam_id"
+      >
+        <uib-tab-heading>
+          <i v-if="benchmark.converted_to_template" class="fa fa-clone"></i>
+          <i
+            v-if="!benchmark.converted_to_template"
+            class="fa fa-fw fa-file-o"
+          ></i>
+          {{benchmark.date | date:'short':'-0400'}}
+        </uib-tab-heading>
+      </b-tab>
+    </b-tabs>
+
     <b-row>
       <b-col>
         <b-card header="Benchmark Information">
@@ -93,7 +111,7 @@
     </b-row>
 
     <b-row v-if="seriesVisible">
-      <BenchmarkSeries :series=benchmarkData.series />
+      <BenchmarkSeries :series="benchmarkData.series" />
     </b-row>
   </b-container>
 </template>
@@ -118,7 +136,7 @@ export default {
       // keep track of benchmarks once we have loaded them from api
       benchmarks: {},
       benchmarkData: "",
-      seriesVisible: false,
+      seriesVisible: true,
       seriesToDelete: [],
       format,
       parseISO,
@@ -164,7 +182,7 @@ export default {
   },
   mounted() {
     // console.log("Component has been created!");
-    // console.log("summary", this.summary);
+    console.log("summary", this.summary);
     this.query();
   }
 };

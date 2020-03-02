@@ -33,6 +33,7 @@
                 <th>View</th>
               </tr>
             </thead>
+            
             <tbody>
               <template
                 v-for="(summary, index) in templates"

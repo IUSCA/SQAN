@@ -6,8 +6,12 @@
       cellspacing="0"
     >
       <!-- <tr style="background-color:#e2eef5"> -->
-      <th class="text-center" v-for="dd in tseriesTable" v-bind:key="dd">
-        {{ dd }}
+      <th
+        class="text-center"
+        v-for="header in tseriesTable"
+        v-bind:key="header"
+      >
+        {{ header }}
       </th>
       <th>
         <font-awesome-icon icon="trash-alt" aria-hidden="true" />
@@ -21,13 +25,13 @@
         <td
           class="text-center"
           style="word-wrap: break-all;cursor:pointer"
-          ng-click="opentemplate(dd.template_id)"
+          v-on:click="opentemplate(dd.template_id)"
         >
           {{ dd.series_desc }}
         </td>
         <td class="text-center">{{ dd.usedInQC }}</td>
         <td class="text-center">{{ dd.imageCount }}</td>
-        <td><input type="checkbox" v-on:click="deleteThisSeries(dd)" /></td>
+        <td><input type="checkbox" v-on:click="toggleThisSeries(dd)" /></td>
       </tr>
     </table>
   </div>
@@ -45,8 +49,25 @@ export default {
         "Series Description",
         "Times used for QC",
         "# Images"
-      ]
+      ],
+      selectedSeries: {},
     };
+  },
+  methods: {
+    toggleThisSeries(series) {
+      if (this.selectedSeries.hasOwnProperty(series.SeriesNumber)) {
+        // console.log("removing series: ", series.SeriesNumber)
+        delete this.selectedSeries[series.SeriesNumber]
+      } else {
+        // console.log("adding series: ", series.SeriesNumber)
+        this.selectedSeries[series.SeriesNumber] = series
+      }
+    },
+    opentemplate(tid) {
+        // console.log(tid);
+        window.open("template/"+tid);
+    }
+
   },
   computed: {
     orderedSeries: function() {
@@ -55,7 +76,7 @@ export default {
   },
   mounted() {
     // console.log("Component has been created!");
-    console.log("series", this.series);
+    // console.log("series", this.series);
   }
 };
 </script>
