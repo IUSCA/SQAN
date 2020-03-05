@@ -50,28 +50,28 @@ export default {
         "Times used for QC",
         "# Images"
       ],
-      selectedSeries: {},
+      selectedSeries: {}
     };
   },
   methods: {
     toggleThisSeries(series) {
       if (this.selectedSeries.hasOwnProperty(series.SeriesNumber)) {
         // console.log("removing series: ", series.SeriesNumber)
-        delete this.selectedSeries[series.SeriesNumber]
+        delete this.selectedSeries[series.SeriesNumber];
       } else {
         // console.log("adding series: ", series.SeriesNumber)
-        this.selectedSeries[series.SeriesNumber] = series
+        this.selectedSeries[series.SeriesNumber] = series;
       }
     },
     opentemplate(tid) {
-        // console.log(tid);
-        window.open("template/"+tid);
+      // console.log(tid);
+      window.open("template/" + tid);
     }
-
   },
   computed: {
     orderedSeries: function() {
-      return this._.orderBy(this.series, "SeriesNumber");
+      //return this._.orderBy(this.series, "SeriesNumber");
+      return this.series.concat().sort(this.$helpers.sortBy("SeriesNumber"));
     }
   },
   mounted() {

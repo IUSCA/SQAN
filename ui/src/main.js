@@ -25,9 +25,9 @@ Axios.interceptors.request.use(
   }
 );
 
-//Lodash
-import Lodash from "lodash"
-Object.defineProperty(Vue.prototype, '_', { value: Lodash });
+//Local glopbal helper functions
+import helpers from './plugins/helpers';
+Object.defineProperty(Vue.prototype, '$helpers', { value: helpers });
 
 
 //Bootstrap
