@@ -2,12 +2,17 @@
   <div class="row">
     <div class="input-group">
       <span class="input-group-addon">
-        <font-awesome-icon icon="filter" aria-hidden="true" style="vertical-align:middle" />
+        <font-awesome-icon
+          icon="filter"
+          aria-hidden="true"
+          style="vertical-align:middle"
+        />
       </span>
       <input
         type="text"
         class="form-control pull-right input-sm"
-        v-bind:value="filter"
+        v-model="filter"
+        v-on:input="updateFilter"
         placeholder="filter..."
       />
     </div>
@@ -15,11 +20,21 @@
 </template>
 
 <script>
+// use with @/plugins/filters.js mixin in parent component
 export default {
   data() {
     return {
       filter: ""
     };
+  },
+  methods: {
+    updateFilter() {
+      // TODO:
+      // this.$helpers.debounce doesn't seem to have any effect:
+      // this.$helpers.debounce(this.$emit("update-filter", this.filter), 2000);
+
+      this.$emit("update-filter", this.filter);
+    }
   }
 };
 </script>

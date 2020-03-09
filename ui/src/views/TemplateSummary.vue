@@ -7,7 +7,7 @@
           Template Summary Table
         </h3>
         <br />
-        <filter-input />
+        <filter-input v-on:update-filter="updateFilter" />
         <br /><br />
         <div class="row">
           <table
@@ -33,10 +33,10 @@
                 <th>View</th>
               </tr>
             </thead>
-            
+
             <tbody>
               <template
-                v-for="(summary, index) in templates"
+                v-for="(summary, index) in filteredResults"
                 v-bind:summary="summary"
                 v-bind:index="index"
               >
@@ -81,13 +81,14 @@
 </template>
 
 <script>
+import FilterMixin from "@/plugins/filters.js";
 import FilterInput from "@/components/FilterInput.vue";
 import TemplateDetail from "@/components/templates/TemplateDetail.vue";
 
 export default {
   name: "templatesummary",
   components: { FilterInput, TemplateDetail },
-
+  mixins: [FilterMixin],
   data() {
     return {
       fields: ["IIBISID", "Modality", "StationName", "radio_tracer", "count"],
@@ -108,7 +109,8 @@ export default {
         filter: "ascending",
         fieldname: "IIBISID"
       },
-      templates: [],
+      results: [],
+      search: "",
       selected: ""
     };
   },
@@ -117,11 +119,11 @@ export default {
     query: function() {
       this.$http.get("/api/qc/templatesummary/istemplate").then(
         res => {
-          this.templates = res.data;
+          this.results = res.data;
           console.log(
-            this.templates.length + " templates retrieved from exam db"
+            this.results.length + " benchmarks retrieved from exam db"
           );
-          console.log(this.templates);
+          console.log(this.results);
         },
         err => {
           console.log("Error contacting API");
@@ -139,7 +141,7 @@ export default {
       //console.log(this.selected);
     },
 
-    updateSort(field) {
+    updateSort: function(field) {
       if (field == this.sorting.fieldname) {
         // toggle the order
         if (this.sorting.filter == "ascending") {
@@ -151,9 +153,12 @@ export default {
         this.sorting.fieldname = field;
         this.sorting.filter = "ascending";
       }
-      //console.log(this.selected);
     },
-    sortIcon(field) {
+    updateFilter: function(term) {
+      this.search = term;
+      // console.log('updating search term', this.search)
+    },
+    sortIcon: function(field) {
       if (field == this.sorting.fieldname) {
         if (this.sorting.filter == "ascending") {
           return "arrow-down";
@@ -163,14 +168,6 @@ export default {
       } else {
         return "";
       }
-    }
-  },
-
-  computed: {
-    sortedTemplates: function() {
-      return this.numbers.filter(function(number) {
-        return number % 2 === 0;
-      });
     }
   },
 
