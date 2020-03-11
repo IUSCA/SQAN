@@ -26,9 +26,7 @@
               <font-awesome-icon :icon="['far', 'clock']" aria-hidden="true" />
             </span>
             <span>Timestamp:</span>
-            <span>{{
-              format(parseISO(benchmarkData.date), "yyyy-MM-dd HH:mm:ss")
-            }}</span>
+            <span>{{ benchmarkData.date | date }}</span>
           </div>
           <div>
             <span>
@@ -119,8 +117,6 @@
 <script>
 import BenchmarkSeries from "@/components/templates/BenchmarkSeries.vue";
 
-import { format, parseISO } from "date-fns";
-
 export default {
   components: { BenchmarkSeries },
   name: "BenchmarkDetail",
@@ -138,8 +134,6 @@ export default {
       benchmarkData: "",
       seriesVisible: true,
       seriesToDelete: [],
-      format,
-      parseISO,
       BenchmarkSeries
     };
   },
