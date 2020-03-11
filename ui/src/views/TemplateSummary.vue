@@ -81,7 +81,7 @@
 </template>
 
 <script>
-import FilterMixin from "@/plugins/filters.js";
+import FilterMixin from "@/plugins/filter_results.js";
 import FilterInput from "@/components/FilterInput.vue";
 import TemplateDetail from "@/components/templates/TemplateDetail.vue";
 
