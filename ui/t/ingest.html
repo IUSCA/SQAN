@@ -1,0 +1,62 @@
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <h3><i class="fa fa-upload"></i> Data Ingestion</h3>
+
+            <div class="row">
+                <div class="col-sm-10">
+                    <form class="form-horizontal" name="ingestion_form">
+                        <fieldset>
+                            <div class="well">
+                                <div class="form-group">
+                                    <label for="inputStudyName" class="col-lg-2 control-label">Study Name</label>
+                                    <div class="col-lg-10">
+                                        <input type="text" class="form-control" id="inputStudyName" placeholder="study name" autocomplete="off" ng-model="ingest.studyname">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputSubjectName" class="col-lg-2 control-label">Subject Name</label>
+                                    <div class="col-lg-10">
+                                        <input type="text" class="form-control" id="inputSubjectName" placeholder="subject name" autocomplete="off" ng-model="ingest.subject">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputPath" class="col-lg-2 control-label">Path</label>
+                                    <div class="col-lg-10">
+                                        <input type="text" class="form-control" id="inputPath" placeholder="full path to data directory" autocomplete="off" ng-model="ingest.path">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-lg-10 col-lg-offset-2">
+                                    <button type="submit" class="btn btn-primary" ng-click="verifyIngestion(); event.preventDefault();" ng-disabled="ingestion_form.$pristine">Ingest Dataset</button>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </form>
+                </div>
+            </div>
+
+            <div class="row">
+                <table class="table table-bordered">
+                    <thead>
+                        <th>User</th>
+                        <th>Path</th>
+                        <th>Date</th>
+                        <th>StudyName</th>
+                        <th>Subject</th>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="ing in ingestions">
+                            <td>{{ing.user.username}}</td>
+                            <td>{{ing.path}}</td>
+                            <td>{{ing.createDate}}</td>
+                            <td>{{ing.studyname}}</td>
+                            <td>{{ing.subject}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

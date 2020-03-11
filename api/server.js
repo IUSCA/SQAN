@@ -20,6 +20,7 @@ var compress = require('compression');
 var config = require('../config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('./models');
+require('passport');
 // var profile = require('./profile');
 
 //init express

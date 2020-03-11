@@ -359,10 +359,19 @@ exports.parseMeta = function(h) {
 	    EchoNumbers: null,
     };
 
-    if(h.PatientName) {
+    if(h.PatientName && typeof h.PatientName === 'string') {
         var ts = h.PatientName.split("^");
         meta.iibisid = ts[0];
         meta.subject = ts[1]; //subject will be undefined if there is only 1 token.
+    } else if(h.PatientID && typeof h.PatientID === 'string') {
+        meta.iibisid = h.StudyDescription;
+        let subj = h.PatientID.split('_');
+        if (subj.length == 1) {
+            meta.subject = subj[0];
+        } else {
+            subj.pop();
+            meta.subject = subj.join('_');
+        }
     }
 
     //this is deprecated by meta.subject
@@ -373,6 +382,8 @@ exports.parseMeta = function(h) {
     if(meta.subject == "TEMPLATE") {
         meta.template = true;
     }
+
+    h["StationName"] = h.DeviceSerialNumber;
 
     //TODO.. it looks like Radiologist won't be able to consistently use ^ as version number separator.
     //we've discussed an alternative to strip all trailing number instead.. but I need to discuss a bit
@@ -405,6 +416,7 @@ exports.composeESIndex = function(h) {
     var index_fields = ["Modality", "ManufacturerModelName", "StationName", "SoftwareVersions"];
     index_fields.forEach(function(field) {
         var value = h[field];
+        if(typeof value !== 'string') return;
         if(!value) throw new Error("missing required esindex fields:"+field);
         if(id != "") id += ".";
         //make es index name friendly

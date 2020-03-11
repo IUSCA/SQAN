@@ -11,49 +11,69 @@ var winston = require('winston');
 var async = require('async');
 var mkdirp = require('mkdirp');
 var split = require('split');
-
+var dicom = require('dicom');
 
 //mine
 var config = require('../config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../api/models');
 var qc_func = require('../api/qc');
+var private_tags = require('./private_tags');
+
+console.log(private_tags.dictionary);
+
+var qckeywords = null;
 
 
 //connect to db and start process loop
 db.init(function(err) {
     if(err) throw err; //will crash
 
-    // process.argv.forEach((val, index) => {console.log(`${index}: ${val}`);});
+    process.argv.forEach((val, index) => {console.log(`${index}: ${val}`);});
 
-    var fpath = process.argv.slice(2).toString();
+    var fpath = process.argv[2].toString();
+    var studyName = null;
+    var subject = null;
+    if(process.argv[3] !== undefined) studyName = process.argv[3].toString();
+    if(process.argv[4] !== undefined) subject = process.argv[4].toString();
 
-    if (fpath && file_exists(fpath)) {
-        logger.info("Running in file mode, will exit when processing is complete.");
 
-        filewalker(fpath, function(err,dirs){
-            if (err) throw err;
-            async.eachSeries(dirs, function(dir, next) {
-            // dirs.forEach(function(dir){
-                dir2Incoming(dir, next) //,function(err){
-                //     if (err) throw err;
-                //   console.log("directory processed -- "+dir);
-                // });
-            }, function(err) {
-                if(err) logger.error(err);
-                process.exit(0)
+    db.QCkeyword.find({},function(err,_keys){
+        if (err) throw err;
+        qckeywords = _keys;
+
+        if(studyName && subject) {
+            logger.info(`Using override study ${studyName} and override subject ${subject}`);
+        }
+
+        if (fpath && file_exists(fpath)) {
+            logger.info("Running in file mode, will exit when processing is complete.");
+
+            filewalker(fpath, function(err,dirs){
+                if (err) throw err;
+                async.eachSeries(dirs, function(dir, next) {
+                // dirs.forEach(function(dir){
+                    dir2Incoming(dir, next, studyName, subject) //,function(err){
+                    //     if (err) throw err;
+                    //   console.log("directory processed -- "+dir);
+                    // });
+                }, function(err) {
+                    if(err) logger.error(err);
+                    process.exit(0)
+                })
+                //db.disconnect(function(){})
             })
-            //db.disconnect(function(){})
-        })
-    }
-    else if (fpath && !file_exists(fpath)){
-        logger.error("Path not found --> "+ fpath);
-        process.exit(0);
-    }
-    else {
-        logger.info("Running in batch mode");
-        process0(0)
-    }
+        }
+        else if (fpath && !file_exists(fpath)){
+            logger.error("Path not found --> "+ fpath);
+            process.exit(0);
+        }
+        else {
+            logger.info("Running in batch mode");
+            process0(0)
+        }
+
+    })
 
 });
 
@@ -126,7 +146,7 @@ function process_instance(change, next) {
 }
 
 //here is the main business logic
-function incoming(tags, fromFile, cb) {
+function incoming(tags, fromFile, studyName, subject, cb) {
     var research = null;
     var exam = null;
     var series = null;
@@ -139,23 +159,51 @@ function incoming(tags, fromFile, cb) {
     async.series([
 
         function(next) {
-            var testag = tags[Object.keys(tags)[0]];
-            if (testag.Name == undefined) {
-                isHeader = true;
-                h = tags;
-                return next();
-            } else {
-                isHeader = false;
-                return next();
-            }
+            isHeader = false;
+            return next();
+            // var testag = tags[Object.keys(tags)[0]];
+            // if (testag.Name == undefined) {
+            //     isHeader = true;
+            //     h = tags;
+            //     return next();
+            // } else {
+            //     isHeader = false;
+            //     return next();
+            // }
         },
 
         //process tags into key/value pairs for database
         function(next) {
             if (isHeader) return next();
             async.each(tags, function(tag, _cb) {
-                h[tag.Name] = tag.Value;
-                _cb();
+                let val = tag.Value;
+                if(typeof val === 'object' && Array.isArray(val) && val.length === 1){
+                    val = val[0]
+                }
+                if(tag.Name == '' || tag.Name === undefined) console.log(tag);
+                h[tag.Name] = val;
+
+                let kk = qckeywords.find(x => x.key === tag.Name);
+                // console.log("Key lookup is "+kk)
+
+                if (kk == undefined && tag.Name !== undefined) {
+                    var newkey = {
+                        key: tag.Name,
+                        modality: "common",
+                    };
+
+                    db.QCkeyword.create({
+                        key: newkey.key,
+                        modality: newkey.modality,
+                    }, function(err, _qckeyword) {
+                        if(err) return next(err);
+                        console.log("new key found: "+newkey.key)
+                        qckeywords.push(newkey);
+                        _cb();
+                    });
+                } else {
+                    _cb();
+                }
             }, function(err) {
                 next(err);
             });
@@ -169,6 +217,10 @@ function incoming(tags, fromFile, cb) {
                 var meta = qc_func.instance.parseMeta(h);
                 h.qc_iibisid = meta.iibisid;
                 h.qc_subject = meta.subject;
+                if(subject && studyName) {
+                    h.qc_iibisid = studyName;
+                    h.qc_subject = subject;
+                }
                 h.qc_istemplate = meta.template;
                 h.qc_series_desc = meta.series_desc;
 
@@ -311,15 +363,15 @@ function incoming(tags, fromFile, cb) {
         function(next) {
             //ignore all image/template with SeriesNumber > 200
             // AAK - large SeriesNumber's identify reconstructed images which should not be inserted in the database
-            if(h.Modality == "MR") {
-                if(h.SeriesNumber > 200) {
-                    return next("MR image SeriesNumber is >200:"+h.SeriesNumber);
-                }
-            } else {
-                if(h.SeriesNumber > 100) {
-                    return next("image SeriesNumber is >100:"+h.SeriesNumber);
-                }
-            }
+            // if(h.Modality == "MR") {
+            //     if(h.SeriesNumber > 200) {
+            //         return next("MR image SeriesNumber is >200:"+h.SeriesNumber);
+            //     }
+            // } else {
+            //     if(h.SeriesNumber > 100) {
+            //         return next("image SeriesNumber is >100:"+h.SeriesNumber);
+            //     }
+            // }
             next();
         },
 
@@ -336,31 +388,40 @@ function incoming(tags, fromFile, cb) {
                     }
                 }
 
-                for( let a of config.acl.actions) {
-                    if(acl[a] === undefined) { //action not defined, create it
-                        update = true;
-                        acl[a] = {
-                            users: [],
-                            groups: config.acl.default_groups
-                        }
-                    } else {
-                        for( let gid of config.acl.default_groups) {
-                            if(acl[a].groups.indexOf(gid) < 0) { //default group not found, add it
-                                acl[a].groups.push(gid);
-                                update = true;
+                //give all groups privileges by default
+                //TODO FIX THIS
+                db.Group.find({}, function(err, groups) {
+
+                    let gids = [];
+                    groups.forEach(function(grp) {
+                        gids.push(grp._id);
+                    });
+                    for( let a of config.acl.actions) {
+                        if(acl[a] === undefined) { //action not defined, create it
+                            update = true;
+                            acl[a] = {
+                                users: [],
+                                groups: gids
+                            }
+                        } else {
+                            for( let gid of gids) {
+                                if(acl[a].groups.indexOf(gid) < 0) { //default group not found, add it
+                                    acl[a].groups.push(gid);
+                                    update = true;
+                                }
                             }
                         }
                     }
-                }
 
-                if(update) {
-                    db.Acl.findOneAndUpdate({IIBISID: h.qc_iibisid}, acl, {upsert: true}, function (err, doc) {
-                        if (err) console.log('error updating ACLs');
+                    if(update) {
+                        db.Acl.findOneAndUpdate({IIBISID: h.qc_iibisid}, acl, {upsert: true}, function (err, doc) {
+                            if (err) console.log('error updating ACLs');
+                            return next();
+                        });
+                    } else {
                         return next();
-                    });
-                } else {
-                    return next();
-                }
+                    }
+                })
             });
         },
 
@@ -393,7 +454,7 @@ function incoming(tags, fromFile, cb) {
             db.Exam.findOneAndUpdate({
                     research_id: research._id,
                     subject: (h.qc_istemplate?null:h.qc_subject),
-                    StudyInstanceUID: h.StudyInstanceUID,                    
+                    StudyInstanceUID: h.StudyInstanceUID,
                 },
                 {
                     StudyTimestamp: h.qc_StudyTimestamp,
@@ -637,20 +698,40 @@ function filewalker(dir, done) {
 };
 
 
-function dir2Incoming(dir, cb){ //}, cb){
+function dir2Incoming(dir, cb, studyName, subject){ //}, cb){
 
     filelist = fs.readdirSync(dir);
     async.eachSeries(filelist, function(file, next) {
         //console.log("file --  " +file);
         file = path.resolve(dir, file);
-        var jsoni = validateJSON(file.toString());
-        if (jsoni) {
-            incoming(jsoni, true, function(){
-                console.log(file +" --> processed!!");
-                next();
+        ext = path.extname(file);
+        if(ext !== '.js' && ext !== '.json') {
+            let read_func = dicom.json.file2json;
+            if(ext === '.gz') read_func = dicom.json.gunzip2json;
+            read_func(file, function(err, jsoni) {
+                if(err) {
+                    console.log(err);
+                    console.log(`Can't read file ${file}`);
+                    return next();
+                }
+                assignTags(jsoni, function(err, dJson) {
+                    if(err) return next(err);
+                    incoming(dJson, true, studyName, subject, function(){
+                        console.log(file +" --> processed!!");
+                        next();
+                    });
+                })
             });
         } else {
-            next();
+            var jsoni = validateJSON(file.toString());
+            if (jsoni) {
+                incoming(jsoni, true,  studyName, subject,function(){
+                    console.log(file +" --> processed!!");
+                    next();
+                });
+            } else {
+                next();
+            }
         }
     }, function(err) {
         if(err) return cb(err);
@@ -658,6 +739,28 @@ function dir2Incoming(dir, cb){ //}, cb){
         cb()
         //process.exit(0);
     });
+};
+
+
+function assignTags(dJson, cb) {
+    async.each(Object.keys(dJson), function(key, cb_e){
+        let tag = dicom.tags.for_tag(key);
+        if(tag.name === undefined) {
+            let pTag = private_tags.dictionary[key];
+            if(pTag !== undefined) {
+                //console.log(`Found pTag ${pTag[1]}`);
+                dJson[key]['Name'] = pTag[1];
+            }
+            cb_e();
+        } else {
+            dJson[key]['Name'] = tag.name;
+            cb_e();
+        }
+
+    }, function(err) {
+        if(err) return cb(err, dJson);
+        return cb(null, dJson);
+    })
 }
 
 
