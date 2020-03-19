@@ -1,19 +1,33 @@
 <template>
-  <b-row>
-    <b-col cols="3">
-      <div v-for="(researches, idx) in results" :key="idx">
-        <div v-for="(rs, _idx) in researches" :key="_idx">
-          <h5>{{rs.research.Modality}} / {{rs.research.IIBISID}} / {{rs.research.StationName}}</h5>
-          <div v-for="exam in rs.exams" :key="exam._id" @click="selectExam(exam._id)">
+  <v-container fluid>
+    <div class="display-1">
+      <v-icon large>mdi-microscope</v-icon> Exams</div>
+    <v-row>
+      <v-col cols="3">
+        <v-text-field
+          v-model="search"
+          append-icon="mdi-magnify"
+          label="Search"
+          single-line
+          hide-details
+          class="mb-5"
+        ></v-text-field>
+        <v-divider></v-divider>
+        <div v-for="(researches, idx) in results" :key="idx" class="mb-3">
+          <div v-for="(rs, _idx) in researches" :key="_idx">
+            <div class="font-weight-light">{{rs.research.Modality}} / {{rs.research.IIBISID}} / {{rs.research.StationName}}</div>
+            <span v-for="exam in rs.exams" :key="exam._id" @click="selectExam(exam._id)">
             <SubjectBlock :subject="exam"></SubjectBlock>
+          </span>
+            <v-divider></v-divider>
           </div>
         </div>
-      </div>
-    </b-col>
-    <b-col cols="9">
-      <Exam :exam_id="selected" v-if="selected" />
-    </b-col>
-  </b-row>
+      </v-col>
+      <v-col cols="9">
+        <Exam :exam_id="selected" v-if="selected" />
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script>
@@ -79,7 +93,7 @@ export default {
       this.loading_series = true;
       let self = this;
       this.$http
-        .get("/api/qc/exam/query", {
+        .get(`${this.$config.api}/exam/query`, {
           params: {
             skip: 0,
             limit: 5000000,
@@ -105,3 +119,7 @@ export default {
   }
 };
 </script>
+
+<style>
+
+</style>

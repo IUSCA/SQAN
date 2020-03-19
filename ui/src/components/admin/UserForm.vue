@@ -78,7 +78,7 @@
                   id="select"
                   ng-model="userform.primary_role"
                 >
-                  <option v-for="role in userform.roles">{{ role }}</option>
+                  <option v-for="role in userform.roles" :key="role">{{ role }}</option>
                 </select>
                 <span class="help-block"
                   >Add roles to user to add primary role options</span

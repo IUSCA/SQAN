@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 
-Vue.use(Vuex)
+Vue.use(Vuex);
 
 export default new Vuex.Store({
     state: {
@@ -10,12 +10,16 @@ export default new Vuex.Store({
             role: localStorage.getItem('role') || 'guest',
             jwt: localStorage.getItem('jwt') || '',
             jwt_exp: localStorage.getItem('jwt_exp') || ''
-        }
+        },
+        layout: 'simple-layout'
     },
     mutations: {
         authChange (state, auth) {
             state.auth = auth
         },
+        SET_LAYOUT (state, payload) {
+          state.layout = payload
+        }
     },
     actions: {
         login({commit}, auth) {
@@ -38,6 +42,11 @@ export default new Vuex.Store({
                 ldapinfo: {}
             });
         },
+    },
+    getters: {
+      layout (state) {
+        return state.layout
+      }
     },
     modules: {}
 })

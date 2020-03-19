@@ -1,40 +1,47 @@
 <template>
-  <div class="container">
-    <table
-      class="table table-striped table-hover info"
-      width="100%"
-      cellspacing="0"
-    >
-      <!-- <tr style="background-color:#e2eef5"> -->
-      <th
-        class="text-center"
-        v-for="header in tseriesTable"
-        v-bind:key="header"
-      >
-        {{ header }}
-      </th>
-      <th>
-        <font-awesome-icon icon="trash-alt" aria-hidden="true" />
-      </th>
-      <tr
-        style="background-color:#f2f7fa"
-        v-for="dd in orderedSeries"
-        v-bind:key="dd.SeriesNumber"
-      >
-        <td class="text-center">{{ dd.SeriesNumber }}</td>
-        <td
-          class="text-center"
-          style="word-wrap: break-all;cursor:pointer"
-          v-on:click="opentemplate(dd.template_id)"
-        >
-          {{ dd.series_desc }}
-        </td>
-        <td class="text-center">{{ dd.usedInQC }}</td>
-        <td class="text-center">{{ dd.imageCount }}</td>
-        <td><input type="checkbox" v-on:click="toggleThisSeries(dd)" /></td>
-      </tr>
-    </table>
+
+  <div class="mt-5">
+    <div class="headline">Template Series</div>
+    <v-data-table :items="series" :headers="tseriesHeaders" show-select>
+
+    </v-data-table>
   </div>
+<!--  <div class="container">-->
+<!--    <table-->
+<!--      class="table table-striped table-hover info"-->
+<!--      width="100%"-->
+<!--      cellspacing="0"-->
+<!--    >-->
+<!--      &lt;!&ndash; <tr style="background-color:#e2eef5"> &ndash;&gt;-->
+<!--      <th-->
+<!--        class="text-center"-->
+<!--        v-for="header in tseriesTable"-->
+<!--        v-bind:key="header"-->
+<!--      >-->
+<!--        {{ header }}-->
+<!--      </th>-->
+<!--      <th>-->
+<!--        <font-awesome-icon icon="trash-alt" aria-hidden="true" />-->
+<!--      </th>-->
+<!--      <tr-->
+<!--        style="background-color:#f2f7fa"-->
+<!--        v-for="dd in orderedSeries"-->
+<!--        v-bind:key="dd.SeriesNumber"-->
+<!--      >-->
+<!--        <td class="text-center">{{ dd.SeriesNumber }}</td>-->
+<!--        <td-->
+<!--          class="text-center"-->
+<!--          style="word-wrap: break-all;cursor:pointer"-->
+<!--          v-on:click="opentemplate(dd.template_id)"-->
+<!--        >-->
+<!--          {{ dd.series_desc }}-->
+<!--        </td>-->
+<!--        <td class="text-center">{{ dd.usedInQC }}</td>-->
+<!--        <td class="text-center">{{ dd.imageCount }}</td>-->
+<!--        <td><input type="checkbox" v-on:click="toggleThisSeries(dd)" /></td>-->
+<!--      </tr>-->
+<!--    </table>-->
+<!--  </div>-->
 </template>
 
 <script>
@@ -44,11 +51,23 @@ export default {
   },
   data() {
     return {
-      tseriesTable: [
-        "Series Number",
-        "Series Description",
-        "Times used for QC",
-        "# Images"
+      tseriesHeaders: [
+        {
+          text: "Series Number",
+          value: 'SeriesNumber'
+        },
+        {
+          text: "Series Description",
+          value: "series_desc"
+        },
+        {
+          text: "Times used for QC",
+          value: "usedInQC"
+        },
+        {
+          text: "# Images",
+          value: "imageCount"
+        }
       ],
       selectedSeries: {}
     };

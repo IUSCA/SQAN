@@ -1,13 +1,41 @@
 <template>
-    <b-table :items="img_header">
+    <v-card>
+      <v-card-title>
+        Image Header - #{{img.InstanceNumber}}
+        <v-spacer></v-spacer>
+          <v-text-field
+            v-model="search"
+            append-icon="mdi-magnify"
+            label="Search"
+            single-line
+            hide-details
+          ></v-text-field>
+      </v-card-title>
 
-    </b-table>
+      <v-data-table :items="img_header" :headers="header" :search="search">
+
+      </v-data-table>
+    </v-card>
+
 </template>
 
 <script>
     export default {
 
         name: 'image-header',
+        data() {
+          return {
+            header: [{
+              value: 'key',
+              text: 'Key'
+            }, {
+              value: 'value',
+              text: 'Value'
+            }
+            ],
+            search: ''
+          }
+        },
         computed: {
             img_header: function() {
                 let self = this;

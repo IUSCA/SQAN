@@ -99,7 +99,7 @@ export default {
 
   methods: {
     query: function() {
-      this.$http.get("/api/qc/user/all").then(
+      this.$http.get(`${this.$config.api}/user/all`).then(
         res => {
           this.users = res.data;
           console.log(this.results.length + " users retrieved from db");

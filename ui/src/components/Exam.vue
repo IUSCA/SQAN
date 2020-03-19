@@ -1,17 +1,22 @@
 <template>
     <div class="exam" v-if="exam.series !== undefined">
-        <h4>{{exam.exam.subject}}</h4>
-        <b-table
+      <div class="display-1 font-weight-medium">
+        <v-icon large>mdi-account-check</v-icon>
+        {{exam.exam.subject}}
+      </div>
+        <v-data-table
                 hover
                 :items="exam.series"
-                :fields="fields"
-                @row-clicked="openSeries"
+                :headers="fields"
+                @click:row="openSeries"
                 v-if="!selected_series"
         >
-        </b-table>
+        </v-data-table>
         <Series :series_id="selected_series" v-if="selected_series">
             <template slot="close">
-                <b-button class="float-right" @click="closeSeries" variant="info">Go Back</b-button>
+                <v-btn fab top right absolute @click="closeSeries" color="light-blue">
+                  <v-icon>mdi-close</v-icon>
+                </v-btn>
             </template>
         </Series>
     </div>
@@ -30,14 +35,23 @@
         data() {
             return {
                 exam: {},
-                fields: ['series_desc', 'SeriesNumber', 'qc1_state'],
-                selected_series: null,
+                fields: [{
+                  text: 'Series Description',
+                  value: 'series_desc'
+                },  {
+                  text: 'Series Number',
+                  value: 'SeriesNumber'
+                }, {
+                  text: 'QC1 State',
+                  value: 'qc1_state'
+                }],
+              selected_series: null
             }
         },
         methods: {
             getExam() {
 
-                this.$http.get(`/api/qc/exam/${this.exam_id}`)
+                this.$http.get(`${this.$config.api}/exam/${this.exam_id}`)
                     .then(res => {
                         this.exam = res.data;
                         console.log(res.data);
@@ -46,10 +60,9 @@
                     });
 
             },
-            openSeries(record, index) {
+            openSeries(record) {
                 this.selected_series = record._id;
                 console.log(record);
-                console.log(index);
             },
             closeSeries() {
                 this.selected_series = null;

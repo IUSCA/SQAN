@@ -1,42 +1,54 @@
 <template>
-  <div class="center-parent">
-    <div class="center-child">
-      <b-img fluid src="../assets/sqan_logo_full.png" />
-      <hr />
+      <v-container
+        class="fill-height"
+        fluid
+      >
+        <v-row
+          align="center"
+          justify="center"
+        >
+          <v-col
+            cols="12"
+            sm="8"
+            md="4"
+          >
+            <v-card class="elevation-12">
+              <v-toolbar
+                color="primary"
+                dark
+                flat
+              >
+                <v-toolbar-title>Login form</v-toolbar-title>
+                <v-spacer />
+              </v-toolbar>
+              <v-card-text>
+                <v-form>
+                  <v-text-field
+                    label="Login"
+                    name="login"
+                    v-model="form.username"
+                    prepend-icon="mdi-account"
+                    type="text"
+                  />
 
-      <div class="login-form">
-        <form>
-          <h2 class="text-center">Log in</h2>
-          <div class="form-group">
-            <input
-              type="text"
-              class="form-control"
-              placeholder="Username"
-              v-model="form.username"
-              required="required"
-            />
-          </div>
-          <div class="form-group">
-            <input
-              type="password"
-              class="form-control"
-              placeholder="Password"
-              v-model="form.password"
-              required="required"
-            />
-          </div>
-          <div class="form-group">
-            <button
-              class="btn btn-primary btn-block"
-              @click.prevent="userLogin()"
-            >
-              Log in
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+                  <v-text-field
+                    id="password"
+                    label="Password"
+                    name="password"
+                    v-model="form.password"
+                    prepend-icon="mdi-lock"
+                    type="password"
+                  />
+                </v-form>
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer />
+                <v-btn color="primary" @click="userLogin">Login</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-container>
 </template>
 
 <script>
@@ -57,7 +69,7 @@ export default {
 
     userLogin: function() {
       let self = this;
-      this.$http.post("/api/qc/userLogin", { user: self.form }).then(
+      this.$http.post(`${this.$config.api}/userLogin`, { user: self.form }).then(
         function(res) {
           console.log(res.data);
           self.login(res.data);
@@ -68,6 +80,7 @@ export default {
               type: "success",
               text: "Logging you in"
             });
+            self.$store.commit('SET_LAYOUT', 'app-layout')
             self.$router.push({ path: "/exams" });
           }, 300);
         },

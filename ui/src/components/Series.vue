@@ -1,42 +1,9 @@
 <template>
-    <div class="series" v-if="series.series !== undefined">
+    <v-card class="series" v-if="series.series !== undefined">
         <slot name="close"></slot>
-        <h4>{{series.series.series_desc}}</h4>
+        <v-card-title>{{series.series.series_desc}}</v-card-title>
+        <v-card-subtitle>{{series.series.exam_id.StudyTimestamp}}</v-card-subtitle>
 
-        <b-list-group>
-            <b-list-group-item variant="info">
-                <b-row>
-                    <b-col cols="2">
-                        <h5>Subject</h5>
-                    </b-col>
-                    <b-col cols="10">
-                        <h4>
-                            {{series.series.exam_id.subject}}
-                        </h4>
-                    </b-col>
-                </b-row>
-            </b-list-group-item>
-            <b-list-group-item>
-                <b-row>
-                    <b-col cols="2">
-                        <b>Series Description</b>
-                    </b-col>
-                    <b-col cols="10">
-                        <b>{{series.series.series_desc}}</b>
-                    </b-col>
-                </b-row>
-            </b-list-group-item>
-            <b-list-group-item>
-                <b-row>
-                    <b-col cols="2">
-                        Study Timestamp
-                    </b-col>
-                    <b-col cols="10">
-                        {{series.series.exam_id.StudyTimestamp}}
-                    </b-col>
-                </b-row>
-            </b-list-group-item>
-        </b-list-group>
         <div
                 v-for="img in series.images"
                 class="block"
@@ -46,7 +13,7 @@
         ></div>
 
         <image-header :img="selected_img" v-if="selected_img"></image-header>
-    </div>
+    </v-card>
 </template>
 
 <script>
@@ -69,7 +36,7 @@
         methods: {
             getSeries() {
 
-                this.$http.get(`/api/qc/series/id/${this.series_id}`)
+                this.$http.get(`${this.$config.api}/series/id/${this.series_id}`)
                     .then(res => {
                         this.series = Object.assign({}, res.data);
                         console.log(res.data);
@@ -81,7 +48,7 @@
             selectImage(img_id) {
                 let self = this;
 
-                this.$http.get(`/api/qc/image/${img_id}`)
+                this.$http.get(`${this.$config.api}/image/${img_id}`)
                     .then(res => {
                         console.log(res.data);
                         self.selected_img = res.data;
@@ -90,7 +57,7 @@
                     })
             },
             monitorSeries() {
-                let es = new EventSource(`/api/qc/series/livefeed/`);
+                let es = new EventSource(`${this.$config.api}/series/livefeed/`);
 
                 // let self = this;
 

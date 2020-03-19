@@ -1,70 +1,44 @@
 <template>
-  <div id="app">
-    <div class="main container-fluid">
-      <b-row>
-        <b-col v-if="this.$route.name !== 'signin'" cols="1">
-          <Sidebar />
-        </b-col>
-        <b-col>
-          <transition
-            name="fade"
-            mode="out-in"
-            @beforeLeave="beforeLeave"
-            @enter="enter"
-            @afterEnter="afterEnter"
-          >
-            <keep-alive>
-              <router-view />
-            </keep-alive>
-          </transition>
-        </b-col>
-      </b-row>
-    </div>
-    <notifications group="main" position="bottom right"></notifications>
-  </div>
+  <v-app>
+    <component v-bind:is="layout"></component>
+  </v-app>
 </template>
 
 <script>
-import Sidebar from "@/components/Sidebar";
-export default {
-  name: "app",
-  components: { Sidebar },
-  methods: {
-    beforeLeave(element) {
-      this.prevHeight = getComputedStyle(element).height;
+  import AppLayout from './layouts/AppLayout'
+  import SimpleLayout from './layouts/SimpleLayout'
+  export default {
+    computed: {
+      layout () {
+        return this.$store.getters.layout
+      }
     },
-    enter(element) {
-      const { height } = getComputedStyle(element);
-
-      element.style.height = this.prevHeight;
-
-      setTimeout(() => {
-        element.style.height = height;
-      });
+    components: {
+      'app-layout': AppLayout,
+      'simple-layout': SimpleLayout
+      // define as many layouts you want for the application
     },
-    afterEnter(element) {
-      element.style.height = "auto";
+    methods: {
     }
   }
-};
 </script>
 
 <style>
-.clickable {
-  cursor: pointer;
-}
+  .clickable {
+    cursor: pointer;
+  }
 
-.fade-enter-active,
-.fade-leave-active {
-  transition-duration: 0.3s;
-  transition-property: height, opacity;
-  transition-timing-function: ease;
-  overflow: hidden;
-}
+  .fade-enter-active,
+  .fade-leave-active {
+    transition-duration: 0.3s;
+    transition-property: height, opacity;
+    transition-timing-function: ease;
+    overflow: hidden;
+  }
 
-.fade-enter,
-.fade-leave-active {
-  opacity: 0;
-}
+  .fade-enter,
+  .fade-leave-active {
+    opacity: 0;
+  }
 
 </style>

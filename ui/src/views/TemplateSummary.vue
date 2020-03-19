@@ -7,97 +7,81 @@
           Template Summary Table
         </h3>
         <br />
-        <filter-input v-on:update-filter="updateFilter" />
-        <br /><br />
-        <div class="row">
-          <table
-            class="table table-striped table-hover table-bordered info"
-            width="100%"
-            cellspacing="0"
-          >
-            <thead>
-              <tr>
-                <th
-                  class="text-center"
-                  v-for="fieldname in fieldnames"
-                  v-bind:key="fieldname"
-                >
-                  <span v-on:click="updateSort(fieldname)">
-                    {{ fieldname }}
-                  </span>
-                  <font-awesome-icon
-                    v-if="sortIcon(fieldname)"
-                    :icon="sortIcon(fieldname)"
-                  />
-                </th>
-                <th>View</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <template
-                v-for="(summary, index) in filteredResults"
-                v-bind:summary="summary"
-                v-bind:index="index"
-              >
-                <tr
-                  v-on:click="selectTemplate(summary.IIBISID)"
-                  v-bind:key="summary.IIBISID"
-                >
-                  <td
-                    v-for="field in fields"
-                    v-bind:field="field"
-                    v-bind:key="field"
-                    class="text-center"
-                  >
-                    {{ summary[field] }}
-                  </td>
-                  <td class="text-center">
-                    <font-awesome-icon
-                      icon="angle-left"
-                      v-if="summary.IIBISID != selected"
-                    />
-                    <font-awesome-icon
-                      icon="angle-down"
-                      v-if="summary.IIBISID == selected"
-                    />
-                  </td>
-                </tr>
-                <tr
-                  v-if="summary.IIBISID == selected"
-                  v-bind:key="summary.IIBISID + '-details'"
-                >
-                  <td colspan="6">
-                    <template-detail v-bind:summary="summary"></template-detail>
-                  </td>
-                </tr>
-              </template>
-            </tbody>
-          </table>
+        <div style="width: 250px">
+        <v-text-field
+          v-model="search"
+          append-icon="mdi-magnify"
+          label="Search"
+          single-line
+          hide-details
+        ></v-text-field>
         </div>
+        <v-data-table
+          :items="results"
+          :headers="headers"
+          :search="search"
+          show-expand
+          class="elevation-4"
+          :expanded.sync="expanded"
+          item-key="_id"
+        >
+          <template v-slot:expanded-item="{ headers, item }">
+            <td :colspan="headers.length">
+              <template-detail v-bind:summary="item"></template-detail>
+            </td>
+          </template>
+
+        </v-data-table>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import FilterMixin from "@/plugins/filter_results.js";
-import FilterInput from "@/components/FilterInput.vue";
+// import FilterMixin from "@/plugins/filter_results.js";
+// import FilterInput from "@/components/FilterInput.vue";
 import TemplateDetail from "@/components/templates/TemplateDetail.vue";
 
 export default {
   name: "templatesummary",
-  components: { FilterInput, TemplateDetail },
-  mixins: [FilterMixin],
+  components: { TemplateDetail },
+  // mixins: [FilterMixin],
   data() {
     return {
-      fields: ["IIBISID", "Modality", "StationName", "radio_tracer", "count"],
-      fieldnames: [
-        "IIBISID",
-        "Modality",
-        "Station Name",
-        "Radio Tracer",
-        "# Study Instances"
+      // fields: ["IIBISID", "Modality", "StationName", "radio_tracer", "count"],
+      // fieldnames: [
+      //   "IIBISID",
+      //   "Modality",
+      //   "Station Name",
+      //   "Radio Tracer",
+      //   "# Study Instances"
+      // ],
+      headers: [
+        {
+          text: 'IIBISID',
+          value: 'IIBISID',
+          sortable: true
+        },
+        {
+          text: 'Modality',
+          value: 'Modality',
+          sortable: true
+        },
+        {
+          text: 'Station Name',
+          value: 'StationName',
+          sortable: true
+        },
+        {
+          text: 'Radio Tracer',
+          value: 'radio_tracer',
+          sortable: true
+        },
+        {
+          text: '# Study Instances',
+          value: 'count',
+          sortable: true
+        }
       ],
       tseriesTable: [
         "Series Number",
@@ -117,7 +101,7 @@ export default {
 
   methods: {
     query: function() {
-      this.$http.get("/api/qc/templatesummary/istemplate").then(
+      this.$http.get(`${this.$config.api}/templatesummary/istemplate`).then(
         res => {
           this.results = res.data;
           console.log(
