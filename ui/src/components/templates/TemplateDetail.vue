@@ -172,7 +172,7 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 span {
   padding-right: 5px;
 }

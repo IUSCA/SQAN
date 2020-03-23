@@ -14,7 +14,7 @@
       </v-list-item-content>
     </v-list-item>
     <v-divider class="mb-5"></v-divider>
-    <v-list-item v-for="item in items" :value="item.active" :key="item.title" :to="item.path">
+    <v-list-item v-for="item in items" :value="item.active" :key="item.title" :to="item.path" @click="navChange(item)">
       <v-list-item-action>
         <v-icon>{{item.action}}</v-icon>
       </v-list-item-action>
@@ -23,7 +23,7 @@
       </v-list-item-content>
     </v-list-item>
     <v-divider class="mb-5"></v-divider>
-    <v-list-item v-for="item in admin_items" :value="item.active" :key="item.title" :to="item.path">
+    <v-list-item v-for="item in admin_items" :value="item.active" :key="item.title" :to="item.path" @click="navChange(item)">
       <v-list-item-action>
         <v-icon>{{item.action}}</v-icon>
       </v-list-item-action>
@@ -32,7 +32,7 @@
       </v-list-item-content>
     </v-list-item>
     <v-divider class="mb-5"></v-divider>
-    <v-list-item v-for="item in user_items" :value="item.active" :key="item.title" :to="item.path">
+    <v-list-item v-for="item in user_items" :value="item.active" :key="item.title" :to="item.path" @click="navChange(item)">
       <v-list-item-action>
         <v-icon>{{item.action}}</v-icon>
       </v-list-item-action>
@@ -99,6 +99,11 @@
             path: 'admin',
           },
         ]
+      }
+    },
+    methods: {
+      navChange: function(navItem) {
+        this.$emit('navChange', navItem);
       }
     }
   }

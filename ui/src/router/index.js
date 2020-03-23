@@ -2,7 +2,7 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Signin from '../views/Signin.vue'
 import About from '../views/About.vue'
-import QC from '../views/QC.vue'
+import QCKeys from '../views/QCKeys.vue'
 import TemplateSummary from '../views/TemplateSummary.vue'
 import ResearchSummary from '../views/ResearchSummary.vue'
 import Admin from '../views/Admin.vue'
@@ -39,15 +39,6 @@ const router = new VueRouter({
       component: () => import(/* webpackChunkName: "exams" */ '../views/Exams.vue')
     },
     {
-      path: '/qc',
-      name: 'qc',
-      component: QC,
-      meta: {
-        requiresAuth: true,
-        is_admin: false
-      },
-    },
-    {
       path: '/templatesummary',
       name: 'templatesummary',
       component: TemplateSummary,
@@ -69,6 +60,15 @@ const router = new VueRouter({
       path: '/admin',
       name: 'admin',
       component: Admin,
+      meta: {
+        requiresAuth: true,
+        is_admin: true
+      },
+    },
+    {
+      path: '/qckeys',
+      name: 'qckeys',
+      component: QCKeys,
       meta: {
         requiresAuth: true,
         is_admin: true

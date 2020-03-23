@@ -14,8 +14,8 @@
         </v-data-table>
         <Series :series_id="selected_series" v-if="selected_series">
             <template slot="close">
-                <v-btn fab top right absolute @click="closeSeries" color="light-blue">
-                  <v-icon>mdi-close</v-icon>
+                <v-btn small fab top right absolute @click="closeSeries" color="light-blue">
+                  <v-icon small>mdi-close</v-icon>
                 </v-btn>
             </template>
         </Series>

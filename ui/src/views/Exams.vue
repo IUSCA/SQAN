@@ -1,7 +1,4 @@
 <template>
-  <v-container fluid>
-    <div class="display-1">
-      <v-icon large>mdi-microscope</v-icon> Exams</div>
     <v-row>
       <v-col cols="3">
         <v-text-field
@@ -27,7 +24,6 @@
         <Exam :exam_id="selected" v-if="selected" />
       </v-col>
     </v-row>
-  </v-container>
 </template>
 
 <script>
