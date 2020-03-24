@@ -1,46 +1,54 @@
 <template>
-  <v-list dense>
-    <v-list-item to="about">
-      <v-list-item-action>
-        <img src="../assets/sqan_logo.png" width="32">
-      </v-list-item-action>
-      <v-list-item-content>
-        <v-list-item-title class="title">
-          SQAN
-        </v-list-item-title>
-        <v-list-item-subtitle>
-          development
-        </v-list-item-subtitle>
-      </v-list-item-content>
-    </v-list-item>
-    <v-divider class="mb-5"></v-divider>
-    <v-list-item v-for="item in items" :value="item.active" :key="item.title" :to="item.path" @click="navChange(item)">
-      <v-list-item-action>
-        <v-icon>{{item.action}}</v-icon>
-      </v-list-item-action>
-      <v-list-item-content>
-        <v-list-item-title>{{item.title}}</v-list-item-title>
-      </v-list-item-content>
-    </v-list-item>
-    <v-divider class="mb-5"></v-divider>
-    <v-list-item v-for="item in admin_items" :value="item.active" :key="item.title" :to="item.path" @click="navChange(item)">
-      <v-list-item-action>
-        <v-icon>{{item.action}}</v-icon>
-      </v-list-item-action>
-      <v-list-item-content>
-        <v-list-item-title>{{item.title}}</v-list-item-title>
-      </v-list-item-content>
-    </v-list-item>
-    <v-divider class="mb-5"></v-divider>
-    <v-list-item v-for="item in user_items" :value="item.active" :key="item.title" :to="item.path" @click="navChange(item)">
-      <v-list-item-action>
-        <v-icon>{{item.action}}</v-icon>
-      </v-list-item-action>
-      <v-list-item-content>
-        <v-list-item-title>{{item.title}}</v-list-item-title>
-      </v-list-item-content>
-    </v-list-item>
-  </v-list>
+  <v-navigation-drawer
+    v-model="drawer"
+    permanent
+    expand-on-hover
+    app
+    class="elevation-8"
+  >
+    <v-list dense>
+      <v-list-item to="about">
+        <v-list-item-action>
+          <img src="../assets/sqan_logo.png" width="30">
+        </v-list-item-action>
+        <v-list-item-content>
+          <v-list-item-title class="title">
+            SQAN
+          </v-list-item-title>
+          <v-list-item-subtitle>
+            development
+          </v-list-item-subtitle>
+        </v-list-item-content>
+      </v-list-item>
+      <v-divider class="mb-5"></v-divider>
+      <v-list-item v-for="item in items" :value="item.active" :key="item.title" :to="item.path" @click="navChange(item)">
+        <v-list-item-action>
+          <v-icon>{{item.action}}</v-icon>
+        </v-list-item-action>
+        <v-list-item-content>
+          <v-list-item-title>{{item.title}}</v-list-item-title>
+        </v-list-item-content>
+      </v-list-item>
+      <v-divider class="mb-5"></v-divider>
+      <v-list-item v-for="item in admin_items" :value="item.active" :key="item.title" :to="item.path" @click="navChange(item)">
+        <v-list-item-action>
+          <v-icon>{{item.action}}</v-icon>
+        </v-list-item-action>
+        <v-list-item-content>
+          <v-list-item-title>{{item.title}}</v-list-item-title>
+        </v-list-item-content>
+      </v-list-item>
+      <v-divider class="mb-5"></v-divider>
+      <v-list-item v-for="item in user_items" :value="item.active" :key="item.title" :to="item.path" @click="navChange(item)">
+        <v-list-item-action>
+          <v-icon>{{item.action}}</v-icon>
+        </v-list-item-action>
+        <v-list-item-content>
+          <v-list-item-title>{{item.title}}</v-list-item-title>
+        </v-list-item-content>
+      </v-list-item>
+    </v-list>
+  </v-navigation-drawer>
 </template>
 
 <script>
@@ -48,6 +56,7 @@
     name: 'Drawer',
     data() {
       return {
+        drawer: null,
         items: [
           {
             action: 'mdi-microscope',
@@ -103,6 +112,7 @@
     },
     methods: {
       navChange: function(navItem) {
+        this.drawer = false;
         this.$emit('navChange', navItem);
       }
     }

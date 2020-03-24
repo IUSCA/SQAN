@@ -10,19 +10,13 @@
           <v-col
             cols="12"
             sm="8"
-            md="4"
+            md="6"
           >
+            <v-img src="../assets/sqan_logo_full.png" class="elevation-4" />
+            <v-divider class="mb-2 mt-2"></v-divider>
+            <v-form @submit.prevent="userLogin">
             <v-card class="elevation-12">
-              <v-toolbar
-                color="primary"
-                dark
-                flat
-              >
-                <v-toolbar-title>Login form</v-toolbar-title>
-                <v-spacer />
-              </v-toolbar>
               <v-card-text>
-                <v-form>
                   <v-text-field
                     label="Login"
                     name="login"
@@ -39,13 +33,13 @@
                     prepend-icon="mdi-lock"
                     type="password"
                   />
-                </v-form>
               </v-card-text>
               <v-card-actions>
                 <v-spacer />
-                <v-btn color="primary" @click="userLogin">Login</v-btn>
+                <v-btn type="submit" color="primary" @click="userLogin">Login</v-btn>
               </v-card-actions>
             </v-card>
+            </v-form>
           </v-col>
         </v-row>
       </v-container>
@@ -104,38 +98,4 @@ body {
   background-color: #484f56;
 }
 
-.login-form {
-  width: 340px;
-  margin: 50px auto;
-}
-.login-form form {
-  margin-bottom: 15px;
-  background: #f7f7f7;
-  box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
-  padding: 30px;
-}
-.login-form h2 {
-  margin: 0 0 15px;
-}
-.form-control,
-.btn {
-  min-height: 38px;
-  border-radius: 2px;
-}
-.btn {
-  font-size: 15px;
-  font-weight: bold;
-}
-
-.center-parent {
-  position: relative;
-  width: 100%;
-  min-height: 100vh;
-}
-.center-child {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
 </style>

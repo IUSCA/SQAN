@@ -103,6 +103,9 @@ import Notifications from "vue-notification";
 
 Vue.use(Notifications);
 
+//Date filtering
+Vue.use(require('vue-moment'));
+
 //Filters
 import "./filters.js";
 

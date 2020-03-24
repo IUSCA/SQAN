@@ -3,7 +3,7 @@
     <v-chip
       :color="status.bg"
       :text-color="status.text"
-      class="mb-1 font-weight-light"
+      :class="`mb-1 font-weight-light elevation-${elevation}`"
       small
       link
     >
@@ -32,7 +32,8 @@
     export default {
         name: 'SubjectBlock',
         props: {
-            subject: Object
+            subject: Object,
+            selected: String
         },
         data() {
           return {
@@ -72,7 +73,12 @@
               if(this.subject.qc.series_missing.length) return this.statuses['missing'];
               if(this.subject.qc.series_no_template.length) return this.statuses['notemplate'];
               return this.statuses['success'];
-            }
+            },
+            elevation: function() {
+              return this.selected == this.subject._id ? '0' : '5';
+            },
+
+
         }
 
     }

@@ -1,29 +1,32 @@
 <template>
-    <v-row>
-      <v-col cols="3">
+    <div style="display: inline-flex; width: 100%">
+      <div class="exam-list">
         <v-text-field
           v-model="search"
           append-icon="mdi-magnify"
           label="Search"
           single-line
           hide-details
-          class="mb-5"
+          class="mx-5 my-5"
         ></v-text-field>
         <v-divider></v-divider>
         <div v-for="(researches, idx) in results" :key="idx" class="mb-3">
           <div v-for="(rs, _idx) in researches" :key="_idx">
             <div class="font-weight-light">{{rs.research.Modality}} / {{rs.research.IIBISID}} / {{rs.research.StationName}}</div>
             <span v-for="exam in rs.exams" :key="exam._id" @click="selectExam(exam._id)">
-            <SubjectBlock :subject="exam"></SubjectBlock>
+            <SubjectBlock :subject="exam" :selected="selected"></SubjectBlock>
           </span>
             <v-divider></v-divider>
           </div>
         </div>
-      </v-col>
-      <v-col cols="9">
+      </div>
+
+      <v-divider vertical class="mx-3"></v-divider>
+      <v-container fluid>
         <Exam :exam_id="selected" v-if="selected" />
-      </v-col>
-    </v-row>
+      </v-container>
+
+    </div>
 </template>
 
 <script>
@@ -54,7 +57,8 @@ export default {
       },
       selected: null,
       loading_series: false,
-      results: []
+      results: [],
+      search: ''
     };
   },
   methods: {
@@ -118,4 +122,9 @@ export default {
 
 <style>
 
+  .exam-list {
+    min-width: 200px;
+    max-width: 300px;
+    height: 100%;
+  }
 </style>

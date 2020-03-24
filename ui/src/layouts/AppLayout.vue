@@ -1,23 +1,23 @@
 <template>
   <v-app id="inspire">
-    <v-navigation-drawer
-      v-model="drawer"
-      permanent
-      expand-on-hover
-      app
-      class="elevation-8"
-    >
       <Drawer @navChange="updateActive"></Drawer>
-    </v-navigation-drawer>
 
     <v-content>
       <v-container
         fluid
       >
         <div class="page-title light-blue darken-3 white--text elevation-6 display-1">
-          <v-icon large class="white--text">{{active_page.action}}</v-icon> {{active_page.title}}
+          <v-icon large class="white--text">{{active_page.action}}</v-icon>
+          <v-divider
+            vertical style="display: inline;"
+            class="mx-2"
+          ></v-divider>
+
+          {{active_page.title}}
         </div>
-        <router-view></router-view>
+        <transition name="fade">
+          <router-view></router-view>
+        </transition>
       </v-container>
     </v-content>
     <v-footer
@@ -35,10 +35,9 @@
 
   export default {
     data: () => ({
-      drawer: null,
       active_page: {
-        action: 'mdi-microscope',
-        title: 'Exams'
+        action: '',
+        title: ''
       }
     }),
     components: {Drawer},
@@ -63,6 +62,20 @@
     margin-top: -12px;
     margin-bottom: 15px;
     max-width: 30%;
+    min-width: 300px;
     border-bottom-right-radius: 20px;
+  }
+
+  .fade-enter-active, .fade-leave-active {
+    transition-property: opacity;
+    transition-duration: .25s;
+  }
+
+  .fade-enter-active {
+    transition-delay: .25s;
+  }
+
+  .fade-enter, .fade-leave-active {
+    opacity: 0
   }
 </style>

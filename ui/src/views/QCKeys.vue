@@ -1,6 +1,17 @@
 <template>
   <div class="QCKeys">
-    <v-data-table :items="qckeys" :headers="headers">
+
+    <div style="width: 250px">
+      <v-text-field
+        v-model="search"
+        append-icon="mdi-magnify"
+        label="Search"
+        single-line
+        hide-details
+      ></v-text-field>
+    </div>
+
+    <v-data-table :items="qckeys" :headers="headers" :search="search">
 
     </v-data-table>
   </div>
@@ -11,6 +22,7 @@
     name: "qc",
     data() {
       return {
+        search: '',
         qckeys: [],
         headers: [
           {
