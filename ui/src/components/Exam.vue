@@ -4,13 +4,19 @@
         <v-icon large>mdi-account-check</v-icon>
         {{exam.exam.subject}}
       </div>
+      <div class="subtitle-1">
+        {{exam.exam.StudyTimestamp}}
+      </div>
         <v-data-table
-                hover
+                dense
                 :items="exam.series"
                 :headers="fields"
                 @click:row="openSeries"
                 v-if="!selected_series"
         >
+          <template v-slot:item.qc1_state="{ item }">
+            <SeriesStatus :series="item" />
+          </template>
         </v-data-table>
         <Series :series_id="selected_series" v-if="selected_series">
             <template slot="close">
@@ -25,10 +31,11 @@
 <script>
 
     import Series from '@/components/Series.vue';
+    import SeriesStatus from "./exams/SeriesStatus";
 
     export default {
         name: 'Exam',
-        components: {Series},
+        components: {Series, SeriesStatus},
         props: {
             exam_id: String
         },
@@ -38,12 +45,15 @@
                 fields: [{
                   text: 'Series Description',
                   value: 'series_desc'
-                },  {
-                  text: 'Series Number',
-                  value: 'SeriesNumber'
                 }, {
                   text: 'QC1 State',
                   value: 'qc1_state'
+                },  {
+                  text: 'Series Number',
+                  value: 'SeriesNumber'
+                },  {
+                  text: 'Image Count',
+                  value: 'qc.series_image_count'
                 }],
               selected_series: null
             }
