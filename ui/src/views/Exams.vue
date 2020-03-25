@@ -1,6 +1,12 @@
 <template>
     <div style="display: inline-flex; width: 100%">
-      <div class="exam-list">
+      <v-dialog
+        v-model="dialog"
+        max-width="500"
+      >
+        <ResearchDetail :research_id="research_id" v-if="research_id" />
+      </v-dialog>
+      <div class="subbar">
         <v-text-field
           v-model="search"
           append-icon="mdi-magnify"
@@ -10,19 +16,21 @@
           class="mx-5 my-5"
         ></v-text-field>
         <v-divider></v-divider>
-        <div v-for="(researches, idx) in results" :key="idx" class="mb-3">
-          <div v-for="(rs, _idx) in researches" :key="_idx">
-            <div class="font-weight-light">{{rs.research.Modality}} / {{rs.research.IIBISID}} / {{rs.research.StationName}}</div>
-            <span v-for="exam in rs.exams" :key="exam._id" @click="selectExam(exam._id)">
-            <SubjectBlock :subject="exam" :selected="selected"></SubjectBlock>
-          </span>
-            <v-divider></v-divider>
+        <div class="subbar-list">
+          <div v-for="(researches, idx) in results" :key="idx" class="mb-3">
+            <div v-for="(rs, _idx) in researches" :key="_idx">
+              <div class="font-weight-light">{{rs.research.Modality}} / <span @click.stop="showDetails(rs.research.IIBISID)">{{rs.research.IIBISID}}</span> / {{rs.research.StationName}}</div>
+              <span v-for="exam in rs.exams" :key="exam._id" @click="selectExam(exam._id)">
+              <SubjectBlock :subject="exam" :selected="selected"></SubjectBlock>
+            </span>
+              <v-divider></v-divider>
+            </div>
           </div>
         </div>
       </div>
 
       <v-divider vertical class="mx-3"></v-divider>
-      <v-container fluid>
+      <v-container fluid class="subbar-content">
         <Exam :exam_id="selected" v-if="selected" />
       </v-container>
 
@@ -32,10 +40,11 @@
 <script>
 import SubjectBlock from "@/components/SubjectBlock.vue";
 import Exam from "@/components/Exam.vue";
+import ResearchDetail from "../components/research/ResearchDetail";
 
 export default {
   name: "exams",
-  components: { SubjectBlock, Exam },
+  components: { SubjectBlock, Exam, ResearchDetail },
   data() {
     return {
       ranges: {
@@ -58,13 +67,23 @@ export default {
       selected: null,
       loading_series: false,
       results: [],
-      search: ''
+      search: '',
+      research_id: null,
+      dialog: false
     };
   },
   methods: {
     selectExam(_id) {
       this.selected = _id;
       console.log(this.selected);
+    },
+    showDetails: function(iibis) {
+      this.research_id = null;
+      this.$nextTick(function() {
+        this.research_id = iibis;
+        this.dialog = true;
+      })
+
     },
     query: function() {
       let pending = null;
@@ -73,8 +92,12 @@ export default {
         StudyTimestamp: -1
       };
 
+      let d = new Date();
+      d.setDate(d.getDate() - 90);
+
       let where = {
-        istemplate: false
+        istemplate: false,
+        StudyTimestamp: {$gt: d}
       };
       // switch(this.search.sort) {
       //     case "dateup":
@@ -122,9 +145,30 @@ export default {
 
 <style>
 
-  .exam-list {
-    min-width: 200px;
-    max-width: 300px;
+  .subbar {
+    position: fixed;
+    left: 65px;
+    width: 275px;
     height: 100%;
+    border-right: 1px solid #ddd;
+    background-color: white;
+  }
+
+  .subbar h2 {
+    color: #878787;
+    font-weight: bold;
+    font-size: 21px;
+  }
+  .subbar-list {
+    overflow-x: hidden;
+    overflow-y: scroll;
+    width: 275px;
+    position: fixed;
+    top: 158px;
+    bottom: 0;
+  }
+
+  .subbar-content {
+    margin-left: 280px;
   }
 </style>

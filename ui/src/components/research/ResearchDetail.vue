@@ -7,9 +7,9 @@
       color="blue"
       dark
     >
-      <v-toolbar-title>{{research.iibis_project_id}} - {{research.short_title}}</v-toolbar-title>
+      <v-toolbar-title v-if="!isLoading">{{research.iibis_project_id}} - {{research.short_title}}</v-toolbar-title>
     </v-toolbar>
-    <v-list dense>
+    <v-list dense v-if="!isLoading">
 
       <v-list-item>
         <v-list-item-avatar>
@@ -89,7 +89,37 @@
   export default {
     name: 'ResearchDetail',
     props: {
-      research: Object
+      research_id: String
+    },
+    data() {
+      return {
+        isLoading: true,
+        research: null
+      }
+    },
+    methods: {
+      getDetail: function() {
+        this.isLoading = true;
+        let url = `${this.$config.api}/iibis/${this.research_id}`;
+        console.log(url);
+        let self = this;
+        this.$http.get(url)
+          .then(function(res) {
+            self.research = res.data[0];
+            console.log(res.data);
+            self.$nextTick(function() {
+              console.log(self.research);
+              self.isLoading = false;
+            });
+          }, function(err) {
+            console.log(err);
+          });
+      }
+    },
+    mounted() {
+      this.$nextTick(function() {
+        this.getDetail();
+      });
     }
   }
 </script>

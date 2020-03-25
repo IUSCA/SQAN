@@ -5,21 +5,18 @@
       <v-autocomplete
         v-model="selected"
         :items="research_ids"
-        :loading="isLoading"
-        color="white"
         hide-no-data
         item-text="IIBISID"
         item-value="_id"
         label="Research IDs"
-        placeholder="Start typing to Search"
         prepend-icon="mdi-database-search"
-        @change="getDetail"
+        @change="updateDetail"
         return-object
       ></v-autocomplete>
     </v-col>
 
     <v-col cols="7">
-      <ResearchDetail :research="selected_detail" v-if="selected_detail" />
+      <ResearchDetail :research_id="selected_id" v-if="selected_id" />
     </v-col>
   </v-row>
   </div>
@@ -33,9 +30,8 @@
     components: {ResearchDetail},
     data() {
       return {
-        isLoading: false,
         selected: null,
-        selected_detail: null,
+        selected_id: null,
         research_ids: [],
         model: null
       }
@@ -59,19 +55,11 @@
             console.log(err);
           });
       },
-      getDetail: function() {
-        this.isLoading = true;
-        let url = `${this.$config.api}/iibis/${this.selected.IIBISID}`;
-        console.log(url);
-        let self = this;
-        this.$http.get(url)
-          .then(function(res) {
-            self.selected_detail = res.data[0];
-            console.log(res.data);
-            self.isLoading = false;
-          }, function(err) {
-            console.log(err);
-          });
+      updateDetail: function() {
+        this.selected_id = null;
+        this.$nextTick(function() {
+          this.selected_id = this.selected.IIBISID;
+        });
       }
     },
     mounted() {

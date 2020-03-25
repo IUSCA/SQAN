@@ -9,7 +9,7 @@
     <v-list dense>
       <v-list-item to="about">
         <v-list-item-action>
-          <img src="../assets/sqan_logo.png" width="30">
+          <img src="../assets/sqan_logo.png" width="30" alt="SQAN LOGO">
         </v-list-item-action>
         <v-list-item-content>
           <v-list-item-title class="title">
@@ -115,6 +115,23 @@
         this.drawer = false;
         this.$emit('navChange', navItem);
       }
+    },
+    mounted() {
+      let self = this;
+      setTimeout(function() {
+        let currentPath = self.$router.currentRoute.path;
+        self.items.forEach(item => {
+          if(currentPath.includes(item.path)) self.navChange(item);
+        });
+
+        self.admin_items.forEach(item => {
+          if(currentPath.includes(item.path)) self.navChange(item);
+        });
+
+        self.user_items.forEach(item => {
+          if(currentPath.includes(item.path)) self.navChange(item);
+        })
+      }, 200);
     }
   }
 </script>
