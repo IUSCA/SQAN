@@ -61,7 +61,7 @@
     margin-left: -12px;
     margin-top: -12px;
     margin-bottom: 15px;
-    max-width: 30%;
+    max-width: 50%;
     min-width: 300px;
     border-bottom-right-radius: 20px;
   }

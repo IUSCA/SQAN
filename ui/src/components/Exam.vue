@@ -31,7 +31,7 @@
 <script>
 
     import Series from '@/components/Series.vue';
-    import SeriesStatus from "./exams/SeriesStatus";
+    import SeriesStatus from "@/components/exams/SeriesStatus";
 
     export default {
         name: 'Exam',

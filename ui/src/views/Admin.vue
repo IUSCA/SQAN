@@ -2,80 +2,43 @@
   <div class="Admin">
     <div class="row">
       <div class="col-sm-12">
-        <h3><i class="fa fa-users"></i> Accounts and Access Control</h3>
-
-        <hr />
-        <div class="row">
-          <b-tabs
-            type="tabs"
-            active="active_tab"
-            v-if="!show_userform && !show_groupform"
+        <v-tabs v-model="tab" @change="changeTab" icons-and-text>
+          <v-tab
+            v-for="(section, index) in sections"
+            :key="index"
           >
-            <b-tab index="0" select="active_tab = 0">
-              <template v-slot:title>
-                <i class="fa fa-fw fa-user"></i> Users
-              </template>
-              <button
-                class="btn btn-success pull-right"
-                v-on:click="createUser()"
-              >
-                <i class="fa fa-fw fa-user-plus"></i> Create User
-              </button>
-              <br />
-              <table class="table table-condensed table-bordered">
-                <thead>
-                  <tr>
-                    <th></th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Primary Role</th>
-                    <th>Roles</th>
-                    <th>Created</th>
-                    <th>Last Login</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="(user, index) in users"
-                    v-bind:user="user"
-                    v-bind:index="index"
-                    v-bind:key="user.name"
-                  >
-                    <td class="text-center">
-                      <font-awesome-icon
-                        :icon="userIcon(user)"
-                        aria-hidden="true"
-                      />
+            {{ section }}
+         </v-tab>
+        </v-tabs>
 
-                      <i
-                        class="fa fa-fw "
-                        ng-class="{
-                                    }"
-                      ></i>
-                    </td>
-                    <td>{{ user.fullname }}</td>
-                    <td>{{ user.email }}</td>
-                    <td>{{ user.primary_role }}</td>
-                    <td>{{ user.roles.join(" | ") }}</td>
-                    <td>{{user.createDate | date:'short'}}</td>
-                    <td>{{user.lastLogin | date:'short'}}</td>
-                    <td>
-                      <i
-                        class="fa fa-fw fa-edit text-warning"
-                        v-on:click="editUser(user)"
-                      ></i>
-                      <i
-                        class="fa fa-fw fa-trash-o text-danger"
-                        v-on:click="deleteUser(user)"
-                      ></i>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </b-tab>
-          </b-tabs>
-        </div>
+        <v-tabs-items v-model="tab">
+          <v-tab-item v-for="section in sections" :key="section">
+            <h3>
+              <v-icon>mdi-account-multiple</v-icon>Users
+            </h3>
+            <button
+              class="btn btn-success pull-right"
+              v-on:click="createUser()"
+            >
+              <v-icon>mdi-account-plus</v-icon>
+              Create User
+            </button>
+
+            <v-data-table
+              :items="users"
+              :headers="headers"
+              :search="search"
+              class="elevation-4"
+              item-key="name"
+            >
+              <template v-slot:item.roles="{ item }">
+                {{ item.roles.join(" | ") }}
+              </template>
+            </v-data-table>
+
+            <hr />
+          </v-tab-item>
+        </v-tabs-items>
       </div>
     </div>
   </div>
@@ -90,8 +53,43 @@ export default {
   data() {
     return {
       users: [],
+      headers: [
+        {
+          text: "Name",
+          value: "fullname",
+          sortable: true
+        },
+        {
+          text: "Email",
+          value: "email",
+          sortable: true
+        },
+        {
+          text: "Primary Role",
+          value: "primary_role",
+          sortable: true
+        },
+        {
+          text: "Roles",
+          value: "roles",
+          sortable: true
+        },
+        {
+          text: "Created",
+          value: "createDate",
+          sortable: true
+        },
+        {
+          text: "Last Login",
+          value: "lastLogin",
+          sortable: true
+        }
+      ],
+      sections: ["users", "Groups", "ACL"],
       search: "",
       selected: "",
+      tab: "",
+      current_tab: "users",
       show_userform: false,
       show_groupform: false
     };
@@ -132,6 +130,11 @@ export default {
       }
     },
 
+    changeTab() {
+      console.log(this.tab);
+      this.current_tab = this.tab;
+      //this.query();
+    },
     createUser: function() {
       console.log("createUser called");
     },
