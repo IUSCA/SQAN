@@ -3,12 +3,15 @@
       <div class="display-1 font-weight-medium">
         <v-icon large>mdi-account-check</v-icon>
         {{exam.exam.subject}}
+        {{exam_id}}
       </div>
       <div class="subtitle-1">
         {{exam.exam.StudyTimestamp}}
       </div>
         <v-data-table
                 dense
+                disable-pagination
+                hide-default-footer
                 :items="exam.series"
                 :headers="fields"
                 @click:row="openSeries"
@@ -70,6 +73,20 @@
                     });
 
             },
+            setupStream() {
+              // Not a real URL, just using for demo purposes
+              let es = new EventSource(`${this.$config.api}/event/exams`);
+
+              es.addEventListener(this.exam_id, event => {
+                console.log(`Event received! ${event.data}`);
+              }, false);
+
+              es.addEventListener('error', event => {
+                if (event.readyState == EventSource.CLOSED) {
+                  console.log('Event was closed');
+                }
+              }, false);
+            },
             openSeries(record) {
                 this.selected_series = record._id;
                 console.log(record);
@@ -80,6 +97,7 @@
         },
         mounted() {
             this.getExam();
+            this.setupStream();
         },
         watch: {
             exam_id(newval) {

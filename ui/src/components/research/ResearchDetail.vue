@@ -7,7 +7,7 @@
       color="blue"
       dark
     >
-      <v-toolbar-title v-if="!isLoading">{{research.iibis_project_id}} - {{research.short_title}}</v-toolbar-title>
+      <v-toolbar-title v-if="!isLoading"><v-icon>mdi-flask</v-icon> {{research.iibis_project_id}} - {{research.short_title}}</v-toolbar-title>
     </v-toolbar>
     <v-list dense v-if="!isLoading">
 
@@ -123,3 +123,14 @@
     }
   }
 </script>
+
+<style>
+  .v-list-item__content {
+    padding: 2px !important;
+  }
+
+  .v-list-item__avatar {
+    margin-top: 2px !important;
+    margin-bottom: 2px !important;
+  }
+</style>

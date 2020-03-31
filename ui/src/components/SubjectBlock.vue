@@ -8,7 +8,7 @@
       link
     >
       <v-icon small class="pr-2">{{status.icon}}</v-icon>
-      {{subject.subject}}
+      {{subject.StudyTimestamp | moment("YYYY-MM-DD")}}
 
     </v-chip>
 
