@@ -1,44 +1,89 @@
 <template>
   <div class="admin-groups">
-    <uib-tab index="1" select="active_tab = 1">
-      <uib-tab-heading>
-        <i class="fa fa-fw fa-users"></i> Groups
-      </uib-tab-heading>
-      <button class="btn btn-success pull-right" ng-click="createGroup()">
-        <i class="fa fa-fw fa-plus-circle"></i> Create Group
-      </button>
-      <br />
-      <table class="table table-condensed table-bordered">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Members</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="group in groups">
-            <td>{{ group.name }}</td>
-            <td>{{ group.desc }}</td>
-            <td>
-              <small v-for="user in group.members"
-                >{{ user.fullname }} |
-              </small>
-            </td>
-            <td>
-              <i
-                class="fa fa-fw fa-edit text-warning"
-                ng-click="editGroup(group)"
-              ></i>
-              <i
-                class="fa fa-fw fa-trash-o text-danger"
-                ng-click="deleteGroup(group)"
-              ></i>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </uib-tab>
+    <button class="btn btn-success pull-right" v-on:click="createGroup()">
+      <v-icon>mdi-plus-thick</v-icon>
+      Create Group
+    </button>
+    <br />
+    <v-data-table
+      :items="groups"
+      :headers="headers"
+      :search="search"
+      class="elevation-4"
+      item-key="name"
+    >
+      <template v-slot:item.members="{ item }">
+        <small v-for="user in item.members" :key="user.name"
+          >{{ user.fullname }} |
+        </small>
+      </template>
+      <template v-slot:item.actions="{ item }">
+        <v-icon small class="mr-2" @click="editGroup(item)">
+          mdi-pencil
+        </v-icon>
+        <v-icon small @click="deleteGroup(item)">
+          mdi-delete
+        </v-icon>
+      </template>
+    </v-data-table>
   </div>
 </template>
+
+<script>
+export default {
+  data() {
+    return {
+      groups: [],
+      headers: [
+        {
+          text: "Name",
+          value: "name",
+          sortable: true
+        },
+        {
+          text: "Description",
+          value: "desc",
+          sortable: true
+        },
+        {
+          text: "Members",
+          value: "members",
+          sortable: true
+        },
+        { text: "Actions", value: "actions", sortable: false }
+      ],
+      show_groupform: false,
+      search: ""
+    };
+  },
+
+  methods: {
+    query: function() {
+      this.$http.get(`${this.$config.api}/group/all`).then(
+        res => {
+          this.groups = res.data;
+          console.log(this.results.length + " groups retrieved from db");
+          console.log(this.results);
+        },
+        err => {
+          console.log("Error contacting API");
+          console.dir(err);
+        }
+      );
+    },
+    createGroup: function() {
+      console.log("createGroup called");
+    },
+    deleteGroup: function() {
+      console.log("deleteGroup called");
+    },
+    editGroup: function() {
+      console.log("editGroup called");
+    }
+  },
+  mounted() {
+    // console.log("Component has been created!");
+    this.query();
+  }
+};
+</script>
