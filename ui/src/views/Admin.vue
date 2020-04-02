@@ -16,7 +16,7 @@
             <Groups></Groups>
           </v-tab-item>
           <v-tab-item key="acl">
-            ACL data
+            <AccessControl></AccessControl>
           </v-tab-item>
 
         </v-tabs-items>
@@ -28,9 +28,10 @@
 <script>
 import UserList from "@/components/admin/UserList.vue";
 import Groups from "@/components/admin/Groups.vue";
+import AccessControl from "@/components/admin/AccessControl.vue";
 
 export default {
-  components: { UserList, Groups },
+  components: { UserList, Groups, AccessControl },
 
   data() {
     return {
