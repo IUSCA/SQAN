@@ -1,9 +1,8 @@
 <template>
-    <div class="exam" v-if="exam.series !== undefined">
+    <div class="exam pa-5" v-if="exam.series !== undefined">
       <div class="display-1 font-weight-medium">
         <v-icon large>mdi-account-check</v-icon>
         {{exam.exam.subject}}
-        {{exam_id}}
       </div>
       <div class="subtitle-1">
         {{exam.exam.StudyTimestamp}}
@@ -101,8 +100,9 @@
         },
         watch: {
             exam_id(newval) {
-                console.log(newval);
-                this.getExam();
+              console.log(newval);
+              this.selected_series = null;
+              this.getExam();
             }
         }
 

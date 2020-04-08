@@ -1,57 +1,119 @@
 <template>
     <div style="display: inline-flex; width: 100%">
       <v-dialog
-        v-model="dialog"
+        v-model="research_dialog"
         max-width="500"
       >
         <ResearchDetail :research_id="research_id" v-if="research_id" />
       </v-dialog>
 
-      <v-container fluid>
-          <v-text-field row
-            v-model="search"
-            append-icon="mdi-magnify"
-            label="Search"
-            single-line
-            hide-details
-            class="mx-5 my-5"
-            @change="query"
-          ></v-text-field>
-          <v-radio-group v-model="search_type" row @change="updateQuery">
-            <v-radio label="Research" value="research"></v-radio>
-            <v-radio label="Subject" value="subject"></v-radio>
-            <v-radio label="Calendar" value="calendar"></v-radio>
-          </v-radio-group>
-        <hr>
-        <v-row dense v-if="search_type === 'research'">
-          <v-col
-            v-for="res in results"
-            :key="res.research._id"
-            :cols="4"
-          >
-            <ResearchCard class="ma-2" :research="res.research" :exams="res.exams"></ResearchCard>
-          </v-col>
-        </v-row>
-        <v-row dense v-if="search_type === 'subject'">
-          <v-col
-            v-for="res in results"
-            :key="res.subject"
-            :cols="4"
-          >
-            <SubjectCard :subject="res"></SubjectCard>
-          </v-col>
-        </v-row>
-        <div v-if="search_type === 'calendar' && calendarData.length">
-          <v-calendar
-            :events="calendarData"
-            start="2020-01-01"
-            :event-color="examColor"
-            event-ripple
-          >
+      <v-dialog
+        v-model="exam_dialog"
+        max-width="90%"
+      >
+        <v-card>
+          <Exam :exam_id="selected" v-if="selected" />
+        </v-card>
+      </v-dialog>
 
-          </v-calendar>
-        </div>
-      </v-container>
+      <v-tabs v-model="tab" @change="changeTab">
+        <v-tab>Search</v-tab>
+        <v-tab>Calendar</v-tab>
+
+        <v-tabs-items v-model="tab">
+          <v-tab-item>
+            <v-text-field row
+                          v-model="search"
+                          append-icon="mdi-magnify"
+                          label="Search"
+                          single-line
+                          hide-details
+                          class="mx-5 my-5"
+                          @change="query"
+
+            ></v-text-field>
+            <v-radio-group v-model="search_type" row @change="updateQuery">
+              <v-radio label="Research" value="research"></v-radio>
+              <v-radio label="Subject" value="subject"></v-radio>
+            </v-radio-group>
+            <hr>
+            <v-row dense v-if="search_type === 'research'">
+              <v-col
+                v-for="res in results"
+                :key="res.research._id"
+                :cols="4"
+              >
+                <ResearchCard class="ma-2" :research="res.research" :exams="res.exams"></ResearchCard>
+              </v-col>
+            </v-row>
+            <v-row dense v-if="search_type === 'subject'">
+              <v-col
+                v-for="res in results"
+                :key="res.subject"
+                :cols="4"
+              >
+                <SubjectCard :subject="res"></SubjectCard>
+              </v-col>
+            </v-row>
+          </v-tab-item>
+          <v-tab-item>
+            <v-text-field
+              row
+              v-model="filter"
+              append-icon="mdi-filter"
+              label="Filter"
+              single-line
+              hide-details
+              class="mx-5 my-5"
+            ></v-text-field>
+            <hr>
+
+            <div v-if="calendarData.length">
+
+              <v-row>
+                <v-col class="mb-4" sm="12">
+                  <v-btn
+                    fab
+                    small
+                    absolute
+                    left
+                    color="primary"
+                    @click="$refs.calendar.prev()"
+                  >
+                    <v-icon dark>mdi-chevron-left</v-icon>
+                  </v-btn>
+                  <v-btn
+                    fab
+                    small
+                    absolute
+                    right
+                    color="primary"
+                    @click="$refs.calendar.next()"
+                  >
+                    <v-icon dark>mdi-chevron-right</v-icon>
+                  </v-btn>
+                  <br>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-calendar
+                  ref="calendar"
+                  v-model="start"
+                  :events="calendarData"
+                  :start="start"
+                  :event-color="examColor"
+                  event-ripple
+                  @change="getEvents"
+                  @click:event="eventClick"
+                ></v-calendar>
+              </v-row>
+
+
+            </div>
+
+          </v-tab-item>
+        </v-tabs-items>
+      </v-tabs>
 
     </div>
 </template>
@@ -60,17 +122,21 @@
 // import SubjectBlock from "@/components/SubjectBlock.vue";
 import ResearchCard from "../components/research/ResearchCard";
 import SubjectCard from "../components/research/SubjectCard";
-// import Exam from "@/components/Exam.vue";
+import Exam from "@/components/Exam.vue";
 import ResearchDetail from "../components/research/ResearchDetail";
 
 export default {
   name: "exams",
-  components: {SubjectCard, ResearchCard, ResearchDetail },
+  components: {SubjectCard, ResearchCard, ResearchDetail, Exam },
   computed: {
     calendarData() {
-      if(this.search_type !== 'calendar') return [];
 
-      let cD = this.results.map( e => {
+      let cD = this.results.filter( e => {
+        if(!this.filter) return true;
+        let lcF = this.filter.toLowerCase();
+        if(!e.subject.toLowerCase().includes(lcF) && !e.research_id.IIBISID.toLowerCase().includes(lcF)) return false;
+        return true;
+      }).map( e => {
         e.start = this.$moment(e.StudyTimestamp).add(5, 'hours').format('YYYY-MM-DD HH:ss');
         e.name = `${e.subject}`;
         console.log(e.start);
@@ -103,9 +169,15 @@ export default {
       loading_series: false,
       results: [],
       search: '',
+      filter: '',
       research_id: null,
-      dialog: false,
-      search_type: 'research'
+      research_dialog: false,
+      exam_dialog: false,
+      start: this.$moment().format('YYYY-MM-DD'),
+      search_type: 'research',
+      selectedEvent: null,
+      selectedElement: null,
+      tab: null
     };
   },
   methods: {
@@ -120,6 +192,12 @@ export default {
         this.dialog = true;
       })
 
+    },
+    changeTab: function(tab) {
+      console.log(tab);
+      if(tab == 0) this.search_type = 'research';
+      if(tab == 1) this.search_type = 'calendar';
+      this.updateQuery();
     },
     updateQuery: function() {
       this.results = [];
@@ -184,7 +262,17 @@ export default {
             console.log(err);
           }
         );
-    }
+    },
+    getEvents ({ start, end }) {
+        console.log(start);
+        console.log(end);
+    },
+    eventClick ({ nativeEvent, event }) {
+      console.log(nativeEvent, event);
+      this.selected = event._id;
+      this.exam_dialog = true;
+      nativeEvent.stopPropagation()
+    },
   },
   mounted() {
     // this.query();
@@ -219,5 +307,10 @@ export default {
 
   .subbar-content {
     margin-left: 280px;
+  }
+
+  .v-dialog {
+    position: absolute;
+    top: 40px;
   }
 </style>
