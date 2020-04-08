@@ -1,97 +1,155 @@
 <template>
   <div>
-    <uib-tab index="2" select="active_tab = 2">
-      <uib-tab-heading>
-        <i class="fa fa-fw fa-unlock-alt"></i> ACL
-      </uib-tab-heading>
-      <table class="table table-condensed table-bordered">
-        <thead>
-          <tr>
-            <th ng-click="toggle_selectall()">
-              <i
-                class="text-info fa fa-fw"
-                ng-class="{'fa-check-square-o': selectall, 'fa-square-o': !selectall}"
-              >
-              </i>
-            </th>
-            <th>IIBISID</th>
-            <th width="40%">Can View/Comment</th>
-            <th width="40%">Can QC</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="iibisid in iibisids | filter:research_filter"
-            ng-init="_selected[iibisid] = false;"
-          >
-            <td ng-click="_selected[iibisid] = !_selected[iibisid]">
-              <i
-                class="text-info fa fa-fw"
-                ng-class="{'fa-check-square-o': _selected[iibisid], 'fa-square-o': !_selected[iibisid]}"
-              >
-              </i>
-            </td>
-            <th>{{ iibisid }}</th>
-            <td>
-              <ui-select multiple ng-model="_acl[iibisid].view.groups">
-                <ui-select-match
-                  placeholder="Select groups who can view this research"
-                >
-                  <b>{{ $item.name }}</b>
-                  <!--<span v-for="member in $item.Members">{{member.fullname}} | </span>-->
-                  <span class="text-muted"
-                    >({{ $item.members.length }} users)</span
-                  >
-                </ui-select-match>
-                <ui-select-choices
-                  repeat="group in groups | propsFilter: {name: $select.search}"
-                >
-                  <b>{{ group.name }}</b>
-                  <span class="text-muted">{{ group.desc }}</span>
-                  <!--<span v-for="member in group.Members">{{member.fullname}} | </span>-->
-                  <span class="text-muted"
-                    >({{ group.members.length }} users)</span
-                  >
-                </ui-select-choices>
-              </ui-select>
-            </td>
-            <td>
-              <ui-select multiple ng-model="_acl[iibisid].qc.groups">
-                <ui-select-match
-                  placeholder="Select groups who can QC this research"
-                >
-                  <b>{{ $item.name }}</b>
-                  <!--<span v-for="member in $item.Members">{{member.fullname}} | </span>-->
-                  <span class="text-muted"
-                    >({{ $item.members.length }} users)</span
-                  >
-                </ui-select-match>
-                <ui-select-choices
-                  repeat="group in groups | propsFilter: {name: $select.search}"
-                >
-                  <b>{{ group.name }}</b>
-                  <span class="text-muted">{{ group.desc }}</span>
-                  <!--<span v-for="member in group.Members">{{member.fullname}} | </span>-->
-                  <span class="text-muted"
-                    >({{ group.members.length }} users)</span
-                  >
-                </ui-select-choices>
-              </ui-select>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <v-data-table
+      :items="acl"
+      :headers="headers"
+      :search="search"
+      show-select
+      class="elevation-4"
+      item-key="name"
+    >
+      <template v-slot:item.view="{ item }">
+        <small v-for="group in item.view.groups" :key="group"
+          >{{ group }} |
+        </small>
+      </template>
+    </v-data-table>
 
-      <input
-        class="btn btn-primary pull-right"
-        value="Update Access"
-        ng-click="update_acl();"
-      />
-      <input
-        class="btn btn-info pull-right"
-        value="ReQC ({{selectedCount()}})"
-        ng-click="reqc()"
-      />
-    </uib-tab>
   </div>
 </template>
+
+<script>
+export default {
+  data() {
+    return {
+      headers: [
+        {
+          text: "IIBISID",
+          value: "iibisid",
+          sortable: true
+        },
+        {
+          text: "Can View/Comment",
+          value: "view",
+          sortable: true
+        },
+        {
+          text: "Can QC",
+          value: "qc",
+          sortable: true
+        }
+      ],
+      show_aclform: false,
+      search: "",
+      acl: [],
+      research: [],
+      iibisids: [],
+      users: [],
+      groups: [],
+      groups_o: []
+    };
+  },
+
+  methods: {
+    query: function() {
+      this.$http
+        .get(`${this.$config.api}/research`, { params: { admin: true } })
+        .then(res => {
+          //find unique iibisids
+          res.data.forEach(research => {
+            if (!~this.iibisids.indexOf(research.IIBISID))
+              this.iibisids.push(research.IIBISID);
+          });
+          console.log("iibisids:", this.iibisids);
+          // is it possible to re-use the call from UserList?
+          return this.$http.get(`${this.$config.api}/user/all`);
+        })
+
+        .then(res => {
+          this.users = res.data;
+          console.log(this.users.length + " users retrieved from db");
+          console.log(this.users);
+          console.log(res);
+
+          // same here... possible to reuse call from Groups?
+          // best place?
+          return this.$http.get(`${this.$config.api}/group/all`);
+        })
+
+        .then(res => {
+          this.groups = res.data;
+          console.log(this.groups.length + " groups retrieved from db");
+          console.log(this.groups);
+
+          //conver to easy to lookup object
+          this.groups_o = [];
+          this.groups.forEach(group => {
+            this.groups_o[group._id] = group;
+          });
+          
+          return this.$http.get(`${this.$config.api}/acl/iibisid`);
+        })
+
+        .then(res => {
+          console.log(res.data);
+          this.acl = {};
+          this._acl = {};
+          res.data.forEach(iibis => {
+            this.acl[iibis.IIBISID] = {
+              qc: iibis.qc,
+              view: iibis.view
+            };
+          });
+
+          this.iibisids.forEach(id => {
+            // console.log(id);
+            //deal with case where acl is not set at all..
+            if (this.acl[id] == undefined) {
+              this.acl[id] = {
+                view: { groups: [] },
+                qc: { groups: [] }
+              };
+            }
+
+            this._acl[id] = {
+              view: { groups: [] },
+              qc: { groups: [] }
+            };
+
+            //convert group id to object
+            // console.log(this.groups_o);
+            for (var action in this.acl[id]) {
+              var acl = this.acl[id][action];
+              if (acl.groups)
+                acl.groups.forEach(gid => {
+                  // console.log(this.groups_o[gid]);
+                  // console.log(gid);
+                  this.acl[id][action].groups.push(this.groups_o[gid]);
+                });
+            }
+          });
+        console.log("acl", this.acl);
+
+        })
+        .catch(err => {
+          console.log("Error contacting API");
+          console.dir(err);
+        });
+    },
+
+    createACL: function() {
+      console.log("createACL called");
+    },
+    deleteACL: function() {
+      console.log("deleteACL called");
+    },
+    editACL: function() {
+      console.log("editACL called");
+    }
+  },
+  mounted() {
+    this.query();
+    // console.log("groups_o", this.groups_o);
+  }
+};
+</script>
