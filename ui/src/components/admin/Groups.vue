@@ -27,10 +27,8 @@
       </template>
     </v-data-table>
     <v-dialog v-model="show_groupform">
-      Hello!
-      <GroupForm></GroupForm>
+      <GroupForm v-bind:groupdata="current_group"></GroupForm>
     </v-dialog>
-
   </div>
 </template>
 
@@ -42,7 +40,9 @@ export default {
   data() {
     return {
       groups: [],
-      current_group: '',
+      current_group: "",
+      show_groupform: false,
+      search: "",
       headers: [
         {
           text: "Name",
@@ -60,9 +60,7 @@ export default {
           sortable: true
         },
         { text: "Actions", value: "actions", sortable: false }
-      ],
-      show_groupform: true,
-      search: ""
+      ]
     };
   },
 
@@ -89,6 +87,7 @@ export default {
     },
     editGroup: function(group) {
       this.current_group = group;
+      this.show_groupform = true;
       console.log("editGroup called", group);
     }
   },

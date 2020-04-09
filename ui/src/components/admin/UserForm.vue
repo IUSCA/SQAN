@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="row" v-if="show_userform">
+    <div class="row">
       <div class="col-sm-10">
         <form class="form-horizontal" name="user_form">
           <fieldset>
@@ -109,3 +109,16 @@
     </div>
   </div>
 </template>
+
+<script>
+export default {
+  props: ["userdata"],
+  data() {
+    return {};
+  },
+  mounted() {
+    console.log("User form has been created!");
+    console.log(this.userdata);
+  }
+};
+</script>

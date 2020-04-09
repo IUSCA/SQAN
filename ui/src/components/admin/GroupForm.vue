@@ -1,7 +1,7 @@
 <template>
-  <div>
-    <div class="row" v-if="show_groupform">
-      <div class="col-sm-10">
+  <v-card>
+    <v-row align="center">
+      <v-col cols="12" sm="6">
         <form class="form-horizontal" name="group_form">
           <fieldset>
             <legend><i class="fa fa-2x fa-user"></i>New/Edit Group</legend>
@@ -16,7 +16,7 @@
                   id="inputUsername"
                   placeholder="Name"
                   autocomplete="off"
-                  ng-model="groupform.name"
+                  v-model="groupdata.name"
                 />
               </div>
             </div>
@@ -31,7 +31,7 @@
                   id="inputFullname"
                   placeholder="Description"
                   autocomplete="off"
-                  ng-model="groupform.desc"
+                  v-model="groupdata.desc"
                 />
               </div>
             </div>
@@ -40,18 +40,13 @@
                 >Members</label
               >
               <div class="col-lg-10">
-                <ui-select multiple ng-model="groupform.members" required>
-                  <ui-select-match placeholder="Select members of this group">
-                    <b>{{ $item.fullname }}</b>
-                    <span class="email">&lt;{{ $item.email }}&gt;</span>
-                  </ui-select-match>
-                  <ui-select-choices
-                    repeat="user in users | propsFilter: {fullname: $select.search, email: $select.search}"
-                  >
-                    <b>{{ user.fullname }}</b>
-                    <small>&lt;{{ user.email }}&gt;</small>
-                  </ui-select-choices>
-                </ui-select>
+                <v-select
+                  multiple
+                  v-model="groupdata"
+                  required
+                  :item="groupdata.members"
+                >
+                </v-select>
               </div>
             </div>
             <div class="form-group">
@@ -59,14 +54,17 @@
                 <button
                   type="reset"
                   class="btn btn-default"
-                  ng-click="hideGroupform();"
+                  @click="hidegroupdata()"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   class="btn btn-primary"
-                  ng-click="submitGroupform(); event.preventDefault();"
+                  @click="
+                    submitgroupdata();
+                    event.preventDefault();
+                  "
                 >
                   Submit
                 </button>
@@ -74,7 +72,20 @@
             </div>
           </fieldset>
         </form>
-      </div>
-    </div>
-  </div>
+      </v-col>
+    </v-row>
+  </v-card>
 </template>
+
+<script>
+export default {
+  props: ["groupdata"],
+  data() {
+    return {};
+  },
+  mounted() {
+    console.log("Group form has been created!");
+    console.log(this.group);
+  }
+};
+</script>

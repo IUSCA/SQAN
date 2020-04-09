@@ -18,17 +18,27 @@
     </v-data-table>
 
     <hr />
+    <v-dialog v-model="show_userform">
+      <UserForm v-bind:userform="current_user"></UserForm>
+    </v-dialog>
   </div>
 </template>
 
 <script>
+import UserForm from "@/components/admin/UserForm.vue";
+
 export default {
   // TODO:
   // make sure users are sorted by 'primary_role':
   //             v-for="user in users | orderBy: 'primary_role'">
+  components: { UserForm },
   data() {
     return {
       users: [],
+      current_user: "",
+      show_userform: false,
+      search: "",
+
       headers: [
         {
           text: "Name",
@@ -61,9 +71,6 @@ export default {
           sortable: true
         }
       ],
-      show_userform: false,
-      show_groupform: false,
-      search: ""
     };
   },
 
@@ -102,12 +109,15 @@ export default {
       }
     },
     createUser: function() {
+      this.show_userform = true;
       console.log("createUser called");
     },
     deleteUser: function() {
       console.log("deleteUser called");
     },
-    editUser: function() {
+    editUser: function(user) {
+      this.current_user = user;
+      this.show_userform = true;
       console.log("editUser called");
     }
   },
