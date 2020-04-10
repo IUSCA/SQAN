@@ -12,14 +12,33 @@
       class="elevation-4"
       item-key="name"
     >
+
       <template v-slot:item.roles="{ item }">
         {{ item.roles.join(" | ") }}
+      </template>
+      <template v-slot:item.createDate="{ item }">
+        {{ item.createDate | date }}
+      </template>
+      <template v-slot:item.lastLogin="{ item }">
+        {{ item.lastLogin | date }}
+      </template>
+
+      <template v-slot:item.actions="{ item }">
+        <v-icon small class="mr-2" @click="sudoUser(item)">
+          mdi-account-convert
+        </v-icon>
+        <v-icon small class="mr-2" @click="editUser(item)">
+          mdi-pencil
+        </v-icon>
+        <v-icon small @click="deleteUser(item)">
+          mdi-delete
+        </v-icon>
       </template>
     </v-data-table>
 
     <hr />
     <v-dialog v-model="show_userform">
-      <UserForm v-bind:userform="current_user"></UserForm>
+      <UserForm @close="closeForm" v-bind:userdata="current_user"></UserForm>
     </v-dialog>
   </div>
 </template>
@@ -69,8 +88,9 @@ export default {
           text: "Last Login",
           value: "lastLogin",
           sortable: true
-        }
-      ],
+        },
+        { text: "Actions", value: "actions", sortable: false }
+      ]
     };
   },
 
@@ -108,12 +128,18 @@ export default {
         return "text-success";
       }
     },
+    closeForm: function() {
+      this.show_userform = false;
+    },
     createUser: function() {
       this.show_userform = true;
       console.log("createUser called");
     },
     deleteUser: function() {
       console.log("deleteUser called");
+    },
+    sudoUser: function() {
+      console.log("sudoUser called");
     },
     editUser: function(user) {
       this.current_user = user;
