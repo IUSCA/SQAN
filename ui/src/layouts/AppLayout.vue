@@ -23,8 +23,11 @@
     <v-footer
       color="blue-grey"
       app
+      padless
+      class="text-right elevation-8"
     >
-      <span class="white--text">SQAN is a service of the Indiana University Scalable Compute Archive (IU SCA) group.</span>
+      <v-spacer></v-spacer>
+      <div class="white--text float-right caption mx-2 mt-1">SQAN is a service of the Indiana University Scalable Compute Archive (IU SCA) group.</div>
     </v-footer>
   </v-app>
 </template>
