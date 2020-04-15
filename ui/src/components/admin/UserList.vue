@@ -12,23 +12,52 @@
       class="elevation-4"
       item-key="name"
     >
+
       <template v-slot:item.roles="{ item }">
         {{ item.roles.join(" | ") }}
+      </template>
+      <template v-slot:item.createDate="{ item }">
+        {{ item.createDate | date }}
+      </template>
+      <template v-slot:item.lastLogin="{ item }">
+        {{ item.lastLogin | date }}
+      </template>
+
+      <template v-slot:item.actions="{ item }">
+        <v-icon small class="mr-2" @click="sudoUser(item)">
+          mdi-account-convert
+        </v-icon>
+        <v-icon small class="mr-2" @click="editUser(item)">
+          mdi-pencil
+        </v-icon>
+        <v-icon small @click="deleteUser(item)">
+          mdi-delete
+        </v-icon>
       </template>
     </v-data-table>
 
     <hr />
+    <v-dialog v-model="show_userform">
+      <UserForm @close="closeForm" v-bind:userdata="current_user"></UserForm>
+    </v-dialog>
   </div>
 </template>
 
 <script>
+import UserForm from "@/components/admin/UserForm.vue";
+
 export default {
   // TODO:
   // make sure users are sorted by 'primary_role':
   //             v-for="user in users | orderBy: 'primary_role'">
+  components: { UserForm },
   data() {
     return {
       users: [],
+      current_user: "",
+      show_userform: false,
+      search: "",
+
       headers: [
         {
           text: "Name",
@@ -59,11 +88,9 @@ export default {
           text: "Last Login",
           value: "lastLogin",
           sortable: true
-        }
-      ],
-      show_userform: false,
-      show_groupform: false,
-      search: ""
+        },
+        { text: "Actions", value: "actions", sortable: false }
+      ]
     };
   },
 
@@ -101,13 +128,22 @@ export default {
         return "text-success";
       }
     },
+    closeForm: function() {
+      this.show_userform = false;
+    },
     createUser: function() {
+      this.show_userform = true;
       console.log("createUser called");
     },
     deleteUser: function() {
       console.log("deleteUser called");
     },
-    editUser: function() {
+    sudoUser: function() {
+      console.log("sudoUser called");
+    },
+    editUser: function(user) {
+      this.current_user = user;
+      this.show_userform = true;
       console.log("editUser called");
     }
   },

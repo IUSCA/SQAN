@@ -13,6 +13,11 @@
           >{{ group }} |
         </small>
       </template>
+      <template v-slot:item.qc="{ item }">
+        <small v-for="group in item.view.groups" :key="group"
+          >{{ group }} |
+        </small>
+      </template>
     </v-data-table>
 
   </div>
@@ -25,7 +30,7 @@ export default {
       headers: [
         {
           text: "IIBISID",
-          value: "iibisid",
+          value: "IIBISID",
           sortable: true
         },
         {
@@ -44,7 +49,6 @@ export default {
       acl: [],
       research: [],
       iibisids: [],
-      users: [],
       groups: [],
       groups_o: []
     };
@@ -61,27 +65,14 @@ export default {
               this.iibisids.push(research.IIBISID);
           });
           console.log("iibisids:", this.iibisids);
-          // is it possible to re-use the call from UserList?
-          return this.$http.get(`${this.$config.api}/user/all`);
-        })
 
-        .then(res => {
-          this.users = res.data;
-          console.log(this.users.length + " users retrieved from db");
-          console.log(this.users);
-          console.log(res);
-
-          // same here... possible to reuse call from Groups?
-          // best place?
           return this.$http.get(`${this.$config.api}/group/all`);
         })
 
         .then(res => {
           this.groups = res.data;
-          console.log(this.groups.length + " groups retrieved from db");
-          console.log(this.groups);
 
-          //conver to easy to lookup object
+          //convert to easy to lookup object
           this.groups_o = [];
           this.groups.forEach(group => {
             this.groups_o[group._id] = group;
@@ -90,8 +81,10 @@ export default {
           return this.$http.get(`${this.$config.api}/acl/iibisid`);
         })
 
-        .then(res => {
+        .then(res => {  
           console.log(res.data);
+          this.acl = res.data;
+          /*
           this.acl = {};
           this._acl = {};
           res.data.forEach(iibis => {
@@ -127,7 +120,9 @@ export default {
                   this.acl[id][action].groups.push(this.groups_o[gid]);
                 });
             }
-          });
+
+            */
+          //});
         console.log("acl", this.acl);
 
         })

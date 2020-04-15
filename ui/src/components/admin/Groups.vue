@@ -26,14 +26,23 @@
         </v-icon>
       </template>
     </v-data-table>
+    <v-dialog v-model="show_groupform">
+      <GroupForm v-bind:groupdata="current_group"></GroupForm>
+    </v-dialog>
   </div>
 </template>
 
 <script>
+import GroupForm from "@/components/admin/GroupForm.vue";
+
 export default {
+  components: { GroupForm },
   data() {
     return {
       groups: [],
+      current_group: "",
+      show_groupform: false,
+      search: "",
       headers: [
         {
           text: "Name",
@@ -51,9 +60,7 @@ export default {
           sortable: true
         },
         { text: "Actions", value: "actions", sortable: false }
-      ],
-      show_groupform: false,
-      search: ""
+      ]
     };
   },
 
@@ -72,13 +79,16 @@ export default {
       );
     },
     createGroup: function() {
+      this.show_groupform = true;
       console.log("createGroup called");
     },
     deleteGroup: function() {
       console.log("deleteGroup called");
     },
-    editGroup: function() {
-      console.log("editGroup called");
+    editGroup: function(group) {
+      this.current_group = group;
+      this.show_groupform = true;
+      console.log("editGroup called", group);
     }
   },
   mounted() {
