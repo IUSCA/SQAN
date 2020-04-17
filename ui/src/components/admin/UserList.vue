@@ -1,9 +1,6 @@
 <template>
   <div class="UserList">
-    <button class="btn btn-success pull-right" v-on:click="createUser()">
-      <v-icon>mdi-account-plus</v-icon>
-      Create User
-    </button>
+    <UserForm @refresh="query" v-bind:userdata="current_user"></UserForm>
 
     <v-data-table
       :items="users"
@@ -12,7 +9,6 @@
       class="elevation-4"
       item-key="name"
     >
-
       <template v-slot:item.roles="{ item }">
         {{ item.roles.join(" | ") }}
       </template>
@@ -27,9 +23,11 @@
         <v-icon small class="mr-2" @click="sudoUser(item)">
           mdi-account-convert
         </v-icon>
-        <v-icon small class="mr-2" @click="editUser(item)">
-          mdi-pencil
-        </v-icon>
+        <UserForm @refresh="query" v-bind:userdata="item">
+            <v-icon small class="mr-2" v-slot:activator>
+              mdi-pencil
+            </v-icon>
+        </UserForm>
         <v-icon small @click="deleteUser(item)">
           mdi-delete
         </v-icon>
@@ -37,9 +35,6 @@
     </v-data-table>
 
     <hr />
-    <v-dialog v-model="show_userform">
-      <UserForm @close="closeForm" v-bind:userdata="current_user"></UserForm>
-    </v-dialog>
   </div>
 </template>
 
@@ -54,8 +49,7 @@ export default {
   data() {
     return {
       users: [],
-      current_user: "",
-      show_userform: false,
+      current_user: {},
       search: "",
 
       headers: [
@@ -128,23 +122,11 @@ export default {
         return "text-success";
       }
     },
-    closeForm: function() {
-      this.show_userform = false;
-    },
-    createUser: function() {
-      this.show_userform = true;
-      console.log("createUser called");
-    },
     deleteUser: function() {
       console.log("deleteUser called");
     },
     sudoUser: function() {
       console.log("sudoUser called");
-    },
-    editUser: function(user) {
-      this.current_user = user;
-      this.show_userform = true;
-      console.log("editUser called");
     }
   },
   mounted() {

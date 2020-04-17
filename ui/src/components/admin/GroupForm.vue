@@ -2,7 +2,7 @@
   <v-card>
     <v-card-title>
       <v-icon>mdi-account-group</v-icon>
-        New / Edit Group
+      New / Edit Group
     </v-card-title>
     <form class="form-horizontal" name="group_form">
       <fieldset>
@@ -14,7 +14,6 @@
               class="form-control"
               id="inputUsername"
               placeholder="Name"
-              autocomplete="off"
               v-model="groupdata.name"
             />
           </div>
@@ -41,13 +40,17 @@
               multiple
               v-model="groupdata"
               required
-              :item="groupdata.members"
+              :items="groupdata.members"
             >
             </v-select>
           </div>
         </div>
         <v-card-actions>
-          <v-btn type="reset" class="btn btn-default" @click="hidegroupdata()">
+          <v-btn
+            type="reset"
+            class="btn btn-default"
+            @click="$emit('close', true)"
+          >
             Cancel
           </v-btn>
           <v-btn
@@ -68,12 +71,21 @@
 
 <script>
 export default {
-  props: ["groupdata"],
+  props: {
+    groupdata: {
+      type: Object,
+      default: () => ({
+        name: "",
+        desc: "",
+        members: []
+      })
+    }
+  },
   data() {
     return {};
   },
-  submitgroupdata(){
-    console.log("submit data")
+  submitgroupdata() {
+    console.log("submit data");
   },
   mounted() {
     console.log("Group form has been created!");

@@ -27,7 +27,7 @@
       </template>
     </v-data-table>
     <v-dialog v-model="show_groupform">
-      <GroupForm v-bind:groupdata="current_group"></GroupForm>
+      <GroupForm @close="closeForm" v-bind:groupdata="current_group"></GroupForm>
     </v-dialog>
   </div>
 </template>
@@ -40,7 +40,7 @@ export default {
   data() {
     return {
       groups: [],
-      current_group: "",
+      current_group: {},
       show_groupform: false,
       search: "",
       headers: [
@@ -77,6 +77,9 @@ export default {
           console.dir(err);
         }
       );
+    },
+    closeForm: function() {
+      this.show_groupform = false;
     },
     createGroup: function() {
       this.show_groupform = true;
