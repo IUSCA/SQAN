@@ -1,5 +1,15 @@
 <template>
   <v-card class="elevation-6" shaped>
+
+    <v-dialog
+      v-model="exam_dialog"
+      max-width="90%"
+    >
+      <v-card>
+        <Exam :exam_id="selected" v-if="selected" />
+      </v-card>
+    </v-dialog>
+
     <v-toolbar
       color="brown lighten-3"
       class="mb-3"
@@ -11,8 +21,8 @@
     <v-divider></v-divider>
 
     <div class="headline">Exams</div>
-    <div class="ml-2 mr-2 mb-3 mt-3">
-      <span v-for="exam in subject.exams" :key="exam._id">
+    <div class="ma-2">
+      <span v-for="exam in subject.exams" :key="exam._id" @click="showExam(exam)">
       <SubjectBlock :subject="exam" v-if="exam.qc !== undefined"></SubjectBlock>
     </span>
     </div>
@@ -21,7 +31,7 @@
     <v-divider></v-divider>
 
     <v-footer>
-      <v-icon class="mr-1">mdi-clock</v-icon> Last Updated: {{lastUpdate | moment("from")}}
+      <v-icon class="mr-1" small>mdi-clock</v-icon> Last Updated: {{lastUpdate | moment("from")}}
     </v-footer>
 
   </v-card>
@@ -30,12 +40,19 @@
 <script>
 
   import SubjectBlock from "../SubjectBlock";
+  import Exam from "../Exam";
 
   export default {
     name: 'SubjectCard',
-    components: {SubjectBlock},
+    components: {SubjectBlock, Exam},
     props: {
       subject: Object
+    },
+    data() {
+      return {
+        selected: null,
+        exam_dialog: false
+      }
     },
     computed: {
       lastUpdate() {
@@ -57,6 +74,13 @@
         return qc;
 
 
+      }
+    },
+    methods: {
+      showExam(exam) {
+        console.log(exam);
+        this.selected = exam._id;
+        this.exam_dialog = true;
       }
     }
   }

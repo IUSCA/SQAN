@@ -56,6 +56,7 @@ export default {
       //   "Radio Tracer",
       //   "# Study Instances"
       // ],
+      expanded: [],
       headers: [
         {
           text: 'IIBISID',

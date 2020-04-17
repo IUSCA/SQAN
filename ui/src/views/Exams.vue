@@ -1,11 +1,5 @@
 <template>
     <div style="display: inline-flex; width: 100%">
-      <v-dialog
-        v-model="research_dialog"
-        max-width="500"
-      >
-        <ResearchDetail :research_id="research_id" v-if="research_id" />
-      </v-dialog>
 
       <v-dialog
         v-model="exam_dialog"
@@ -36,6 +30,9 @@
               <v-radio label="Research" value="research"></v-radio>
               <v-radio label="Subject" value="subject"></v-radio>
             </v-radio-group>
+
+
+
             <hr>
             <v-row dense v-if="search_type === 'research'">
               <v-col
@@ -93,19 +90,35 @@
                     <v-icon dark>mdi-chevron-right</v-icon>
                   </v-btn>
                   <br>
+                  <v-select
+                    class="mt-5"
+                    v-model="type"
+                    :items="typeOptions"
+                    label="Type"
+                    hide-details
+                    outlined
+                    dense
+                  ></v-select>
                 </v-col>
               </v-row>
               <v-row>
+                <v-col
+                  sm="12"
+                  lg="9"
+                  class="pl-4"
+                >
                 <v-calendar
                   ref="calendar"
                   v-model="start"
                   :events="calendarData"
                   :start="start"
+                  :type="type"
                   :event-color="examColor"
                   event-ripple
                   @change="getEvents"
                   @click:event="eventClick"
                 ></v-calendar>
+                </v-col>
               </v-row>
 
 
@@ -123,13 +136,13 @@
 import ResearchCard from "../components/research/ResearchCard";
 import SubjectCard from "../components/research/SubjectCard";
 import Exam from "@/components/Exam.vue";
-import ResearchDetail from "../components/research/ResearchDetail";
 
 export default {
   name: "exams",
-  components: {SubjectCard, ResearchCard, ResearchDetail, Exam },
+  components: {SubjectCard, ResearchCard, Exam },
   computed: {
     calendarData() {
+      if(this.search_type !== 'calendar') return [];
 
       let cD = this.results.filter( e => {
         if(!this.filter) return true;
@@ -154,7 +167,12 @@ export default {
         90: "90 days",
         all: "All Time"
       },
-
+      type: 'month',
+      typeOptions: [
+        { text: 'Day', value: 'day' },
+        { text: 'Week', value: 'week' },
+        { text: 'Month', value: 'month' },
+      ],
       sortoptions: {
         dateup: "Newest",
         datedown: "Oldest",

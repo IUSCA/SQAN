@@ -1,16 +1,31 @@
 <template>
   <v-card class="elevation-6" shaped>
+
+    <v-dialog
+      v-model="research_dialog"
+      max-width="500"
+    >
+      <ResearchDetail :research_id="research.IIBISID" v-if="research" />
+    </v-dialog>
+
+    <v-dialog
+      v-model="research_exams_dialog"
+      max-width="90%"
+    >
+      <ResearchExams :exams="exams" :research="research" v-if="exams" />
+    </v-dialog>
+
     <v-toolbar
       color="blue-grey lighten-3"
       class="mb-3"
     >
       <v-icon class="mr-2">mdi-microscope</v-icon>
-      <v-toolbar-title>{{research.IIBISID}} / {{research.Modality}}</v-toolbar-title>
+      <v-toolbar-title @click="openDetails">{{research.IIBISID}} / {{research.Modality}}</v-toolbar-title>
     </v-toolbar>
 
     <v-divider></v-divider>
 
-    <v-row class="text-center">
+    <v-row class="text-center" @click="openResearchExams">
       <v-col cols="6" class="text-center">
         <v-icon large color="orange darken-2">mdi-face-recognition</v-icon><br>
         <span class="title">{{subjectList.length}} subjects</span>
@@ -40,11 +55,21 @@
 
 <script>
 
+  import ResearchDetail from "./ResearchDetail"
+  import ResearchExams from "./ResearchExams";
+
   export default {
     name: 'ResearchCard',
+    components: {ResearchDetail, ResearchExams},
     props: {
       research: Object,
       exams: Array
+    },
+    data() {
+      return {
+        research_dialog: false,
+        research_exams_dialog: false
+      }
     },
     computed: {
       lastUpdate() {
@@ -69,6 +94,14 @@
         return qc;
 
 
+      }
+    },
+    methods: {
+      openDetails() {
+        this.research_dialog = true;
+      },
+      openResearchExams() {
+        this.research_exams_dialog = true;
       }
     }
   }
