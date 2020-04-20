@@ -1,10 +1,14 @@
 <template>
   <v-dialog v-model="show_userform">
     <template v-slot:activator="{ on }">
-      <v-btn color="green lighten-2" dark v-on="on">
-        <v-icon>mdi-account-plus</v-icon>
-        Create User
-      </v-btn>
+        <span v-on="on">
+          <slot name="label">
+            <v-btn color="green lighten-2" dark class="ma-2">
+              <v-icon>mdi-account-plus</v-icon>
+              Create User
+            </v-btn>
+          </slot>
+        </span>
     </template>
 
     <v-card>

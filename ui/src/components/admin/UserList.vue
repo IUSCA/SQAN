@@ -24,9 +24,12 @@
           mdi-account-convert
         </v-icon>
         <UserForm @refresh="query" v-bind:userdata="item">
-            <v-icon small class="mr-2" v-slot:activator>
+          <template v-slot:label>
+            <v-icon small class="mr-2">
               mdi-pencil
             </v-icon>
+          </template>
+
         </UserForm>
         <v-icon small @click="deleteUser(item)">
           mdi-delete
