@@ -1,9 +1,8 @@
 <template>
-  <div class="container">
+  <div class="container--fluid">
     <div class="row">
-      <div class="col-sm-11 col-offset-1">
+      <div cols="12">
         <h3>
-          <font-awesome-icon :icon="['far', 'clone']" aria-hidden="true" />
           Template Summary Table
         </h3>
         <br />

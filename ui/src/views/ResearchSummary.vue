@@ -28,7 +28,7 @@
 <script>
 
   import ResearchDetail from "../components/research/ResearchDetail";
-  import ResearchTable from "../components/research/ResearchTable";
+  import ResearchTable from "../components/research/ResearchSummaryTable";
 
   export default {
     name: "ResearchSummary",

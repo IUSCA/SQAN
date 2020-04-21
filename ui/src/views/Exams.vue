@@ -35,13 +35,15 @@
 
             <hr>
             <v-row dense v-if="search_type === 'research'">
-              <v-col
-                v-for="res in results"
-                :key="res.research._id"
-                :cols="4"
-              >
-                <ResearchCard class="ma-2" :research="res.research" :exams="res.exams"></ResearchCard>
-              </v-col>
+
+              <ResearchTable :results="results" v-if="results.length"></ResearchTable>
+<!--              <v-col-->
+<!--                v-for="res in results"-->
+<!--                :key="res.research._id"-->
+<!--                :cols="4"-->
+<!--              >-->
+<!--                <ResearchCard class="ma-2" :research="res.research" :exams="res.exams"></ResearchCard>-->
+<!--              </v-col>-->
             </v-row>
             <v-row dense v-if="search_type === 'subject'">
               <v-col
@@ -133,13 +135,13 @@
 
 <script>
 // import SubjectBlock from "@/components/SubjectBlock.vue";
-import ResearchCard from "../components/research/ResearchCard";
+import ResearchTable from "../components/research/ResearchTable";
 import SubjectCard from "../components/research/SubjectCard";
 import Exam from "@/components/Exam.vue";
 
 export default {
   name: "exams",
-  components: {SubjectCard, ResearchCard, Exam },
+  components: {SubjectCard, ResearchTable, Exam },
   computed: {
     calendarData() {
       if(this.search_type !== 'calendar') return [];
@@ -233,6 +235,7 @@ export default {
     },
     query: function() {
       let self = this;
+      this.results = [];
       // let pending = null;
       //
       // let sortby = {

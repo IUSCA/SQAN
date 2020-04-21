@@ -1,136 +1,118 @@
 <template>
-  <v-simple-table>
-    <template v-slot:default>
-    <table class="table table-scroll table-header-rotated table-condensed">
-      <thead>
-        <th>Series</th>
-        <th
-          class="rotate-45 text-muted"
-          v-for="sub in research.subjects"
-          :key="sub"
-        >
-          <div style="white-space: nowrap; height:180px; left:100px">
-            <span>
-              {{sub}}
-            </span>
-          </div>
-        </th>
-      </thead>
-      <tbody>
-        <tr>
-          <th><span class="pull-right text-muted">Series Descriptions</span></th>
-          <td colspan="100"></td>
-        </tr>
-        <tr v-for="sd in research.series_desc" :key="sd">
-          <td><span class="pull-right">{{sd}}&nbsp;&nbsp;</span></td>
-          <td style="white-space:nowrap" v-for="sub in research.subjects" :key="sub">
-            <span
-              v-for="exam in research.exams[sub]"
-              :key="exam._id"
-            >
-              <SeriesBox :series="exam[sd]" v-if="exam[sd]"></SeriesBox>
-            </span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    </template>
-  </v-simple-table>
+  <div>
+
+    <v-dialog
+      v-model="research_exams_dialog"
+      max-width="90%"
+    >
+      <ResearchExams :exams="selected.exams" :research="selected.research" v-if="selected" />
+    </v-dialog>
+
+    <v-data-table
+      dense
+      :items="filtered_results"
+      :headers="fields"
+      @click:row="showResearch"
+    >
+      <template v-slot:item.lastUpdated="{ item }">
+        {{item.lastUpdated | moment}}
+      </template>
+      <template v-slot:item.QCStatus="{ item }">
+        <QCStatus :exams="item.exams"></QCStatus>
+      </template>
+    </v-data-table>
+  </div>
 </template>
 
 <script>
 
-  import SeriesBox from "./SeriesBox";
+  import QCStatus from "./QCStatus";
+  import ResearchExams from "./ResearchExams";
 
   export default {
     name: 'ResearchTable',
-    components: {SeriesBox},
+    components: {QCStatus, ResearchExams},
     props: {
-      research_id: String,
+      results: Array
     },
-    data() {
-      return {
-        research: {
-          series_desc: [],
-          subjects: [],
-          exams: {}
-        }
+    computed: {
+      filtered_results() {
+        let mapped = this.results.map(s => {
+          s['subjectCount'] = [...new Set(s.exams.map( e => e.subject))].length;
+          s['examCount'] = s.exams.length;
+          s['lastUpdated'] = new Date(Math.max.apply(Math, s.exams.map(function(e) { return new Date(e.StudyTimestamp)})));
+
+          let qc = {
+            passed: 0,
+            failed: 0
+          };
+
+          s.exams.map( e => {
+            if(e.qc === undefined) return;
+            if(e.qc.series_failed > 0) return qc.failed += 1;
+            if(e.qc.series_passed > 0) return qc.passed += 1;
+            return;
+          });
+
+          return s;
+        });
+
+        return mapped;
       }
     },
     methods: {
-      getSummary: function() {
-        let self = this;
-        this.$http.get(`${this.$config.api}/research/summary/${self.research_id}`)
-          .then(function(res) {
-            console.log(res.data);
-            self.research = res.data;
-          }, (err) => {
-            console.log(err)
-          });
+      showResearch(research) {
+        this.selected = null;
+        console.log(research);
+        this.$nextTick(() => {
+          this.selected = research;
+          this.research_exams_dialog = true;
+        })
       }
     },
-    mounted() {
-      this.getSummary();
-    }
+    data() {
+      return {
+        research_exams_dialog: false,
+        selected: null,
+        fields: [
+          {
+            text: 'IIBISID',
+            value: 'research.IIBISID',
+            sortable: true
+          },
+          {
+            text: 'Modality',
+            value: 'research.Modality',
+            sortable: true
+          },
+          {
+            text: 'StationName',
+            value: 'research.StationName',
+            sortable: true
+          },
+          {
+            text: '# of Subjects',
+            value: 'subjectCount',
+            sortable: true
+          },
+          {
+            text: '# of Exams',
+            value: 'examCount',
+            sortable: true
+          },
+          {
+            text: 'Last Exam',
+            value: 'lastUpdated',
+            sortable: true
+          },
+          {
+            text: 'QC Status',
+            value: 'QCStatus',
+            sortable: false
+          }
+        ]
+      }
+    },
   }
+
 </script>
-
-<style>
-  /***************** Rotate Table Header *************/
-  .table-header-rotated th.row-header{
-    width: auto;
-  }
-
-  .table-header-rotated td{
-    /*width: 40px;*/
-    border-top: 1px solid #dddddd;
-    border-left: 1px solid #dddddd;
-    border-right: 1px solid #dddddd;
-    vertical-align: middle;
-    text-align: center;
-  }
-
-  .table-header-rotated th.rotate-45{
-    height: 80px;
-    width: 40px;
-    min-width: 40px;
-    max-width: 40px;
-    position: relative;
-    vertical-align: bottom;
-    padding: 0;
-    font-size: 12px;
-    line-height: 0.8;
-  }
-
-  .table-header-rotated th.rotate-45 > div{
-    position: relative;
-    top: 0px;
-    left: 40px; /* 80 * tan(45) / 2 = 40 where 80 is the height on the cell and 45 is the transform angle*/
-    height: 100%;
-    -ms-transform:skew(-45deg,0deg);
-    -moz-transform:skew(-45deg,0deg);
-    -webkit-transform:skew(-45deg,0deg);
-    -o-transform:skew(-45deg,0deg);
-    transform:skew(-45deg,0deg);
-    overflow: hidden;
-    border-left: 1px solid #dddddd;
-    border-right: 1px solid #dddddd;
-    border-top: 1px solid #dddddd;
-  }
-
-  .table-header-rotated th.rotate-45 span {
-    -ms-transform:skew(45deg,0deg) rotate(315deg);
-    -moz-transform:skew(45deg,0deg) rotate(315deg);
-    -webkit-transform:skew(45deg,0deg) rotate(315deg);
-    -o-transform:skew(45deg,0deg) rotate(315deg);
-    transform:skew(45deg,0deg) rotate(315deg);
-    position: absolute;
-    bottom: 30px; /* 40 cos(45) = 28 with an additional 2px margin*/
-    left: -25px; /*Because it looked good, but there is probably a mathematical link here as well*/
-    display: inline-block;
-    width: 85px; /* 80 / cos(45) - 40 cos (45) = 85 where 80 is the height of the cell, 40 the width of the cell and 45 the transform angle*/
-    text-align: left;
-  }
-
-
-</style>

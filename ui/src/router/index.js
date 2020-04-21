@@ -3,6 +3,7 @@ import VueRouter from 'vue-router'
 import Signin from '../views/Signin.vue'
 import About from '../views/About.vue'
 import QCKeys from '../views/QCKeys.vue'
+import Dataflow from '../views/Dataflow'
 import TemplateSummary from '../views/TemplateSummary.vue'
 import ResearchSummary from '../views/ResearchSummary.vue'
 import Admin from '../views/Admin.vue'
@@ -60,6 +61,15 @@ const router = new VueRouter({
       path: '/admin',
       name: 'admin',
       component: Admin,
+      meta: {
+        requiresAuth: true,
+        is_admin: true
+      },
+    },
+    {
+      path: '/dataflow',
+      name: 'dataflow',
+      component: Dataflow,
       meta: {
         requiresAuth: true,
         is_admin: true
