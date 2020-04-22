@@ -29,7 +29,6 @@
               mdi-pencil
             </v-icon>
           </template>
-
         </UserForm>
         <v-icon small @click="deleteUser(item)">
           mdi-delete
@@ -125,8 +124,29 @@ export default {
         return "text-success";
       }
     },
-    deleteUser: function() {
+    deleteUser: function(user) {
       console.log("deleteUser called");
+      var alert = `Please confirm that you want to delete user ${user.username}`;
+
+      var r = confirm(alert);
+      if (r == true) {
+        console.log("delete confirmed");
+        this.$http.delete(`${this.$config.api}/user/` + user._id).then(
+          function(res) {
+            console.log("Delete successful", res);
+            //toaster.success(
+            //  `Successfully deleted ${user.username}, refreshing user list`
+            //);
+            this.query();
+          },
+          function(res) {
+            console.log("Delete failed", res);
+            //toaster.error(res.statusText);
+          }
+        );
+      } else {
+        console.log("delete canceled");
+      }
     },
     sudoUser: function() {
       console.log("sudoUser called");

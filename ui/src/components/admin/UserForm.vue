@@ -1,14 +1,14 @@
 <template>
   <v-dialog v-model="show_userform">
     <template v-slot:activator="{ on }">
-        <span v-on="on">
-          <slot name="label">
-            <v-btn color="green lighten-2" dark class="ma-2">
-              <v-icon>mdi-account-plus</v-icon>
-              Create User
-            </v-btn>
-          </slot>
-        </span>
+      <span v-on="on">
+        <slot name="label">
+          <v-btn color="green lighten-2" dark class="ma-2">
+            <v-icon>mdi-account-plus</v-icon>
+            Create User
+          </v-btn>
+        </slot>
+      </span>
     </template>
 
     <v-card>
@@ -17,15 +17,18 @@
         New / Edit User
       </v-card-title>
 
-      <form class="form-horizontal" name="user_form">
+      <form
+        v-on:submit.prevent="submituserdata"
+        class="form-horizontal"
+        name="user_form"
+      >
         <fieldset>
           <div class="form-group">
             <label for="inputUsername" class="col-lg-2 control-label">
               Username
             </label>
             <div class="col-lg-10">
-              <input
-                type="text"
+              <v-text-field
                 class="form-control"
                 id="inputUsername"
                 placeholder="Username"
@@ -39,8 +42,7 @@
               >Name</label
             >
             <div class="col-lg-10">
-              <input
-                type="text"
+              <v-text-field
                 class="form-control"
                 id="inputFullname"
                 placeholder="Full name"
@@ -52,8 +54,7 @@
           <div class="form-group">
             <label for="inputEmail" class="col-lg-2 control-label">Email</label>
             <div class="col-lg-10">
-              <input
-                type="text"
+              <v-text-field
                 class="form-control"
                 id="inputEmail"
                 placeholder="Email"
@@ -94,20 +95,13 @@
           </div>
           <div class="form-group">
             <div class="col-lg-10 col-lg-offset-2">
-              <v-btn
-                type="reset"
-                class="btn btn-default"
-                @click="closeForm()"
-              >
+              <v-btn type="reset" class="btn btn-default" @click="closeForm()">
                 Cancel
               </v-btn>
               <v-btn
                 type="submit"
                 class="btn btn-primary"
-                @click="
-                  event.preventDefault();
-                  submituserdata();
-                "
+                @click="submituserdata()"
               >
                 Submit
               </v-btn>
@@ -142,37 +136,40 @@ export default {
       user_roles: ["user", "guest", "admin", "technologist", "researcher"]
     };
   },
-  submituserdata() {
-    // this.$emit("close");
-    // $scope.show_userform = false;
-    // $scope.active_tab = 0;
-    if (this.userdataLocal._id !== undefined) {
-      //toaster.success("Updating user!");
-      console.log("updating user");
-      this.$http
-        .patch(
-          `${this.$config.api}/user/` + this.userdataLocal._id,
-          this.userdataLocal
-        )
-        .then(function(res) {
-          console.log(res.data);
-          //toaster.success("User updated!");
-        }, this.toast_error);
-    } else {
-      //toaster.success("Creating new user!");
-      console.log("creating user");
-      this.$http
-        .post(`${this.$config.api}/user`, this.userdataLocal)
-        .then(function(res) {
-          console.log(res.data);
-          //toaster.success("New user created, refreshing user list");
-          //this.refreshUsers();
-
-          //$emit('refresh', true)
-        }, this.toast_error);
-    }
-  },
   methods: {
+    submituserdata() {
+      // this.$emit("close");
+      // $scope.show_userform = false;
+      // $scope.active_tab = 0;
+      console.log(this.userdataLocal);
+      if (this.userdataLocal._id !== undefined) {
+        //toaster.success("Updating user!");
+        console.log("updating user");
+        this.$http
+          .patch(
+            `${this.$config.api}/user/` + this.userdataLocal._id,
+            this.userdataLocal
+          )
+          .then(function(res) {
+            console.log(res.data);
+            //toaster.success("User updated!");
+          }, this.toast_error);
+      } else {
+        //toaster.success("Creating new user!");
+        console.log("creating user");
+        this.$http
+          .post(`${this.$config.api}/user`, this.userdataLocal)
+          .then(function(res) {
+            console.log(res.data);
+            //toaster.success("New user created, refreshing user list");
+            //this.refreshUsers();
+
+            //$emit('refresh', true)
+          }, this.toast_error);
+      }
+      this.$emit("refresh");
+      this.show_userform = false;
+    },
     closeForm: function() {
       this.show_userform = false;
     },
@@ -192,3 +189,9 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+i {
+  padding-right: 10px;
+}
+</style>
