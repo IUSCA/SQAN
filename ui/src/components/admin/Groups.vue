@@ -1,9 +1,6 @@
 <template>
   <div class="admin-groups">
-    <button class="btn btn-success pull-right" v-on:click="createGroup()">
-      <v-icon>mdi-plus-thick</v-icon>
-      Create Group
-    </button>
+      <GroupForm v-bind:groupdata="current_group"></GroupForm>
     <br />
     <v-data-table
       :items="groups"
@@ -18,17 +15,18 @@
         </small>
       </template>
       <template v-slot:item.actions="{ item }">
-        <v-icon small class="mr-2" @click="editGroup(item)">
-          mdi-pencil
-        </v-icon>
+        <GroupForm @refresh="query" v-bind:groupdata="item">
+          <template v-slot:label>
+            <v-icon small class="mr-2">
+              mdi-pencil
+            </v-icon>
+          </template>
+        </GroupForm>
         <v-icon small @click="deleteGroup(item)">
           mdi-delete
         </v-icon>
       </template>
     </v-data-table>
-    <v-dialog v-model="show_groupform">
-      <GroupForm @close="closeForm" v-bind:groupdata="current_group"></GroupForm>
-    </v-dialog>
   </div>
 </template>
 
@@ -41,7 +39,6 @@ export default {
     return {
       groups: [],
       current_group: {},
-      show_groupform: false,
       search: "",
       headers: [
         {
@@ -78,21 +75,9 @@ export default {
         }
       );
     },
-    closeForm: function() {
-      this.show_groupform = false;
-    },
-    createGroup: function() {
-      this.show_groupform = true;
-      console.log("createGroup called");
-    },
     deleteGroup: function() {
       console.log("deleteGroup called");
     },
-    editGroup: function(group) {
-      this.current_group = group;
-      this.show_groupform = true;
-      console.log("editGroup called", group);
-    }
   },
   mounted() {
     // console.log("Component has been created!");
