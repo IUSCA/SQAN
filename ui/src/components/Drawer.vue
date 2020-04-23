@@ -83,7 +83,7 @@
           {
             action: 'mdi-logout-variant',
             title: 'Logout',
-            path: 'logout',
+            path: 'signout',
           },
         ],
         admin_items: [

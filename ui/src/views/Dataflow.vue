@@ -127,7 +127,7 @@
   };
 </script>
 
-<style>
+<style scoped>
   .v-input {
     display: inline-block;
   }

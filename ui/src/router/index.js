@@ -99,7 +99,8 @@ const router = new VueRouter({
       component: Signout,
       meta: {
         requiresAuth: true,
-        is_admin: false
+        is_admin: false,
+        simple_layout: true
       },
     },
 
