@@ -136,6 +136,11 @@ export default {
       user_roles: ["user", "guest", "admin", "technologist", "researcher"]
     };
   },
+  watch: {
+    userdata: function(val) {
+      this.userdataLocal = { ...val };
+    }
+  },
   methods: {
     submituserdata() {
       // this.$emit("close");
