@@ -7,7 +7,7 @@
     class="elevation-8"
   >
     <v-list dense>
-      <v-list-item to="about">
+      <v-list-item @click="navChange(user_items[0])" to="about">
         <v-list-item-action>
           <img src="../assets/sqan_logo.png" width="30" alt="SQAN LOGO">
         </v-list-item-action>
@@ -17,6 +17,7 @@
           </v-list-item-title>
           <v-list-item-subtitle>
             development
+            <div class="caption">Logged in as {{$store.state.auth.uid}}</div>
           </v-list-item-subtitle>
         </v-list-item-content>
       </v-list-item>
@@ -75,6 +76,11 @@
           },
         ],
         user_items: [
+          {
+            action: 'mdi-information',
+            title: 'About',
+            path: 'about',
+          },
           {
             action: 'mdi-account-details',
             title: 'Profile',

@@ -1,11 +1,5 @@
 <template>
   <div class="container--fluid">
-    <div class="row">
-      <div cols="12">
-        <h3>
-          Template Summary Table
-        </h3>
-        <br />
         <div style="width: 250px">
         <v-text-field
           v-model="search"
@@ -15,6 +9,7 @@
           hide-details
         ></v-text-field>
         </div>
+        <v-divider class="my-2"></v-divider>
         <v-data-table
           :items="results"
           :headers="headers"
@@ -31,8 +26,6 @@
           </template>
 
         </v-data-table>
-      </div>
-    </div>
   </div>
 </template>
 

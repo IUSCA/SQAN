@@ -6,7 +6,7 @@
       v-model="daysAgo"
       type="number"
       style="width: 45px"
-      @change="getDataflows"
+      @input="getDataflows"
     ></v-text-field> days acquisitions/transfers</div>
     <v-data-table
       :items="dataflows"
@@ -90,6 +90,7 @@
       getDataflows: function() {
         let self = this;
         this.dataflows = [];
+        this.expanded = [];
         this.$http.get(`${this.$config.api}/dataflow/recent/${this.daysAgo}`)
           .then( res => {
             console.log(res.data);

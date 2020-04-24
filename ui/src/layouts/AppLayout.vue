@@ -5,6 +5,7 @@
     <v-content>
       <v-container
         fluid
+        class="main"
       >
         <div class="page-title light-blue darken-3 white--text elevation-6 display-1">
           <v-icon large class="white--text">{{active_page.action}}</v-icon>
@@ -62,11 +63,19 @@
     padding-left: 10px;
     padding-top: 7px;
     margin-left: -12px;
-    margin-top: -12px;
+    margin-top: 0px;
     margin-bottom: 15px;
     max-width: 50%;
-    min-width: 300px;
-    border-bottom-right-radius: 20px;
+    min-width: 350px;
+    border-bottom-left-radius: 20px;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+  }
+
+  .main {
+    margin-top: 60px;
+    margin-left: 50px;
   }
 
   .fade-enter-active, .fade-leave-active {
