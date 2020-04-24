@@ -30,24 +30,33 @@
             </v-icon>
           </template>
         </UserForm>
-        <v-icon small @click="deleteUser(item)">
-          mdi-delete
-        </v-icon>
+
+        <Confirm
+          title="Delete User?"
+          :message="deleteMessage(item)"
+          v-on:confirm="deleteUser(item)"
+        >
+          <template v-slot:label>
+            <v-icon small>
+              mdi-delete
+            </v-icon>
+          </template>
+        </Confirm>
       </template>
     </v-data-table>
-
     <hr />
   </div>
 </template>
 
 <script>
 import UserForm from "@/components/admin/UserForm.vue";
+import Confirm from "@/components/Confirm.vue";
 
 export default {
   // TODO:
   // make sure users are sorted by 'primary_role':
   //             v-for="user in users | orderBy: 'primary_role'">
-  components: { UserForm },
+  components: { UserForm, Confirm },
   data() {
     return {
       users: [],
@@ -124,29 +133,33 @@ export default {
         return "text-success";
       }
     },
+    deleteMessage: function(user) {
+      return `Are you sure you want to delete ${user.fullname}?`;
+    },
+
     deleteUser: function(user) {
       console.log("deleteUser called");
-      var alert = `Please confirm that you want to delete user ${user.username}`;
+      // var alert = `Please confirm that you want to delete user ${user.username}`;
 
-      var r = confirm(alert);
-      if (r == true) {
-        console.log("delete confirmed");
-        this.$http.delete(`${this.$config.api}/user/` + user._id).then(
-          function(res) {
-            console.log("Delete successful", res);
-            //toaster.success(
-            //  `Successfully deleted ${user.username}, refreshing user list`
-            //);
-            this.query();
-          },
-          function(res) {
-            console.log("Delete failed", res);
-            //toaster.error(res.statusText);
-          }
-        );
-      } else {
-        console.log("delete canceled");
-      }
+      // var r = confirm(alert);
+      // if (r == true) {
+      // console.log("delete confirmed");
+      this.$http.delete(`${this.$config.api}/user/` + user._id).then(
+        res => {
+          console.log("Delete successful", res);
+          //toaster.success(
+          //  `Successfully deleted ${user.username}, refreshing user list`
+          //);
+          this.query();
+        },
+        err => {
+          console.log("Delete failed", err);
+          //toaster.error(err.statusText);
+        }
+      );
+      // } else {
+      //   console.log("delete canceled");
+      // }
     },
     sudoUser: function() {
       console.log("sudoUser called");
