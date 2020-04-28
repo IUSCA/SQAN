@@ -51,7 +51,7 @@
         </v-tab-item>
         <v-tab-item>
           <v-tabs vertical>
-            <v-tab left v-for="s in res.series" :key="s">{{s}}</v-tab>
+            <v-tab left v-for="s in res.series" :key="s" class="font-weight-light">{{s}}</v-tab>
             <v-tab-item v-for="s in res.series" :key="s">
               <v-simple-table class="ml-5" dense>
                 <thead>

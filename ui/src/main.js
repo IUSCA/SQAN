@@ -9,6 +9,10 @@ import config from './config';
 
 Vue.prototype.$config = config;
 
+//Gravatar
+import Gravatar from 'vue-gravatar';
+Vue.component('v-gravatar', Gravatar);
+
 //Axios
 import Axios from "axios";
 

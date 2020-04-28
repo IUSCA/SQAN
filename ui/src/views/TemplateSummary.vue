@@ -1,5 +1,19 @@
 <template>
   <div class="container--fluid">
+
+    <v-btn color="error" small @click="show_notemp = !show_notemp"><v-icon small class="mr-2">mdi-alert</v-icon> {{noTemplates.length}} researches have no templates</v-btn>
+
+    <v-data-table
+      v-show="show_notemp"
+      :items="noTemplates"
+      :headers="noTemp_headers"
+      :search="search"
+      dense
+      class="elevation-4"
+      item-key="_id"
+    >
+    </v-data-table>
+
         <div style="width: 250px">
         <v-text-field
           v-model="search"
@@ -50,6 +64,25 @@ export default {
       //   "# Study Instances"
       // ],
       expanded: [],
+      show_notemp: false,
+      noTemp_headers: [
+        {
+          text: 'IIBISID',
+          value: 'IIBISID',
+          sortable: true
+        },
+        {
+          text: 'Modality',
+          value: 'Modality',
+          sortable: true
+        },
+        {
+          text: 'Station Name',
+          value: 'StationName',
+          sortable: true
+        }
+      ],
+
       headers: [
         {
           text: 'IIBISID',
@@ -88,6 +121,7 @@ export default {
         fieldname: "IIBISID"
       },
       results: [],
+      noTemplates: [],
       search: "",
       selected: ""
     };
@@ -95,19 +129,32 @@ export default {
 
   methods: {
     query: function() {
-      this.$http.get(`${this.$config.api}/templatesummary/istemplate`).then(
-        res => {
-          this.results = res.data;
-          console.log(
-            this.results.length + " benchmarks retrieved from exam db"
-          );
-          console.log(this.results);
+      this.$http.get(`${this.$config.api}/templatesummary/istemplate`)
+        .then(res => {
+            this.results = res.data;
+            console.log(
+              this.results.length + " benchmarks retrieved from exam db"
+            );
+            console.log(this.results);
         },
         err => {
           console.log("Error contacting API");
           console.dir(err);
         }
       );
+    },
+
+    getNoTemplates: function() {
+      let self = this;
+      this.$http.get(`${this.$config.api}/templatesummary/notemplate`)
+        .then( res => {
+        self.noTemplates = res.data;
+        console.log(res.data);
+        console.log(res.data.length + ' researches have no templates!');
+      }, function(err) {
+        console.log("Error contacting API");
+        console.dir(err);
+      });
     },
 
     selectTemplate(_id) {
@@ -153,6 +200,7 @@ export default {
     // console.log("Component has been created!");
     // console.log("Process.env", process.env);
     this.query();
+    this.getNoTemplates();
   }
 };
 </script>

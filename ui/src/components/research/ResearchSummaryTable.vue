@@ -6,16 +6,16 @@
         <th>Series</th>
         <th
           class="text-muted"
-          v-for="sub in research.subjects"
+          v-for="sub in filtered_subjects"
           :key="sub"
         >
               {{sub}}
         </th>
       </thead>
       <tbody>
-        <tr v-for="sd in research.series_desc" :key="sd">
+        <tr v-for="sd in filtered_series" :key="sd">
           <td><span class="pull-right">{{sd}}&nbsp;&nbsp;</span></td>
-          <td style="white-space:nowrap" v-for="sub in research.subjects" :key="sub">
+          <td style="white-space:nowrap" v-for="sub in filtered_subjects" :key="sub">
             <span
               v-for="exam in research.exams[sub]"
               :key="exam._id"
@@ -39,6 +39,22 @@
     components: {SeriesBox},
     props: {
       research_id: String,
+      series_filter: String,
+      subject_filter: String
+    },
+    computed: {
+      filtered_subjects() {
+        return this.research.subjects.filter(rs => {
+          if(this.subject_filter.length && !rs.includes(this.subject_filter)) return false;
+          return true;
+        })
+      },
+      filtered_series() {
+        return this.research.series_desc.filter(sd => {
+          if(this.series_filter.length && !sd.includes(this.series_filter)) return false;
+          return true;
+        })
+      }
     },
     data() {
       return {

@@ -5,31 +5,31 @@
     <v-content>
       <v-container
         fluid
-        class="main"
+        class="main mb-4"
       >
         <div class="page-title light-blue darken-3 white--text elevation-6 display-1">
-          <v-icon large class="white--text">{{active_page.action}}</v-icon>
+          <v-icon large class="white--text pb-2 ml-1">{{active_page.action}}</v-icon>
           <v-divider
             vertical style="display: inline;"
-            class="mx-2"
+            light
+            class="mx-3"
           ></v-divider>
 
-          {{active_page.title}}
+
+          <span class="font-weight-light">{{active_page.title}}</span>
         </div>
         <transition name="fade">
           <router-view></router-view>
         </transition>
+        <div
+          class="light-blue darken-3 white--text text-right page-footer"
+        >
+          <v-spacer></v-spacer>
+          <div class="float-right caption mx-2 mt-1">SQAN is a service of the Indiana University Scalable Compute Archive (IU SCA) group.</div>
+        </div>
       </v-container>
+
     </v-content>
-    <v-footer
-      color="blue-grey"
-      app
-      padless
-      class="text-right elevation-8"
-    >
-      <v-spacer></v-spacer>
-      <div class="white--text float-right caption mx-2 mt-1">SQAN is a service of the Indiana University Scalable Compute Archive (IU SCA) group.</div>
-    </v-footer>
   </v-app>
 </template>
 
@@ -70,6 +70,14 @@
     border-bottom-left-radius: 20px;
     position: absolute;
     top: 0px;
+    right: 0px;
+  }
+
+  .page-footer {
+    position: absolute;
+    bottom: 0px;
+    margin-top: 20px;
+    width: 100%;
     right: 0px;
   }
 

@@ -75,31 +75,15 @@
 
             <div v-if="calendarData.length">
 
-              <v-row>
-                <v-col class="mb-4" sm="12">
-                  <v-btn
-                    fab
-                    small
-                    absolute
-                    left
-                    color="primary"
-                    @click="$refs.calendar.prev()"
-                  >
-                    <v-icon dark>mdi-chevron-left</v-icon>
-                  </v-btn>
-                  <v-btn
-                    fab
-                    small
-                    absolute
-                    right
-                    color="primary"
-                    @click="$refs.calendar.next()"
-                  >
-                    <v-icon dark>mdi-chevron-right</v-icon>
-                  </v-btn>
-                  <br>
-                </v-col>
-              </v-row>
+              <v-toolbar flat color="white">
+                <v-btn fab text small color="grey darken-2" @click="$refs.calendar.prev()">
+                  <v-icon small>mdi-chevron-left</v-icon>
+                </v-btn>
+                <v-btn fab text small color="grey darken-2" @click="$refs.calendar.next()">
+                  <v-icon small>mdi-chevron-right</v-icon>
+                </v-btn>
+                <v-toolbar-title>{{ title }}</v-toolbar-title>
+              </v-toolbar>
               <v-row style="height: 100%">
                 <v-col
                   sm="12"
@@ -112,7 +96,6 @@
                   :start="start"
                   :event-color="examColor"
                   event-ripple
-                  event-height="20"
                   :event-more="false"
                   @change="getEvents"
                   @click:event="eventClick"
@@ -151,12 +134,22 @@ export default {
       }).map( e => {
         e.start = this.$moment(e.StudyTimestamp).add(5, 'hours').format('YYYY-MM-DD');
         e.name = `${e.research_id.IIBISID} | ${e.subject}`;
-        console.log(e.start);
         return e;
       });
       console.log(cD);
       return cD;
-    }
+    },
+    title () {
+
+      let thisMonth = this.start.split('-');
+
+      const startMonth = this.$moment(thisMonth[1], 'MM').format('MMM');
+
+      const startYear = thisMonth[0];
+
+
+      return `${startMonth} ${startYear}`;
+    },
   },
   data() {
     return {
@@ -194,7 +187,7 @@ export default {
       search_type: 'research',
       selectedEvent: null,
       selectedElement: null,
-      tab: null
+      tab: null,
     };
   },
   methods: {
@@ -331,4 +324,29 @@ export default {
     position: absolute;
     top: 40px;
   }
+
+  .v-calendar-weekly {
+    display: table;
+    table-layout: fixed;
+  }
+  .v-calendar-weekly__week {
+    height: auto;
+    display: table-row;
+  }
+
+  .v-calendar-weekly__head {
+    height: auto;
+    display: table-row;
+  }
+
+  .v-calendar-weekly__day {
+    display: table-cell;
+    width: calc(100% / 7)
+  }
+
+  .v-calendar-weekly__head-weekday {
+    display: table-cell;
+    width: calc(100% / 7)
+  }
+
 </style>

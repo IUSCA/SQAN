@@ -13,6 +13,24 @@
           @change="updateDetail"
           return-object
         ></v-autocomplete>
+
+        <div v-show="selected_id">
+          <v-text-field
+            v-model="searchSeries"
+            prepend-icon="mdi-filter"
+            label="Series"
+            single-line
+            hide-details
+          ></v-text-field>
+
+          <v-text-field
+            v-model="searchSubject"
+            prepend-icon="mdi-filter"
+            label="Subject"
+            single-line
+            hide-details
+          ></v-text-field>
+        </div>
       </v-col>
 
       <v-col cols="7">
@@ -20,7 +38,7 @@
       </v-col>
   </v-row>
     <v-row>
-      <ResearchTable :research_id="selected._id" v-if="selected_id"/>
+      <ResearchTable :research_id="selected._id" v-if="selected_id" :series_filter="searchSeries" :subject_filter="searchSubject"/>
     </v-row>
   </div>
 </template>
@@ -41,7 +59,9 @@
         },
         selected_id: null,
         research_ids: [],
-        model: null
+        model: null,
+        searchSeries: '',
+        searchSubject: '',
       }
     },
     methods: {

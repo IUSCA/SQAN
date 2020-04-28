@@ -2,6 +2,8 @@
   <v-card class="series pa-4" v-if="series.series !== undefined">
     <slot name="close"></slot>
 
+    <Contact :exam="series.series.exam_id" :series="series.series"></Contact>
+
     <v-tabs v-model="tab">
       <v-tab>Summary</v-tab>
       <v-tab>
@@ -114,10 +116,11 @@
 
   import ImageHeader from '@/components/ImageHeader.vue';
   import ErrorPanel from "./series/ErrorPanel";
+  import Contact from "./Contact";
 
   export default {
     name: 'Series',
-    components: {ImageHeader, ErrorPanel},
+    components: {ImageHeader, ErrorPanel, Contact},
     props: {
       series_id: String
     },

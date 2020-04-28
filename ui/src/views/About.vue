@@ -1,6 +1,6 @@
 <template>
-  <div class="about">
-    <h1>This is an about page</h1>
+  <div class="container--fluid">
+    <v-img src="../assets/sqan_infographic.png" />
   </div>
 </template>
 
