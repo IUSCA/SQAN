@@ -61,6 +61,7 @@
     },
     computed: {
       status: function() {
+        if(this.series.qc1_state === 'missing') return this.statuses['missing'];
         if(this.series.qc1_state === 'no template') return this.statuses['notemplate'];
         if(this.series.qc1_state === 're-qcing') return this.statuses['reqc'];
         if(this.series.qc === undefined) return this.statuses['noqc'];

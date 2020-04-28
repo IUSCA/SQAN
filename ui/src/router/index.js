@@ -9,6 +9,7 @@ import ResearchSummary from '../views/ResearchSummary.vue'
 import Admin from '../views/Admin.vue'
 import Profile from '../views/Profile.vue'
 import Signout from '../views/Signout.vue'
+import Report from "../views/Report";
 
 import store from '../store';
 
@@ -79,6 +80,15 @@ const router = new VueRouter({
       path: '/qckeys',
       name: 'qckeys',
       component: QCKeys,
+      meta: {
+        requiresAuth: true,
+        is_admin: true
+      },
+    },
+    {
+      path: '/report',
+      name: 'report',
+      component: Report,
       meta: {
         requiresAuth: true,
         is_admin: true

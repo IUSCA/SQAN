@@ -75,10 +75,20 @@
     },
     computed: {
       filtered_series() {
-        if(this.deprecated !== 'none') return this.exam.series;
-        return this.exam.series.filter(s => {
+        let series = [];
+
+        if(this.deprecated !== 'none') series = this.exam.series;
+
+        series = this.exam.series.filter(s => {
           return s.deprecated_by === null;
-        })
+        });
+
+        if(this.exam.exam.qc.series_missing.length) {
+          this.exam.exam.qc.series_missing.forEach(m => {
+            series.push({series_desc: m, qc1_state: 'missing', deprecated_by: null})
+          })
+        }
+        return series;
       }
     },
     data() {

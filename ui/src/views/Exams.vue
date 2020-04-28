@@ -1,5 +1,5 @@
 <template>
-    <div style="display: inline-flex; width: 100%">
+    <div class="ml-2">
 
       <v-dialog
         v-model="exam_dialog"
@@ -11,27 +11,30 @@
       </v-dialog>
 
       <v-tabs v-model="tab" @change="changeTab">
-        <v-tab>Search</v-tab>
-        <v-tab>Calendar</v-tab>
+        <v-tab><v-icon class="mr-2">mdi-magnify</v-icon> Search</v-tab>
+        <v-tab><v-icon class="mr-2">mdi-calendar</v-icon> Calendar</v-tab>
 
         <v-tabs-items v-model="tab">
           <v-tab-item>
-            <v-text-field row
-                          v-model="search"
-                          append-icon="mdi-magnify"
-                          label="Search"
-                          single-line
-                          hide-details
-                          class="mx-5 my-5"
-                          @change="query"
 
-            ></v-text-field>
+            <v-text-field
+              v-model="search"
+              label="Search"
+              hide-details
+              style="margin-right: 15px; max-width: 460px"
+            >
+              <template slot="append">
+                <v-btn color="success" style="margin-bottom: 6px" @click="query">
+                  <v-icon left>mdi-magnify</v-icon>
+                  Search
+                </v-btn>
+              </template>
+            </v-text-field>
+
             <v-radio-group v-model="search_type" row @change="updateQuery">
               <v-radio label="Research" value="research"></v-radio>
               <v-radio label="Subject" value="subject"></v-radio>
             </v-radio-group>
-
-
 
             <hr>
             <v-row dense v-if="search_type === 'research'">
@@ -46,18 +49,21 @@
 <!--              </v-col>-->
             </v-row>
             <v-row dense v-if="search_type === 'subject'">
-              <v-col
-                v-for="res in results"
-                :key="res.subject"
-                :cols="4"
-              >
-                <SubjectCard :subject="res"></SubjectCard>
-              </v-col>
+
+              <SubjectTable :results="results" v-if="results !== []"></SubjectTable>
+<!--              <v-col-->
+<!--                v-for="res in results"-->
+<!--                :key="res.subject"-->
+<!--                :cols="4"-->
+<!--              >-->
+<!--                <SubjectCard :subject="res"></SubjectCard>-->
+<!--              </v-col>-->
             </v-row>
           </v-tab-item>
           <v-tab-item>
             <v-text-field
               row
+              style="max-width: 300px"
               v-model="filter"
               append-icon="mdi-filter"
               label="Filter"
@@ -92,21 +98,11 @@
                     <v-icon dark>mdi-chevron-right</v-icon>
                   </v-btn>
                   <br>
-                  <v-select
-                    class="mt-5"
-                    v-model="type"
-                    :items="typeOptions"
-                    label="Type"
-                    hide-details
-                    outlined
-                    dense
-                  ></v-select>
                 </v-col>
               </v-row>
-              <v-row>
+              <v-row style="height: 100%">
                 <v-col
                   sm="12"
-                  lg="9"
                   class="pl-4"
                 >
                 <v-calendar
@@ -114,9 +110,10 @@
                   v-model="start"
                   :events="calendarData"
                   :start="start"
-                  :type="type"
                   :event-color="examColor"
                   event-ripple
+                  event-height="20"
+                  :event-more="false"
                   @change="getEvents"
                   @click:event="eventClick"
                 ></v-calendar>
@@ -136,12 +133,12 @@
 <script>
 // import SubjectBlock from "@/components/SubjectBlock.vue";
 import ResearchTable from "../components/research/ResearchTable";
-import SubjectCard from "../components/research/SubjectCard";
+import SubjectTable from "../components/research/SubjectTable";
 import Exam from "@/components/Exam.vue";
 
 export default {
   name: "exams",
-  components: {SubjectCard, ResearchTable, Exam },
+  components: {SubjectTable, ResearchTable, Exam },
   computed: {
     calendarData() {
       if(this.search_type !== 'calendar') return [];
@@ -152,8 +149,8 @@ export default {
         if(!e.subject.toLowerCase().includes(lcF) && !e.research_id.IIBISID.toLowerCase().includes(lcF)) return false;
         return true;
       }).map( e => {
-        e.start = this.$moment(e.StudyTimestamp).add(5, 'hours').format('YYYY-MM-DD HH:ss');
-        e.name = `${e.subject}`;
+        e.start = this.$moment(e.StudyTimestamp).add(5, 'hours').format('YYYY-MM-DD');
+        e.name = `${e.research_id.IIBISID} | ${e.subject}`;
         console.log(e.start);
         return e;
       });

@@ -94,14 +94,19 @@
         ],
         admin_items: [
           {
-            action: 'mdi-file-key',
-            title: 'QC Keys',
-            path: 'qckeys',
+            action: 'mdi-file-chart',
+            title: 'Reports',
+            path: 'report',
           },
           {
             action: 'mdi-upload',
             title: 'Upload',
             path: 'upload',
+          },
+          {
+            action: 'mdi-file-key',
+            title: 'QC Keys',
+            path: 'qckeys',
           },
           {
             action: 'mdi-cube-send',

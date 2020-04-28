@@ -44,6 +44,17 @@
                 {{series.series.qc1_state}}
               </td>
             </tr>
+            <tr v-if="series.series.qc !== undefined">
+              <th>
+                QC Issues
+              </th>
+              <td>
+                <ErrorPanel v-for="error in series.series.qc.errors" :key="error.type" :error="error" type="error" :notemps="series.series.qc.notemps"></ErrorPanel>
+                <ErrorPanel v-for="warning in series.series.qc.warnings" :key="warning.type" :error="warning" type="warning"></ErrorPanel>
+                <ErrorPanel v-if="series.series.qc.notemps > 0" :notemps="series.series.qc.notemps" type="info"></ErrorPanel>
+              </td>
+            </tr>
+
             </tbody>
           </v-simple-table>
         </v-tab-item>
@@ -54,9 +65,10 @@
               class="block"
               :key="img._id"
               :class="{
-                error: img.qc.errors.length,
-                warning: img.qc.warnings.length,
-                success: !(img.qc.errors.length + img.qc.warnings.length),
+                waiting: img.qc === undefined,
+                error: img.qc !== undefined && img.qc.errors.length,
+                warning: img.qc !== undefined && img.qc.warnings.length,
+                success: img.qc !== undefined && !(img.qc.errors.length + img.qc.warnings.length),
                 selected: selected_img && selected_img._id == img._id
               }"
               @click="selectImage(img._id)"
@@ -101,10 +113,11 @@
 <script>
 
   import ImageHeader from '@/components/ImageHeader.vue';
+  import ErrorPanel from "./series/ErrorPanel";
 
   export default {
     name: 'Series',
-    components: {ImageHeader},
+    components: {ImageHeader, ErrorPanel},
     props: {
       series_id: String
     },

@@ -15,13 +15,14 @@
           :headers="headers"
           :search="search"
           show-expand
+          dense
           class="elevation-4"
           :expanded.sync="expanded"
           item-key="_id"
         >
           <template v-slot:expanded-item="{ headers, item }">
             <td :colspan="headers.length">
-              <template-detail v-bind:summary="item"></template-detail>
+              <template-detail v-bind:summary="item" class="my-3"></template-detail>
             </td>
           </template>
 

@@ -62,10 +62,6 @@
     data() {
       return {
         con_dialog: false,
-        snackbar: false,
-        status: '',
-        timeout: 5000,
-        comment: '',
       }
     },
     methods: {
