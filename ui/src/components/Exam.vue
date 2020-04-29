@@ -77,11 +77,13 @@
       filtered_series() {
         let series = [];
 
-        if(this.deprecated !== 'none') series = this.exam.series;
-
-        series = this.exam.series.filter(s => {
-          return s.deprecated_by === null;
-        });
+        if(this.deprecated !== 'none') {
+          series = this.exam.series;
+        } else {
+          series = this.exam.series.filter(s => {
+            return s.deprecated_by === null;
+          });
+        }
 
         if(this.exam.exam.qc.series_missing.length) {
           this.exam.exam.qc.series_missing.forEach(m => {

@@ -91,7 +91,6 @@ const router = new VueRouter({
       component: Report,
       meta: {
         requiresAuth: true,
-        is_admin: true
       },
     },
     {

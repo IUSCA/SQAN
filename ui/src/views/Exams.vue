@@ -326,27 +326,27 @@ export default {
   }
 
   .v-calendar-weekly {
-    display: table;
-    table-layout: fixed;
+    display: table !important;
+    table-layout: fixed !important;
   }
   .v-calendar-weekly__week {
-    height: auto;
-    display: table-row;
+    height: auto !important;
+    display: table-row !important;
   }
 
   .v-calendar-weekly__head {
-    height: auto;
-    display: table-row;
+    height: auto !important;
+    display: table-row !important;
   }
 
   .v-calendar-weekly__day {
-    display: table-cell;
-    width: calc(100% / 7)
+    display: table-cell !important;
+    width: calc(100% / 7) !important;
   }
 
   .v-calendar-weekly__head-weekday {
-    display: table-cell;
-    width: calc(100% / 7)
+    display: table-cell !important;
+    width: calc(100% / 7) !important;
   }
 
 </style>

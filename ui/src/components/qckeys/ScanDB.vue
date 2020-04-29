@@ -38,17 +38,41 @@
         <v-icon class="mr-1">mdi-cube-scan</v-icon> Scan Database
       </v-card-title>
       <v-divider></v-divider>
+        <v-progress-circular
+                v-show="loading"
+                :size="50"
+                color="primary"
+                indeterminate
+        ></v-progress-circular>
+        <v-list dense>
+          <v-list-item v-for="k in newkeys" :key="k">
+            <v-list-item-action>
+              <v-simple-checkbox :ripple="false"
+              ></v-simple-checkbox>
+            </v-list-item-action>
 
-
+            <v-list-item-content>
+              <v-list-item-title>{{k}}</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list>
       <v-divider></v-divider>
 
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn
+                v-show="!newkeys.length"
           color="success"
-          @click="newKey"
+          @click="scanDB"
         >
-          Confirm
+          Scan Image Database for Unregistered QC Keys
+        </v-btn>
+        <v-btn
+                v-show="newkeys.length"
+                color="success"
+                @click="scanDB"
+        >
+          Add Selected Keys to QC Database
         </v-btn>
       </v-card-actions>
 
@@ -67,21 +91,22 @@
         sat_dialog: false,
         snackbar: false,
         status: '',
+        loading: false,
         timeout: 5000,
         newkeys: []
       }
     },
     methods: {
       scanDB() {
-        this.sat_dialog = false;
-        this.status = "Processing ...";
-        this.snackbar = true;
+        this.loading = true;
+
         let self = this;
-        this.$http.post(`${this.$config.api}/qc_keywords/`, this.qckey)
+        this.$http.get(`${this.$config.api}/qc_keywords/scandb`)
           .then(res => {
-            self.snackbar = false;
-            self.status = res.data.message;
-            self.snackbar = true;
+
+            self.loading = false;
+            self.newkeys = res.data;
+
           }, err=> {
             self.snackbar = false;
             self.status = 'Error scanning database';

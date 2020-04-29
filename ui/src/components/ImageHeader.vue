@@ -2,6 +2,7 @@
     <v-card>
       <v-card-title>
         Image Header - #{{img.InstanceNumber}}
+
         <v-spacer></v-spacer>
           <v-text-field
             v-model="search"
@@ -12,8 +13,10 @@
           ></v-text-field>
       </v-card-title>
 
-      <v-data-table :items="img_header" :headers="header" :search="search">
-
+      <v-data-table :items="img_header" :headers="header" :search="search" dense>
+          <template v-slot:item.err_msg="{ item }">
+              {{item.key in qc_mapped ? qc_mapped[item.key].msg : ''}}
+          </template>
       </v-data-table>
     </v-card>
 
@@ -31,6 +34,9 @@
             }, {
               value: 'value',
               text: 'Value'
+            }, {
+                value: 'err_msg',
+                text: 'QC Error'
             }
             ],
             search: ''
@@ -61,6 +67,17 @@
                         return rObj
                     })
                 }
+            },
+            qc_mapped: function() {
+                let mapped = {};
+
+                this.img.qc.errors.forEach(qe => {
+                    if(!(qe.k in mapped)) {
+                        mapped[qe.k] = qe
+                    }
+                });
+
+                return mapped;
             }
         },
         props: {

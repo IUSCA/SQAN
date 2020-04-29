@@ -12,7 +12,7 @@
 
 
     <div class="display-1 font-weight-medium">
-      <v-icon large>mdi-account-check</v-icon>
+      <v-icon large>mdi-microscope</v-icon>
       {{research.IIBISID}} - {{research.Modality}}
     </div>
 
@@ -20,11 +20,17 @@
       dense
       disable-pagination
       hide-default-footer
-      :items="exams"
+      :items="filter_exams"
       @click:row="showExam"
       :headers="fields"
 
     >
+      <template v-slot:item.qc.series_passed="{ item }">
+        <v-chip small color="green" v-if="item.qc !== undefined">{{item.qc.series_passed}}</v-chip>
+      </template>
+      <template v-slot:item.qc.series_failed="{ item }">
+        <v-chip small color="red" v-if="item.qc !== undefined">{{item.qc.series_failed}}</v-chip>
+      </template>
     </v-data-table>
 
   </v-card>
@@ -37,6 +43,13 @@
   export default {
     name: 'ResearchExams',
     components: {Exam},
+    computed: {
+      filter_exams() {
+        return this.exams.filter(ex => {
+          return ex.subject !== null
+        })
+      }
+    },
     props: {
       research: Object,
       exams: Array,

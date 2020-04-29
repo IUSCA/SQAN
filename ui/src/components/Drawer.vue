@@ -74,6 +74,11 @@
             title: 'Research',
             path: 'researchsummary',
           },
+          {
+            action: 'mdi-file-chart',
+            title: 'Reports',
+            path: 'report',
+          },
         ],
         user_items: [
           {
@@ -93,11 +98,6 @@
           },
         ],
         admin_items: [
-          {
-            action: 'mdi-file-chart',
-            title: 'Reports',
-            path: 'report',
-          },
           {
             action: 'mdi-upload',
             title: 'Upload',

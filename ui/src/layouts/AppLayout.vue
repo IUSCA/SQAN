@@ -19,7 +19,9 @@
           <span class="font-weight-light">{{active_page.title}}</span>
         </div>
         <transition name="fade">
-          <router-view></router-view>
+          <keep-alive>
+            <router-view></router-view>
+          </keep-alive>
         </transition>
         <div
           class="light-blue darken-3 white--text text-right page-footer"
@@ -83,7 +85,6 @@
 
   .main {
     margin-top: 60px;
-    margin-left: 50px;
   }
 
   .fade-enter-active, .fade-leave-active {

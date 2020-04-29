@@ -3,11 +3,6 @@
 
     <AddKey></AddKey>
     <ScanDB></ScanDB>
-    <Confirm title="Stuff" message="Other Stuff Here" v-on:confirm="doConfirm">
-      <template v-slot:label>
-        Stuff
-      </template>
-    </Confirm>
 
     <v-divider class="my-2"></v-divider>
     <v-tabs v-model="tab">
@@ -35,10 +30,19 @@
               :headers="headers"
               :search="search"
               hide-default-footer
+              dense
               disable-pagination
             >
               <template v-slot:item.actions="{ item }">
                 <DeleteKey :qckey="item"></DeleteKey>
+              </template>
+              <template v-slot:item.updatedAt="{ item }">
+                {{item.updatedAt | moment('from')}}
+              </template>
+              <template v-slot:item.skip="{ item }">
+                <v-simple-checkbox :ripple="false"
+                        v-model="item.skip"
+                ></v-simple-checkbox>
               </template>
             </v-data-table>
           </div>
@@ -53,11 +57,10 @@
   import DeleteKey from "../components/qckeys/DeleteKey";
   import AddKey from "../components/qckeys/AddKey";
   import ScanDB from "../components/qckeys/ScanDB";
-  import Confirm from "../components/Confirm";
 
   export default {
     name: "qc",
-    components: {DeleteKey, AddKey, ScanDB, Confirm},
+    components: {DeleteKey, AddKey, ScanDB},
     computed: {
       sorted_keys() {
         let sorted = {};
@@ -117,3 +120,7 @@
     }
   };
 </script>
+
+<style>
+
+</style>
