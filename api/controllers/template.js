@@ -21,7 +21,7 @@ router.get('/head/:template_id', jwt({secret: config.express.jwt.pub}), function
             path: 'research_id'
         }
     })
-    .exec(function(err, template) {            
+    .exec(function(err, template) {
         if(err) return next(err);
         if (!template) return res.status(404).json({message: "no such template:" + req.params.template_id});
         //console.log(template);
@@ -34,7 +34,7 @@ router.get('/head/:template_id', jwt({secret: config.express.jwt.pub}), function
             .sort('AcquisitionNumber InstanceNumber')
             .exec(function(err, templates) {
                 if(err) return next(err);
-                res.json({                    
+                res.json({
                     template: template,
                     templates: templates,
                 });

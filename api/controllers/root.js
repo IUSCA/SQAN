@@ -199,6 +199,8 @@ router.get('/verify', function(req, res, next) {
     //var casurl = config.iucas.home_url;
     if(!req.headers.referer) return next("Referer not set in header..");
     var casurl = req.headers.referer;
+    console.log(ticket);
+    console.log(casurl);
     axios.get('https://cas.iu.edu/cas/validate?cassvc=IU&casticket='+ticket+'&casurl='+casurl, {
         timeout: 2000,
         // headers: {'Connection': 'close'},

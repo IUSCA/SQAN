@@ -15,6 +15,20 @@ var db = require('../models');
 
 var qc_func = require('../qc');
 
+//get dataflows in last x days
+router.get('/recent/:days', function(req, res, next) {
+  let today = new Date();
+  let priorDate = new Date().setDate(today.getDate()-parseInt(req.params.days));
+  let dateQ = new Date(priorDate);
+
+  db.Dataflow.find({date: {$gte: dateQ}}).exec(function(err, rs) {
+    if(err) return next(err);
+
+    return res.json(rs);
+  });
+})
+
+
 //get all dataflows
 router.get('/', function(req, res, next) {
     var query = db.Dataflow.find();

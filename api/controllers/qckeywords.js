@@ -23,6 +23,36 @@ router.get('/allkeys', function(req, res, next) {
     });
 });
 
+router.get('/scandb', function(req, res, next) {
+  db.QCkeyword.find({}).distinct('key').exec(function(err, keys) {
+    if(err) return next(err);
+    logger.info(`Fetched list of ${keys.length} qc-keywords`);
+
+    db.Image.find({primary_image: null}).exec(function(err, _images) {
+      if(err) return next(err);
+
+      let new_keys = [];
+
+      async.each(_images, function(img, cb_i) {
+        async.eachOf(img.headers, function(val, key, cb_h){
+          if(key.includes('qc_')) return cb_h();
+          if(key === undefined || key === 'undefined') return cb_h();
+          if(!keys.includes(key) && !new_keys.includes(key)) new_keys.push(key);
+          cb_h();
+        }, function(err) {
+          if(err) return cb_i(err);
+          cb_i();
+        } )
+      }, function(err) {
+        if(err) return next(err);
+        res.json(new_keys);
+      })
+    })
+  });
+
+});
+
+
 //return a joined list of common and modality-specific QC keyword settings
 router.get('/modality/:modality', function(req, res,next) {
    db.QCkeyword.find({modality: 'common'}).exec(function(err, c_keys) {
@@ -102,7 +132,7 @@ router.patch('/', jwt({secret: config.express.jwt.pub}), common.has_role("admin"
 
 });
 
-//delete user
+//delete qckey
 router.delete('/:id', jwt({secret: config.express.jwt.pub}), common.has_role("admin"), function(req, res, next) {
     db.QCkeyword.findByIdAndRemove(req.params.id).exec(function(err, _qckeyword) {
         if(err) return next(err);
