@@ -21,6 +21,7 @@ router.get('/', jwt({secret: config.express.jwt.pub}), function(req, res, next) 
     query.sort('-IIBISID');
     query.exec(function(err, rs) {
         if(err) return next(err);
+        console.log(rs.length);
         //if admin parameter is set and if user is admin, return all (used to list all iibisid on admin page)
         if(req.query.admin && ~req.user.roles.indexOf('admin')) {
             return res.json(rs);
@@ -34,6 +35,57 @@ router.get('/', jwt({secret: config.express.jwt.pub}), function(req, res, next) 
             res.json(researches);
         });
     });
+});
+
+router.get('/search/:q', function(req, res, next) {
+    db.Research.find(
+        {
+            $or: [
+                { 'IIBISID': { "$regex": req.params.q, "$options": "i" } },
+                { 'StationName': { "$regex": req.params.q, "$options": "i" } },
+                { 'radio_tracer': { "$regex": req.params.q, "$options": "i" } },
+            ]
+        }, function(err, _docs) {
+            if(err) return next(err);
+            let results = [];
+            async.each(_docs, function(_doc, cb) {
+                db.Exam.find({research_id: _doc._id}, function(err, _exams) {
+                   if(err) cb(err);
+                   let result = {
+                       research: _doc,
+                       exams: _exams
+                   }
+                   results.push(result);
+                   cb();
+                });
+            }, function(err) {
+                if(err) return next(err);
+                res.json(results);
+            })
+        })
+});
+
+//get templates available for this research
+router.get('/templates/:id', function(req, res, next) {
+    db.Exam.find({research_id: req.params.id, 'istemplate' : true}).exec(function(err, _texams) {
+        if(err) return next(err);
+
+        let result = [];
+        async.each(_texams, function(_texam, cb) {
+            db.Template.find({exam_id: _texam._id}).exec(function(err, _tseries) {
+                if(err) cb(err);
+                let entry = {
+                    template: _texam,
+                    series: _tseries
+                }
+                result.push(entry);
+                cb()
+            })
+        }, function(err) {
+            if(err) return next(err);
+            return res.json(result)
+        })
+    })
 });
 
 router.get('/summary/:id', function(req, res, next) {
@@ -253,6 +305,108 @@ router.get('/:id', jwt({secret: config.express.jwt.pub}), function(req, res, nex
         });
     });
 });
+
+
+router.post('/report/:iibis', function(req, res, next) {
+  let iibis = req.params.iibis;
+
+  let keywords = req.body.keywords;
+  console.log(keywords);
+  let output = {};
+  db.Research.find({IIBISID: iibis}, function(err, _researches){
+    async.each(_researches, function(_research, cb_r) {
+      let res_id = `${iibis}_${_research.Modality}_${_research.StationName}`;
+      if(_research.radio_tracer) res_id += `_${_research.radio_tracer}`;
+      output[res_id] = {
+        summary: [],
+        subjects: []
+      }
+      db.Exam.find({research_id: _research._id}, function(err, _exams) {
+        if(err) return cb_r(err);
+        let e_rows = [];
+        let subjects = {};
+        let series = [];
+        async.each(_exams, function(_exam, cb_e) {
+          if(!(_exam.subject in subjects)) subjects[_exam.subject] = [];
+          let e_row = {
+            iibis: iibis,
+            StationName: _research.StationName,
+            subject: _exam.subject,
+            StudyTimestamp: _exam.StudyTimestamp,
+            ManufacturerModelName: '',
+            SoftwareVersions: ''
+          }
+
+          let sub_exam = {
+            StudyTimestamp: _exam.StudyTimestamp,
+            series: {}
+          }
+          db.Series.find({exam_id: _exam._id}, function(err, _serieses) {
+            if(err) return cb_e(err);
+            if(!_serieses) return cb_e();
+            if(!_serieses.length) return cb_e();
+            db.Image.findById(_serieses[0].primary_image).exec(function(err, _image) {
+              if(err) return cb_e(err);
+              let h = _image.headers
+              e_row.ManufacturerModelName = h.ManufacturerModelName;
+              e_row.SoftwareVersions = h.SoftwareVersions;
+              e_rows.push(e_row);
+            })
+            async.each(_serieses, function(_series, cb_s) {
+              db.Image.findById(_series.primary_image).exec(function(err, _image) {
+                let h = _image.headers
+                let sd = _series.series_desc;
+                // let sub = subjects[_exam.subject];
+
+                if(series.indexOf(sd) < 0) series.push(sd);
+                if(!(sd in sub_exam.series)) {
+                  sub_exam.series[sd] = {
+                    scan_count: 0,
+                    img_count: 0
+                  };
+
+                  keywords.forEach(function(key) {
+                    sub_exam.series[sd][key] = '';
+                  })
+                };
+
+                db.Image.count({series_id: _series._id}, function(err, _c) {
+                  if(err) return cb_s(err);
+                  keywords.forEach(function(key) {
+                    if(sub_exam.series[sd][key] !== '') sub_exam.series[sd][key] += ' | ';
+                    sub_exam.series[sd][key] += h[key];
+                  })
+                  sub_exam.series[sd].scan_count += 1;
+                  sub_exam.series[sd].img_count = Math.max(_c, sub_exam.series[sd].img_count);
+                  return cb_s()
+                })
+              })
+            }, function(err) {
+              if(err) return cb_e(err);
+              subjects[_exam.subject].push(sub_exam);
+              return cb_e();
+            });
+
+          })
+        }, function(err) {
+          if(err) return cb_r(err);
+          output[res_id] = {
+            summary: e_rows,
+            subjects: subjects,
+            series: series,
+            keywords: keywords
+          }
+          return cb_r()
+        })
+      })
+    }, function(err) {
+      if(err) next(err)
+      res.json(output);
+    })
+  });
+
+});
+
 
 
 module.exports = router;

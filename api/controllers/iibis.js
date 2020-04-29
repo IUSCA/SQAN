@@ -14,6 +14,7 @@ var db = require('../models');
 
 //get IIBIS record by IIBIS ID
 router.get('/:iibis_id', function(req, res, next) {
+    console.log(req.params.iibis_id);
     db.IIBIS.find({iibis_project_id: req.params.iibis_id}).exec(function (err, _iibis){
         if (err) return next(err);
         if (!_iibis) return res.status(404).json({message: "no such iibis record:" + req.params.iibis_id});

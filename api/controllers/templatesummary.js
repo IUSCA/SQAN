@@ -59,7 +59,8 @@ router.get('/istemplate', jwt({secret: config.express.jwt.pub}),function(req,res
 
 // search template's by research_id and group them by exam_id:
 router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
-
+    
+    console.log(`${req.params.exam_id}`);
     var template_instance = {
         date: null,
         exam_id: null,
@@ -71,6 +72,7 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(r
 
     db.Exam.findById(new mongoose.Types.ObjectId(req.params.exam_id), function(err,texam) {
         if (err) return next(err);
+        if (!texam) return res.json([]);
         template_instance.date = texam.StudyTimestamp;
         template_instance.exam_id = texam._id;
         template_instance.converted_to_template = texam.converted_to_template ? texam.converted_to_template : false;
@@ -171,7 +173,7 @@ router.get('/deleteselected/:template_id', jwt({secret: config.express.jwt.pub})
                             // but first check if this template exam is a clone of an existing exam
                             if (template.exam_id.converted_to_template) {
                                 db.Exam.update({_id:template.exam_id.parent_exam_id}, {converted_to_template:false}, function(err){
-                                    if (err) return next(err);                            
+                                    if (err) return next(err);
                                 })
                             }
 
@@ -213,9 +215,9 @@ router.get('/deleteall/:exam_id', jwt({secret: config.express.jwt.pub}), functio
 
             db.Template.find({"exam_id":new mongoose.Types.ObjectId(req.params.exam_id)},function(err,templates){
                 if (err) return next(err);
-        
+
                 async.forEach(templates, function(temp, next_temp) {
-        
+
                     deleteTemplate(temp._id,function(err){
                         if (err) return next(err);
                         unQC_series(temp._id, user, function(err,images_modified){
@@ -232,7 +234,7 @@ router.get('/deleteall/:exam_id', jwt({secret: config.express.jwt.pub}), functio
                     // check if this template exam is a clone of an existing exam
                     if (texam.converted_to_template) {
                         db.Exam.update({_id:texam.parent_exam_id}, {converted_to_template:false}, function(err){
-                            if (err) return next(err);                            
+                            if (err) return next(err);
                         })
                     }
                     db.Exam.deleteOne({_id:new mongoose.Types.ObjectId(req.params.exam_id)}, function(err){
@@ -241,7 +243,7 @@ router.get('/deleteall/:exam_id', jwt({secret: config.express.jwt.pub}), functio
                     })
                 })
             })
-        })        
+        })
     })
 
 })

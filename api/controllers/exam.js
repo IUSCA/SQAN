@@ -60,6 +60,39 @@ router.post('/comment/:exam_id', jwt({secret: config.express.jwt.pub}), function
     });
 });
 
+
+router.get('/subject/:q', function(req, res, next) {
+    db.Exam.find(
+        {
+            'subject': { "$regex": req.params.q, "$options": "i" }
+        }).populate('research_id').exec(function(err, _docs) {
+            if(err) return next(err);
+            let results = {};
+            async.each(_docs, function(_doc, cb) {
+                if(!(_doc.subject in results)) results[_doc.subject] = { 'subject': _doc.subject, 'exams': []};
+                results[_doc.subject].exams.push(_doc);
+                cb();
+            }, function(err) {
+                if(err) return next(err);
+                res.json(results);
+            })
+        })
+});
+
+router.get('/calendar', function(req, res, next) {
+
+    let d = new Date();
+    d.setDate(d.getDate() - 360);
+    db.Exam.find(
+        {
+            istemplate: false,
+            StudyTimestamp: {$gt: d}
+        }).populate('research_id').exec(function(err, _docs) {
+        if(err) return next(err);
+        res.json(_docs);
+    })
+})
+
 router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
 
     //lookup iibisids that user has access to (TODO - refactor this to aclSchema statics?)

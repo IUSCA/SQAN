@@ -8,6 +8,9 @@ const jwt = require('express-jwt');
 //const async = require('async');
 //const fs = require('fs');
 
+var SSE = require('express-sse');
+var sse = new SSE([]);
+
 //mine
 const config = require('../../config');
 const logger = new winston.Logger(config.logger.winston);
@@ -23,6 +26,20 @@ function check_series(req, res, next) {
     res.json({status: "ok"});
 }
 */
+
+router.get('/exams', sse.init);
+
+
+router.get('/exam/:id/:status', function(req, res, next) {
+    console.log(req.params.id);
+    let data = {
+        id: req.params.id,
+        block: {status: req.params.status}
+    };
+    sse.send(data, req.params.id);
+    res.json({'msg': 'ok'});
+})
+
 
 //called by sca-event to check to see if user has access to this key
 router.get('/checkaccess/series/:key', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
