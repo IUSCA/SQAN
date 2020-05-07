@@ -9,8 +9,6 @@ services:
     ports:
       - 8000:80
       - 443:443
-    networks:
-      - sqan-network
     # entrypoint: ["tail", "-f", "/dev/null"]
       
   mongo:
@@ -19,6 +17,9 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - ./mongo:/data/db
+      #- ./mongodump:/opt/mongodump
     
   api:
     image: node:12
@@ -29,13 +30,13 @@ services:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: example
     working_dir: /opt/sca/sqan
-    # entrypoint: ["tail", "-f", "/dev/null"]
+    entrypoint: ["tail", "-f", "/dev/null"]
     # command: npm run start
-    command: sh -c "
-      mkdir -p /opt/sca/var/log
-      && node ./api/sqan.js
-      "
-
+    #command: sh -c "
+    #  mkdir -p /opt/sca/var/log
+    #  && node ./api/sqan.js
+    #  "
+    # DEBUG=express:* node ./api/sqan.js 
   ui:
     image: node:12
     volumes:
@@ -55,7 +56,3 @@ volumes:
   apimodules:
     external: true
 
-networks:
-  sqan-network:
-    driver: bridge
-  
