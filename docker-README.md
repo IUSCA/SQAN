@@ -9,6 +9,15 @@ The ui files make calls to the backend api node server for data.
 Using `-p sqan` allows the project name (and consequently the container name) to be consistent from one deployment to the next. That way containers are named with `sqan_[service]_1`. If you've checked out the repository to a directory named `sqan`, that works too. 
 
 
+For the express API config (`config/index.js`), make sure that the API is listening on 0.0.0.0, not just localhost:
+
+```
+exports.express = {
+  host: "0.0.0.0",
+  port: 22340,
+
+```
+
 Create a shared volume for build steps and serving steps (these are also available in the Makefile):
 
     docker volume create --name=nodemodules
@@ -50,6 +59,10 @@ To restore the mongodb:
       - ./mongo:/data/db
       - ./mongodump:/opt/mongodump
 ```
+
+Connect to the container:
+
+    docker-compose -p sqan exec mongo bash
 
     cd /opt/mongodump/mongodump/
     mongorestore --host localhost --db SQAN
