@@ -262,6 +262,10 @@ export default {
       if(this.search_type === 'calendar') search_api = `${this.$config.api}/exam/calendar`;
       console.log(search_api);
 
+      if(this.search_type === 'research' || this.search_type === 'subject') {
+        if(this.search === '') return;
+      }
+
       this.$http
         .get(search_api)
         .then(

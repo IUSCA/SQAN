@@ -21,7 +21,7 @@
      >
     <template v-slot:activator="{ on }">
       <v-btn
-        color="blue lighten-2"
+        color="orange lighten-2"
         dark
         x-small
         v-on="on"
@@ -34,7 +34,7 @@
       ref="form"
     >
     <v-card>
-      <v-card-title class="blue lighten-2">
+      <v-card-title class="orange lighten-2">
         <v-icon class="mr-1">mdi-recycle</v-icon> Confirm Re-running QC Operations
       </v-card-title>
       <v-divider></v-divider>
@@ -56,6 +56,7 @@
           ></v-text-field>
 
           <v-select
+            v-if="series !== undefined"
             :items="template_options"
             v-model="override"
             label="Template Override"
@@ -145,6 +146,7 @@
       }
     },
     mounted() {
+      console.log(this.series);
       this.getTemplates();
     }
   }

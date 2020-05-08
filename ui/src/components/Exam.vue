@@ -157,7 +157,7 @@
     },
     mounted() {
       this.getExam();
-      this.setupStream();
+      // this.setupStream();
     },
     watch: {
       exam_id(newval) {

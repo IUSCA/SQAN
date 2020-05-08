@@ -19,7 +19,7 @@ const router = new VueRouter({
   mode: 'history',
   routes: [
     {
-      path: '/',
+      path: '/signin',
       name: 'signin',
       component: Signin,
       meta: {
@@ -34,6 +34,7 @@ const router = new VueRouter({
     {
       path: '/exams',
       name: 'exams',
+      alias: '/',
       meta: {
         requiresAuth: true,
         is_admin: false
@@ -127,15 +128,15 @@ router.beforeEach((to, from, next) => {
 
   if (to.matched.some(record => record.meta.requiresAuth)) {
     let role = localStorage.getItem('role');
-    let jwt_exp = localStorage.getItem('jwt_exp') || (Date.now()) / 1000;
-    let now = (Date.now()) / 1000 + 600;
+    // let jwt_exp = localStorage.getItem('jwt_exp') || (Date.now()) / 1000;
+    // let now = (Date.now()) / 1000 + 600;
 
     console.log("In router, role is set to", role);
-    console.log("In router, jwt_exp is set to", jwt_exp);
-    console.log("In router, jwt expiration is ", (now > jwt_exp));
-    if (typeof (role) === 'undefined' || role === 'undefined' || role === 'guest' || !role || now > jwt_exp) {
+    // console.log("In router, jwt_exp is set to", jwt_exp);
+    // console.log("In router, jwt expiration is ", (now > jwt_exp));
+    if (typeof (role) === 'undefined' || role === 'undefined' || role === 'guest' || !role ) {
       next({
-        path: '/',
+        path: '/signin',
 
       })
     } else {

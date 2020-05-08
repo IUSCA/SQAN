@@ -80,6 +80,7 @@ export default {
       showForm: false,
       status: '',
       snackbar: false,
+      timeout: 500
     };
   },
   computed: {
@@ -98,6 +99,7 @@ export default {
     },
 
     validate: function(casticket) {
+      console.log(`Calling validate`);
       var self = this;
       this.$http.get(this.$config.api + '/verify?casticket=' + casticket)
         .then(res => {
@@ -127,8 +129,8 @@ export default {
       self.status = "Logging you in";
       self.snackbar = true;
       setTimeout(() => {
-        self.$store.commit('SET_LAYOUT', 'app-layout');
-        self.$router.push({ path: "/exams" });
+        self.$router.replace({'query': null});
+        self.$router.push({path: '/exams'});
       }, 300);
     },
 

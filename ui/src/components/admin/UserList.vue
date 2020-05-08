@@ -34,6 +34,7 @@
         <Confirm
           title="Delete User?"
           :message="deleteMessage(item)"
+          color="red lighten-2"
           v-on:confirm="deleteUser(item)"
         >
           <template v-slot:label>

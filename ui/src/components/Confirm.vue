@@ -6,7 +6,7 @@
      >
     <template v-slot:activator="{ on }">
       <v-btn
-        color="red lighten-2"
+        :color="color"
         dark
         x-small
         v-on="on"
@@ -19,7 +19,7 @@
       ref="form"
     >
     <v-card>
-      <v-card-title class="red white--text">
+      <v-card-title :class="color">
         <v-icon class="mr-1 white--text">mdi-help-circle</v-icon> {{title}}
       </v-card-title>
       <v-divider></v-divider>
@@ -32,7 +32,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn
-          color="red white--text"
+          :color="color"
           @click="confirm"
         >
           Confirm
@@ -58,6 +58,7 @@
     props: {
       title: String,
       message: String,
+      color: String
     },
     data() {
       return {

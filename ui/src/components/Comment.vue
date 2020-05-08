@@ -16,18 +16,16 @@
       </v-btn>
     </v-snackbar>
      <v-dialog
-       v-model="sat_dialog"
+       v-model="dialog"
        max-width="500"
      >
     <template v-slot:activator="{ on }">
       <v-btn
-        color="blue lighten-2"
-        dark
+        color="grey lighten-2 text-black"
         x-small
         v-on="on"
-        :disabled="exam.converted_to_template"
       >
-        <v-icon x-small class="mr-1">mdi-checkbox-multiple-blank</v-icon> Add as Template
+        <v-icon x-small class="mr-1">mdi-comment-text-outline</v-icon> Add Comment
       </v-btn>
     </template>
 
@@ -35,34 +33,20 @@
       ref="form"
     >
     <v-card>
-      <v-card-title class="blue lighten-2">
-        <v-icon class="mr-1">mdi-check-box-multiple-outline</v-icon> Confirm using this Exam as a Template
+      <v-card-title class="grey lighten-2">
+        <v-icon class="mr-1">mdi-comment-text-outline</v-icon> Add Comment
       </v-card-title>
       <v-divider></v-divider>
       <v-card-text>
-          <v-text-field
-            v-model="exam.subject"
-            label="Subject"
-            prepend-icon="mdi-account"
-            required
-            disabled
-          ></v-text-field>
 
-          <v-text-field
-            v-model="exam.StudyTimestamp"
-            label="Timestamp"
-            prepend-icon="mdi-clock"
-            required
-            disabled
-          ></v-text-field>
 
-          <v-textarea
-            v-model="comment"
-            label="Comment"
-            prepend-icon="mdi-comment"
-            rows="2"
-            required
-          ></v-textarea>
+        <v-textarea
+          label="Comment"
+          rows="2"
+          v-model="comment"
+          hint="Comment on series data or QC status"
+        ></v-textarea>
+
       </v-card-text>
 
       <v-divider></v-divider>
@@ -71,9 +55,9 @@
         <v-spacer></v-spacer>
         <v-btn
           color="primary"
-          @click="makeTemplate"
+          @click="submitComment"
         >
-          Confirm
+          Submit
         </v-btn>
       </v-card-actions>
 
@@ -86,13 +70,13 @@
 <script>
 
   export default {
-    name: 'SetAsTemplate',
+    name: 'Comment',
     props: {
-      exam: Object
+      series_id: String
     },
     data() {
       return {
-        sat_dialog: false,
+        dialog: false,
         snackbar: false,
         status: '',
         timeout: 5000,
@@ -100,23 +84,27 @@
       }
     },
     methods: {
-      makeTemplate() {
-        this.sat_dialog = false;
+      submitComment() {
+        this.dialog = false;
         this.status = "Processing ...";
         this.snackbar = true;
         let self = this;
-        this.$http.post(`${this.$config.api}/exam/maketemplate/${this.exam._id}`, { comment: this.comment})
+        this.$http.post(`${this.$config.api}/series/comment/${this.series_id}`, { comment: this.comment})
           .then(res => {
+            self.$emit("submitted");
             self.snackbar = false;
             self.status = res.data.message;
             self.snackbar = true;
           }, err=> {
             self.snackbar = false;
-            self.status = 'Error marking exam as template!';
+            self.status = 'Error submitting comment!';
             self.snackbar = true;
             console.log(err);
           });
-      }
+      },
+    },
+    mounted() {
+
     }
   }
 </script>
