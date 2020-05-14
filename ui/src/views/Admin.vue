@@ -4,7 +4,7 @@
       <div class="col-sm-12">
         <v-tabs v-model="tab" @change="changeTab" icons-and-text>
           <v-tab v-for="(section, index) in sections" :key="index">
-            {{ section }}
+            <v-icon left>{{section.icon}}</v-icon> {{ section.label }}
           </v-tab>
         </v-tabs>
 
@@ -36,7 +36,20 @@ export default {
   data() {
     return {
       name: "admin",
-      sections: ["Users", "Groups", "ACL"],
+      sections: [
+        {
+          label: "Users",
+          icon: "mdi-account"
+        },
+        {
+          label: "Groups",
+          icon: "mdi-account-group"
+        },
+        {
+          label: "ACL",
+          icon: "mdi-lock"
+        },
+      ],
       selected: "",
       tab: "",
       current_tab: "Users"

@@ -46,6 +46,9 @@ export default new Vuex.Store({
     getters: {
       layout (state) {
         return state.layout
+      },
+      isAdmin (state) {
+        return state.auth.role === 'admin';
       }
     },
     modules: {}

@@ -30,15 +30,17 @@
           <v-list-item-title>{{item.title}}</v-list-item-title>
         </v-list-item-content>
       </v-list-item>
-      <v-divider class="mb-5"></v-divider>
-      <v-list-item v-for="item in admin_items" :value="item.active" :key="item.title" :to="item.path" @click="navChange(item)">
-        <v-list-item-action>
-          <v-icon>{{item.action}}</v-icon>
-        </v-list-item-action>
-        <v-list-item-content>
-          <v-list-item-title>{{item.title}}</v-list-item-title>
-        </v-list-item-content>
-      </v-list-item>
+      <span v-if="$store.getters.isAdmin">
+        <v-divider class="mb-5"></v-divider>
+        <v-list-item v-for="item in admin_items" :value="item.active" :key="item.title" :to="item.path" @click="navChange(item)">
+          <v-list-item-action>
+            <v-icon>{{item.action}}</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>{{item.title}}</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </span>
       <v-divider class="mb-5"></v-divider>
       <v-list-item v-for="item in user_items" :value="item.active" :key="item.title" :to="item.path" @click="navChange(item)">
         <v-list-item-action>
@@ -161,5 +163,13 @@
 <style>
   a {
     text-decoration: none !important;
+  }
+
+  .v-navigation-drawer__content {
+    background-image: linear-gradient(to bottom, white, white, white, #0277bd);
+  }
+
+  .v-list {
+    background-image: none !important;
   }
 </style>

@@ -32,8 +32,10 @@
             <v-img src="../assets/sqan_logo_full.png" class="elevation-4" />
             <v-divider class="mb-2 mt-2"></v-divider>
             <v-btn block @click="begin_iucas" class="elevation-8" color="primary"><v-img src="../assets/trident.png" max-width="15px" class="mx-1"/> Login with IU CAS</v-btn>
+            <v-divider class="mb-2 mt-2" v-show="mode == 'demo'"></v-divider>
+            <v-btn block @click="guestLogin" class="elevation-8" color="primary"><v-icon class="mx-1">mdi-account-outline</v-icon> Guest Login</v-btn>
             <v-divider class="my-2"></v-divider>
-            <v-btn block @click="showForm = true" v-show="!showForm" class="elevation-8" color="primary"><v-icon class="mx-1">mdi-account</v-icon> Local Signin</v-btn>
+            <v-btn block @click="showForm = true" v-show="!showForm" class="elevation-8" color="primary"><v-icon class="mx-1">mdi-account</v-icon> User Login</v-btn>
 
             <v-form @submit.prevent="userLogin" v-show="showForm">
             <v-card class="elevation-12">
@@ -80,7 +82,8 @@ export default {
       showForm: false,
       status: '',
       snackbar: false,
-      timeout: 500
+      timeout: 1000,
+      mode: this.$config.mode
     };
   },
   computed: {
@@ -122,6 +125,16 @@ export default {
       );
     },
 
+    guestLogin: function() {
+      let self = this;
+      this.$http.get(`${this.$config.api}/guestLogin`).then(
+        function(res) {
+          self.completeLogin(res.data);
+        },
+        self.errorLogin
+      );
+    },
+
     completeLogin: function(response) {
       let self = this;
       this.login(response);
@@ -135,9 +148,19 @@ export default {
     },
 
     errorLogin: function(err) {
-      self.snackbar = false;
-      self.status = err;
-      self.snackbar = true;
+
+      console.dir(err);
+      this.snackbar = false;
+      this.timeout = 5000;
+      let errors = err.response.data.errors;
+      let key = Object.keys(errors)[0];
+      this.status = `${key} ${errors[key]}`;
+      this.snackbar = true;
+      let self = this;
+      setTimeout(() => {
+        self.timeout = 1000;
+      }, 5000);
+
     }
   },
   mounted() {

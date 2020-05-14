@@ -134,7 +134,7 @@ router.beforeEach((to, from, next) => {
     console.log("In router, role is set to", role);
     // console.log("In router, jwt_exp is set to", jwt_exp);
     // console.log("In router, jwt expiration is ", (now > jwt_exp));
-    if (typeof (role) === 'undefined' || role === 'undefined' || role === 'guest' || !role ) {
+    if (typeof (role) === 'undefined' || role === 'undefined' || !role ) {
       next({
         path: '/signin',
 
@@ -144,7 +144,7 @@ router.beforeEach((to, from, next) => {
         if (role === 'admin') {
           next()
         } else {
-          next({name: 'signin'})
+          next(false)
         }
       } else {
         next()
@@ -153,6 +153,6 @@ router.beforeEach((to, from, next) => {
   } else {
     next()
   }
-})
+});
 
 export default router
