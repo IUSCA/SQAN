@@ -125,24 +125,35 @@
       navChange: function(navItem) {
         this.drawer = false;
         this.$emit('navChange', navItem);
+      },
+      checkRoute: function() {
+        console.log("checking route");
+        let currentPath = this.$router.currentRoute.path;
+        this.items.forEach(item => {
+          if(currentPath.includes(item.path)) this.navChange(item);
+        });
+
+        this.admin_items.forEach(item => {
+          if(currentPath.includes(item.path)) this.navChange(item);
+        });
+
+        this.user_items.forEach(item => {
+          if(currentPath.includes(item.path)) this.navChange(item);
+        })
       }
     },
     mounted() {
       let self = this;
       setTimeout(function() {
-        let currentPath = self.$router.currentRoute.path;
-        self.items.forEach(item => {
-          if(currentPath.includes(item.path)) self.navChange(item);
-        });
-
-        self.admin_items.forEach(item => {
-          if(currentPath.includes(item.path)) self.navChange(item);
-        });
-
-        self.user_items.forEach(item => {
-          if(currentPath.includes(item.path)) self.navChange(item);
-        })
+        self.checkRoute();
       }, 200);
+    },
+    watch: {
+      '$route' (to, from) {
+        console.log(to);
+        console.log(from);
+        this.checkRoute();
+      }
     }
   }
 </script>
