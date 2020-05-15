@@ -1,0 +1,31 @@
+version: '2'
+services:
+  ui:
+    image: node:12
+    volumes:
+      - ./ui:/opt/sca/sqan/ui
+      - nodemodules:/opt/sca/sqan/ui/node_modules
+    working_dir: /opt/sca/sqan/ui
+  install:
+    extends:
+      service: ui
+    command: npm i
+
+  api:
+    image: node:12
+    volumes:
+      - .:/opt/sca/sqan
+      - apimodules:/opt/sca/sqan/node_modules
+    working_dir: /opt/sca/sqan
+  install:
+    extends:
+      service: api
+    command: npm i
+
+volumes:
+  nodemodules:
+    external: true
+
+  apimodules:
+    external: true
+    

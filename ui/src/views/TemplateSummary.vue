@@ -33,6 +33,7 @@
           class="elevation-4"
           :expanded.sync="expanded"
           item-key="_id"
+          @click:row="toggleRow"
         >
           <template v-slot:expanded-item="{ headers, item }">
             <td :colspan="headers.length">
@@ -142,6 +143,18 @@ export default {
           console.dir(err);
         }
       );
+    },
+
+    toggleRow: function(value) {
+      //console.log("checking value: ", value)
+      let index = this.expanded.indexOf(value);
+      if (index !== -1) {
+        // console.log("removing series: ", value)
+        this.expanded.splice(index, 1);
+      } else {
+        // console.log("adding series: ", value)
+        this.expanded.push(value);
+      }
     },
 
     getNoTemplates: function() {
