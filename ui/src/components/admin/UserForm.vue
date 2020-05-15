@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="show_userform">
+  <v-dialog v-model="show_userform" max-width="750">
     <template v-slot:activator="{ on }">
       <span v-on="on">
         <slot name="label">
@@ -11,105 +11,82 @@
       </span>
     </template>
 
+    <v-form ref="userform">
+
     <v-card>
       <v-card-title>
-        <v-icon>mdi-account</v-icon>
+        <v-icon>mdi-account-edit</v-icon>
         New / Edit User
       </v-card-title>
 
-      <form
-        v-on:submit.prevent="submituserdata"
-        class="form-horizontal"
-        name="user_form"
-      >
-        <fieldset>
-          <div class="form-group">
-            <label for="inputUsername" class="col-lg-2 control-label">
-              Username
-            </label>
-            <div class="col-lg-10">
-              <v-text-field
-                class="form-control"
-                id="inputUsername"
-                placeholder="Username"
-                autocomplete="off"
-                v-model="userdataLocal.username"
-              />
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="inputFullname" class="col-lg-2 control-label"
-              >Name</label
-            >
-            <div class="col-lg-10">
-              <v-text-field
-                class="form-control"
-                id="inputFullname"
-                placeholder="Full name"
-                autocomplete="off"
-                v-model="userdataLocal.fullname"
-              />
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="inputEmail" class="col-lg-2 control-label">Email</label>
-            <div class="col-lg-10">
-              <v-text-field
-                class="form-control"
-                id="inputEmail"
-                placeholder="Email"
-                autocomplete="off"
-                v-model="userdataLocal.email"
-              />
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="inputRoles" class="col-lg-2 control-label">Roles</label>
-            <div class="col-lg-10">
-              <v-select
-                multiple
-                v-model="userdataLocal.roles"
-                required
-                :items="user_roles"
-              >
-              </v-select>
-            </div>
-          </div>
+      <v-card-text>
 
-          <div class="form-group">
-            <label for="inputPrimary" class="col-lg-2 control-label"
-              >Primary Role</label
-            >
-            <div class="col-lg-10">
-              <v-select
-                class="form-control"
-                id="select"
-                v-model="userdataLocal.primary_role"
-                :items="userdataLocal.roles"
-              >
-              </v-select>
-              <span class="help-block">
-                Add roles to user to add primary role options
-              </span>
-            </div>
-          </div>
-          <div class="form-group">
-            <div class="col-lg-10 col-lg-offset-2">
-              <v-btn type="reset" class="btn btn-default" @click="closeForm()">
-                Cancel
-              </v-btn>
-              <v-btn
-                type="submit"
-                class="btn btn-primary"
-                @click="submituserdata()"
-              >
-                Submit
-              </v-btn>
-            </div>
-          </div>
-        </fieldset>
-      </form>
+        <v-text-field
+          class="form-control"
+          id="inputUsername"
+          placeholder="Username"
+          label="Username"
+          autocomplete="off"
+          v-model="userdataLocal.username"
+        />
+
+        <v-text-field
+          class="form-control"
+          id="inputFullname"
+          placeholder="Full name"
+          autocomplete="off"
+          label="Fullname"
+          v-model="userdataLocal.fullname"
+        />
+
+        <v-text-field
+          class="form-control"
+          id="inputEmail"
+          label="Email"
+          placeholder="Email"
+          autocomplete="off"
+          v-model="userdataLocal.email"
+        />
+
+        <v-autocomplete
+          multiple
+          chips
+          small-chips
+          outlined
+          v-model="userdataLocal.roles"
+          label="Roles"
+          required
+          :items="user_roles"
+        >
+        </v-autocomplete>
+
+
+        <v-select
+          class="form-control"
+          id="select"
+          label="Primary Role"
+          v-model="userdataLocal.primary_role"
+          :items="userdataLocal.roles"
+          description="Add roles to user to enable primary role options"
+        >
+        </v-select>
+
+      </v-card-text>
+
+      <v-spacer></v-spacer>
+
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn
+          color="green white--text"
+          @click="submituserdata"
+        >
+          Submit
+        </v-btn>
+      </v-card-actions>
+
     </v-card>
+    </v-form>
   </v-dialog>
 </template>
 
@@ -133,7 +110,7 @@ export default {
     return {
       show_userform: false,
       userdataLocal: { ...this.userdata },
-      user_roles: ["user", "guest", "admin", "technologist", "researcher"]
+      user_roles: ["user", "guest", "admin", "technologist", "researcher", "god"]
     };
   },
   watch: {
@@ -143,50 +120,65 @@ export default {
   },
   methods: {
     submituserdata() {
-      // this.$emit("close");
-      // $scope.show_userform = false;
-      // $scope.active_tab = 0;
-      console.log(this.userdataLocal);
-      if (this.userdataLocal._id !== undefined) {
-        //toaster.success("Updating user!");
-        console.log("updating user");
-        this.$http
-          .patch(
-            `${this.$config.api}/user/` + this.userdataLocal._id,
-            this.userdataLocal
-          )
-          .then(function(res) {
-            console.log(res.data);
-            //toaster.success("User updated!");
-          }, this.toast_error);
-      } else {
-        //toaster.success("Creating new user!");
-        console.log("creating user");
-        this.$http
-          .post(`${this.$config.api}/user`, this.userdataLocal)
-          .then(function(res) {
-            console.log(res.data);
-            //toaster.success("New user created, refreshing user list");
-            //this.refreshUsers();
 
-            //$emit('refresh', true)
-          }, this.toast_error);
+      console.log(this.userdataLocal);
+
+
+      let method = '';
+      let url =  '';
+      let message = ';'
+      if(this.userdataLocal._id === undefined) {
+        message = 'Created new user';
+        method = 'post';
+        url = `${this.$config.api}/user`;
+      } else {
+        message = 'Updated new user';
+        method = 'patch';
+        url = `${this.$config.api}/user/${this.userdataLocal._id}`;
       }
+
+      let self = this;
+      this.$http({method: method, url: url, data: this.userdataLocal})
+        .then(res => {
+          console.log(res.data);
+          self.$emit('refresh');
+          self.$store.dispatch('snack', message);
+          self.closeForm();
+        }, err => {
+          self.$store.dispatch('snack', err);
+          console.log(err);
+        })
+      // if (this.userdataLocal._id !== undefined) {
+      //
+      //   console.log("updating user");
+      //   this.$http
+      //     .patch(
+      //       `${this.$config.api}/user/` + this.userdataLocal._id,
+      //       this.userdataLocal
+      //     )
+      //     .then(function(res) {
+      //       console.log(res.data);
+      //       this.$emit('submitted')
+      //
+      //     }, err => {
+      //       console.log(err);
+      //     });
+      // } else {
+      //   console.log("creating user");
+      //   this.$http
+      //     .post(`${this.$config.api}/user`, this.userdataLocal)
+      //     .then(function(res) {
+      //       console.log(res.data);
+      //       this.$emit('submitted')
+      //
+      //     }, this.toast_error);
+      // }
       this.$emit("refresh");
       this.show_userform = false;
     },
     closeForm: function() {
       this.show_userform = false;
     },
-    createUser: function() {
-      this.show_userform = true;
-      console.log("createUser called");
-    },
-    editUser: function(user) {
-      this.current_user = user;
-      this.show_userform = true;
-      console.log("editUser called");
-    }
   },
   mounted() {
     console.log("User form has been created!");

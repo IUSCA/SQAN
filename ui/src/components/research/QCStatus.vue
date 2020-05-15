@@ -19,7 +19,11 @@
   export default {
     name: 'QCStatus',
     props: {
-      exams: Array
+      exams: Array,
+      show_legend: {
+        type: Boolean,
+        default: false
+      }
     },
     data() {
       return {

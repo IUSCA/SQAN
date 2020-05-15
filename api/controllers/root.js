@@ -104,14 +104,15 @@ router.get('/guestLogin', function(req, res, next) {
     db.User.findOne({username: 'guest'}).exec(function(err, user) {
         if(err) return next(err);
         if(!user) {
-            res.sendStatus('403').json({msg: 'Guest user not found'});
+            res.status('403').json({errors: {'username' : 'guest does not exist'}});
             return;
         } else {
             user.lastLogin = Date.now();
             user.save();
             common.issue_jwt(user, function (err, jwt) {
                 if (err) return next(err);
-                res.json({jwt: jwt, uid: user.username, role: user.primary_role});
+                var decoded = jsonwt.verify(jwt, config.express.jwt.pub);
+                res.json({jwt: jwt, uid: user.username, role: user.primary_role, jwt_exp: decoded.exp});
             });
         }
     });

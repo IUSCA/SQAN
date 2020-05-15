@@ -1,27 +1,13 @@
 <template>
   <span>
-    <v-snackbar
-      v-model="snackbar"
-      top
-      right
-      :timeout="timeout"
-    >
-      {{status}}
-      <v-btn
-        color="red"
-        text
-        @click="snackbar = false"
-      >
-        Close
-      </v-btn>
-    </v-snackbar>
+
      <v-dialog
        v-model="req_dialog"
        max-width="500"
      >
     <template v-slot:activator="{ on }">
       <v-btn
-        color="blue lighten-2"
+        color="orange lighten-2"
         dark
         x-small
         v-on="on"
@@ -34,7 +20,7 @@
       ref="form"
     >
     <v-card>
-      <v-card-title class="blue lighten-2">
+      <v-card-title class="orange lighten-2">
         <v-icon class="mr-1">mdi-recycle</v-icon> Confirm Re-running QC Operations
       </v-card-title>
       <v-divider></v-divider>
@@ -56,6 +42,7 @@
           ></v-text-field>
 
           <v-select
+            v-if="series !== undefined"
             :items="template_options"
             v-model="override"
             label="Template Override"
@@ -96,9 +83,6 @@
     data() {
       return {
         req_dialog: false,
-        snackbar: false,
-        status: '',
-        timeout: 5000,
         override: '',
         failures: false,
         templates: []
@@ -122,13 +106,9 @@
         let self = this;
         this.$http.post(`${this.$config.api}/exam/reqc/${this.exam._id}`, { comment: this.comment})
           .then(res => {
-            self.snackbar = false;
-            self.status = res.data.message;
-            self.snackbar = true;
+            self.$store.dispatch('snack', res.data.message);
           }, err=> {
-            self.snackbar = false;
-            self.status = 'Error marking exam as template!';
-            self.snackbar = true;
+            self.$store.dispatch('snack', 'Error submitting ReQC!');
             console.log(err);
           });
       },
@@ -145,6 +125,7 @@
       }
     },
     mounted() {
+      console.log(this.series);
       this.getTemplates();
     }
   }

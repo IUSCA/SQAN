@@ -23,14 +23,20 @@
 </template>
 
 <script>
-export default {
-  name: "signout",
-  mounted() {
-    let self = this;
-    setTimeout(() => {
-      self.$router.push({ path: "/" });
-    }, 800);
-  }
+  import {mapActions} from "vuex";
+
+  export default {
+    name: "signout",
+    methods: {
+      ...mapActions(["logout"]),
+    },
+    mounted() {
+      let self = this;
+      this.logout();
+      setTimeout(() => {
+        self.$router.push({ path: "/signin" });
+      }, 500);
+    }
 };
 </script>
 

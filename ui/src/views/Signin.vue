@@ -4,21 +4,6 @@
         id="signin"
         fluid
       >
-        <v-snackbar
-          v-model="snackbar"
-          top
-          right
-          :timeout="timeout"
-        >
-          {{status}}
-          <v-btn
-            color="red"
-            text
-            @click="snackbar = false"
-          >
-            Close
-          </v-btn>
-        </v-snackbar>
 
         <v-row
           align="center"
@@ -32,8 +17,10 @@
             <v-img src="../assets/sqan_logo_full.png" class="elevation-4" />
             <v-divider class="mb-2 mt-2"></v-divider>
             <v-btn block @click="begin_iucas" class="elevation-8" color="primary"><v-img src="../assets/trident.png" max-width="15px" class="mx-1"/> Login with IU CAS</v-btn>
+            <v-divider class="mb-2 mt-2" v-show="mode == 'demo'"></v-divider>
+            <v-btn block @click="guestLogin" class="elevation-8" color="primary"><v-icon class="mx-1">mdi-account-outline</v-icon> Guest Login</v-btn>
             <v-divider class="my-2"></v-divider>
-            <v-btn block @click="showForm = true" v-show="!showForm" class="elevation-8" color="primary"><v-icon class="mx-1">mdi-account</v-icon> Local Signin</v-btn>
+            <v-btn block @click="showForm = true" v-show="!showForm" class="elevation-8" color="primary"><v-icon class="mx-1">mdi-account</v-icon> User Login</v-btn>
 
             <v-form @submit.prevent="userLogin" v-show="showForm">
             <v-card class="elevation-12">
@@ -78,8 +65,7 @@ export default {
         password: ""
       },
       showForm: false,
-      status: '',
-      snackbar: false,
+      mode: this.$config.mode
     };
   },
   computed: {
@@ -98,6 +84,7 @@ export default {
     },
 
     validate: function(casticket) {
+      console.log(`Calling validate`);
       var self = this;
       this.$http.get(this.$config.api + '/verify?casticket=' + casticket)
         .then(res => {
@@ -120,22 +107,31 @@ export default {
       );
     },
 
+    guestLogin: function() {
+      let self = this;
+      this.$http.get(`${this.$config.api}/guestLogin`).then(
+        function(res) {
+          self.completeLogin(res.data);
+        },
+        self.errorLogin
+      );
+    },
+
     completeLogin: function(response) {
       let self = this;
       this.login(response);
-      self.snackbar = false;
-      self.status = "Logging you in";
-      self.snackbar = true;
+      self.$store.dispatch('snack', "Login successful");
       setTimeout(() => {
-        self.$store.commit('SET_LAYOUT', 'app-layout');
-        self.$router.push({ path: "/exams" });
+        self.$router.replace({'query': null});
+        self.$router.push({path: '/exams'});
       }, 300);
     },
 
     errorLogin: function(err) {
-      self.snackbar = false;
-      self.status = err;
-      self.snackbar = true;
+
+      let errors = err.response.data.errors;
+      let key = Object.keys(errors)[0];
+      this.$store.dispatch('snack', `${key} ${errors[key]}`);
     }
   },
   mounted() {

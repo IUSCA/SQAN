@@ -5,6 +5,7 @@ var express = require('express');
 var router = express.Router();
 var winston = require('winston');
 var jwt = require('express-jwt');
+var jsonwt = require('jsonwebtoken');
 var async = require('async');
 
 //mine
@@ -109,6 +110,22 @@ router.delete('/:id', jwt({secret: config.express.jwt.pub}), common.has_role("ad
         res.json(_user);
     });
 });
+
+
+//sudo as user
+router.get('/spoof/:id', jwt({secret: config.express.jwt.pub}), common.has_role('god'), function(req, res, next) {
+  db.User.findById(req.params.id).exec(function(err, _user) {
+    if(err) return next(err);
+    if(!_user) return res.status('404').json({"msg":"Requested user not found"});
+
+    common.issue_jwt(_user, function (err, jwt) {
+      if (err) return next(err);
+      var decoded = jsonwt.verify(jwt, config.express.jwt.pub);
+      return res.json({jwt: jwt, uid: _user.username, role: _user.primary_role, jwt_exp: decoded.exp});
+    });
+  })
+})
+
 
 
 module.exports = router;

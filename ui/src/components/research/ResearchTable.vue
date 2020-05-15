@@ -12,6 +12,8 @@
       dense
       :items="filtered_results"
       :headers="fields"
+      disable-pagination
+      hide-default-footer
       @click:row="showResearch"
     >
       <template v-slot:item.lastUpdated="{ item }">
@@ -21,12 +23,19 @@
         <QCStatus :exams="item.exams"></QCStatus>
       </template>
     </v-data-table>
+
+    <v-divider></v-divider>
+
+    <div class="text-right my-2">
+      <QCStatus :exam="{}" :show_legend="true"></QCStatus>
+    </div>
+
   </div>
 </template>
 
 <script>
 
-  import QCStatus from "./QCStatus";
+  import QCStatus from "../exams/QCStatus";
   import ResearchExams from "./ResearchExams";
 
   export default {
@@ -106,7 +115,7 @@
             sortable: true
           },
           {
-            text: 'QC Status',
+            text: 'QC Status of Exams',
             value: 'QCStatus',
             sortable: false
           }

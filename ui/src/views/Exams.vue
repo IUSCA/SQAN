@@ -262,6 +262,10 @@ export default {
       if(this.search_type === 'calendar') search_api = `${this.$config.api}/exam/calendar`;
       console.log(search_api);
 
+      if(this.search_type === 'research' || this.search_type === 'subject') {
+        if(this.search === '') return;
+      }
+
       this.$http
         .get(search_api)
         .then(
@@ -326,27 +330,27 @@ export default {
   }
 
   .v-calendar-weekly {
-    display: table;
-    table-layout: fixed;
+    display: table !important;
+    table-layout: fixed !important;
   }
   .v-calendar-weekly__week {
-    height: auto;
-    display: table-row;
+    height: auto !important;
+    display: table-row !important;
   }
 
   .v-calendar-weekly__head {
-    height: auto;
-    display: table-row;
+    height: auto !important;
+    display: table-row !important;
   }
 
   .v-calendar-weekly__day {
-    display: table-cell;
-    width: calc(100% / 7)
+    display: table-cell !important;
+    width: calc(100% / 7) !important;
   }
 
   .v-calendar-weekly__head-weekday {
-    display: table-cell;
-    width: calc(100% / 7)
+    display: table-cell !important;
+    width: calc(100% / 7) !important;
   }
 
 </style>

@@ -12,20 +12,40 @@
 
 
     <div class="display-1 font-weight-medium">
-      <v-icon large>mdi-account-check</v-icon>
+      <v-icon large>mdi-microscope</v-icon>
       {{research.IIBISID}} - {{research.Modality}}
     </div>
+
+    <v-col cols="3">
+      <v-text-field
+        v-model="filter"
+        prepend-icon="mdi-filter"
+        label="Subject"
+        single-line
+        hide-details
+      ></v-text-field>
+    </v-col>
 
     <v-data-table
       dense
       disable-pagination
       hide-default-footer
-      :items="exams"
+      :search="filter"
+      :items="filter_exams"
       @click:row="showExam"
       :headers="fields"
 
     >
+      <template v-slot:item.qc="{ item }">
+        <QCStatus :exam="item"></QCStatus>
+      </template>
     </v-data-table>
+
+    <v-divider></v-divider>
+
+    <div class="text-right my-2">
+      <QCStatus :exam="{}" :show_legend="true"></QCStatus>
+    </div>
 
   </v-card>
 </template>
@@ -33,10 +53,18 @@
 <script>
 
   import Exam from "../Exam";
+  import QCStatus from "../exams/QCStatus";
 
   export default {
     name: 'ResearchExams',
-    components: {Exam},
+    components: {Exam,QCStatus},
+    computed: {
+      filter_exams() {
+        return this.exams.filter(ex => {
+          return ex.subject !== null
+        })
+      }
+    },
     props: {
       research: Object,
       exams: Array,
@@ -45,18 +73,19 @@
       return {
         selected: null,
         exam_dialog: false,
+        filter: '',
         fields: [{
           text: 'Subject',
           value: 'subject'
         }, {
           text: 'Date',
-          value: 'StudyTimestamp'
+          value: 'StudyTimestamp',
+          filterable: false,
         },  {
-          text: 'Passed',
-          value: 'qc.series_passed'
-        },  {
-          text: 'Failed',
-          value: 'qc.series_failed'
+          text: 'QC Status (series)',
+          value: 'qc',
+          filterable: false,
+          sortable: false
         }],
         selected_series: null
       }

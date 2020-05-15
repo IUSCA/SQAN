@@ -11,7 +11,7 @@
           >
             <v-row>
               <v-col cols="3" class="text-center">
-                <v-gravatar :email="user.email" size="160" class="elevation-6" />
+                <v-gravatar :email="user.email" :size="160" class="elevation-6" />
                 <br />
                 <p class="caption">
                   Your avatar is handled by
@@ -136,6 +136,7 @@ export default {
       this.$http
         .patch(`${this.$config.api}/user/` + this.user._id, this.user)
         .then(res => {
+          this.$store.dispatch('snack', "Profile updated successfully");
           console.log(res.data);
         });
     }
