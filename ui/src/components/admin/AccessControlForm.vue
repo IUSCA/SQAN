@@ -1,22 +1,6 @@
 <template>
   <span>
 
-  <v-snackbar
-    v-model="snackbar"
-    top
-    right
-    :timeout="timeout"
-  >
-    {{status}}
-    <v-btn
-      color="red"
-      text
-      @click="snackbar = false"
-    >
-      Close
-    </v-btn>
-  </v-snackbar>
-
   <v-dialog v-model="show_form" max-width="500">
     <template v-slot:activator="{ on }">
       <span v-on="on">
@@ -106,9 +90,6 @@
         show_form: false,
         canView: [], //merged list of allowed groups when batch editing
         canQC: [],
-        snackbar: false,
-        status: '',
-        timeout: 4000
 
       };
     },
@@ -176,12 +157,13 @@
           .then(function(res) {
             console.log(res.data);
             self.show_form = false;
-            self.snackbar = false;
-            self.status = res.data.msg;
-            self.snackbar = true;
+            self.$store.dispatch('snack', res.data.message);
             self.$emit("updated");
 
-          }, err => {console.log(err)});
+          }, err => {
+            self.$store.dispatch('snack', err);
+            console.log(err)
+          });
       }
 
     },

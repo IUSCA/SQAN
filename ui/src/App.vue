@@ -1,5 +1,6 @@
 <template>
   <v-app>
+    <Snackbar></Snackbar>
     <component v-bind:is="layout"></component>
   </v-app>
 </template>
@@ -7,6 +8,7 @@
 <script>
   import AppLayout from './layouts/AppLayout'
   import SimpleLayout from './layouts/SimpleLayout'
+  import Snackbar from "./components/Snackbar";
   export default {
     computed: {
       layout () {
@@ -15,7 +17,8 @@
     },
     components: {
       'app-layout': AppLayout,
-      'simple-layout': SimpleLayout
+      'simple-layout': SimpleLayout,
+      Snackbar
       // define as many layouts you want for the application
     },
     methods: {

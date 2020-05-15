@@ -11,7 +11,8 @@ export default new Vuex.Store({
             jwt: localStorage.getItem('jwt') || '',
             jwt_exp: localStorage.getItem('jwt_exp') || ''
         },
-        layout: 'simple-layout'
+        layout: 'simple-layout',
+        snack: ''
     },
     mutations: {
         authChange (state, auth) {
@@ -19,6 +20,9 @@ export default new Vuex.Store({
         },
         SET_LAYOUT (state, payload) {
           state.layout = payload
+        },
+        setSnack (state, snack) {
+          state.snack = snack
         }
     },
     actions: {
@@ -42,6 +46,9 @@ export default new Vuex.Store({
                 ldapinfo: {}
             });
         },
+        snack({commit}, message) {
+          commit('setSnack', message);
+        }
     },
     getters: {
       layout (state) {

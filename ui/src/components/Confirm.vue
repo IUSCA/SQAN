@@ -5,14 +5,11 @@
        max-width="500"
      >
     <template v-slot:activator="{ on }">
-      <v-btn
-        :color="color"
-        dark
-        x-small
+      <span
         v-on="on"
       >
         <slot name="label"></slot>
-      </v-btn>
+      </span>
     </template>
 
     <v-form

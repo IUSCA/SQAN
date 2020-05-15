@@ -4,21 +4,6 @@
         id="signin"
         fluid
       >
-        <v-snackbar
-          v-model="snackbar"
-          top
-          right
-          :timeout="timeout"
-        >
-          {{status}}
-          <v-btn
-            color="red"
-            text
-            @click="snackbar = false"
-          >
-            Close
-          </v-btn>
-        </v-snackbar>
 
         <v-row
           align="center"
@@ -80,9 +65,6 @@ export default {
         password: ""
       },
       showForm: false,
-      status: '',
-      snackbar: false,
-      timeout: 1000,
       mode: this.$config.mode
     };
   },
@@ -138,9 +120,7 @@ export default {
     completeLogin: function(response) {
       let self = this;
       this.login(response);
-      self.snackbar = false;
-      self.status = "Logging you in";
-      self.snackbar = true;
+      self.$store.dispatch('snack', "Login successful");
       setTimeout(() => {
         self.$router.replace({'query': null});
         self.$router.push({path: '/exams'});
@@ -149,18 +129,9 @@ export default {
 
     errorLogin: function(err) {
 
-      console.dir(err);
-      this.snackbar = false;
-      this.timeout = 5000;
       let errors = err.response.data.errors;
       let key = Object.keys(errors)[0];
-      this.status = `${key} ${errors[key]}`;
-      this.snackbar = true;
-      let self = this;
-      setTimeout(() => {
-        self.timeout = 1000;
-      }, 5000);
-
+      this.$store.dispatch('snack', `${key} ${errors[key]}`);
     }
   },
   mounted() {

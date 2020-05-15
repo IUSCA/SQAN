@@ -1,20 +1,5 @@
 <template>
   <span>
-    <v-snackbar
-      v-model="snackbar"
-      top
-      right
-      :timeout="timeout"
-    >
-      {{status}}
-      <v-btn
-        color="red"
-        text
-        @click="snackbar = false"
-      >
-        Close
-      </v-btn>
-    </v-snackbar>
      <v-dialog
        v-model="sat_dialog"
        max-width="500"
@@ -93,9 +78,6 @@
     data() {
       return {
         sat_dialog: false,
-        snackbar: false,
-        status: '',
-        timeout: 5000,
         comment: ''
       }
     },
@@ -107,13 +89,9 @@
         let self = this;
         this.$http.post(`${this.$config.api}/exam/maketemplate/${this.exam._id}`, { comment: this.comment})
           .then(res => {
-            self.snackbar = false;
-            self.status = res.data.message;
-            self.snackbar = true;
+            self.$store.dispatch('snack', res.data.message);
           }, err=> {
-            self.snackbar = false;
-            self.status = 'Error marking exam as template!';
-            self.snackbar = true;
+            self.$store.dispatch('snack', err);
             console.log(err);
           });
       }
