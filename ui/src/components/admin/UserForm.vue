@@ -132,7 +132,7 @@ export default {
         method = 'post';
         url = `${this.$config.api}/user`;
       } else {
-        message = 'Updated new user';
+        message = `Updated ${this.userdata.fullname} successfully`;
         method = 'patch';
         url = `${this.$config.api}/user/${this.userdataLocal._id}`;
       }
