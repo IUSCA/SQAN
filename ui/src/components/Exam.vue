@@ -44,8 +44,14 @@
       v-if="!selected_series"
     >
       <template v-slot:item.qc1_state="{ item }">
-        <span v-if="item.deprecated_by === null || deprecated === 'all'">
-          <SeriesStatus :series="item"/>
+        <span v-if="item.qc !== undefined && item.deprecated_by === null || deprecated === 'all'">
+          <SeriesStatus :series="item" :key="componentKey"/>
+        </span>
+      </template>
+
+      <template v-slot:item.qc.template_id="{ item }">
+        <span v-if="item.qc !== undefined && templates && (item.deprecated_by === null || deprecated === 'all')">
+          <TemplateChip :templates="templates" :template_series="template_series[item.qc.template_id]" :key="componentKey"></TemplateChip>
         </span>
       </template>
     </v-data-table>
@@ -66,10 +72,11 @@
   import SetAsTemplate from "./exams/SetAsTemplate";
   import ReQC from "./exams/ReQC";
   import DeleteExam from "./exams/DeleteExam";
+  import TemplateChip from "./exams/TemplateChip";
 
   export default {
     name: 'Exam',
-    components: {Series, SeriesStatus, SetAsTemplate, ReQC, DeleteExam},
+    components: {Series, SeriesStatus, SetAsTemplate, ReQC, DeleteExam, TemplateChip},
     props: {
       exam_id: String
     },
@@ -95,7 +102,10 @@
     },
     data() {
       return {
+        componentKey: 0,
         exam: {},
+        templates: {},
+        template_series: {},
         fields: [{
           text: 'Series Description',
           value: 'series_desc'
@@ -108,6 +118,9 @@
         }, {
           text: 'Image Count',
           value: 'qc.series_image_count'
+        }, {
+          text: 'Template Used',
+          value: 'qc.template_id'
         }],
         selected_series: null,
         deprecated: 'some',
@@ -123,11 +136,29 @@
             console.log('EXAM DATA');
             console.log(res.data.series);
             console.log(res.data);
+            this.getTemplates();
           }, err => {
             console.log(err);
           });
 
       },
+      getTemplates() {
+        let self = this;
+        this.$http.get(`${this.$config.api}/research/templates/${this.exam.exam.research_id._id}`)
+          .then(res => {
+            res.data.forEach( t => {
+              self.$set(self.templates, t.template._id, t.template);
+              t.series.forEach(ts => {
+                self.$set(self.template_series, ts._id, ts);
+              });
+            });
+            console.log('TEMPLATE DATA');
+            console.log(res.data);
+          }, err => {
+            console.log(err);
+          });
+      },
+
       setupStream() {
         // Not a real URL, just using for demo purposes
         let es = new EventSource(`${this.$config.api}/event/exams`);
@@ -153,6 +184,10 @@
         let idx = this.deprecated_options.indexOf(this.deprecated);
         let new_idx = idx + 1 >= this.deprecated_options.length ? 0 : idx + 1;
         this.deprecated = this.deprecated_options[new_idx];
+        this.forceReRender();
+      },
+      forceReRender() {
+        this.componentKey += 1;
       }
     },
     mounted() {
