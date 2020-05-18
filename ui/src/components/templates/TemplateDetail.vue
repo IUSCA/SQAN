@@ -231,7 +231,7 @@ export default {
               series.template_id,
             {}
           );
-          // console.log(result);
+          console.log(result);
           this.selected = [];
           this.query();
         }
