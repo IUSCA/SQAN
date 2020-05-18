@@ -1,7 +1,10 @@
 <template>
   <div v-if="benchmarkData">
     <v-tabs v-model="tab" @change="changeTab" icons-and-text>
-      <v-tab v-for="(benchmark, index) in summaryLocal.StudyTimestamp" :key="index">
+      <v-tab
+        v-for="(benchmark, index) in summaryLocal.StudyTimestamp"
+        :key="index"
+      >
         {{ benchmark | date }}
         <v-icon v-if="benchmark.converted_to_template">
           mdi-checkbox-multiple
@@ -158,16 +161,15 @@ export default {
   watch: {
     benchmarkData: function (val) {
       //return this._.orderBy(this.series, "SeriesNumber");
-      console.log("New value: ", val)
+      //console.log("New value: ", val)
       this.orderedSeries = val.series
         .concat()
         .sort(this.$helpers.sortBy("SeriesNumber"));
-      console.log("benchmarkData changed:", this.orderedSeries);
+      //console.log("benchmarkData changed:", this.orderedSeries);
     },
-    summary: function(val) {
+    summary: function (val) {
       this.summaryLocal = { ...val };
-    }
-
+    },
   },
 
   methods: {
@@ -195,18 +197,24 @@ export default {
     },
 
     async deleteBenchmark() {
-        var alert = `Please confirm that you want to Delete all the series in this Template`;
-        var r = confirm(alert);
-        if (r == true) {
-            var texam_id = this.benchmarkData.exam_id;
-            console.log("Deleting template exam "+texam_id);
-            this.$http.get(this.$config.api+'/templatesummary/deleteall/'+texam_id,{}).then(function(res) {
-                console.log(res.data)
-                //$scope.templatebytimestamp.splice(index,1);
-            })
-        } else {
-          console.log("Deletion canceled")
-        }
+      var alert = `Please confirm that you want to Delete all the series in this Template`;
+      var r = confirm(alert);
+      if (r == true) {
+        var texam_id = this.benchmarkData.exam_id;
+        // console.log("Deleting template exam " + texam_id);
+        this.$http
+          .get(this.$config.api + "/templatesummary/deleteall/" + texam_id, {})
+          .then((res) => {
+            console.log(res.data);
+            // remove the timestamp from the local copy
+            var index = this.summaryLocal.StudyTimestamp.indexOf(this.benchmarkData.date);
+            if (index !== -1) this.summaryLocal.StudyTimestamp.splice(index, 1);
+
+            //$scope.templatebytimestamp.splice(index,1);
+          });
+      } else {
+        console.log("Deletion canceled");
+      }
       //console.log("deleteBenchmark called");
     },
 
@@ -217,13 +225,13 @@ export default {
       if (r == true) {
         //var s2d = 0;
         for (const series of this.selected) {
-          console.log(series);
+          // console.log(series);
           const result = await this.$http.get(
             `${this.$config.api}/templatesummary/deleteselected/` +
               series.template_id,
             {}
           );
-          console.log(result);
+          // console.log(result);
           this.selected = [];
           this.query();
         }
