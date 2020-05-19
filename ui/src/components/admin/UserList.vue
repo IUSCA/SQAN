@@ -1,6 +1,6 @@
 <template>
   <div class="UserList">
-    <UserForm @refresh="query" v-bind:userdata="current_user" v-on:refresh="query"></UserForm>
+    <UserForm @refresh="query" v-bind:userdata="current_user" v-on:refresh="query" v-if="$store.getters.hasRole('god')"></UserForm>
 
     <v-data-table
       :items="users"
@@ -28,7 +28,8 @@
       </template>
 
       <template v-slot:item.actions="{ item }">
-        <UserForm v-on:refresh="query" v-bind:userdata="item">
+        <span v-if="$store.getters.hasRole('god')">
+          <UserForm v-on:refresh="query" v-bind:userdata="item">
           <template v-slot:label>
             <v-icon small class="mr-2 clickable" color="green lighten-2">
               mdi-pencil
@@ -61,6 +62,7 @@
             </v-icon>
           </template>
         </Confirm>
+        </span>
       </template>
     </v-data-table>
     <hr />

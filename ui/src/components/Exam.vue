@@ -44,7 +44,7 @@
       v-if="!selected_series"
     >
       <template v-slot:item.qc1_state="{ item }">
-        <span v-if="item.qc !== undefined && item.deprecated_by === null || deprecated === 'all'">
+        <span v-if="(item.qc !== undefined || item.qc1_state === 're-qcing') && item.deprecated_by === null || deprecated === 'all'">
           <SeriesStatus :series="item" :key="componentKey"/>
         </span>
       </template>
@@ -102,6 +102,7 @@
     },
     data() {
       return {
+        es: null,
         componentKey: 0,
         exam: {},
         templates: {},
@@ -129,7 +130,7 @@
     },
     methods: {
       getExam() {
-
+        this.exam = {};
         this.$http.get(`${this.$config.api}/exam/${this.exam_id}`)
           .then(res => {
             this.exam = res.data;
@@ -161,18 +162,24 @@
 
       setupStream() {
         // Not a real URL, just using for demo purposes
-        let es = new EventSource(`${this.$config.api}/event/exams`);
+        console.log(`Creating event stream for id ${this.exam_id}`);
 
-        es.addEventListener(this.exam_id, event => {
+        this.es.addEventListener(this.exam_id, event => {
           console.log(`Event received! ${event.data}`);
+          let evt = JSON.parse(event.data);
+          if(evt.status.includes('qc')) {
+            console.log('reqc event detected, reloading exam page');
+            this.getExam()
+          }
         }, false);
 
-        es.addEventListener('error', event => {
+        this.es.addEventListener('error', event => {
           if (event.readyState == EventSource.CLOSED) {
             console.log('Event was closed');
           }
         }, false);
       },
+
       openSeries(record) {
         this.selected_series = record._id;
         console.log(record);
@@ -192,13 +199,18 @@
     },
     mounted() {
       this.getExam();
-      // this.setupStream();
+      this.es = new EventSource(`${this.$config.api}/event/exams`),
+      this.setupStream();
     },
     watch: {
       exam_id(newval) {
         console.log(newval);
         this.selected_series = null;
+        this.es.close();
+        this.es = new EventSource(`${this.$config.api}/event/exams`);
+        console.log(this.es);
         this.getExam();
+        this.setupStream();
       }
     }
 

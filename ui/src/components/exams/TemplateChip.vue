@@ -18,11 +18,10 @@
     },
     computed: {
       icon() {
-        console.log(this.templates);
-        console.log(this.template_series);
+
         if(this.templates === undefined || this.template_series === undefined) return '';
         let t = this.templates[this.template_series.exam_id];
-        console.log(t);
+
         if(t === undefined) return 'mdi-question-circle';
         return t.converted_to_template ? 'mdi-file-multiple-outline' : 'mdi-file-multiple';
       },

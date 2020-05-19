@@ -5,7 +5,7 @@
        v-model="req_dialog"
        max-width="500"
      >
-    <template v-slot:activator="{ on }">
+    <template v-slot:activator="{ on }" v-if="$store.getters.hasRole('admin')">
       <v-btn
         color="orange lighten-2"
         dark
@@ -51,8 +51,6 @@
             disabled
           ></v-text-field>
 
-
-          {{override}}
           <v-select
             :items="template_options"
             v-model="override"
@@ -154,7 +152,7 @@
         }
 
         if(this.mode === 'exam' && qcmode == 'failed') {
-          url = `${this.$config.api}/series/reqcallseries/${this.exam._id}`;
+          url = `${this.$config.api}/series/reqcerroredseries/${this.exam._id}`;
         }
 
         if(this.mode === 'series') {

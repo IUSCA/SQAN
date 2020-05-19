@@ -11,6 +11,7 @@
     <span class="caption mr-2 mb-2">QC Override:</span>
 
     <Confirm
+      v-if="$store.getters.hasRole('admin')"
       title="QC Override (approve)"
       message="Are you sure you want to approve (pass) this series for QC purposes?"
       v-on:confirm="updateQCState('accept')"
@@ -21,6 +22,7 @@
     </Confirm>
 
     <Confirm
+      v-if="$store.getters.hasRole('admin')"
       title="QC Override (reject)"
       message="Are you sure you want to reject (fail) this series for QC purposes?"
       v-on:confirm="updateQCState('reject')"

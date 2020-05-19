@@ -141,7 +141,7 @@ router.beforeEach((to, from, next) => {
       })
     } else {
       if (to.matched.some(record => record.meta.is_admin)) {
-        if (role === 'admin') {
+        if (store.getters.hasRole('admin')) {
           next()
         } else {
           next(false)

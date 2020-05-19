@@ -181,8 +181,7 @@ export default {
     },
   },
   mounted() {
-    console.log("User form has been created!");
-    console.log(this.userdataLocal);
+
   }
 };
 </script>
