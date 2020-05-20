@@ -6,7 +6,15 @@
     x-small
     link
   >
-    <v-icon small class="pr-2">{{status.icon}}</v-icon>
+    <v-icon small class="pr-2" v-show="status.icon !== 'reqc'">{{status.icon}}</v-icon>
+    <v-progress-circular
+      v-show="status.icon === 'reqc'"
+      size=12
+      width=2
+      class="mr-2"
+      indeterminate
+      color="primary"
+    ></v-progress-circular>
     {{series.qc1_state}}
 
   </v-chip>
@@ -54,7 +62,7 @@
           'reqc': {
             bg: 'light-grey',
             text: 'black',
-            icon: 'mdi-refresh'
+            icon: 'reqc'
           },
           'noqc': {
             bg: 'light-grey',

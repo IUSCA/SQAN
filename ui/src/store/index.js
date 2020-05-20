@@ -8,6 +8,7 @@ export default new Vuex.Store({
         auth: {
             uid: localStorage.getItem('uid') || '',
             role: localStorage.getItem('role') || 'guest',
+            roles: JSON.parse(localStorage.getItem('roles') || '[]'),
             jwt: localStorage.getItem('jwt') || '',
             jwt_exp: localStorage.getItem('jwt_exp') || ''
         },
@@ -30,20 +31,21 @@ export default new Vuex.Store({
             commit('authChange', auth);
             localStorage.setItem('uid', auth.uid);
             localStorage.setItem('role', auth.role);
+            localStorage.setItem('roles', JSON.stringify(auth.roles));
             localStorage.setItem('jwt', auth.jwt);
             localStorage.setItem('jwt_exp', auth.jwt_exp);
         },
         logout({commit}) {
             localStorage.setItem('uid', '');
             localStorage.setItem('role', '');
-            localStorage.setItem('roles', '');
+            localStorage.setItem('roles', '[]');
             localStorage.setItem('jwt', '');
             localStorage.setItem('jwt_exp', '');
             commit('authChange', {
                 uid: '',
                 role: 'guest',
+                roles: ['guest'],
                 jwt: '',
-                ldapinfo: {}
             });
         },
         snack({commit}, message) {
@@ -55,7 +57,10 @@ export default new Vuex.Store({
         return state.layout
       },
       isAdmin (state) {
-        return state.auth.role === 'admin';
+        return state.auth.roles.includes('admin');
+      },
+      hasRole: (state) => (r) => {
+        return state.auth.roles.includes(r);
       }
     },
     modules: {}

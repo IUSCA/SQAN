@@ -132,7 +132,7 @@ export default {
         method = 'post';
         url = `${this.$config.api}/user`;
       } else {
-        message = 'Updated new user';
+        message = `Updated ${this.userdata.fullname} successfully`;
         method = 'patch';
         url = `${this.$config.api}/user/${this.userdataLocal._id}`;
       }
@@ -181,8 +181,7 @@ export default {
     },
   },
   mounted() {
-    console.log("User form has been created!");
-    console.log(this.userdataLocal);
+
   }
 };
 </script>

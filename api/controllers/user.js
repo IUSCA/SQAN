@@ -85,7 +85,7 @@ router.get('/:id', jwt({secret: config.express.jwt.pub}), common.has_role("admin
 
 
 //update user
-router.patch('/:id', jwt({secret: config.express.jwt.pub}), common.has_role("admin"), function(req, res, next) {
+router.patch('/:id', jwt({secret: config.express.jwt.pub}), common.has_role("god"), function(req, res, next) {
     db.User.findById(req.params.id).exec(function(err, _user) {
         if(err) return next(err);
         if(!_user) res.sendStatus(404);
@@ -102,7 +102,7 @@ router.patch('/:id', jwt({secret: config.express.jwt.pub}), common.has_role("adm
 });
 
 //delete user
-router.delete('/:id', jwt({secret: config.express.jwt.pub}), common.has_role("admin"), function(req, res, next) {
+router.delete('/:id', jwt({secret: config.express.jwt.pub}), common.has_role("god"), function(req, res, next) {
     db.User.findByIdAndRemove(req.params.id).exec(function(err, _user) {
         if(err) return next(err);
         if(!_user) res.sendStatus(404);
@@ -121,7 +121,7 @@ router.get('/spoof/:id', jwt({secret: config.express.jwt.pub}), common.has_role(
     common.issue_jwt(_user, function (err, jwt) {
       if (err) return next(err);
       var decoded = jsonwt.verify(jwt, config.express.jwt.pub);
-      return res.json({jwt: jwt, uid: _user.username, role: _user.primary_role, jwt_exp: decoded.exp});
+      return res.json({jwt: jwt, uid: _user.username, role: _user.primary_role, jwt_exp: decoded.exp, roles: _user.roles});
     });
   })
 })

@@ -11,24 +11,24 @@
     <span class="caption mr-2 mb-2">QC Override:</span>
 
     <Confirm
+      v-if="$store.getters.hasRole('admin')"
       title="QC Override (approve)"
       message="Are you sure you want to approve (pass) this series for QC purposes?"
-      color="green lighten-2"
       v-on:confirm="updateQCState('accept')"
     >
       <template v-slot:label>
-        Pass
+        <v-btn x-small color="green lighten-2">Pass</v-btn>
       </template>
     </Confirm>
 
     <Confirm
+      v-if="$store.getters.hasRole('admin')"
       title="QC Override (reject)"
       message="Are you sure you want to reject (fail) this series for QC purposes?"
-      color="red lighten-2"
       v-on:confirm="updateQCState('reject')"
     >
       <template v-slot:label>
-        Fail
+        <v-btn x-small color="red lighten-2">Fail</v-btn>
       </template>
     </Confirm>
 

@@ -112,7 +112,7 @@ router.get('/guestLogin', function(req, res, next) {
             common.issue_jwt(user, function (err, jwt) {
                 if (err) return next(err);
                 var decoded = jsonwt.verify(jwt, config.express.jwt.pub);
-                res.json({jwt: jwt, uid: user.username, role: user.primary_role, jwt_exp: decoded.exp});
+                res.json({jwt: jwt, uid: user.username, role: user.primary_role, jwt_exp: decoded.exp, roles: ['guest']});
             });
         }
     });
@@ -157,7 +157,7 @@ router.post('/userLogin', function(req, res, next) {
                 if (err) return next(err);
                 console.log(passportUser);
                 var decoded = jsonwt.verify(jwt, config.express.jwt.pub);
-                return res.json({jwt: jwt, uid: passportUser.username, role: passportUser.primary_role, jwt_exp: decoded.exp});
+                return res.json({jwt: jwt, uid: passportUser.username, role: passportUser.primary_role, roles: passportUser.roles, jwt_exp: decoded.exp});
             });
 
             // const user = passportUser;
@@ -228,7 +228,7 @@ router.get('/verify', function(req, res, next) {
                                 if(err) return next(err);
                                 common.issue_jwt(_user, function (err, jwt) {
                                     if (err) return next(err);
-                                    res.json({jwt: jwt, uid: uid, role: _user.primary_role});
+                                    res.json({jwt: jwt, uid: uid, role: _user.primary_role, roles: _user.roles});
                                 });
                             })
                         } else {
@@ -236,7 +236,7 @@ router.get('/verify', function(req, res, next) {
                             user.save();
                             common.issue_jwt(user, function (err, jwt) {
                                 if (err) return next(err);
-                                res.json({jwt: jwt, uid: uid, role: user.primary_role});
+                                res.json({jwt: jwt, uid: uid, role: user.primary_role, roles: user.roles});
                             });
                         }
                     });

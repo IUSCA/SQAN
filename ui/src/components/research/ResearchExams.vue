@@ -16,6 +16,9 @@
       {{research.IIBISID}} - {{research.Modality}}
     </div>
 
+    <v-divider></v-divider>
+    <ReQC class="mx-1" :research="research"></ReQC>
+
     <v-col cols="3">
       <v-text-field
         v-model="filter"
@@ -54,10 +57,11 @@
 
   import Exam from "../Exam";
   import QCStatus from "../exams/QCStatus";
+  import ReQC from "../exams/ReQC";
 
   export default {
     name: 'ResearchExams',
-    components: {Exam,QCStatus},
+    components: {Exam,QCStatus,ReQC},
     computed: {
       filter_exams() {
         return this.exams.filter(ex => {

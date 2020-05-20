@@ -160,104 +160,80 @@ function check_percent_diff(k, v, tv, qc, r, th, a_tv) {
 };
 
 //compare image headers against template headers
-exports.match = function(image, template, qc, cb_m) {
+exports.match = function(image, template, c_keys, qc, cb_m) {
 
     var template_mismatch = 0;
     var not_set = 0;
 
     // console.log("QC-ing image " + image.InstanceNumber + " with template " + template.InstanceNumber);
 
-    //find exclusion list
-    var handler_list = [];
-
-    db.init(function(err) {
-        if(err) throw err;
-
-        db.QCkeyword.find({modality: 'common'}).exec(function(err, c_keys) {
-            if(err) return next(err);
-            db.QCkeyword.find({modality: image.headers.modality}).exec(function(err, m_keys) {
-                if(err) return next(err);
-
-                async.each(m_keys, function(mk, cb){
-                    let res = c_keys.findIndex(ck => ck.key === mk.key);
-                    if(res > -1) {
-                        c_keys[res] = mk;
-                        console.log(`Found modality override ${mk.key} ${res} ${ck.key}`);
-                    } else {
-                        c_keys.push(mk);
-                    }
-                    cb();
-                }, function(err){
-                    if(err) console.log(err);
-                    var cus = customs[image.headers.Modality];
-                    if(!cus) {
-                        qc.errors.push({type: 'unknown_modality', msg: "unknown modality "+image.headers.Modality+" found for image:"+image.id});
-                        return;
-                    }
-
-                    // find fileds that are in image and not in template
-                    var tl = Object.keys(template.headers).length;
-                    var il = Object.keys(image.headers).length;
-
-                    // first check if image header has fields that are not in the template
-                    var keydiff = [];
-                    for (var kk in image.headers) {
-                        if(template.headers[kk] === undefined && cus[k] !== undefined) keydiff.push({ik:kk,v:image.headers[kk]})
-                    }
-                    var lengthdiff = keydiff.length;
-                    if (lengthdiff > 0) qc.warnings.push({type: 'image_tag_mismatch', k: keydiff, c: lengthdiff, msg: "image has "+ lengthdiff + " fields that are not found in the template"});
-
-                    //compare each field of the template with the corresponding filed in the image
-                    for(var k in template.headers) {
-                        let handler = c_keys.find(ck => ck.key == k);
-                        if(handler === undefined) {
-                            console.log(`Unknown key: ${k}`)
-                            continue;
-                        }
-
-                        if(handler.skip) {
-                            console.log(`skipping key ${k}`)
-                            continue;
-                        }
-
-                        var v = image.headers[k];
-                        var tv = template.headers[k];
-                        if(k.indexOf("qc_") === 0) continue;//ignore all qc fields
-                        if(k.indexOf("UID") !== -1 ) continue; //ignore all UID fields
-
-                        if(cus[k]) {
-                            console.log("Evaluating custom");
-                            cus[k](k, v, tv, qc);
-                        } else {
-                            console.log("Evaluating standard");
-                            if(!check_set(k, v, tv, qc)) continue;
-                            check_equal(k, v, tv, qc);
-                        }
-                    };
-
-                    qc.errors.forEach(function(e) {
-                        if (e.type == 'template_mismatch') template_mismatch++;
-                        if (e.type == 'not_set') not_set++;
-                    })
-
-                    var error_stats = {
-                        template_mismatch: template_mismatch,
-                        not_set: not_set,
-                        template_field_count: tl,
-                        image_field_count: il,
-                        image_tag_mismatch: lengthdiff
-                    }
-
-                    console.log(error_stats);
-
-                    qc.error_stats = error_stats;
-                    cb_m();
-                })
-            })
-        })
-    });
+    // //find exclusion list
+    // var handler_list = [];
 
 
+    var cus = customs[image.headers.Modality];
+    if(!cus) {
+        qc.errors.push({type: 'unknown_modality', msg: "unknown modality "+image.headers.Modality+" found for image:"+image.id});
+        return;
+    }
+
+    // find fileds that are in image and not in template
+    var tl = Object.keys(template.headers).length;
+    var il = Object.keys(image.headers).length;
+
+    // first check if image header has fields that are not in the template
+    var keydiff = [];
+    for (var kk in image.headers) {
+        if(template.headers[kk] === undefined && cus[k] !== undefined) keydiff.push({ik:kk,v:image.headers[kk]})
+    }
+    var lengthdiff = keydiff.length;
+    if (lengthdiff > 0) qc.warnings.push({type: 'image_tag_mismatch', k: keydiff, c: lengthdiff, msg: "image has "+ lengthdiff + " fields that are not found in the template"});
+
+    //compare each field of the template with the corresponding filed in the image
+    for(var k in template.headers) {
+        let handler = c_keys.find(ck => ck.key == k);
+        if(handler === undefined) {
+            // console.log(`Unknown key: ${k}`)
+            continue;
+        }
+
+        if(handler.skip) {
+            // console.log(`skipping key ${k}`)
+            continue;
+        }
+
+        var v = image.headers[k];
+        var tv = template.headers[k];
+        if(k.indexOf("qc_") === 0) continue;//ignore all qc fields
+        if(k.indexOf("UID") !== -1 ) continue; //ignore all UID fields
+
+        if(cus[k]) {
+            // console.log("Evaluating custom");
+            cus[k](k, v, tv, qc);
+        } else {
+            // console.log("Evaluating standard");
+            if(!check_set(k, v, tv, qc)) continue;
+            check_equal(k, v, tv, qc);
+        }
+    };
+
+    qc.errors.forEach(function(e) {
+        if (e.type == 'template_mismatch') template_mismatch++;
+        if (e.type == 'not_set') not_set++;
+    })
+
+    var error_stats = {
+        template_mismatch: template_mismatch,
+        not_set: not_set,
+        template_field_count: tl,
+        image_field_count: il,
+        image_tag_mismatch: lengthdiff
+    }
+
+    // console.log(error_stats);
+
+    qc.error_stats = error_stats;
+    cb_m();
 }
 
 

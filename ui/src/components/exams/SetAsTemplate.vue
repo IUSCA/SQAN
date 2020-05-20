@@ -4,7 +4,7 @@
        v-model="sat_dialog"
        max-width="500"
      >
-    <template v-slot:activator="{ on }">
+    <template v-slot:activator="{ on }" v-if="$store.getters.hasRole('admin')">
       <v-btn
         color="blue lighten-2"
         dark

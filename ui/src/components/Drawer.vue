@@ -30,9 +30,9 @@
           <v-list-item-title>{{item.title}}</v-list-item-title>
         </v-list-item-content>
       </v-list-item>
-      <span v-if="$store.getters.isAdmin">
+      <span v-if="$store.getters.hasRole('admin')">
         <v-divider class="mb-5"></v-divider>
-        <v-list-item v-for="item in admin_items" :value="item.active" :key="item.title" :to="item.path" @click="navChange(item)">
+        <v-list-item v-for="item in admin_items_filtered" :value="item.active" :key="item.title" :to="item.path" @click="navChange(item)">
           <v-list-item-action>
             <v-icon>{{item.action}}</v-icon>
           </v-list-item-action>
@@ -42,6 +42,7 @@
         </v-list-item>
       </span>
       <v-divider class="mb-5"></v-divider>
+      <span v-if="$store.getters.hasRole('user')">
       <v-list-item v-for="item in user_items" :value="item.active" :key="item.title" :to="item.path" @click="navChange(item)">
         <v-list-item-action>
           <v-icon>{{item.action}}</v-icon>
@@ -50,6 +51,17 @@
           <v-list-item-title>{{item.title}}</v-list-item-title>
         </v-list-item-content>
       </v-list-item>
+      </span>
+      <span v-if="$store.getters.hasRole('guest')">
+      <v-list-item v-for="item in guest_items" :value="item.active" :key="item.title" :to="item.path" @click="navChange(item)">
+        <v-list-item-action>
+          <v-icon>{{item.action}}</v-icon>
+        </v-list-item-action>
+        <v-list-item-content>
+          <v-list-item-title>{{item.title}}</v-list-item-title>
+        </v-list-item-content>
+      </v-list-item>
+      </span>
     </v-list>
   </v-navigation-drawer>
 </template>
@@ -99,6 +111,18 @@
             path: 'signout',
           },
         ],
+        guest_items: [
+          {
+            action: 'mdi-information',
+            title: 'About',
+            path: 'about',
+          },
+          {
+            action: 'mdi-logout-variant',
+            title: 'Logout',
+            path: 'signout',
+          },
+        ],
         admin_items: [
           {
             action: 'mdi-upload',
@@ -121,6 +145,14 @@
             path: 'admin',
           },
         ]
+      }
+    },
+    computed: {
+      admin_items_filtered() {
+        if(this.$config.upload_enabled) return this.admin_items;
+        return this.admin_items.filter(ai => {
+          return ai.path !== 'upload';
+        })
       }
     },
     methods: {
@@ -166,7 +198,7 @@
   }
 
   .v-navigation-drawer__content {
-    background-image: linear-gradient(to bottom, white, white, white, #0277bd);
+    background-image: linear-gradient(to bottom, white, white, white, white, #0277bd, #0277bd);
   }
 
   .v-list {
