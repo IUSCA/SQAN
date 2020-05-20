@@ -2,7 +2,37 @@
   <v-card class="series pa-4" v-if="series.series !== undefined">
     <slot name="close"></slot>
 
+    <ReQC :series="series.series" :exam="series.series.exam_id"></ReQC>
     <Contact :exam="series.series.exam_id" :series="series.series"></Contact>
+    <Comment :series_id="series.series._id" v-on:submitted="getSeries"></Comment>
+
+    <v-divider vertical class="mx-2"></v-divider>
+
+    <span class="caption mr-2 mb-2">QC Override:</span>
+
+    <Confirm
+      v-if="$store.getters.hasRole('admin')"
+      title="QC Override (approve)"
+      message="Are you sure you want to approve (pass) this series for QC purposes?"
+      v-on:confirm="updateQCState('accept')"
+    >
+      <template v-slot:label>
+        <v-btn x-small color="green lighten-2">Pass</v-btn>
+      </template>
+    </Confirm>
+
+    <Confirm
+      v-if="$store.getters.hasRole('admin')"
+      title="QC Override (reject)"
+      message="Are you sure you want to reject (fail) this series for QC purposes?"
+      v-on:confirm="updateQCState('reject')"
+    >
+      <template v-slot:label>
+        <v-btn x-small color="red lighten-2">Fail</v-btn>
+      </template>
+    </Confirm>
+
+    <v-divider class="my-2"></v-divider>
 
     <v-tabs v-model="tab">
       <v-tab>Summary</v-tab>
@@ -40,10 +70,28 @@
             </tr>
             <tr>
               <th>
+                Template Used
+              </th>
+              <td>
+                <TemplateBadge :id="series.series.qc.template_id"></TemplateBadge>
+              </td>
+            </tr>
+            <tr>
+              <th>
+                Comments
+              </th>
+              <td>
+                <div v-for="comment in series.series.comments" :key="comment.date">
+                  <span class="font-italic font-weight-light">{{comment.comment}} - {{comment.date | moment("MMM Do YYYY")}}</span> <Avatar :user_id="comment.user_id"></Avatar>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th>
                 QC State
               </th>
               <td>
-                {{series.series.qc1_state}}
+                <SeriesStatus :series="series.series"></SeriesStatus>
               </td>
             </tr>
             <tr v-if="series.series.qc !== undefined">
@@ -87,6 +135,7 @@
                 <v-card-title>{{evt.title}}</v-card-title>
                 <v-card-text>
                   {{evt.date | moment("MMM Do YYYY, h:mm:ssA")}}
+                  <span v-if="evt.user_id !== undefined"><Avatar :user_id="evt.user_id"></Avatar></span>
                 </v-card-text>
               </v-card>
             </v-timeline-item>
@@ -117,10 +166,16 @@
   import ImageHeader from '@/components/ImageHeader.vue';
   import ErrorPanel from "./series/ErrorPanel";
   import Contact from "./Contact";
+  import ReQC from "./exams/ReQC";
+  import SeriesStatus from "./exams/SeriesStatus";
+  import TemplateBadge from "./templates/TemplateBadge";
+  import Confirm from "./Confirm";
+  import Comment from "./Comment";
+  import Avatar from "./Avatar";
 
   export default {
     name: 'Series',
-    components: {ImageHeader, ErrorPanel, Contact},
+    components: {ImageHeader, ErrorPanel, Contact, SeriesStatus, Confirm, Comment, Avatar, TemplateBadge, ReQC},
     props: {
       series_id: String
     },
@@ -145,7 +200,7 @@
 
         this.series.series.events.forEach(evt => {
           if(evt.title === 'Received') return;
-          evts.unshift({title: evt.title, date: evt.date, icon: 'mdi-calendar'});
+          evts.unshift({title: evt.title, date: evt.date, icon: 'mdi-calendar', user_id: evt.user_id});
         });
 
         return evts;
@@ -192,10 +247,27 @@
           }
         }, false);
       },
+      updateQCState(state) {
+        let data = {
+          comment: 'Manual QC approval/rejection',
+          level: 1,
+          state: state
+        };
+
+        let self = this;
+        this.$http.post(`${this.$config.api}/series/qcstate/${this.series_id}`, data)
+          .then(res => {
+            console.log(res.data);
+            self.series = {};
+            self.getSeries()
+          }, err => {
+            console.log(err);
+          });
+      },
     },
     mounted() {
       this.getSeries();
-      this.monitorSeries();
+      // this.monitorSeries();
     },
     watch: {
       series_id(newval) {

@@ -6,7 +6,15 @@
     x-small
     link
   >
-    <v-icon small class="pr-2">{{status.icon}}</v-icon>
+    <v-icon small class="pr-2" v-show="status.icon !== 'reqc'">{{status.icon}}</v-icon>
+    <v-progress-circular
+      v-show="status.icon === 'reqc'"
+      size=12
+      width=2
+      class="mr-2"
+      indeterminate
+      color="primary"
+    ></v-progress-circular>
     {{series.qc1_state}}
 
   </v-chip>
@@ -46,10 +54,15 @@
             text: 'black',
             icon: 'mdi-check-circle'
           },
+          'accept': {
+            bg: 'green lighten-3',
+            text: 'black',
+            icon: 'mdi-check-circle-outline'
+          },
           'reqc': {
             bg: 'light-grey',
             text: 'black',
-            icon: 'mdi-refresh'
+            icon: 'reqc'
           },
           'noqc': {
             bg: 'light-grey',
@@ -62,6 +75,7 @@
     computed: {
       status: function() {
         if(this.series.qc1_state === 'missing') return this.statuses['missing'];
+        if(this.series.qc1_state === 'accept') return this.statuses['accept'];
         if(this.series.qc1_state === 'no template') return this.statuses['notemplate'];
         if(this.series.qc1_state === 're-qcing') return this.statuses['reqc'];
         if(this.series.qc === undefined) return this.statuses['noqc'];

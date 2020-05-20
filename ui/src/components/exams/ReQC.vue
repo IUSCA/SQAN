@@ -1,27 +1,13 @@
 <template>
   <span>
-    <v-snackbar
-      v-model="snackbar"
-      top
-      right
-      :timeout="timeout"
-    >
-      {{status}}
-      <v-btn
-        color="red"
-        text
-        @click="snackbar = false"
-      >
-        Close
-      </v-btn>
-    </v-snackbar>
+
      <v-dialog
        v-model="req_dialog"
        max-width="500"
      >
-    <template v-slot:activator="{ on }">
+    <template v-slot:activator="{ on }" v-if="$store.getters.hasRole('admin')">
       <v-btn
-        color="blue lighten-2"
+        color="orange lighten-2"
         dark
         x-small
         v-on="on"
@@ -31,39 +17,50 @@
     </template>
 
     <v-form
-      ref="form"
+      ref="form" v-model="isFormValid"
     >
     <v-card>
-      <v-card-title class="blue lighten-2">
+      <v-card-title class="orange lighten-2">
         <v-icon class="mr-1">mdi-recycle</v-icon> Confirm Re-running QC Operations
       </v-card-title>
       <v-divider></v-divider>
+
       <v-card-text>
+
           <v-text-field
-            v-model="exam.subject"
-            label="Subject"
-            prepend-icon="mdi-account"
-            required
+            v-if="mode === 'research'"
+            v-model="research.IIBISID"
+            label="Research"
+            prepend-icon="mdi-flask"
             disabled
           ></v-text-field>
 
           <v-text-field
+            v-if="mode !== 'research'"
+            v-model="exam.subject"
+            label="Subject"
+            prepend-icon="mdi-account"
+            disabled
+          ></v-text-field>
+
+          <v-text-field
+            v-if="mode !== 'research'"
             v-model="exam.StudyTimestamp"
             label="Timestamp"
             prepend-icon="mdi-clock"
-            required
             disabled
           ></v-text-field>
 
           <v-select
             :items="template_options"
             v-model="override"
-            label="Template Override"
+            label="Template"
             prepend-icon="mdi-checkbox-multiple-blank"
+            :rules="[(v) => !!v || 'You must select a template']"
             required
           ></v-select>
 
-          <v-switch v-model="failures" class="mx-2" label="Only Re-run QC Failures "></v-switch>
+          <v-switch v-model="failures" class="mx-2" label="Only Re-run QC Failures " v-if="mode !== 'series'"></v-switch>
       </v-card-text>
 
       <v-divider></v-divider>
@@ -73,6 +70,7 @@
         <v-btn
           color="primary"
           @click="confirmReQC"
+          :disabled="!isFormValid"
         >
           Confirm
         </v-btn>
@@ -90,51 +88,105 @@
     name: 'ReQC',
     props: {
       exam: Object,
-      exams: Array,
+      research: Object,
       series: Object,
     },
     data() {
       return {
+        isFormValid: false,
         req_dialog: false,
-        snackbar: false,
-        status: '',
-        timeout: 5000,
-        override: '',
+        override: null,
         failures: false,
         templates: []
       }
     },
     computed: {
+      mode() {
+        if(this.series !== undefined) return 'series';
+        if(this.research !== undefined) return 'research';
+        return 'exam';
+      },
       template_options() {
-        return this.templates.map(t => {
+
+        if(this.mode === 'series') { //filter out templates that don't include this series
+
+          let options = [];
+          this.templates.map(t => {
+            t.series.map(ts => {
+              if(ts.series_desc == this.series.series_desc) {
+                let option = {
+                  text: `${t.template.StudyTimestamp} - (#${ts.SeriesNumber})`,
+                  value: ts._id
+                }
+                options.push(option);
+              }
+            });
+          });
+          return options;
+        } else return this.templates.map(t => {
+
           return {
             text: `${t.template.StudyTimestamp} - (${t.series.length})`,
-            value: t._id
+            value: t.template._id
           }
         })
       }
     },
     methods: {
       confirmReQC() {
+
         this.req_dialog = false;
-        this.status = "Processing ...";
-        this.snackbar = true;
         let self = this;
-        this.$http.post(`${this.$config.api}/exam/reqc/${this.exam._id}`, { comment: this.comment})
+        let url = '';
+        let data = {
+          template_id: this.override
+        };
+        let qcmode = this.failures ? 'failed' : 'all';
+
+        if(this.mode === 'research') {
+          url = `${this.$config.api}/research/reqc/${qcmode}/${this.research._id}`;
+        }
+
+        if(this.mode === 'exam' && qcmode == 'all') {
+          url = `${this.$config.api}/series/reqcallseries/${this.exam._id}`;
+        }
+
+        if(this.mode === 'exam' && qcmode == 'failed') {
+          url = `${this.$config.api}/series/reqcerroredseries/${this.exam._id}`;
+        }
+
+        if(this.mode === 'series') {
+          url = `${this.$config.api}/series/template/${this.series._id}`;
+        }
+
+        self.$store.dispatch('snack', 'Submitted ReQC Request');
+
+        this.$http.post(url, data)
           .then(res => {
-            self.snackbar = false;
-            self.status = res.data.message;
-            self.snackbar = true;
+            self.$store.dispatch('snack', res.data.message);
+            self.$emit('reqc');
           }, err=> {
-            self.snackbar = false;
-            self.status = 'Error marking exam as template!';
-            self.snackbar = true;
+            self.$store.dispatch('snack', 'Error submitting ReQC!');
             console.log(err);
           });
       },
+
       getTemplates() {
         let self = this;
-        this.$http.get(`${this.$config.api}/research/templates/${this.exam.research_id._id}`, { comment: this.comment})
+        let research_id = '';
+        if(this.mode === 'research') {
+          research_id = this.research._id;
+        }
+
+        if(this.mode === 'exam') {
+          research_id = this.exam.research_id._id;
+        }
+
+        if(this.mode === 'series') {
+          research_id = this.series.exam_id.research_id._id;
+        }
+
+        this.$http.get(`${this.$config.api}/research/templates/${research_id}`)
           .then(res => {
             console.log(res.data);
             self.templates = res.data;
@@ -145,6 +197,7 @@
       }
     },
     mounted() {
+      console.log(this.series);
       this.getTemplates();
     }
   }

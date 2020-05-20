@@ -81,6 +81,7 @@
     margin-top: 20px;
     width: 100%;
     right: 0px;
+    z-index: 200;
   }
 
   .main {

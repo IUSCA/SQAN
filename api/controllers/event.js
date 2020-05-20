@@ -8,10 +8,9 @@ const jwt = require('express-jwt');
 //const async = require('async');
 //const fs = require('fs');
 
-var SSE = require('express-sse');
-var sse = new SSE([]);
 
 //mine
+const common = require('./common');
 const config = require('../../config');
 const logger = new winston.Logger(config.logger.winston);
 const db = require('../models');
@@ -27,18 +26,34 @@ function check_series(req, res, next) {
 }
 */
 
-router.get('/exams', sse.init);
+router.get('/exams', common.sse.init);
 
+router.get('/series', common.sse.init);
 
 router.get('/exam/:id/:status', function(req, res, next) {
-    console.log(req.params.id);
-    let data = {
-        id: req.params.id,
-        block: {status: req.params.status}
-    };
-    sse.send(data, req.params.id);
+  console.log(req.params.id);
+  let data = {
+      id: req.params.id,
+      status: req.params.status
+  };
+  common.publish(data, req.params.id, function(err) {
+    if(err) return next(err);
     res.json({'msg': 'ok'});
+  })
 })
+
+router.get('/series/:id/:status', function(req, res, next) {
+  console.log(req.params.id);
+  let data = {
+    id: req.params.id,
+    status: req.params.status
+  };
+  common.publish(data, req.params.id, function(err) {
+    if(err) return next(err);
+    res.json({'msg': 'ok'});
+  })
+})
+
 
 
 //called by sca-event to check to see if user has access to this key

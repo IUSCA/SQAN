@@ -5,6 +5,7 @@
 var winston = require('winston');
 var async = require('async');
 var _ = require('underscore');
+var axios = require('axios');
 
 //mine
 var config = require('../config');
@@ -54,6 +55,15 @@ function run(cb) {
                     qc_funcs.exam.qc_exam(ee,function(err){
                         if (err) return cb(err);
                         console.log('Done with exam: ', ee);
+                        axios.get(`http://localhost:22340/event/exam/${ee}/reqc`)
+                          .then(function (response) {
+                            // handle success
+                            console.log(response.data);
+                          })
+                          .catch(function (error) {
+                            // handle error
+                            console.log(error);
+                          })
                     })
                 })
             }
@@ -63,6 +73,7 @@ function run(cb) {
                 logger.info("Batch complete. Starting next batch...");
                 run(cb);
             } else {
+              logger.info("Queue is empty, checking every 10 seconds...");
                 setTimeout(function() {
                     run(cb);
                 }, 1000*10);
@@ -76,45 +87,64 @@ function qc_images(series,next) {
 
     // find the primary image for this series
     db.Image.findOne({"series_id":series._id, "primary_image":null},function(err,primimage) {
+      if (err) return next(err);
+      //build key dictionary
+      db.QCkeyword.find({modality: 'common'}).exec(function (err, c_keys) {
         if (err) return next(err);
-        //console.log(`primary image for this series : ${primimage._id}`);
+        db.QCkeyword.find({modality: primimage.headers.modality}).exec(function (err, m_keys) {
+          if (err) return next(err);
 
-        // find template for this series
-        find_template(series, function(err,template) {
-            if (err) return next(err);
-            if (!template) return next(null,null);
-
-            find_template_primary(template,function(err,primtemplate) {
+          async.each(m_keys, function (mk, cb) {
+              let res = c_keys.findIndex(ck => ck.key === mk.key);
+              if (res > -1) {
+                c_keys[res] = mk;
+                console.log(`Found modality override ${mk.key} ${res} ${ck.key}`);
+              } else {
+                c_keys.push(mk);
+              }
+              cb();
+            },
+            function (err) {
+              // find template for this series
+              find_template(series, function (err, template) {
                 if (err) return next(err);
-                if (!primtemplate) return next(null,null); // This case should only happen when the tarball for this template set is not "old" enough
+                if (!template) return next(null, null);
 
-                // Now find all image headers for this series
-                db.Image.find({series_id: series._id},function(err,images) {
-                // db.Image.find({$or: [ {primary_image: primimage._id},{_id:primimage._id}]},function(err,images) {
+                find_template_primary(template, function (err, primtemplate) {
+                  if (err) return next(err);
+                  if (!primtemplate) return next(null, null); // This case should only happen when the tarball for this template set is not "old" enough
+
+                  // Now find all image headers for this series
+                  db.Image.find({series_id: series._id}, function (err, images) {
+                    // db.Image.find({$or: [ {primary_image: primimage._id},{_id:primimage._id}]},function(err,images) {
                     if (err) return next(err);
                     //console.log(`number of images for this series : ${images.length}`);
-                    qc_the_series(images,primimage,primtemplate,function(err) {
+                    qc_the_series(images, primimage, primtemplate, c_keys, function (err) {
+                      if (err) return next(err);
+                      //console.log(images.length + " images have been qc-ed, now aggregating qc for the series "+ primimage.headers.qc_series_desc + " -- " + new Date());
+
+                      qc_funcs.series.qc_series(series, images, template, function (err) {
                         if (err) return next(err);
-                        //console.log(images.length + " images have been qc-ed, now aggregating qc for the series "+ primimage.headers.qc_series_desc + " -- " + new Date());
 
-                        qc_funcs.series.qc_series(series,images,template,function(err) {
-                            if (err) return next(err);
-
-                            console.log(series._id + " Series has been qc-ed")
-                            return next();
-                        });
+                        console.log(series._id + " Series has been qc-ed")
+                        return next();
+                      });
                     });
+                  });
                 });
+              });
             });
         });
+        //console.log(`primary image for this series : ${primimage._id}`);
+      });
     });
 }
 
 // ************************** QC functions ********************************//
 
-function qc_the_series(images,primimage,primtemplate,cb) {
+function qc_the_series(images,primimage,primtemplate,c_keys,cb) {
     async.each(images, function(image, callback) {
-        qc_one_image(image, primimage, primtemplate, function(err) {
+        qc_one_image(image, primimage, primtemplate, c_keys, function(err) {
             if(err) callback(err);
             callback();
         });
@@ -124,7 +154,7 @@ function qc_the_series(images,primimage,primtemplate,cb) {
 };
 
 
-function qc_one_image(image,primimage,primtemplate,cb) {
+function qc_one_image(image,primimage,primtemplate,c_keys,cb) {
     var qc = {
         template_id: primtemplate.template_id,
         date: new Date(),
@@ -153,7 +183,7 @@ function qc_one_image(image,primimage,primtemplate,cb) {
 
                     if (templateheader) {
                         //console.log("matching template header "+ templateheader.InstanceNumber+ " with image header " + image.InstanceNumber);
-                        qc_funcs.template.match(image,templateheader,qc, function(err){
+                        qc_funcs.template.match(image,templateheader, c_keys, qc, function(err){
                             if(err) return next(err)
                             next();
                         });
@@ -165,7 +195,7 @@ function qc_one_image(image,primimage,primtemplate,cb) {
                     }  // template header is missing for this instance number
                 })
             } else {
-                qc_funcs.template.match(image,primtemplate,qc, function(err){
+                qc_funcs.template.match(image,primtemplate, c_keys, qc, function(err){
                     if(err) return next(err)
                     next();
                 });

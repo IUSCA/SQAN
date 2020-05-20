@@ -2,18 +2,31 @@
   <div class="dataflow">
 
     <div >Previous <v-text-field
-      class="ml-1"
+      class="ml-1 foo"
       v-model="daysAgo"
       type="number"
       style="width: 45px"
       @input="getDataflows"
     ></v-text-field> days acquisitions/transfers</div>
+
+    <v-col cols="5">
+      <v-text-field
+        v-model="filter"
+        prepend-icon="mdi-filter"
+        label="Filter"
+        single-line
+        hide-details
+      ></v-text-field>
+    </v-col>
+
+
     <v-data-table
       :items="dataflows"
       :headers="headers"
       dense
       show-expand
       :expanded.sync="expanded"
+      :search="filter"
       item-key="_id"
       disable-pagination
       hide-default-footer
@@ -46,6 +59,7 @@
         daysAgo: 30,
         dataflows: [],
         expanded: [],
+        filter: '',
         headers: [
           {
             text: 'Study Timestamp',
@@ -129,7 +143,7 @@
 </script>
 
 <style scoped>
-  .v-input {
+  .foo.v-input {
     display: inline-block;
   }
 </style>

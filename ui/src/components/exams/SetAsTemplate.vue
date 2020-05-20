@@ -1,27 +1,12 @@
 <template>
   <span>
-    <v-snackbar
-      v-model="snackbar"
-      top
-      right
-      :timeout="timeout"
-    >
-      {{status}}
-      <v-btn
-        color="red"
-        text
-        @click="snackbar = false"
-      >
-        Close
-      </v-btn>
-    </v-snackbar>
      <v-dialog
        v-model="sat_dialog"
        max-width="500"
      >
-    <template v-slot:activator="{ on }">
+    <template v-slot:activator="{ on }" v-if="$store.getters.hasRole('admin')">
       <v-btn
-        color="orange lighten-2"
+        color="blue lighten-2"
         dark
         x-small
         v-on="on"
@@ -35,7 +20,7 @@
       ref="form"
     >
     <v-card>
-      <v-card-title class="orange lighten-2">
+      <v-card-title class="blue lighten-2">
         <v-icon class="mr-1">mdi-check-box-multiple-outline</v-icon> Confirm using this Exam as a Template
       </v-card-title>
       <v-divider></v-divider>
@@ -93,9 +78,6 @@
     data() {
       return {
         sat_dialog: false,
-        snackbar: false,
-        status: '',
-        timeout: 5000,
         comment: ''
       }
     },
@@ -107,13 +89,9 @@
         let self = this;
         this.$http.post(`${this.$config.api}/exam/maketemplate/${this.exam._id}`, { comment: this.comment})
           .then(res => {
-            self.snackbar = false;
-            self.status = res.data.message;
-            self.snackbar = true;
+            self.$store.dispatch('snack', res.data.message);
           }, err=> {
-            self.snackbar = false;
-            self.status = 'Error marking exam as template!';
-            self.snackbar = true;
+            self.$store.dispatch('snack', err);
             console.log(err);
           });
       }

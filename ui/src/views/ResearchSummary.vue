@@ -6,8 +6,8 @@
           v-model="selected"
           :items="research_ids"
           hide-no-data
-          item-text="IIBISID"
-          item-value="_id"
+          :item-text="researchLabel"
+          item-value="IIBISID"
           label="Research IDs"
           prepend-icon="mdi-database-search"
           @change="updateDetail"
@@ -30,15 +30,21 @@
             single-line
             hide-details
           ></v-text-field>
+
         </div>
       </v-col>
 
       <v-col cols="7">
+
         <ResearchDetail :research_id="selected.IIBISID" v-if="selected_id" />
       </v-col>
   </v-row>
-    <v-row>
-      <ResearchTable :research_id="selected._id" v-if="selected_id" :series_filter="searchSeries" :subject_filter="searchSubject"/>
+    <v-row v-if="selected_id">
+
+      <v-col cols="12">
+        <v-divider></v-divider>
+        <ResearchTable :research="selected" v-if="selected_id" :series_filter="searchSeries" :subject_filter="searchSubject"/>
+      </v-col>
     </v-row>
   </div>
 </template>
@@ -54,7 +60,6 @@
     data() {
       return {
         selected: {
-          _id: null,
           IIBISID: null
         },
         selected_id: null,
@@ -65,20 +70,32 @@
       }
     },
     methods: {
+      researchLabel: function(research) {
+        if(research.researches === undefined) return '';
+        let modalities = [];
+        research.researches.forEach(r => {
+          modalities.push(r.Modality);
+        });
+
+        return `${research.IIBISID} (${modalities.join(' | ')})`
+      },
       getResearches: function() {
         let self = this;
         this.$http.get(`${this.$config.api}/research?admin=true`)
           .then(function(res) {
             // console.log(res.data);
-            self.research_ids = res.data;
+            //self.research_ids = res.data;
 
             // //organize records into IIBISID / (Modality+StationName+Radio Tracer)
             // $scope.research_count = res.data.length;
             // $scope.iibisids = {};
-            // res.data.forEach(function(rec) {
-            //   if(!self.research_ids[rec.IIBISID]) self.$set(self.research_ids, rec.IIBISID, []);
-            //   self.research_ids[rec.IIBISID].push(rec);
-            // });
+            let tmp_res = {};
+            res.data.forEach(function(rec) {
+              if(!tmp_res[rec.IIBISID]) self.$set(tmp_res, rec.IIBISID, { IIBISID: rec.IIBISID, researches: []});
+              tmp_res[rec.IIBISID].researches.push(rec);
+            });
+
+            self.research_ids = Object.values(tmp_res);
           }, function(err) {
             console.log(err);
           });
@@ -88,7 +105,7 @@
         this.$nextTick(function() {
           this.selected_id = this.selected.IIBISID;
         });
-      }
+      },
     },
     mounted() {
       this.getResearches();

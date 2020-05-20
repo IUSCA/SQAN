@@ -136,6 +136,7 @@ export default {
       this.$http
         .patch(`${this.$config.api}/user/` + this.user._id, this.user)
         .then(res => {
+          this.$store.dispatch('snack', "Profile updated successfully");
           console.log(res.data);
         });
     }

@@ -7,8 +7,7 @@ const winston = require('winston');
 const jwt = require('express-jwt');
 const async = require('async');
 var nodemailer = require('nodemailer');
-var SSE = require('express-sse');
-var sse = new SSE([]);
+
 
 //mine
 const config = require('../../config');
@@ -16,6 +15,7 @@ const logger = new winston.Logger(config.logger.winston);
 const db = require('../models');
 const qc = require('../qc');
 const common = require('./common');
+const events = require('./event');
 
 //should I store this somewhere common?
 function compose_modalityid(research_detail) {
@@ -230,19 +230,6 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
     });
 });
 
-router.get('/livefeed', sse.init);
-
-router.get('/feedtest', function(req, res, next) {
-    let data = {
-        foo: 'bar',
-        bar: 'foo'
-    };
-    sse.send(data, 'message');
-    console.log('sending message');
-    res.json({'msg': 'ok'});
-})
-
-
 
 router.get('/id/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
     //first load the series
@@ -377,6 +364,8 @@ router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), funct
         })
         .exec(function(err, series) {
         if(err) return next(err);
+        console.log("WTF");
+        if(!series) console.log("CANT FIND SERIES");
         if(!series) return res.status(404).json({message: "can't find specified series"});
         //make sure user has access to this series
         db.Acl.can(req.user, 'qc', series.exam_id.research_id.IIBISID, function(can) {
@@ -513,7 +502,10 @@ router.post('/reqcallseries/:exam_id', jwt({secret: config.express.jwt.pub}), fu
                         });
                     });
                 }, function(err) {
-                    res.json({message: "Re-running QC on "+serieses.length+ " series and "  +total_modified+" images "});
+                    common.publish({id: exam._id, status: 'reqc all'}, exam._id, function(err) {
+                      if(err) return next(err);
+                      res.json({message: "Re-running QC on " + serieses.length + " series and " + total_modified + " images "});
+                  })
                 });
             });
         });
@@ -560,7 +552,10 @@ router.post('/reqcerroredseries/:exam_id', jwt({secret: config.express.jwt.pub})
                         });
                     });
                 }, function(err) {
+                  common.publish({id: exam._id, status: 'reqc errors'}, exam._id, function(err) {
+                    if(err) return next(err);
                     res.json({message: "Re-running QC on "+serieses.length+ " errored series and "  +total_modified+" images "});
+                  });
                 });
             });
         });

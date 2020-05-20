@@ -1,25 +1,11 @@
 <template>
   <span>
-    <v-snackbar
-      v-model="snackbar"
-      top
-      right
-      :timeout="timeout"
-    >
-      {{status}}
-      <v-btn
-        color="red"
-        text
-        @click="snackbar = false"
-      >
-        Close
-      </v-btn>
-    </v-snackbar>
+
      <v-dialog
        v-model="del_dialog"
        max-width="500"
      >
-    <template v-slot:activator="{ on }">
+    <template v-slot:activator="{ on }" v-if="$store.getters.hasRole('admin')">
       <v-btn
         color="red lighten-2"
         dark
@@ -92,9 +78,6 @@
     data() {
       return {
         del_dialog: false,
-        snackbar: false,
-        status: '',
-        timeout: 5000,
         comment: '',
       }
     },
@@ -106,13 +89,10 @@
         let self = this;
         this.$http.post(`${this.$config.api}/exam/delete/${this.exam._id}`, { comment: this.comment})
           .then(res => {
-            self.snackbar = false;
-            self.status = res.data.message;
-            self.snackbar = true;
+            self.$store.dispatch('snack', res.data.message);
           }, err=> {
-            self.snackbar = false;
-            self.status = 'Error deleting exam!';
-            self.snackbar = true;
+
+            self.$store.dispatch('snack', 'Error deleting exam!');
             console.log(err);
           });
       }
