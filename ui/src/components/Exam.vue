@@ -16,7 +16,7 @@
     </div>
     <div class="subtitle-1">
       <v-icon>mdi-flask</v-icon>
-      2018-00072 // MR // AWP66027 <br>
+      {{exam.exam.research_id.IIBISID}} // {{exam.exam.research_id.Modality}} // {{exam.exam.research_id.StationName}}<br>
       <v-icon>mdi-clock</v-icon>
       {{exam.exam.StudyTimestamp | moment("MMM Do, YYYY hh:mm:ss")}}
     </div>

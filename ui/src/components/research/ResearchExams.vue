@@ -25,6 +25,12 @@
       :headers="fields"
 
     >
+      <template v-slot:item.subject="{ item }">
+        <v-icon>mdi-account</v-icon> {{item.subject}}
+      </template>
+      <template v-slot:item.StudyTimestamp="{ item }">
+        {{item.StudyTimestamp | moment("YYYY-MM-DD hh:mm:ss")}}
+      </template>
       <template v-slot:item.qc.series_passed="{ item }">
         <v-chip small color="green" v-if="item.qc !== undefined">{{item.qc.series_passed}}</v-chip>
       </template>

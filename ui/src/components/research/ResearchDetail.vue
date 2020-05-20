@@ -26,7 +26,7 @@
         </v-list-item-avatar>
         <v-list-item-content>
           <v-list-item-title>Dates</v-list-item-title>
-          <v-list-item-subtitle>{{research.start_date}} - {{research.end_date | moment}}</v-list-item-subtitle>
+          <v-list-item-subtitle>{{research.start_date | moment("YYYY-MM-DD")}} - {{research.end_date | moment("YYYY-MM-DD")}}</v-list-item-subtitle>
         </v-list-item-content>
       </v-list-item>
 

@@ -15,7 +15,9 @@
 
       <v-data-table :items="img_header" :headers="header" :search="search" dense>
           <template v-slot:item.err_msg="{ item }">
-              {{item.key in qc_mapped ? qc_mapped[item.key].msg : ''}}
+              <span v-if="item.key in qc_mapped">
+                  <v-chip class="red white--text"><v-icon>mdi-alert</v-icon> {{qc_mapped[item.key].msg}}</v-chip>
+              </span>
           </template>
       </v-data-table>
     </v-card>

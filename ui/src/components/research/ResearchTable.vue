@@ -2,6 +2,13 @@
   <div>
 
     <v-dialog
+        v-model="research_dialog"
+        max-width="500"
+    >
+      <ResearchDetail :research_id="research.IIBISID" v-if="research" />
+    </v-dialog>
+
+    <v-dialog
       v-model="research_exams_dialog"
       max-width="90%"
     >
@@ -17,6 +24,9 @@
       <template v-slot:item.lastUpdated="{ item }">
         {{item.lastUpdated | moment}}
       </template>
+      <template v-slot:item.info="{ item }">
+        <v-icon color="light-blue" @click.stop="openDetails(item.research)">mdi-information</v-icon>
+      </template>
       <template v-slot:item.QCStatus="{ item }">
         <QCStatus :exams="item.exams"></QCStatus>
       </template>
@@ -28,10 +38,11 @@
 
   import QCStatus from "./QCStatus";
   import ResearchExams from "./ResearchExams";
+  import ResearchDetail from "./ResearchDetail";
 
   export default {
     name: 'ResearchTable',
-    components: {QCStatus, ResearchExams},
+    components: {QCStatus, ResearchExams, ResearchDetail},
     props: {
       results: Array
     },
@@ -68,13 +79,24 @@
           this.selected = research;
           this.research_exams_dialog = true;
         })
-      }
+      },
+      openDetails(research) {
+        this.research = research;
+        this.research_dialog = true;
+      },
     },
     data() {
       return {
         research_exams_dialog: false,
+        research_dialog: false,
+        research: null,
         selected: null,
         fields: [
+          {
+            text: '',
+            value: 'info',
+            sortable: false
+          },
           {
             text: 'IIBISID',
             value: 'research.IIBISID',
