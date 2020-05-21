@@ -73,7 +73,7 @@ function run(cb) {
                 logger.info("Batch complete. Starting next batch...");
                 run(cb);
             } else {
-              logger.info("Queue is empty, checking every 10 seconds...");
+              // logger.info("Queue is empty, checking every 10 seconds...");
                 setTimeout(function() {
                     run(cb);
                 }, 1000*10);

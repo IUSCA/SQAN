@@ -6,6 +6,7 @@ const router = express.Router();
 const winston = require('winston');
 const jwt = require('express-jwt');
 const async = require('async');
+const moment = require('moment');
 var nodemailer = require('nodemailer');
 
 
@@ -563,6 +564,82 @@ router.post('/reqcerroredseries/:exam_id', jwt({secret: config.express.jwt.pub})
 });
 
 
+function get_key(h, ph, k) {
+    let val = h[k];
+    if(val === undefined) val = ph[k];
+    return val;
+}
+
+router.get('/frame_report/:series_id', function(req, res, next) {
+
+    db.Series.findById(req.params.series_id).exec(function(err, series){
+        if(err) next(err);
+
+        console.log("Working on series "+series.series_desc);
+
+        db.Image.findOne({series_id:series._id, primary_image: null})
+            .exec(function(err, p_img){
+
+                let ph = p_img.headers;
+                db.Image.find({series_id:series._id})
+                    .sort('InstanceNumber')
+                    .exec(function(err,images){
+                        let img_0 = images[0].headers;
+                        let img_n = images[images.length-1].headers;
+
+                        let n_frames = parseInt(get_key(img_0, ph, 'NumberOfTimeSlices'));
+                        let n_slices = get_key(img_0, ph, 'NumberOfSlices');
+
+                        // console.log(n_frames, n_slices);
+
+                        let img_expected = n_frames * n_slices;
+                        let img_count = images.length;
+
+
+                        let series_start = moment(get_key(img_0, ph, 'AcquisitionTime'), "HHmmss.S");
+
+                        let end_frame_start = moment(get_key(img_n, ph, 'AcquisitionTime'), "HHmmss.S");
+                        let series_end = end_frame_start.add(get_key(img_n, ph, 'ActualFrameDuration'), 'ms');
+
+                        let total_duration = series_end.diff(series_start, 'ms');
+
+                        // console.log(`${img_count}/${img_expected} images, Start: ${start_time.format('HH:mm:ss.S')}, End: ${end_time.format('HH:mm:ss.S')}`);
+
+                        let results = [];
+                        console.log('frame,start_time,end_time,duration');
+                        let duration = 0;
+                        for(var f = 0; f < n_frames; f++) {
+                            let s0 = f * n_slices;
+                            let sn = s0 + n_slices - 1;
+                            let s0_h = images[s0].headers;
+                            let sn_h = images[sn].headers;
+
+                            let start_time = moment(get_key(s0_h, ph, 'AcquisitionTime'), "HHmmss.S");
+                            let frame_duration = get_key(sn_h, ph, 'ActualFrameDuration');
+
+                            let end_frame_start = moment(get_key(sn_h, ph, 'AcquisitionTime'), "HHmmss.S");
+                            let end_time = end_frame_start.add(frame_duration, 'ms');
+
+                            duration += frame_duration;
+
+                            let frame_stats = {
+                                frame: f+1,
+                                start_time: start_time.diff(series_start, 's'),
+                                end_time: end_time.diff(series_start, 's'),
+                                duration: frame_duration / 1000
+                            }
+                            results.push(frame_stats);
+                        }
+
+                        console.log(`Realtime Duration: ${total_duration/1000} s, Expected: ${duration/1000} s`);
+
+                        res.json(results);
+
+                    })
+            })
+
+    })
+})
 
 module.exports = router;
 

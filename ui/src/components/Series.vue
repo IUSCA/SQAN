@@ -2,6 +2,7 @@
   <v-card class="series pa-4" v-if="series.series !== undefined">
     <slot name="close"></slot>
 
+    <FrameReport :series_id="series.series._id" v-if="series.series.series_desc.includes('dyna')"></FrameReport>
     <ReQC :series="series.series" :exam="series.series.exam_id"></ReQC>
     <Contact :exam="series.series.exam_id" :series="series.series"></Contact>
     <Comment :series_id="series.series._id" v-on:submitted="getSeries"></Comment>
@@ -172,10 +173,11 @@
   import Confirm from "./Confirm";
   import Comment from "./Comment";
   import Avatar from "./Avatar";
+  import FrameReport from "./series/FrameReport";
 
   export default {
     name: 'Series',
-    components: {ImageHeader, ErrorPanel, Contact, SeriesStatus, Confirm, Comment, Avatar, TemplateBadge, ReQC},
+    components: {ImageHeader, ErrorPanel, Contact, SeriesStatus, Confirm, Comment, Avatar, TemplateBadge, ReQC, FrameReport},
     props: {
       series_id: String
     },
