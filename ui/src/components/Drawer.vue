@@ -163,6 +163,7 @@
       checkRoute: function() {
         console.log("checking route");
         let currentPath = this.$router.currentRoute.path;
+        console.log(currentPath);
         this.items.forEach(item => {
           if(currentPath.includes(item.path)) this.navChange(item);
         });
@@ -173,7 +174,11 @@
 
         this.user_items.forEach(item => {
           if(currentPath.includes(item.path)) this.navChange(item);
-        })
+        });
+
+        if(currentPath === '/') this.navChange(this.items[0]);
+
+
       }
     },
     mounted() {

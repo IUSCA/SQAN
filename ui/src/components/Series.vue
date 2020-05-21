@@ -2,6 +2,8 @@
   <v-card class="series pa-4" v-if="series.series !== undefined">
     <slot name="close"></slot>
 
+
+    <Clipboard :message="direct_link"></Clipboard>
     <FrameReport :series_id="series.series._id" v-if="series.series.series_desc.includes('dyna')"></FrameReport>
     <ReQC :series="series.series" :exam="series.series.exam_id"></ReQC>
     <Contact :exam="series.series.exam_id" :series="series.series"></Contact>
@@ -174,10 +176,11 @@
   import Comment from "./Comment";
   import Avatar from "./Avatar";
   import FrameReport from "./series/FrameReport";
+  import Clipboard from "./Clipboard";
 
   export default {
     name: 'Series',
-    components: {ImageHeader, ErrorPanel, Contact, SeriesStatus, Confirm, Comment, Avatar, TemplateBadge, ReQC, FrameReport},
+    components: {ImageHeader, ErrorPanel, Contact, SeriesStatus, Confirm, Comment, Avatar, TemplateBadge, ReQC, FrameReport, Clipboard},
     props: {
       series_id: String
     },
@@ -190,6 +193,9 @@
       }
     },
     computed: {
+      direct_link() {
+        return `${window.location.origin}/exams?series=${this.series_id}`;
+      },
       filtered_events() {
         let evts = [
           {title: 'Received by SCA', date: this.series.series.createdAt, icon: 'mdi-send-check'},

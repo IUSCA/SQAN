@@ -17,6 +17,9 @@
       disable-pagination
       hide-default-footer
     >
+      <template v-slot:item.subject="{ item }">
+        <v-icon>mdi-account</v-icon> {{item.subject}}
+      </template>
       <template v-slot:item.lastUpdated="{ item }">
         {{item.lastUpdated | moment}}
       </template>

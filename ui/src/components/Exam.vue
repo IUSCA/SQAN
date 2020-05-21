@@ -23,6 +23,7 @@
     <v-divider></v-divider>
     <v-divider></v-divider>
     <div v-if="!selected_series">
+    <Clipboard :message="direct_link"></Clipboard>
     <ReQC class="mx-1" :exam="exam.exam"></ReQC>
     <SetAsTemplate class="mx-1" :exam="exam.exam" v-if="!exam.exam.converted_to_template"></SetAsTemplate>
     <v-btn x-small color="orange" v-if="exam.exam.converted_to_template">
@@ -44,7 +45,7 @@
       v-if="!selected_series"
     >
       <template v-slot:item.qc1_state="{ item }">
-        <span v-if="(item.qc !== undefined || item.qc1_state === 're-qcing') && item.deprecated_by === null || deprecated === 'all'">
+        <span v-if="item.deprecated_by === null || deprecated === 'all'">
           <SeriesStatus :series="item" :key="componentKey"/>
         </span>
       </template>
@@ -73,14 +74,18 @@
   import ReQC from "./exams/ReQC";
   import DeleteExam from "./exams/DeleteExam";
   import TemplateChip from "./exams/TemplateChip";
+  import Clipboard from "./Clipboard";
 
   export default {
     name: 'Exam',
-    components: {Series, SeriesStatus, SetAsTemplate, ReQC, DeleteExam, TemplateChip},
+    components: {Series, SeriesStatus, SetAsTemplate, ReQC, DeleteExam, TemplateChip, Clipboard},
     props: {
       exam_id: String
     },
     computed: {
+      direct_link() {
+        return `${window.location.origin}/exams?exam=${this.exam_id}`;
+      },
       filtered_series() {
         let series = [];
 

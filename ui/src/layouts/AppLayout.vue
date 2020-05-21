@@ -27,7 +27,7 @@
           class="light-blue darken-3 white--text text-right page-footer"
         >
           <v-spacer></v-spacer>
-          <div class="float-right caption mx-2 mt-1">SQAN is a service of the Indiana University Scalable Compute Archive (IU SCA) group.</div>
+          <div class="float-right caption mx-2 mt-1">SQAN is a service of the <a href="https://sca.iu.edu" color="white" target="_blank">Indiana University Scalable Compute Archive (IU SCA)</a> group.</div>
         </div>
       </v-container>
 
@@ -99,5 +99,9 @@
 
   .fade-enter, .fade-leave-active {
     opacity: 0
+  }
+
+  .caption a {
+    color: white !important;
   }
 </style>

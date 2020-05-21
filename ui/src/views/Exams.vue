@@ -1,6 +1,12 @@
 <template>
     <div class="ml-2">
 
+      <div v-if="direct_load">
+        <v-btn class="mb-2" small color="green lighten-2" @click="closeDirect"><v-icon small>mdi-magnify</v-icon> Back to Search</v-btn>
+        <Exam :exam_id="load_exam" v-if="direct_load === 'exam'"/>
+        <Series :series_id="load_series" v-if="direct_load === 'series'"/>
+      </div>
+
       <v-dialog
         v-model="exam_dialog"
         max-width="90%"
@@ -10,7 +16,7 @@
         </v-card>
       </v-dialog>
 
-      <v-tabs v-model="tab" @change="changeTab">
+      <v-tabs v-model="tab" @change="changeTab" v-if="!direct_load">
         <v-tab><v-icon class="mr-2">mdi-magnify</v-icon> Search</v-tab>
         <v-tab><v-icon class="mr-2">mdi-calendar</v-icon> Calendar</v-tab>
 
@@ -21,6 +27,8 @@
               v-model="search"
               label="Search"
               hide-details
+              v-on:keydown.enter="query"
+              :placeholder="search_type === 'research' ? 'e.g. 2018-QF32' : 'e.g. PPA2039'"
               style="margin-right: 15px; max-width: 460px"
             >
               <template slot="append">
@@ -48,9 +56,9 @@
 <!--                <ResearchCard class="ma-2" :research="res.research" :exams="res.exams"></ResearchCard>-->
 <!--              </v-col>-->
             </v-row>
-            <v-row dense v-if="search_type === 'subject'">
+            <v-row dense v-if="search_type === 'subject' && !Array.isArray(results)">
 
-              <SubjectTable :results="results" v-if="results !== []"></SubjectTable>
+              <SubjectTable :results="results"></SubjectTable>
 <!--              <v-col-->
 <!--                v-for="res in results"-->
 <!--                :key="res.subject"-->
@@ -118,10 +126,11 @@
 import ResearchTable from "../components/research/ResearchTable";
 import SubjectTable from "../components/research/SubjectTable";
 import Exam from "@/components/Exam.vue";
+import Series from "../components/Series";
 
 export default {
   name: "exams",
-  components: {SubjectTable, ResearchTable, Exam },
+  components: {SubjectTable, ResearchTable, Exam, Series },
   computed: {
     calendarData() {
       if(this.search_type !== 'calendar') return [];
@@ -150,9 +159,20 @@ export default {
 
       return `${startMonth} ${startYear}`;
     },
+    load_exam: function () {
+      return this.$route.query.exam;
+    },
+    load_research: function() {
+      return this.$route.query.research;
+    },
+    load_series: function() {
+      return this.$route.query.series;
+    },
+
   },
   data() {
     return {
+      direct_load: null,
       ranges: {
         30: "30 days",
         60: "60 days",
@@ -202,6 +222,10 @@ export default {
         this.dialog = true;
       })
 
+    },
+    closeDirect: function() {
+      this.direct_load = null;
+      this.$router.replace({'query': null});
     },
     changeTab: function(tab) {
       console.log(tab);
@@ -290,6 +314,15 @@ export default {
     },
   },
   mounted() {
+    console.log("direct_exam: ",this.load_exam);
+    if(this.load_exam !== undefined) {
+      this.direct_load = 'exam';
+    }
+    if(this.load_series !== undefined) {
+      this.direct_load = 'series';
+    }
+    console.log("direct_research: ",this.load_research);
+    console.log("direct_series: ",this.load_series);
     // this.query();
   }
 };
