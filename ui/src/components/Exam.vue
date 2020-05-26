@@ -42,7 +42,6 @@
       :items="filtered_series"
       :headers="fields"
       @click:row="openSeries"
-      v-if="!selected_series"
     >
       <template v-slot:item.qc1_state="{ item }">
         <span v-if="item.deprecated_by === null || deprecated === 'all'">
@@ -56,13 +55,14 @@
         </span>
       </template>
     </v-data-table>
-    <Series :series_id="selected_series" v-if="selected_series">
-      <template slot="close">
-        <v-btn small fab top right absolute @click="closeSeries" color="light-blue">
-          <v-icon small>mdi-close</v-icon>
-        </v-btn>
-      </template>
+
+    <v-dialog
+      v-model="series_dialog"
+      max-width="90%"
+    >
+      <Series :series_id="selected_series" v-if="selected_series">
     </Series>
+    </v-dialog>
   </div>
 </template>
 
@@ -107,6 +107,7 @@
     },
     data() {
       return {
+        series_dialog: false,
         es: null,
         componentKey: 0,
         exam: {},
@@ -187,6 +188,7 @@
 
       openSeries(record) {
         this.selected_series = record._id;
+        this.series_dialog = true;
         console.log(record);
       },
       closeSeries() {

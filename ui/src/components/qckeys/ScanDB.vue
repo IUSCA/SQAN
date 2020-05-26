@@ -1,20 +1,5 @@
 <template>
   <span>
-    <v-snackbar
-      v-model="snackbar"
-      top
-      right
-      :timeout="timeout"
-    >
-      {{status}}
-      <v-btn
-        color="red"
-        text
-        @click="snackbar = false"
-      >
-        Close
-      </v-btn>
-    </v-snackbar>
      <v-dialog
        v-model="sat_dialog"
        max-width="500"
@@ -44,18 +29,29 @@
                 color="primary"
                 indeterminate
         ></v-progress-circular>
-        <v-list dense>
-          <v-list-item v-for="k in newkeys" :key="k">
-            <v-list-item-action>
-              <v-simple-checkbox :ripple="false"
-              ></v-simple-checkbox>
-            </v-list-item-action>
+      <v-data-table
+        v-show="newkeys.length"
+        :items="newkeys"
+        :headers="headers"
+        show-select
+        item-key="key"
+        v-model="selected"
+        disable-pagination
+        hide-default-footer
+        dense>
+      </v-data-table>
+<!--        <v-list dense>-->
+<!--          <v-list-item v-for="k in newkeys" :key="k">-->
+<!--            <v-list-item-action>-->
+<!--              <v-simple-checkbox :ripple="false"-->
+<!--              ></v-simple-checkbox>-->
+<!--            </v-list-item-action>-->
 
-            <v-list-item-content>
-              <v-list-item-title>{{k}}</v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-        </v-list>
+<!--            <v-list-item-content>-->
+<!--              <v-list-item-title>{{k}}</v-list-item-title>-->
+<!--            </v-list-item-content>-->
+<!--          </v-list-item>-->
+<!--        </v-list>-->
       <v-divider></v-divider>
 
       <v-card-actions>
@@ -70,9 +66,10 @@
         <v-btn
                 v-show="newkeys.length"
                 color="success"
-                @click="scanDB"
+                @click="addSelected"
+                :disabled="!newkeys.length"
         >
-          Add Selected Keys to QC Database
+          Add {{selected.length}} Selected Keys to QC Database
         </v-btn>
       </v-card-actions>
 
@@ -89,11 +86,16 @@
     data() {
       return {
         sat_dialog: false,
-        snackbar: false,
-        status: '',
         loading: false,
-        timeout: 5000,
-        newkeys: []
+        newkeys: [],
+        selected: [],
+        headers: [
+          {
+            text: 'Key',
+            value: 'key',
+            sortable: true
+          }
+        ]
       }
     },
     methods: {
@@ -105,7 +107,11 @@
           .then(res => {
 
             self.loading = false;
-            self.newkeys = res.data;
+            // self.newkeys = res.data;
+            self.newkeys = res.data.map(k => {
+              return {key: k}
+            });
+            console.log(res.data);
 
           }, err=> {
             self.snackbar = false;
@@ -113,6 +119,28 @@
             self.snackbar = true;
             console.log(err);
           });
+      },
+      addSelected() {
+        console.log(this.selected);
+        let self = this;
+
+        this.selected.forEach(k => {
+          let data = {
+            key: k.key,
+            modality: 'common',
+            skip: true
+          };
+          this.$http.post(`${this.$config.api}/qc_keywords/`, data)
+            .then(res => {
+              console.log(res.data);
+              self.$store.dispatch('snack', `Added keyword ${k.key}`);
+              self.$emit('newkey');
+            }, err=> {
+              console.log(err);
+            });
+        });
+
+        this.sat_dialog = false;
       }
     }
   }
