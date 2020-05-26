@@ -1,20 +1,5 @@
 <template>
   <span>
-    <v-snackbar
-      v-model="snackbar"
-      top
-      right
-      :timeout="timeout"
-    >
-      {{status}}
-      <v-btn
-        color="red"
-        text
-        @click="snackbar = false"
-      >
-        Close
-      </v-btn>
-    </v-snackbar>
      <v-dialog
        v-model="sat_dialog"
        max-width="500"
@@ -44,16 +29,14 @@
             label="Key"
             prepend-icon="mdi-key"
             required
-            disabled
           ></v-text-field>
 
-          <v-text-field
+          <v-select
             v-model="qckey.modality"
-            label="Timestamp"
-            prepend-icon="mdi-clock"
-            required
-            disabled
-          ></v-text-field>
+            :items="modalities"
+            label="Modality"
+            outlined
+          ></v-select>
       </v-card-text>
 
       <v-divider></v-divider>
@@ -81,9 +64,7 @@
     data() {
       return {
         sat_dialog: false,
-        snackbar: false,
-        status: '',
-        timeout: 5000,
+        modalities: ['common','MR','CT','PT'],
         qckey: {
           'key': '',
           'modality': ''
@@ -93,19 +74,14 @@
     methods: {
       newKey() {
         this.sat_dialog = false;
-        this.status = "Processing ...";
-        this.snackbar = true;
         let self = this;
         this.$http.post(`${this.$config.api}/qc_keywords/`, this.qckey)
           .then(res => {
-            self.snackbar = false;
-            self.status = res.data.message;
-            self.snackbar = true;
+            console.log(res.data);
+            self.$store.dispatch('snack', 'New Key Added');
+            self.$emit('newkey');
           }, err=> {
-            self.snackbar = false;
-            self.status = 'Error creating new QC Key';
-            self.snackbar = true;
-            console.log(err);
+            self.$store.dispatch('snack', err);
           });
       }
     }

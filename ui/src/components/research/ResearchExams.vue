@@ -16,6 +16,11 @@
       {{research.IIBISID}} - {{research.Modality}}
     </div>
 
+    <div class="headline font-weight-light">
+      <v-icon large>mdi-clipboard-account</v-icon>
+      PI: <PrimaryInvestigator :research_id="research.IIBISID" :show_email="true"></PrimaryInvestigator>
+    </div>
+
     <v-divider></v-divider>
     <ReQC class="mx-1" :research="research"></ReQC>
 
@@ -37,8 +42,17 @@
       :items="filter_exams"
       @click:row="showExam"
       :headers="fields"
+      sort-by="StudyTimestamp"
+      sort-desc
 
     >
+      <template v-slot:item.subject="{ item }">
+        <v-icon small>mdi-account</v-icon> {{item.subject}}
+      </template>
+
+      <template v-slot:item.StudyTimestamp="{ item }">
+        {{item.StudyTimestamp | moment("YYYY-MM-DD HH:mm:ss")}}
+      </template>
 
       <template v-slot:item.qc="{ item }">
         <QCStatus :exam="item"></QCStatus>
@@ -59,10 +73,11 @@
   import Exam from "../Exam";
   import QCStatus from "../exams/QCStatus";
   import ReQC from "../exams/ReQC";
+  import PrimaryInvestigator from "./PrimaryInvestigator";
 
   export default {
     name: 'ResearchExams',
-    components: {Exam,QCStatus,ReQC},
+    components: {Exam,QCStatus,ReQC, PrimaryInvestigator},
     computed: {
       filter_exams() {
         return this.exams.filter(ex => {

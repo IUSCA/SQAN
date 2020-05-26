@@ -9,6 +9,11 @@ import config from './config';
 
 Vue.prototype.$config = config;
 
+//clipboard
+import VueClipboard from 'vue-clipboard2'
+VueClipboard.config.autoSetContainer = true;
+Vue.use(VueClipboard);
+
 //Gravatar
 import Gravatar from 'vue-gravatar';
 Vue.component('v-gravatar', Gravatar);

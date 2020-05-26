@@ -1,8 +1,8 @@
 <template>
   <div class="QCKeys">
 
-    <AddKey></AddKey>
-    <ScanDB></ScanDB>
+    <AddKey @newkey="getQCKeys"></AddKey>
+    <ScanDB @newkey="getQCKeys"></ScanDB>
 
     <v-divider class="my-2"></v-divider>
     <v-tabs v-model="tab">
@@ -34,14 +34,19 @@
               disable-pagination
             >
               <template v-slot:item.actions="{ item }">
-                <DeleteKey :qckey="item"></DeleteKey>
+                <DeleteKey :qckey="item" @deleted="getQCKeys"></DeleteKey>
               </template>
               <template v-slot:item.updatedAt="{ item }">
                 {{item.updatedAt | moment('from')}}
               </template>
               <template v-slot:item.skip="{ item }">
-                <v-simple-checkbox :ripple="false"
+                <v-simple-checkbox :ripple="false" @input="updateKey(item)"
                         v-model="item.skip"
+                ></v-simple-checkbox>
+              </template>
+              <template v-slot:item.custom="{ item }">
+                <v-simple-checkbox :ripple="false" @input="updateKey(item)"
+                                   v-model="item.custom"
                 ></v-simple-checkbox>
               </template>
             </v-data-table>
@@ -89,6 +94,11 @@
             sortable: true
           },
           {
+            text: 'Custom Handler?',
+            value: 'custom',
+            sortable: true
+          },
+          {
             text: 'Last Updated',
             value: 'updatedAt',
             sortable: true
@@ -111,8 +121,12 @@
             self.qckeys = res.data;
           }, err => {console.log(err)});
       },
-      doConfirm: function() {
-        console.log("Got a confirmation");
+      updateKey: function(key) {
+        this.$http.patch(`${this.$config.api}/qc_keywords/update/${key._id}`, key)
+          .then( res => {
+            console.log(res.data);
+            self.qckeys = res.data;
+          }, err => {console.log(err)});
       }
     },
     mounted() {

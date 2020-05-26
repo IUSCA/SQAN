@@ -1,7 +1,20 @@
 <template>
   <v-card class="series pa-4" v-if="series.series !== undefined">
-    <slot name="close"></slot>
 
+    <div class="display-1 font-weight-medium" v-if="exam">
+      <v-icon large>mdi-account-check</v-icon>
+      {{exam.subject}}
+    </div>
+
+    <div class="subtitle-1" v-if="exam">
+      <v-icon>mdi-flask</v-icon>
+      {{exam.research_id.IIBISID}} // {{exam.research_id.Modality}} // {{exam.research_id.StationName}}<br>
+      <v-icon>mdi-clock</v-icon>
+      {{exam.StudyTimestamp | moment("MMM Do, YYYY hh:mm:ss")}}
+    </div>
+
+
+    <Clipboard :message="direct_link"></Clipboard>
     <FrameReport :series_id="series.series._id" v-if="series.series.series_desc.includes('dyna')"></FrameReport>
     <ReQC :series="series.series" :exam="series.series.exam_id"></ReQC>
     <Contact :exam="series.series.exam_id" :series="series.series"></Contact>
@@ -174,10 +187,11 @@
   import Comment from "./Comment";
   import Avatar from "./Avatar";
   import FrameReport from "./series/FrameReport";
+  import Clipboard from "./Clipboard";
 
   export default {
     name: 'Series',
-    components: {ImageHeader, ErrorPanel, Contact, SeriesStatus, Confirm, Comment, Avatar, TemplateBadge, ReQC, FrameReport},
+    components: {ImageHeader, ErrorPanel, Contact, SeriesStatus, Confirm, Comment, Avatar, TemplateBadge, ReQC, FrameReport, Clipboard},
     props: {
       series_id: String
     },
@@ -190,6 +204,12 @@
       }
     },
     computed: {
+      direct_link() {
+        return `${window.location.origin}/exams?series=${this.series_id}`;
+      },
+      exam() {
+        return this.series.series !== undefined ? this.series.series.exam_id : undefined;
+      },
       filtered_events() {
         let evts = [
           {title: 'Received by SCA', date: this.series.series.createdAt, icon: 'mdi-send-check'},

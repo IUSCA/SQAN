@@ -21,10 +21,14 @@
       :headers="fields"
       disable-pagination
       hide-default-footer
+
       @click:row="showResearch"
     >
+      <template v-slot:item.pi="{ item }">
+        <PrimaryInvestigator :research_id="item.research.IIBISID" :key="item.research._id"></PrimaryInvestigator>
+      </template>
       <template v-slot:item.lastUpdated="{ item }">
-        {{item.lastUpdated | moment}}
+        {{item.lastUpdated | moment("YYYY-MM-DD")}}
       </template>
       <template v-slot:item.info="{ item }">
         <v-icon color="light-blue" @click.stop="openDetails(item.research)">mdi-information</v-icon>
@@ -48,10 +52,11 @@
   import QCStatus from "../exams/QCStatus";
   import ResearchExams from "./ResearchExams";
   import ResearchDetail from "./ResearchDetail";
+  import PrimaryInvestigator from "./PrimaryInvestigator";
 
   export default {
     name: 'ResearchTable',
-    components: {QCStatus, ResearchExams, ResearchDetail},
+    components: {QCStatus, ResearchExams, ResearchDetail, PrimaryInvestigator},
     props: {
       results: Array
     },
@@ -109,6 +114,11 @@
           {
             text: 'IIBISID',
             value: 'research.IIBISID',
+            sortable: true
+          },
+          {
+            text: 'PI',
+            value: 'pi',
             sortable: true
           },
           {

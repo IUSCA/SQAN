@@ -1,20 +1,5 @@
 <template>
   <span>
-    <v-snackbar
-      v-model="snackbar"
-      top
-      right
-      :timeout="timeout"
-    >
-      {{status}}
-      <v-btn
-        color="red"
-        text
-        @click="snackbar = false"
-      >
-        Close
-      </v-btn>
-    </v-snackbar>
      <v-dialog
        v-model="del_dialog"
        max-width="500"
@@ -77,9 +62,6 @@
     data() {
       return {
         del_dialog: false,
-        snackbar: false,
-        status: '',
-        timeout: 5000,
         comment: '',
       }
     },
@@ -91,14 +73,11 @@
         let self = this;
         this.$http.delete(`${this.$config.api}/qc_keywords/${this.qckey._id}`)
           .then(res => {
-            self.snackbar = false;
-            self.status = res.data.message;
-            self.snackbar = true;
+            console.log(res.data);
+            self.$store.dispatch('snack', 'Key successfully deleted');
+            self.$emit('deleted');
           }, err=> {
-            self.snackbar = false;
-            self.status = 'Error deleting QC Key!';
-            self.snackbar = true;
-            console.log(err);
+            self.$store.dispatch('snack', err);
           });
       }
     }
