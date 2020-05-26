@@ -1,6 +1,6 @@
 <template>
   <v-card class="series pa-4" v-if="series.series !== undefined">
-    
+
     <div class="display-1 font-weight-medium" v-if="exam">
       <v-icon large>mdi-account-check</v-icon>
       {{exam.subject}}
@@ -207,12 +207,9 @@
       direct_link() {
         return `${window.location.origin}/exams?series=${this.series_id}`;
       },
-<<<<<<< HEAD
       exam() {
         return this.series.series !== undefined ? this.series.series.exam_id : undefined;
       },
-=======
->>>>>>> 870c4ee33d0549311f8d8c599f8d401cfc1c51ae
       filtered_events() {
         let evts = [
           {title: 'Received by SCA', date: this.series.series.createdAt, icon: 'mdi-send-check'},
