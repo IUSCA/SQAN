@@ -82,7 +82,7 @@ router.get('/subject/:q', function(req, res, next) {
 router.get('/calendar', function(req, res, next) {
 
     let d = new Date();
-    d.setDate(d.getDate() - 360);
+    d.setDate(d.getDate() - 720);
     db.Exam.find(
         {
             istemplate: false,

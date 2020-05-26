@@ -111,6 +111,21 @@ router.get('/:qckeyword', jwt({secret: config.express.jwt.pub}), common.has_role
 });
 
 
+//single update
+router.patch('/update/:id', jwt({secret: config.express.jwt.pub}), common.has_role("admin"), function(req, res, next) {
+
+    db.QCkeyword.findById(req.params.id).exec(function(err, doc){
+      console.log(doc);
+      if(err) return callback(err);
+      doc.modality = req.body.modality;
+      doc.skip = req.body.skip;
+      doc.custom = req.body.custom;
+      doc.save();
+      res.json({status: "ok", msg: `${doc.key} updated`});
+    });
+
+});
+
 //bulk update
 router.patch('/', jwt({secret: config.express.jwt.pub}), common.has_role("admin"), function(req, res, next) {
     async.each(req.body, function(kk, callback) {
