@@ -19,8 +19,8 @@
             <v-btn block @click="begin_iucas" class="elevation-8" color="primary"><v-img src="../assets/trident.png" max-width="15px" class="mx-1"/> Login with IU CAS</v-btn>
             <v-divider class="mb-2 mt-2" v-show="mode === 'demo'"></v-divider>
             <v-btn block @click="guestLogin" class="elevation-8" color="primary" v-show="mode === 'demo'"><v-icon class="mx-1">mdi-account-outline</v-icon> Guest Login</v-btn>
-            <v-divider class="my-2"></v-divider>
-            <v-btn block @click="showForm = true" v-show="!showForm" class="elevation-8" color="primary"><v-icon class="mx-1">mdi-account</v-icon> User Login</v-btn>
+            <v-divider class="my-2" v-show="mode !== 'production'"></v-divider>
+            <v-btn block @click="showForm = true" v-show="!showForm && mode !== 'production'" class="elevation-8" color="primary"><v-icon class="mx-1">mdi-account</v-icon> User Login</v-btn>
 
             <v-form @submit.prevent="userLogin" v-show="showForm">
             <v-card class="elevation-12">
