@@ -128,30 +128,37 @@ router.beforeEach((to, from, next) => {
 
   if (to.matched.some(record => record.meta.requiresAuth)) {
     let role = localStorage.getItem('role');
-    // let jwt_exp = localStorage.getItem('jwt_exp') || (Date.now()) / 1000;
-    // let now = (Date.now()) / 1000 + 600;
+    let jwt_exp = localStorage.getItem('jwt_exp') || (Date.now()) / 1000;
+    let now = (Date.now()) / 1000 + 600;
+
 
     console.log("In router, role is set to", role);
-    // console.log("In router, jwt_exp is set to", jwt_exp);
-    // console.log("In router, jwt expiration is ", (now > jwt_exp));
+    console.log("In router, jwt_exp is set to", jwt_exp);
+    console.log("In router, jwt expiration is ", (now > jwt_exp));
+    if(now > jwt_exp) {
+      return next({
+        path: '/signin',
+
+      })
+    }
     if (typeof (role) === 'undefined' || role === 'undefined' || !role ) {
-      next({
+      return next({
         path: '/signin',
 
       })
     } else {
       if (to.matched.some(record => record.meta.is_admin)) {
         if (store.getters.hasRole('admin')) {
-          next()
+          return next()
         } else {
-          next(false)
+          return next(false)
         }
       } else {
-        next()
+        return next()
       }
     }
   } else {
-    next()
+    return next()
   }
 });
 

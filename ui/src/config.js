@@ -1,8 +1,8 @@
 const exports = {
-  mode: 'demo',
-  api: 'https://sqan-test.sca.iu.edu/api/qc',
+  mode: 'production',
+  api: 'https://rady.sca.iu.edu/api/qc',
   iucas_url: 'https://cas.iu.edu/cas/login',
-  cas_return: 'http://localhost:8080/signin',
+  cas_return: 'https://rady.sca.iu.edu/signin',
   default_redirect: '/signin',
   upload_enabled: false
 };

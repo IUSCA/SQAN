@@ -3,7 +3,7 @@
 
      <v-dialog
              v-model="req_dialog"
-             max-width="500"
+             max-width="800"
      >
     <template v-slot:activator="{ on }">
       <v-btn
@@ -63,10 +63,12 @@
             return {
                 report: [],
                 fields: [
-                    {text: 'Frame #', value: 'frame'},
-                    {text: 'Start (s)', value: 'start_time'},
-                    {text: 'End (s)', value: 'end_time'},
-                    {text: 'Duration (s)', value: 'duration'}
+                  {text: 'Frame #', value: 'frame'},
+                  {text: 'Start (s)', value: 'start_time'},
+                  {text: 'End (s)', value: 'end_time'},
+                  {text: 'Duration (s)', value: 'duration'},
+                  {text: 'Start Time', value: 'start_timestamp'},
+                  {text: 'End Time', value: 'end_timestamp'}
                 ]
             }
         },

@@ -44,7 +44,7 @@ function issue_jwt(user, cb) {
             },
         };
 
-        cb(null, jsonwt.sign(claim, config.express.jwt.key, config.express.sign_opt));
+        cb(null, jsonwt.sign(claim, config.express.jwt.key, config.express.sign_opt), claim.exp);
     })
 };
 

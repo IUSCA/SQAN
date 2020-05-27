@@ -17,8 +17,8 @@
             <v-img src="../assets/sqan_logo_full.png" class="elevation-4" />
             <v-divider class="mb-2 mt-2"></v-divider>
             <v-btn block @click="begin_iucas" class="elevation-8" color="primary"><v-img src="../assets/trident.png" max-width="15px" class="mx-1"/> Login with IU CAS</v-btn>
-            <v-divider class="mb-2 mt-2" v-show="mode == 'demo'"></v-divider>
-            <v-btn block @click="guestLogin" class="elevation-8" color="primary"><v-icon class="mx-1">mdi-account-outline</v-icon> Guest Login</v-btn>
+            <v-divider class="mb-2 mt-2" v-show="mode === 'demo'"></v-divider>
+            <v-btn block @click="guestLogin" class="elevation-8" color="primary" v-show="mode === 'demo'"><v-icon class="mx-1">mdi-account-outline</v-icon> Guest Login</v-btn>
             <v-divider class="my-2"></v-divider>
             <v-btn block @click="showForm = true" v-show="!showForm" class="elevation-8" color="primary"><v-icon class="mx-1">mdi-account</v-icon> User Login</v-btn>
 
@@ -121,6 +121,7 @@ export default {
       let self = this;
       this.login(response);
       self.$store.dispatch('snack', "Login successful");
+      console.log(self.$store.state.auth.jwt_exp);
       setTimeout(() => {
         self.$router.replace({'query': null});
         self.$router.push({path: '/exams'});
@@ -135,6 +136,7 @@ export default {
     }
   },
   mounted() {
+      console.log(this.mode);
     if(this.redirect) {
       console.log("redirect is set, redirect is set to: ",this.redirect);
       localStorage.setItem('redirect', this.redirect);

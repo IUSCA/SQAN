@@ -226,17 +226,17 @@ router.get('/verify', function(req, res, next) {
                         if(!user) {
                             common.create_user(uid, next, function(err, _user) {
                                 if(err) return next(err);
-                                common.issue_jwt(_user, function (err, jwt) {
+                                common.issue_jwt(_user, function (err, jwt, jwt_exp) {
                                     if (err) return next(err);
-                                    res.json({jwt: jwt, uid: uid, role: _user.primary_role, roles: _user.roles});
+                                    res.json({jwt: jwt, uid: uid, role: _user.primary_role, roles: _user.roles, jwt_exp: jwt_exp});
                                 });
                             })
                         } else {
                             user.lastLogin = Date.now();
                             user.save();
-                            common.issue_jwt(user, function (err, jwt) {
+                            common.issue_jwt(user, function (err, jwt, jwt_exp) {
                                 if (err) return next(err);
-                                res.json({jwt: jwt, uid: uid, role: user.primary_role, roles: user.roles});
+                                res.json({jwt: jwt, uid: uid, role: user.primary_role, roles: user.roles, jwt_exp: jwt_exp});
                             });
                         }
                     });

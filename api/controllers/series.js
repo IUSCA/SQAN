@@ -625,6 +625,8 @@ router.get('/frame_report/:series_id', function(req, res, next) {
                             let frame_stats = {
                                 frame: f+1,
                                 start_time: start_time.diff(series_start, 's'),
+                                start_timestamp: start_time,
+                                end_timestamp: end_time,
                                 end_time: end_time.diff(series_start, 's'),
                                 duration: frame_duration / 1000
                             }

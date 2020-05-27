@@ -21,11 +21,9 @@
         let self = this;
         let container = this.$refs.container;
         this.$copyText(this.msg_text, container).then(function (e) {
-          alert('Copied')
           console.log(self.msg_text);
           console.log(e)
         }, function (e) {
-          alert('Can not copy')
           console.log(e)
         })
       }
