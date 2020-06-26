@@ -31,9 +31,10 @@ db.init(function(err) {
 
     process.argv.forEach((val, index) => {console.log(`${index}: ${val}`);});
 
-    var fpath = process.argv[2].toString();
+    var fpath = null
     var studyName = null;
     var subject = null;
+    if(process.argv[2] !== undefined) fpath = process.argv[2].toString();
     if(process.argv[3] !== undefined) studyName = process.argv[3].toString();
     if(process.argv[4] !== undefined) subject = process.argv[4].toString();
 
@@ -135,7 +136,7 @@ function process_instance(change, next) {
             next(err);
         } else {
             //console.time('processQC');
-            incoming(json, false, function(){
+            incoming(json, false, null, null, function(){
                 request.del(config.orthanc.url+change.Path).on('response', function(res) {
                     //console.timeEnd('processQC');
                     next();
