@@ -383,7 +383,7 @@ exports.parseMeta = function(h) {
         meta.template = true;
     }
 
-    h["StationName"] = h.DeviceSerialNumber;
+    // h["StationName"] = h.DeviceSerialNumber;
 
     //TODO.. it looks like Radiologist won't be able to consistently use ^ as version number separator.
     //we've discussed an alternative to strip all trailing number instead.. but I need to discuss a bit

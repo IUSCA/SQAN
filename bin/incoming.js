@@ -181,6 +181,7 @@ function incoming(tags, fromFile, studyName, subject, cb) {
                 if(typeof val === 'object' && Array.isArray(val) && val.length === 1){
                     val = val[0]
                 }
+                if(tag.Name == 'StationName') console.log(tag);
                 if(tag.Name == '' || tag.Name === undefined) console.log(tag);
                 h[tag.Name] = val;
 
@@ -215,7 +216,9 @@ function incoming(tags, fromFile, studyName, subject, cb) {
                 //parse some special fields
                 //if these fields fails to set, rest of the behavior is undefined.
                 //according to john, however, iibisid and subject should always be found
+
                 var meta = qc_func.instance.parseMeta(h);
+
                 h.qc_iibisid = meta.iibisid;
                 h.qc_subject = meta.subject;
                 if(subject && studyName) {
@@ -235,6 +238,8 @@ function incoming(tags, fromFile, studyName, subject, cb) {
                 var esindex = qc_func.instance.composeESIndex(h);
                 logger.info(h.qc_iibisid+" subject:"+h.qc_subject+" esindex:"+esindex+" "+h.SOPInstanceUID);
                 h.qc_esindex = esindex;
+
+                console.log(`StationName is set to ${h.StationName}`);
                 next();
             } catch(err) {
                 next(err);
@@ -428,6 +433,8 @@ function incoming(tags, fromFile, studyName, subject, cb) {
 
         //make sure we know about this research
         function(next) {
+
+            console.log(`StationName is set to ${h.StationName}`);
             //TODO radio_tracer should always be set for CT.. right? Should I validate?
             var radio_tracer = null;
             if(h.RadiopharmaceuticalInformationSequence) {

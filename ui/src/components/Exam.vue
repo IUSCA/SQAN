@@ -42,6 +42,7 @@
       :items="filtered_series"
       :headers="fields"
       @click:row="openSeries"
+      sort-by="SeriesNumber"
     >
       <template v-slot:item.qc1_state="{ item }">
         <span v-if="item.deprecated_by === null || deprecated === 'all'">
@@ -102,6 +103,7 @@
             series.push({series_desc: m, qc1_state: 'missing', deprecated_by: null})
           })
         }
+
         return series;
       }
     },
@@ -115,16 +117,19 @@
         template_series: {},
         fields: [{
           text: 'Series Description',
-          value: 'series_desc'
+          value: 'series_desc',
+          sortable: true,
         }, {
           text: 'QC1 State',
           value: 'qc1_state'
         }, {
           text: 'Series Number',
-          value: 'SeriesNumber'
+          value: 'SeriesNumber',
+          sortable: true,
         }, {
           text: 'Image Count',
-          value: 'qc.series_image_count'
+          value: 'qc.series_image_count',
+          sortable: true,
         }, {
           text: 'Template Used',
           value: 'qc.template_id'

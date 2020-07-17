@@ -183,6 +183,7 @@ exports.isExcluded = function(modality, series_desc) {
     switch(modality) {
     case "MR":
         if(series_desc == "MoCoSeries") return true;
+        if(series_desc == "localizer") return true;
         if(series_desc == "<MPR Collection>") return true;
         if(series_desc == "Perfusion_Weighted") return true;
         if(series_desc.endsWith("_ADC")) return true;
