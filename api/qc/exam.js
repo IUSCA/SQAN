@@ -110,7 +110,7 @@ function qc_exam(exam_id,cb) {
                     if (typeof s.qc === 'object' && s.qc !== null) {
                         qc.qced_series++;
 
-                        if (s.deprecated_by === null) { // only count non-deprecated series for exam-level qc errors
+                        if (s.deprecated_by === null && s.series_desc !== 'localizer') { // only count non-deprecated and non-localizer series for exam-level qc errors
 
                             if (s.qc1_state == "fail") {
                                 qc.series_failed++;

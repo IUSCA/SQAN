@@ -5,7 +5,8 @@
        v-model="req_dialog"
        max-width="500"
      >
-    <template v-slot:activator="{ on }" v-if="$store.getters.hasRole('admin')">
+         {{canQC}}
+    <template v-slot:activator="{ on }" v-show="canQC">
       <v-btn
         color="orange lighten-2"
         dark
@@ -97,7 +98,8 @@
         req_dialog: false,
         override: null,
         failures: false,
-        templates: []
+        templates: [],
+        canQC: false,
       }
     },
     computed: {
@@ -133,6 +135,39 @@
       }
     },
     methods: {
+
+      checkQC() {
+        let research_id = '';
+
+        if(this.mode === 'research') {
+          research_id = this.research._id;
+        }
+
+        if(this.mode === 'exam') {
+          research_id = this.exam.research_id._id;
+        }
+
+        if(this.mode === 'series') {
+          research_id = this.series.exam_id.research_id._id;
+        }
+
+        let self = this;
+
+        let url = `${this.$config.api}/research/canqc/${research_id}`;
+
+        this.$http.get(url)
+          .then(res => {
+            console.log("CHECKING CanQC");
+            console.log(res.data);
+            if(res.data.status !== undefined && res.data.status == 'ok') {
+              console.log("YES YOU CAN QC!");
+              self.canQC = true;
+            }
+          }, err=> {
+            console.log(err)
+          });
+      },
+
       confirmReQC() {
 
         this.req_dialog = false;
@@ -199,6 +234,7 @@
     mounted() {
       console.log(this.series);
       this.getTemplates();
+      this.checkQC();
     }
   }
 </script>

@@ -22,7 +22,7 @@
     </div>
     <v-divider></v-divider>
     <v-divider></v-divider>
-    <div v-if="!selected_series">
+    <div>
     <Clipboard :message="direct_link"></Clipboard>
     <ReQC class="mx-1" :exam="exam.exam"></ReQC>
     <SetAsTemplate class="mx-1" :exam="exam.exam" v-if="!exam.exam.converted_to_template"></SetAsTemplate>
@@ -98,7 +98,7 @@
           });
         }
 
-        if(this.exam.exam.qc.series_missing.length) {
+        if(this.exam.exam.qc !== undefined && this.exam.exam.qc.series_missing.length) {
           this.exam.exam.qc.series_missing.forEach(m => {
             series.push({series_desc: m, qc1_state: 'missing', deprecated_by: null})
           })

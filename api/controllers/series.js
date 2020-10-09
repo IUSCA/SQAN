@@ -466,6 +466,9 @@ router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub}), function(
 router.post('/reqcallseries/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
 
     console.log("ReQ-All exam "+req.params.exam_id)
+    console.log("Using template_id "+req.body.template_id);
+
+    var override_template_id = req.body.template_id;
 
     db.Exam.findById(req.params.exam_id)
         .populate('research_id')
@@ -473,12 +476,16 @@ router.post('/reqcallseries/:exam_id', jwt({secret: config.express.jwt.pub}), fu
         if(err) return next(err);
         if(!exam) return res.status(404).json({message: "can't find specified exam"});
         //make sure user has access to this research
+        exam.override_template_id = override_template_id;
+        exam.save();
         db.Acl.can(req.user, 'qc', exam.research_id.IIBISID, function(can) {
             if(!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:"+exam.research_id.IIBISID});
             //find all serieses user specified
             db.Series.find({exam_id: req.params.exam_id}).exec(function(err, serieses) {
                 if(err) return next(err);
                 var total_modified = 0;
+                console.log(`FOUND ${serieses.length} series to reqc`);
+                
                 async.forEach(serieses, function(series, next_series) {
                     db.Image.update({series_id: series._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
                         if(err) return next(err);
@@ -497,6 +504,7 @@ router.post('/reqcallseries/:exam_id', jwt({secret: config.express.jwt.pub}), fu
                             date: new Date(), //should be set by default, but UI needs this right away
                             detail: detail,
                         };
+
                         db.Series.update({_id: series._id}, {$push: { events: event }, qc1_state:"re-qcing", $unset: {qc: 1}}, function(err){
                             if(err) next(err);
                             next_series();
@@ -516,6 +524,9 @@ router.post('/reqcallseries/:exam_id', jwt({secret: config.express.jwt.pub}), fu
 router.post('/reqcerroredseries/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
 
     console.log("ReQ-failed exam "+req.params.exam_id)
+    console.log("Using template_id "+req.body.template_id);
+
+    var override_template_id = req.body.template_id;
 
     db.Exam.findById(req.params.exam_id)
         .populate('research_id')
@@ -523,6 +534,8 @@ router.post('/reqcerroredseries/:exam_id', jwt({secret: config.express.jwt.pub})
         if(err) return next(err);
         if(!exam) return res.status(404).json({message: "can't find specified exam"});
         //make sure user has access to this research
+        exam.override_template_id = override_template_id;
+        exam.save();
         db.Acl.can(req.user, 'qc', exam.research_id.IIBISID, function(can) {
             if(!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:"+exam.research_id.IIBISID});
             //find all serieses user specified

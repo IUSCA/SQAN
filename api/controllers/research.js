@@ -118,6 +118,21 @@ router.get('/summary/:id', function(req, res, next) {
 
 });
 
+
+router.get('/canqc/:research_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+  db.Research.findById(req.params.research_id)
+    .exec(function (err, research) {
+      if (err) return next(err);
+      if (!research) return res.status(404).json({message: "can't find specified research"});
+      //make sure user has access to this research
+      db.Acl.can(req.user, 'qc', research.IIBISID, function (can) {
+        if (!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:" + research.IIBISID});
+        res.json({status: 'ok'})
+      })
+    });
+});
+
+
 //rerun QC
 router.post('/reqc/:mode/:research_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
 

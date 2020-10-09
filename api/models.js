@@ -160,7 +160,7 @@ var seriesSchema = mongoose.Schema({
     override_template_id: {type: mongoose.Schema.Types.ObjectId, index: true},  // template_id to use for qc
 
     isexcluded: Boolean,
-    primary_image: {type: mongoose.Schema.Types.ObjectId, index: true},
+    primary_image: {type: mongoose.Schema.Types.ObjectId, index: true, ref: 'Image'},
 
     qc: mongoose.Schema.Types.Mixed, //has to be Mixed so that mongoose will let me set to null
     qc1_state: String, //(null), fail, autopass, accept, reject

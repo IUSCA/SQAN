@@ -24,8 +24,33 @@ var customs = {
             if(!check_set(k, v, tv, qc)) return;
             var fv = convertToFloat(v, k);
             var ftv = convertToFloat(tv, k);
-            check_absolute_diff(k, fv, ftv, qc, 'errors', 3);
+            return check_absolute_diff(k, fv, ftv, qc, 'errors', 3);
         },
+        "p_CoilString" : function(k, v, tv, qc) {
+            if(!check_set(k, v, tv, qc)) return;
+            if(tv.includes("HEA/HEP")) {
+                return check_equal(k, v, tv, qc);
+            } else {
+                if(tv.includes('HE')) {
+                    if(!v.includes('HE')) {
+
+                        return qc.errors.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "value doesn't match with template value"});
+                    } else {
+                        return true;
+                    }
+                }
+
+                if(tv.includes('HC')) {
+                    if(!v.includes('HC')) {
+                        return qc.errors.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "value doesn't match with template value"});
+                    } else {
+                        return true;
+                    }
+                }
+
+                return check_equal(k, v, tv, qc);
+            }
+        }
 
     }, common_customs),
 
@@ -191,7 +216,12 @@ exports.match = function(image, template, c_keys, qc, cb_m) {
 
     //compare each field of the template with the corresponding filed in the image
     for(var k in template.headers) {
-        let handler = c_keys.find(ck => ck.key == k);
+
+        // let handler = c_keys.find(ck => ck.key == k);
+        let handler = c_keys[k];
+
+
+
         if(handler === undefined) {
             // console.log(`Unknown key: ${k}`)
             continue;

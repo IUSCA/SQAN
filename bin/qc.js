@@ -13,6 +13,8 @@ var logger = new winston.Logger(config.logger.winston);
 var db = require('../api/models');
 var qc_funcs = require('../api/qc');
 
+
+
 //connect to db and start processing batch indefinitely
 db.init(function(err) {
     run(function(err) {
@@ -35,9 +37,9 @@ function run(cb) {
 
         if(err) return cb(err);
 
-        //logger.info("Un-qc-ed Series retrieved: "+ series.length);
+        logger.info("Un-qc-ed Series retrieved: "+ series.length);
 
-        async.forEach(series,qc_images,function(err) {
+        async.eachLimit(series, 1, qc_images,function(err) {
             if (err) return cb(err);
 
             // update exams reccords
@@ -106,9 +108,18 @@ function qc_images(series,next) {
             },
             function (err) {
               // find template for this series
+              let i_keys = c_keys.reduce(function(map, obj) {
+                    map[obj.key] = obj.val;
+                    return map;
+                }, {});
+
               find_template(series, function (err, template) {
                 if (err) return next(err);
-                if (!template) return next(null, null);
+
+                if (!template) {
+                    logger.info("NO TEMPLATE")
+                    return next(null, null);
+                }
 
                 find_template_primary(template, function (err, primtemplate) {
                   if (err) return next(err);
@@ -119,7 +130,7 @@ function qc_images(series,next) {
                     // db.Image.find({$or: [ {primary_image: primimage._id},{_id:primimage._id}]},function(err,images) {
                     if (err) return next(err);
                     //console.log(`number of images for this series : ${images.length}`);
-                    qc_the_series(images, primimage, primtemplate, c_keys, function (err) {
+                    qc_the_series(images, primimage, primtemplate, i_keys, function (err) {
                       if (err) return next(err);
                       //console.log(images.length + " images have been qc-ed, now aggregating qc for the series "+ primimage.headers.qc_series_desc + " -- " + new Date());
 
@@ -143,18 +154,26 @@ function qc_images(series,next) {
 // ************************** QC functions ********************************//
 
 function qc_the_series(images,primimage,primtemplate,c_keys,cb) {
-    async.each(images, function(image, callback) {
+    var hrstart = process.hrtime()
+    logger.info(`Starting work on ${images.length} images`);
+    async.eachLimit(images, 2000, function(image, callback) {
         qc_one_image(image, primimage, primtemplate, c_keys, function(err) {
             if(err) callback(err);
             callback();
         });
     }, function(err) {
+        var hrend = process.hrtime(hrstart)
+        logger.info('Execution time (hr): %ds %dms', hrend[0], hrend[1] / 1000000)
+        logger.info(`There were ${images.length} images`);
         cb(err);
     })
 };
 
 
 function qc_one_image(image,primimage,primtemplate,c_keys,cb) {
+
+    // var hrstart1 = process.hrtime()
+    // logger.info(`Starting work on image ${image._id}`);
     var qc = {
         template_id: primtemplate.template_id,
         date: new Date(),
@@ -185,6 +204,7 @@ function qc_one_image(image,primimage,primtemplate,c_keys,cb) {
                         //console.log("matching template header "+ templateheader.InstanceNumber+ " with image header " + image.InstanceNumber);
                         qc_funcs.template.match(image,templateheader, c_keys, qc, function(err){
                             if(err) return next(err)
+
                             next();
                         });
                     }
@@ -220,10 +240,14 @@ function qc_one_image(image,primimage,primtemplate,c_keys,cb) {
 
 
     ], function(err) {
+
         if(err) {
             logger.error(err);
             return cb(err);
         }
+        // var hrend2 = process.hrtime(hrstart1)
+        // logger.info('Saved QC on image after ', hrend2[0], hrend2[1] / 1000000)
+        // logger.info(`Done with image ${image._id}`);
         cb();
     });
 }
@@ -231,6 +255,7 @@ function qc_one_image(image,primimage,primtemplate,c_keys,cb) {
 function find_template(series, cb) {
 
     if (series.override_template_id) {
+        logger.info("Series level override is set, using that");
         get_override_template(series,cb)
 
     } else {
@@ -253,33 +278,59 @@ function get_override_template(series,cb) {
 function get_mostrecent_template(series, cb) {
     //find the research_id by looking in the exam doc
     db.Exam
-    .findById(series.exam_id, 'research_id')
+    .findById(series.exam_id)
     .exec(function(err, exam) {
     if(err) return cb(err);
+    logger.info("GETTING MOST RECENT TEMPLATE");
     if(!exam) {
         logger.info("couldn't find such exam: "+series.exam_id);
         return cb(null);
     }
-    db.Exam.find({"research_id":exam.research_id, "istemplate":true})
-        .sort({"StudyTimestamp":-1})  //.sort('-date')
-        .exec(function(err,texams) {
-            if (err) return cb(err);
-            //console.log(texams.length + " template exams retrieved for research_id "+exam.research_id);
-            if (!texams || texams.length == 0) {
-                logger.info("couldn't find any exam templates for series:"+series._id+" and research_id:"+exam.research_id);
-                return update_qc1(series,null,cb);
-            } else {
-                db.Template.findOne({
-                    exam_id: texams[0]._id,
-                    series_desc: series.series_desc,
-                    deprecated_by: null,
-                    updatedAt: {$lt: new Date(new Date().getTime() - 1000 * 30)}
-                },function(err,temp) {
-                    if (err) return cb(err);
-                    return update_qc1(series,temp,cb);
-                })
-            }
-        })
+    logger.info(exam);
+    if (exam.override_template_id) {
+        logger.info("Exam level template override is set, looking for series template in template exam");
+        db.Exam.findOne({_id:exam.override_template_id, "istemplate":true})
+          .exec(function(err,texam) {
+              if (err) return cb(err);
+              //console.log(texams.length + " template exams retrieved for research_id "+exam.research_id);
+              if (!texam) {
+                  logger.info("couldn't find any exam templates for series:"+series._id+" and research_id:"+exam.research_id);
+                  return update_qc1(series,null,cb);
+              } else {
+                  db.Template.findOne({
+                      exam_id: texam._id,
+                      series_desc: series.series_desc,
+                      deprecated_by: null,
+                      updatedAt: {$lt: new Date(new Date().getTime() - 1000 * 30)}
+                  },function(err,temp) {
+                      if (err) return cb(err);
+                      return update_qc1(series,temp,cb);
+                  })
+              }
+          })
+    } else {
+        logger.info("Exam level override is NOT set");
+        db.Exam.find({"research_id":exam.research_id, "istemplate":true})
+          .sort({"StudyTimestamp":-1})  //.sort('-date')
+          .exec(function(err,texams) {
+              if (err) return cb(err);
+              //console.log(texams.length + " template exams retrieved for research_id "+exam.research_id);
+              if (!texams || texams.length == 0) {
+                  logger.info("couldn't find any exam templates for series:"+series._id+" and research_id:"+exam.research_id);
+                  return update_qc1(series,null,cb);
+              } else {
+                  db.Template.findOne({
+                      exam_id: texams[0]._id,
+                      series_desc: series.series_desc,
+                      deprecated_by: null,
+                      updatedAt: {$lt: new Date(new Date().getTime() - 1000 * 30)}
+                  },function(err,temp) {
+                      if (err) return cb(err);
+                      return update_qc1(series,temp,cb);
+                  })
+              }
+          })
+    }
     });
 }
 

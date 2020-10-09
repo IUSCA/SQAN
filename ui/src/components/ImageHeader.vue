@@ -54,11 +54,24 @@
         },
         computed: {
             filtered_headers: function() {
-              if(!this.errOnly) return this.img_header;
+              let keys = [];
+              this.img.qc.errors.forEach(qe => {
+                if(qe.type === 'not_set') {
+                  keys.push({
+                    key: qe.k,
+                    value: ''
+                  })
+                }
+              });
 
-              return this.img_header.filter( h => {
+              // always show missing keys
+
+              if(!this.errOnly) return keys.concat(this.img_header);
+
+              let err_only = this.img_header.filter( h => {
                 return (h.key in this.qc_errors || h.key in this.qc_warnings);
               })
+              return keys.concat(err_only);
             },
             img_header: function() {
                 let self = this;

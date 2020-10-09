@@ -87,7 +87,7 @@
                 Template Used
               </th>
               <td>
-                <TemplateBadge :id="series.series.qc.template_id"></TemplateBadge>
+                <TemplateBadge :id="series.series.qc.template_id" v-if="series.series.qc !== undefined"></TemplateBadge>
               </td>
             </tr>
             <tr>
