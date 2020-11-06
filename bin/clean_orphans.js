@@ -57,6 +57,5 @@ db.init(function(err) {
             })
         });
     })
-
-
+    
 })

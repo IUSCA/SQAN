@@ -11,7 +11,7 @@ var config = require('../../config');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
 
-router.get('/:image_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.get('/:image_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
     //limit to admin for now (in the future allow normal user with iibisid auth)
     //if(!~req.user.scopes.dicom.indexOf('admin')) return res.status(401).end();
 

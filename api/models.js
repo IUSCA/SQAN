@@ -3,7 +3,12 @@
 //contrib
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
+mongoose.set('useNewUrlParser', true);
+mongoose.set('useFindAndModify', false);
+mongoose.set('useCreateIndex', true);
+mongoose.set('useUnifiedTopology', true);
 const winston = require('winston');
+const crypto = require('crypto');
 
 //mine
 const config = require('../config');
@@ -155,7 +160,7 @@ var seriesSchema = mongoose.Schema({
     override_template_id: {type: mongoose.Schema.Types.ObjectId, index: true},  // template_id to use for qc
 
     isexcluded: Boolean,
-    primary_image: {type: mongoose.Schema.Types.ObjectId, index: true},
+    primary_image: {type: mongoose.Schema.Types.ObjectId, index: true, ref: 'Image'},
 
     qc: mongoose.Schema.Types.Mixed, //has to be Mixed so that mongoose will let me set to null
     qc1_state: String, //(null), fail, autopass, accept, reject
@@ -273,7 +278,19 @@ var userSchema = mongoose.Schema({
     email: String,
     active: {type: Boolean, default: true},
     prefs: mongoose.Schema.Types.Mixed,
+    hash: String,
+    salt: String,
 });
+
+userSchema.methods.setPassword = function(password) {
+    this.salt = crypto.randomBytes(16).toString('hex');
+    this.hash = crypto.pbkdf2Sync(password, this.salt, 10000, 512, 'sha512').toString('hex');
+};
+
+userSchema.methods.validatePassword = function(password) {
+    const hash = crypto.pbkdf2Sync(password, this.salt, 10000, 512, 'sha512').toString('hex');
+    return this.hash === hash;
+};
 
 exports.User  = mongoose.model('User', userSchema);
 
@@ -406,3 +423,35 @@ aclSchema.statics.getCan = function(user, action, cb) {
 exports.Acl = mongoose.model('Acl', aclSchema);
 
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+var ingestSchema = mongoose.Schema({
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+    user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+    createDate: { type: Date, default: Date.now },
+    path: String,
+    studyname: String,
+    subject: String,
+    status: String,
+    files_ingested: Number
+});
+
+exports.Ingest  = mongoose.model('Ingest', ingestSchema);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+var qckeywordSchema = mongoose.Schema({
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+    key: String,
+    skip: {type: Boolean,default:false},
+    custom: {type: Boolean,default:false},
+    modality: String,
+},{timestamps: {createdAt: 'createdAt', updatedAt: 'updatedAt'}, strict: false});
+
+
+exports.QCkeyword  = mongoose.model('QCkeyword', qckeywordSchema);

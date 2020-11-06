@@ -5,6 +5,7 @@ var express = require('express');
 var router = express.Router();
 var winston = require('winston');
 var jwt = require('express-jwt');
+var jsonwt = require('jsonwebtoken');
 var async = require('async');
 
 //mine
@@ -15,7 +16,7 @@ var db = require('../models');
 
 
 //return list of all users - no ACL
-router.get('/all', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.get('/all', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
     db.User.find({}).exec(function(err, users) {
         if(err) return next(err);
         logger.info(`Fetched list of ${users.length} users`);
@@ -24,7 +25,7 @@ router.get('/all', jwt({secret: config.express.jwt.pub}), function(req, res, nex
 });
 
 //create user
-router.post('/', jwt({secret: config.express.jwt.pub}), common.has_role("admin"), function(req, res, next) {
+router.post('/', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), common.has_role("admin"), function(req, res, next) {
     common.create_user(req.body.username, function(err, _user) {
         if(err) return next(err);
         if(!_user) res.sendStatus(404);
@@ -38,19 +39,22 @@ router.post('/', jwt({secret: config.express.jwt.pub}), common.has_role("admin")
 });
 
 //get self
-router.get('/self', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.get('/self', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
     db.User.findOne({username: req.user.profile.username}).exec(function(err, _user) {
         if(err) return next(err);
         if(!_user) res.sendStatus(404);
-        db.Group.getUserGroups(_user, function(err, gids) {
-            console.log(gids);
-            res.json({'user':_user, 'groups': gids});
+        db.Group.find({members: _user._id}, function(err, _groups) {
+          if(err) return next(err, null);
+          let groups = _groups.map(g => {
+            return {name: g.name, _id: g._id}
+          })
+          res.json({'user':_user, 'groups': groups});
         });
     });
 });
 
 //update self
-router.patch('/self', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.patch('/self', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
     db.User.findOne({username: req.user.profile.username}).exec(function(err, _user) {
         if(err) return next(err);
         if(!_user) res.sendStatus(404);
@@ -71,7 +75,7 @@ router.patch('/self', jwt({secret: config.express.jwt.pub}), function(req, res, 
 });
 
 //get single user
-router.get('/:id', jwt({secret: config.express.jwt.pub}), common.has_role("admin"), function(req, res, next) {
+router.get('/:id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), common.has_role("admin"), function(req, res, next) {
     db.User.findById(req.params.id).exec(function(err, _user) {
         if(err) return next(err);
         if(!_user) res.sendStatus(404);
@@ -81,7 +85,7 @@ router.get('/:id', jwt({secret: config.express.jwt.pub}), common.has_role("admin
 
 
 //update user
-router.patch('/:id', jwt({secret: config.express.jwt.pub}), common.has_role("admin"), function(req, res, next) {
+router.patch('/:id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), common.has_role("god"), function(req, res, next) {
     db.User.findById(req.params.id).exec(function(err, _user) {
         if(err) return next(err);
         if(!_user) res.sendStatus(404);
@@ -98,7 +102,7 @@ router.patch('/:id', jwt({secret: config.express.jwt.pub}), common.has_role("adm
 });
 
 //delete user
-router.delete('/:id', jwt({secret: config.express.jwt.pub}), common.has_role("admin"), function(req, res, next) {
+router.delete('/:id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), common.has_role("god"), function(req, res, next) {
     db.User.findByIdAndRemove(req.params.id).exec(function(err, _user) {
         if(err) return next(err);
         if(!_user) res.sendStatus(404);
@@ -106,6 +110,22 @@ router.delete('/:id', jwt({secret: config.express.jwt.pub}), common.has_role("ad
         res.json(_user);
     });
 });
+
+
+//sudo as user
+router.get('/spoof/:id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), common.has_role('god'), function(req, res, next) {
+  db.User.findById(req.params.id).exec(function(err, _user) {
+    if(err) return next(err);
+    if(!_user) return res.status('404').json({"msg":"Requested user not found"});
+
+    common.issue_jwt(_user, function (err, jwt) {
+      if (err) return next(err);
+      var decoded = jsonwt.verify(jwt, config.express.jwt.pub);
+      return res.json({jwt: jwt, uid: _user.username, role: _user.primary_role, jwt_exp: decoded.exp, roles: _user.roles});
+    });
+  })
+})
+
 
 
 module.exports = router;

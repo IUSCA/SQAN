@@ -3,9 +3,12 @@ config
 nohup_*.out
 ui/bower_components
 ui/config.js
+ui/src/config.js
+ui/dist
 bin/barn
 debug
 **/*.log
 barn
 start.sh
 package-lock.json
+mongo

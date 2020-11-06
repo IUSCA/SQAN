@@ -6,6 +6,7 @@ const router = express.Router();
 const winston = require('winston');
 const jwt = require('express-jwt');
 const async = require('async');
+const moment = require('moment');
 var nodemailer = require('nodemailer');
 
 
@@ -15,6 +16,7 @@ const logger = new winston.Logger(config.logger.winston);
 const db = require('../models');
 const qc = require('../qc');
 const common = require('./common');
+const events = require('./event');
 
 //should I store this somewhere common?
 function compose_modalityid(research_detail) {
@@ -120,7 +122,7 @@ function reorg(data) {
 }
 
 //query against all serieses
-router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.get('/query', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
     //lookup iibisids that user has access to (TODO - refactor this to aclSchema statics?)
 
     var where = JSON.parse(req.query.where);
@@ -230,8 +232,7 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
 });
 
 
-
-router.get('/id/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.get('/id/:series_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
     //first load the series
     db.Series.findById(req.params.series_id)
     .populate({
@@ -281,8 +282,7 @@ router.get('/id/:series_id', jwt({secret: config.express.jwt.pub}), function(req
     })
 });
 
-
-router.post('/comment/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.post('/comment/:series_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
     db.Series.findById(req.params.series_id)
         .populate({
             path: 'exam_id',
@@ -310,7 +310,7 @@ router.post('/comment/:series_id', jwt({secret: config.express.jwt.pub}), functi
     });
 });
 
-router.post('/qcstate/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.post('/qcstate/:series_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
     db.Series.findById(req.params.series_id)
         .populate({
             path: 'exam_id',
@@ -355,8 +355,7 @@ router.post('/qcstate/:series_id', jwt({secret: config.express.jwt.pub}), functi
     });
 });
 
-
-router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.post('/template/:series_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
     db.Series.findById(req.params.series_id)
         .populate({
             path: 'exam_id',
@@ -366,6 +365,8 @@ router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), funct
         })
         .exec(function(err, series) {
         if(err) return next(err);
+        console.log("WTF");
+        if(!series) console.log("CANT FIND SERIES");
         if(!series) return res.status(404).json({message: "can't find specified series"});
         //make sure user has access to this series
         db.Acl.can(req.user, 'qc', series.exam_id.research_id.IIBISID, function(can) {
@@ -414,7 +415,7 @@ router.post('/template/:series_id', jwt({secret: config.express.jwt.pub}), funct
     });
 });
 
-router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
 
     console.log("ReQ series_id "+req.params.series_id)
 
@@ -462,9 +463,12 @@ router.post('/reqc/:series_id', jwt({secret: config.express.jwt.pub}), function(
     });
 });
 
-router.post('/reqcallseries/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.post('/reqcallseries/:exam_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
 
     console.log("ReQ-All exam "+req.params.exam_id)
+    console.log("Using template_id "+req.body.template_id);
+
+    var override_template_id = req.body.template_id;
 
     db.Exam.findById(req.params.exam_id)
         .populate('research_id')
@@ -472,12 +476,16 @@ router.post('/reqcallseries/:exam_id', jwt({secret: config.express.jwt.pub}), fu
         if(err) return next(err);
         if(!exam) return res.status(404).json({message: "can't find specified exam"});
         //make sure user has access to this research
+        exam.override_template_id = override_template_id;
+        exam.save();
         db.Acl.can(req.user, 'qc', exam.research_id.IIBISID, function(can) {
             if(!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:"+exam.research_id.IIBISID});
             //find all serieses user specified
             db.Series.find({exam_id: req.params.exam_id}).exec(function(err, serieses) {
                 if(err) return next(err);
                 var total_modified = 0;
+                console.log(`FOUND ${serieses.length} series to reqc`);
+
                 async.forEach(serieses, function(series, next_series) {
                     db.Image.update({series_id: series._id}, {$unset: {qc: 1}}, {multi: true}, function(err, affected){
                         if(err) return next(err);
@@ -496,22 +504,29 @@ router.post('/reqcallseries/:exam_id', jwt({secret: config.express.jwt.pub}), fu
                             date: new Date(), //should be set by default, but UI needs this right away
                             detail: detail,
                         };
+
                         db.Series.update({_id: series._id}, {$push: { events: event }, qc1_state:"re-qcing", $unset: {qc: 1}}, function(err){
                             if(err) next(err);
                             next_series();
                         });
                     });
                 }, function(err) {
-                    res.json({message: "Re-running QC on "+serieses.length+ " series and "  +total_modified+" images "});
+                    common.publish({id: exam._id, status: 'reqc all'}, exam._id, function(err) {
+                      if(err) return next(err);
+                      res.json({message: "Re-running QC on " + serieses.length + " series and " + total_modified + " images "});
+                  })
                 });
             });
         });
     });
 });
 
-router.post('/reqcerroredseries/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.post('/reqcerroredseries/:exam_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
 
     console.log("ReQ-failed exam "+req.params.exam_id)
+    console.log("Using template_id "+req.body.template_id);
+
+    var override_template_id = req.body.template_id;
 
     db.Exam.findById(req.params.exam_id)
         .populate('research_id')
@@ -519,6 +534,8 @@ router.post('/reqcerroredseries/:exam_id', jwt({secret: config.express.jwt.pub})
         if(err) return next(err);
         if(!exam) return res.status(404).json({message: "can't find specified exam"});
         //make sure user has access to this research
+        exam.override_template_id = override_template_id;
+        exam.save();
         db.Acl.can(req.user, 'qc', exam.research_id.IIBISID, function(can) {
             if(!can) return res.status(401).json({message: "you are not authorized to QC IIBISID:"+exam.research_id.IIBISID});
             //find all serieses user specified
@@ -549,7 +566,10 @@ router.post('/reqcerroredseries/:exam_id', jwt({secret: config.express.jwt.pub})
                         });
                     });
                 }, function(err) {
+                  common.publish({id: exam._id, status: 'reqc errors'}, exam._id, function(err) {
+                    if(err) return next(err);
                     res.json({message: "Re-running QC on "+serieses.length+ " errored series and "  +total_modified+" images "});
+                  });
                 });
             });
         });
@@ -557,6 +577,84 @@ router.post('/reqcerroredseries/:exam_id', jwt({secret: config.express.jwt.pub})
 });
 
 
+function get_key(h, ph, k) {
+    let val = h[k];
+    if(val === undefined) val = ph[k];
+    return val;
+}
+
+router.get('/frame_report/:series_id', function(req, res, next) {
+
+    db.Series.findById(req.params.series_id).exec(function(err, series){
+        if(err) next(err);
+
+        console.log("Working on series "+series.series_desc);
+
+        db.Image.findOne({series_id:series._id, primary_image: null})
+            .exec(function(err, p_img){
+
+                let ph = p_img.headers;
+                db.Image.find({series_id:series._id})
+                    .sort('InstanceNumber')
+                    .exec(function(err,images){
+                        let img_0 = images[0].headers;
+                        let img_n = images[images.length-1].headers;
+
+                        let n_frames = parseInt(get_key(img_0, ph, 'NumberOfTimeSlices'));
+                        let n_slices = get_key(img_0, ph, 'NumberOfSlices');
+
+                        // console.log(n_frames, n_slices);
+
+                        let img_expected = n_frames * n_slices;
+                        let img_count = images.length;
+
+
+                        let series_start = moment(get_key(img_0, ph, 'AcquisitionTime'), "HHmmss.S");
+
+                        let end_frame_start = moment(get_key(img_n, ph, 'AcquisitionTime'), "HHmmss.S");
+                        let series_end = end_frame_start.add(get_key(img_n, ph, 'ActualFrameDuration'), 'ms');
+
+                        let total_duration = series_end.diff(series_start, 'ms');
+
+                        // console.log(`${img_count}/${img_expected} images, Start: ${start_time.format('HH:mm:ss.S')}, End: ${end_time.format('HH:mm:ss.S')}`);
+
+                        let results = [];
+                        console.log('frame,start_time,end_time,duration');
+                        let duration = 0;
+                        for(var f = 0; f < n_frames; f++) {
+                            let s0 = f * n_slices;
+                            let sn = s0 + n_slices - 1;
+                            let s0_h = images[s0].headers;
+                            let sn_h = images[sn].headers;
+
+                            let start_time = moment(get_key(s0_h, ph, 'AcquisitionTime'), "HHmmss.S");
+                            let frame_duration = get_key(sn_h, ph, 'ActualFrameDuration');
+
+                            let end_frame_start = moment(get_key(sn_h, ph, 'AcquisitionTime'), "HHmmss.S");
+                            let end_time = end_frame_start.add(frame_duration, 'ms');
+
+                            duration += frame_duration;
+
+                            let frame_stats = {
+                                frame: f+1,
+                                start_time: start_time.diff(series_start, 's'),
+                                start_timestamp: start_time,
+                                end_timestamp: end_time,
+                                end_time: end_time.diff(series_start, 's'),
+                                duration: frame_duration / 1000
+                            }
+                            results.push(frame_stats);
+                        }
+
+                        console.log(`Realtime Duration: ${total_duration/1000} s, Expected: ${duration/1000} s`);
+
+                        res.json(results);
+
+                    })
+            })
+
+    })
+})
 
 module.exports = router;
 

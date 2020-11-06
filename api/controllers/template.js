@@ -12,7 +12,7 @@ var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
 
 //get template head record
-router.get('/head/:template_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.get('/head/:template_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
     //console.log("inside template controller")
     db.Template.findById(req.params.template_id)
     .populate({
@@ -21,7 +21,7 @@ router.get('/head/:template_id', jwt({secret: config.express.jwt.pub}), function
             path: 'research_id'
         }
     })
-    .exec(function(err, template) {            
+    .exec(function(err, template) {
         if(err) return next(err);
         if (!template) return res.status(404).json({message: "no such template:" + req.params.template_id});
         //console.log(template);
@@ -34,7 +34,7 @@ router.get('/head/:template_id', jwt({secret: config.express.jwt.pub}), function
             .sort('AcquisitionNumber InstanceNumber')
             .exec(function(err, templates) {
                 if(err) return next(err);
-                res.json({                    
+                res.json({
                     template: template,
                     templates: templates,
                 });
@@ -44,7 +44,7 @@ router.get('/head/:template_id', jwt({secret: config.express.jwt.pub}), function
 });
 
 //get one template header intance
-router.get('/inst/:inst_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.get('/inst/:inst_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
 
     db.TemplateHeader.findById(req.params.inst_id)
         .populate('primary_image')

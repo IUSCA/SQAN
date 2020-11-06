@@ -17,7 +17,7 @@ var mongoose = require('mongoose');
 
 
 
-router.get('/istemplate', jwt({secret: config.express.jwt.pub}),function(req,res,next) {
+router.get('/istemplate', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}),function(req,res,next) {
     db.Exam.aggregate([
         {$match: {
             istemplate:true
@@ -58,8 +58,9 @@ router.get('/istemplate', jwt({secret: config.express.jwt.pub}),function(req,res
 
 
 // search template's by research_id and group them by exam_id:
-router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
 
+    console.log(`${req.params.exam_id}`);
     var template_instance = {
         date: null,
         exam_id: null,
@@ -71,6 +72,7 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub}), function(r
 
     db.Exam.findById(new mongoose.Types.ObjectId(req.params.exam_id), function(err,texam) {
         if (err) return next(err);
+        if (!texam) return res.json([]);
         template_instance.date = texam.StudyTimestamp;
         template_instance.exam_id = texam._id;
         template_instance.converted_to_template = texam.converted_to_template ? texam.converted_to_template : false;
@@ -125,21 +127,7 @@ router.get('/notemplate', function(req, res, next) {
         if(err) return next(err);
         db.Research.find({_id: {$nin: has_templates}}).exec(function(err, no_templates) {
             if(err) return next(err);
-            let ds = [];
-            async.forEach(no_templates, function(r_nt, cb){
-                db.IIBIS.findOne({iibis_project_id: r_nt.IIBISID}).exec(function (err, _iibis){
-                    if (err) return cb(err);
-                    let rec = {
-                        research: r_nt,
-                        iibis: _iibis
-                    }
-                    ds.push(rec);
-                    cb();
-                });
-            }, function(err) {
-                if(err) return next(err);
-                res.json(ds);
-            })
+            res.json(no_templates);
         })
     })
 });
@@ -147,7 +135,7 @@ router.get('/notemplate', function(req, res, next) {
 // delete a template series
 
 // delete a template series
-router.get('/deleteselected/:template_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.get('/deleteselected/:template_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
 
 
     db.Template.findById(req.params.template_id)
@@ -209,7 +197,7 @@ router.get('/deleteselected/:template_id', jwt({secret: config.express.jwt.pub})
 
 
 // delete a template exam
-router.get('/deleteall/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.get('/deleteall/:exam_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
 
     //console.log(req.user.sub);
     var user = req.user.sub;

@@ -5,16 +5,19 @@ var express = require('express');
 var router = express.Router();
 var winston = require('winston');
 var jwt = require('express-jwt');
+var jsonwt = require('jsonwebtoken');
 var _ = require('underscore');
 var async = require('async');
 var axios = require('axios');
 var nodemailer = require('nodemailer');
+var passport = require('passport');
 
 //mine
 var config = require('../../config');
 var common = require('./common');
 var logger = new winston.Logger(config.logger.winston);
 var db = require('../models');
+require('../passport');
 // var profile = require('../profile');
 
 /**
@@ -28,7 +31,7 @@ router.get('/health', function(req, res, next) {
     res.json({status: 'ok'});
 });
 
-router.get('/config', jwt({secret: config.express.jwt.pub, credentialsRequired: false}), function(req, res) {
+router.get('/config', jwt({secret: config.express.jwt.pub, credentialsRequired: false, algorithms: ['RS256']}), function(req, res) {
     var conf = {
         //service_types: config.service_types,
         //defaults: config.defaults,
@@ -39,13 +42,13 @@ router.get('/config', jwt({secret: config.express.jwt.pub, credentialsRequired: 
 
 
 //See if I'm allowed to do something (to hide/show UI elements mostly)
-router.get('/self/can/:iibisid/:action', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.get('/self/can/:iibisid/:action', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
     db.Acl.can(req.user, req.params.action, req.params.iibisid, function (can) {
         res.json({iibis: req.params.iibisid, action: req.params.action, result: can})
     })
 });
 
-router.get('/acl/:key', jwt({secret: config.express.jwt.pub/*, credentialsRequired: false*/}), function(req, res, next) {
+router.get('/acl/:key', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']/*, credentialsRequired: false*/}), function(req, res, next) {
     if(!~req.user.roles.indexOf('admin')) return next(new Error("admin only"));
     db.Acl.find({}, function(err, acl) {
         if(err) return next(err);
@@ -54,7 +57,7 @@ router.get('/acl/:key', jwt({secret: config.express.jwt.pub/*, credentialsRequir
     });
 });
 
-router.put('/acl/:key', jwt({secret: config.express.jwt.pub/*, credentialsRequired: false*/}), function(req, res, next) {
+router.put('/acl/:key', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']/*, credentialsRequired: false*/}), function(req, res, next) {
     if(!~req.user.roles.indexOf('admin')) return next(new Error("admin only"));
     var update_cnt = 0;
     async.eachOf(req.body, function(acl, iibisid, callback) {
@@ -101,18 +104,93 @@ router.get('/guestLogin', function(req, res, next) {
     db.User.findOne({username: 'guest'}).exec(function(err, user) {
         if(err) return next(err);
         if(!user) {
-            res.sendStatus('403').json({msg: 'Guest user not found'});
+            res.status('403').json({errors: {'username' : 'guest does not exist'}});
             return;
         } else {
             user.lastLogin = Date.now();
             user.save();
             common.issue_jwt(user, function (err, jwt) {
                 if (err) return next(err);
-                res.json({jwt: jwt, uid: user.username, role: user.primary_role});
+                var decoded = jsonwt.verify(jwt, config.express.jwt.pub);
+                res.json({jwt: jwt, uid: user.username, role: user.primary_role, jwt_exp: decoded.exp, roles: ['guest']});
             });
         }
     });
 });
+
+
+
+
+router.post('/userLogin', function(req, res, next) {
+
+    const { body: { user } } = req;
+
+    if(!user.username) {
+        return res.status(422).json({
+            errors: {
+                email: 'is required',
+            },
+        });
+    }
+
+    if(!user.password) {
+        return res.status(422).json({
+            errors: {
+                password: 'is required',
+            },
+        });
+    }
+
+    return passport.authenticate('local', { session: false }, (err, passportUser, info) => {
+
+        if(err) {
+            return next(err);
+        }
+
+
+        if(passportUser) {
+
+            console.log("User found");
+            passportUser.lastLogin = Date.now();
+            passportUser.save();
+            common.issue_jwt(passportUser, function (err, jwt) {
+                if (err) return next(err);
+                console.log(passportUser);
+                var decoded = jsonwt.verify(jwt, config.express.jwt.pub);
+                return res.json({jwt: jwt, uid: passportUser.username, role: passportUser.primary_role, roles: passportUser.roles, jwt_exp: decoded.exp});
+            });
+
+            // const user = passportUser;
+            // user.token = passportUser.generateJWT();
+            //
+            // return res.json({ user: user.toAuthJSON() });
+        } else {
+            return res.status(401).send(info);
+        }
+
+    })(req, res, next);
+});
+
+
+    // db.User.findOne({username: req.body.username}).exec(function(err, user) {
+    //     if(err) return next(err);
+    //     if(!user) {
+    //         res.sendStatus('403').json({msg: 'User not found'});
+    //         return;
+    //     } else {
+    //         if(req.body.password !== config.auth.admin_pass) {
+    //             res.sendStatus('403').json({msg: 'Incorrect password'});
+    //         }
+    //         user.lastLogin = Date.now();
+    //         user.save();
+    //         common.issue_jwt(user, function (err, jwt) {
+    //             if (err) return next(err);
+    //             res.json({jwt: jwt, uid: user.username, role: user.primary_role});
+    //         });
+    //     }
+    // });
+// });
+
 
 
 router.get('/verify', function(req, res, next) {
@@ -122,6 +200,8 @@ router.get('/verify', function(req, res, next) {
     //var casurl = config.iucas.home_url;
     if(!req.headers.referer) return next("Referer not set in header..");
     var casurl = req.headers.referer;
+    console.log(ticket);
+    console.log(casurl);
     axios.get('https://cas.iu.edu/cas/validate?cassvc=IU&casticket='+ticket+'&casurl='+casurl, {
         timeout: 2000,
         // headers: {'Connection': 'close'},
@@ -146,17 +226,17 @@ router.get('/verify', function(req, res, next) {
                         if(!user) {
                             common.create_user(uid, next, function(err, _user) {
                                 if(err) return next(err);
-                                common.issue_jwt(_user, function (err, jwt) {
+                                common.issue_jwt(_user, function (err, jwt, jwt_exp) {
                                     if (err) return next(err);
-                                    res.json({jwt: jwt, uid: uid, role: _user.primary_role});
+                                    res.json({jwt: jwt, uid: uid, role: _user.primary_role, roles: _user.roles, jwt_exp: jwt_exp});
                                 });
                             })
                         } else {
                             user.lastLogin = Date.now();
                             user.save();
-                            common.issue_jwt(user, function (err, jwt) {
+                            common.issue_jwt(user, function (err, jwt, jwt_exp) {
                                 if (err) return next(err);
-                                res.json({jwt: jwt, uid: uid, role: user.primary_role});
+                                res.json({jwt: jwt, uid: uid, role: user.primary_role, roles: user.roles, jwt_exp: jwt_exp});
                             });
                         }
                     });

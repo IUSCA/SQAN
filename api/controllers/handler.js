@@ -14,7 +14,7 @@ var db = require('../models');
 var qc = require('../qc');
 
 //get all handlers
-router.get('/', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.get('/', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
     var query = db.Handler.find();
     query.exec(function(err, rs) {
         if(err) return next(err);
@@ -23,7 +23,7 @@ router.get('/', jwt({secret: config.express.jwt.pub}), function(req, res, next) 
     });
 });
 
-router.post('/update/:handler_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.post('/update/:handler_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
     console.log(req.params.handler_id);
     db.Handler.findById(req.params.handler_id).exec(function (err, handler) {
         if (err) return next(err);

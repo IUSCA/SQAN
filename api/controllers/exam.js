@@ -35,7 +35,7 @@ var common = require('./common');
 */
 
 
-router.post('/comment/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.post('/comment/:exam_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
     db.Exam.findById(req.params.exam_id).populate('research_id').exec(function(err, exam) {
         if(err) return next(err);
         //make sure user has access to this series
@@ -60,7 +60,87 @@ router.post('/comment/:exam_id', jwt({secret: config.express.jwt.pub}), function
     });
 });
 
-router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+
+router.get('/subject/:q', function(req, res, next) {
+    db.Exam.find(
+        {
+            'subject': { "$regex": req.params.q, "$options": "i" }
+        }).populate('research_id').exec(function(err, _docs) {
+            if(err) return next(err);
+            let results = {};
+            async.each(_docs, function(_doc, cb) {
+                if(!(_doc.subject in results)) results[_doc.subject] = { 'subject': _doc.subject, 'exams': []};
+                results[_doc.subject].exams.push(_doc);
+                cb();
+            }, function(err) {
+                if(err) return next(err);
+                res.json(results);
+            })
+        })
+});
+
+//get all exams created/updated in last n days
+router.get('/recent/:days/:datetype', function(req, res, next) {
+    let d = new Date();
+    d.setDate(d.getDate() - parseInt(req.params.days));
+
+    let q = {updatedAt: {$gt: d}}
+    if(req.params.datetype == 'created') {
+        q = {createdAt: {$gt: d}}
+    }
+    
+    db.Series.find(q).distinct('exam_id').exec(function(err, _docs) {
+        if(err) return next(err);
+        db.Exam.find({_id: {$in: _docs}}).exec(function(err, _exams) {
+            if(err) return next(err);
+            res.json(_exams);
+        })
+    })
+});
+
+router.get('/calendar/:year/:month', function(req, res, next) {
+
+    let yy = parseInt(req.params.year);
+    let mm = parseInt(req.params.month) - 1;
+
+    console.log(yy,mm);
+    let dd_s = 1;
+    let dd_e = 28;
+
+    let ds = new Date(yy, mm, dd_s);
+    let de = new Date(yy, mm, dd_e);
+    ds.setDate(ds.getDate() - 7);  //get up to a week before start of month
+    de.setDate(de.getDate() + 10); //get up to a week after end of month
+
+    console.log(ds);
+    console.log(de);
+
+    db.Exam.find(
+      {
+          istemplate: false,
+          $and: [{ StudyTimestamp: {$gt: ds}}, { StudyTimestamp: {$lt: de}}]
+      }).populate('research_id').exec(function(err, _docs) {
+        if(err) return next(err);
+        res.json(_docs);
+    })
+})
+
+
+router.get('/calendar', function(req, res, next) {
+
+    let d = new Date();
+    d.setDate(d.getDate() - 720);
+    db.Exam.find(
+        {
+            istemplate: false,
+            StudyTimestamp: {$gt: d}
+        }).populate('research_id').exec(function(err, _docs) {
+        if(err) return next(err);
+        res.json(_docs);
+    })
+})
+
+router.get('/query', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
 
     //lookup iibisids that user has access to (TODO - refactor this to aclSchema statics?)
     //console.log(req.user);
@@ -133,7 +213,24 @@ router.get('/query', jwt({secret: config.express.jwt.pub}), function(req, res, n
     })
 });
 
-router.post('/template/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+
+router.get('/:exam_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
+    db.Exam.findById(req.params.exam_id).populate('research_id').exec(function(err, exam) {
+        if(err) return next(err);
+        if(!exam) return res.status(404).json({message: "no such exam:"+req.params.exam_id});
+        db.Series.find({exam_id: exam._id}).exec(function(err, serieses) {
+            if(err) return next(err);
+            let data = {
+                exam: exam,
+                series: serieses
+            }
+            res.json(data);
+        });
+    });
+});
+
+
+router.post('/template/:exam_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
 
     db.Exam.findById(req.params.exam_id).populate('research_id').exec(function(err, exam) {
         if(err) return next(err);
@@ -203,7 +300,7 @@ router.post('/template/:exam_id', jwt({secret: config.express.jwt.pub}), functio
 });
 
 
-router.post('/delete/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.post('/delete/:exam_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
 
     db.Exam.findById(req.params.exam_id).populate('research_id').exec(function(err, exam) {
         if(err) return next(err);
@@ -264,7 +361,7 @@ router.post('/delete/:exam_id', jwt({secret: config.express.jwt.pub}), function(
 
 
 
-router.post('/maketemplate/:exam_id', jwt({secret: config.express.jwt.pub}), function(req, res, next) {
+router.post('/maketemplate/:exam_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
 
     db.Exam.findById(req.params.exam_id).populate('research_id').exec(function(err, exam) {
         if(err) return next(err);

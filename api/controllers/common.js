@@ -6,6 +6,19 @@ var config = require('../../config');
 var db = require('../models');
 var logger = new winston.Logger(config.logger.winston);
 
+var SSE = require('express-sse');
+var sse = new SSE([]);
+
+/////////EVENTS///////////////
+function publish(data, id, cb) {
+  console.log("publishing");
+  console.log(data);
+  sse.send(data, id);
+  cb();
+}
+
+exports.publish = publish;
+exports.sse = sse;
 
 /////////AUTH/////////////////
 function issue_jwt(user, cb) {
@@ -31,7 +44,7 @@ function issue_jwt(user, cb) {
             },
         };
 
-        cb(null, jsonwt.sign(claim, config.express.jwt.key, config.express.sign_opt));
+        cb(null, jsonwt.sign(claim, config.express.jwt.key, config.express.sign_opt), claim.exp);
     })
 };
 

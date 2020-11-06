@@ -19,7 +19,7 @@ db.init(function(err) {
     if(err) throw err;
 });
 
-function qc_series(series,images,template,cb) {
+function qc_series(series,images,template,qc_keys,cb) {
 
     //console.log("qc_series: "+series._id + " -- series description " +series.series_desc);
 
@@ -40,6 +40,7 @@ function qc_series(series,images,template,cb) {
         template_field_count: 0,
         template_image_count: undefined,
         missing_count: 0,
+        qc_keys: qc_keys,
 
         template_id: template._id, //template set used to do qc for this series (sampled from one images's qc.template_id)
         date: new Date(), //series-qc time
@@ -60,6 +61,8 @@ function qc_series(series,images,template,cb) {
                 // image has errors
                 if(image.qc.errors.length > 0) {
                     //errored_InstanceNumber.push(image.InstanceNumber);
+                    console.log('FOUND ERRORS');
+                    console.log(image.qc.errors);
                     qc.errored_images++;
                     template_mismatch +=  image.qc.error_stats.template_mismatch;
                     not_set += image.qc.error_stats.not_set;
@@ -154,7 +157,7 @@ function qc_series(series,images,template,cb) {
             series.qc1_state = (qc.errors.length > 0 ? "fail" : "autopass");
             series.qc = qc;
             // events.series(series);
-            db.Series.update({_id: series._id}, {qc: qc, qc1_state: series.qc1_state}, function(err) {
+            db.Series.updateOne({_id: series._id}, {qc: qc, qc1_state: series.qc1_state}, function(err) {
                 if (err) {
                     console.log(err);
                     return cb(err);
@@ -183,6 +186,7 @@ exports.isExcluded = function(modality, series_desc) {
     switch(modality) {
     case "MR":
         if(series_desc == "MoCoSeries") return true;
+        if(series_desc == "localizer") return true;
         if(series_desc == "<MPR Collection>") return true;
         if(series_desc == "Perfusion_Weighted") return true;
         if(series_desc.endsWith("_ADC")) return true;
