@@ -36,6 +36,14 @@
 
             <div v-if="calendarData.length">
 
+
+              <v-checkbox
+                      v-model="refreshCalendar"
+                      label="Auto Refresh (10s)"
+                      color="success"
+                      class="mx-2 my-1 float-right"
+              ></v-checkbox>
+
               <v-toolbar flat color="white">
                 <v-btn fab text small color="grey darken-2" @click="$refs.calendar.prev()">
                   <v-icon small>mdi-chevron-left</v-icon>
@@ -44,6 +52,7 @@
                   <v-icon small>mdi-chevron-right</v-icon>
                 </v-btn>
                 <v-toolbar-title>{{ title }}</v-toolbar-title>
+
               </v-toolbar>
               <v-row style="height: 100%">
                 <v-col
@@ -215,6 +224,8 @@ export default {
       selectedEvent: null,
       selectedElement: null,
       tab: null,
+      interval: null,
+      refreshCalendar: true
     };
   },
   methods: {
@@ -256,36 +267,11 @@ export default {
     },
     query: function() {
       let self = this;
-      this.results = [];
-      // let pending = null;
-      //
-      // let sortby = {
-      //   StudyTimestamp: -1
-      // };
-      //
-      // let d = new Date();
-      // d.setDate(d.getDate() - 90);
-      //
-      // let where = {
-      //   istemplate: false,
-      //   StudyTimestamp: {$gt: d}
-      // };
-      // // switch(this.search.sort) {
-      // //     case "dateup":
-      // //         sortby.StudyTimestamp = -1;
-      // //         break;
-      // //     case "datedown":
-      // //         sortby.StudyTimestamp = 1;
-      // //         break;
-      // //     case "iibis":
-      // //         sortby.IIBISID = -1;
-      // //         break
-      // //     default:
-      // //         sortby.StudyTimestamp = -1;
-      // // }
-      // this.selected = null;
-      // this.loading_series = true;
-      // let self = this;
+
+
+      //reset results if not calendar
+      if(this.search_type !== 'calendar') this.results = [];
+
 
       let search_api = '';
       if(this.search_type === 'research') search_api = `${this.$config.api}/research/search/${this.search}`;
@@ -303,7 +289,7 @@ export default {
           function(res) {
             console.log(res.data);
 
-            self.results = res.data;
+            if(self.results !== res.data) self.results = res.data;
           },
           function(err) {
             console.log(err);
@@ -333,7 +319,32 @@ export default {
     }
     console.log("direct_research: ",this.load_research);
     console.log("direct_series: ",this.load_series);
-    // this.query();
+
+    // this.interval = setInterval(function () {
+    //   if(this.search_type === 'calendar' && this.refreshCalendar) {
+    //     console.log("refreshing!");
+    //     this.query();
+    //   }
+    // }.bind(this), 10000);
+  },
+
+  activated () {
+    console.log('Exam view has been activated');
+    this.interval = setInterval(function () {
+      if(this.search_type === 'calendar' && this.refreshCalendar && !this.direct_load) {
+        console.log("refreshing!");
+        this.query();
+      }
+    }.bind(this), 10000);
+  },
+
+  deactivated () {
+    console.log('Exam view has been deactivated')
+    clearInterval(this.interval);
+  },
+
+  beforeDestroy: function(){
+    clearInterval(this.interval);
   }
 };
 </script>

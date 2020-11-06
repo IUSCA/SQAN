@@ -38,7 +38,7 @@
       >
 
           <template v-slot:item.qc="{ item }">
-              <span v-if="qc_keys.includes(item.key)">
+              <span v-if="qc_keys !== undefined && qc_keys.includes(item.key)">
                   <v-icon small color="info">mdi-checkbox-multiple-marked-circle</v-icon>
               </span>
           </template>
@@ -95,7 +95,11 @@
         methods: {
           toggleShowing() {
             if(this.showing === 'errors') {
-              this.showing = 'qc';
+              if(this.qc_keys !== undefined) {
+                this.showing = 'qc';
+              } else {
+                this.showing = 'all';
+              }
               return;
             }
             if(this.showing === 'qc') {
