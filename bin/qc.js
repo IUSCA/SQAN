@@ -37,7 +37,9 @@ function run(cb) {
 
         if(err) return cb(err);
 
-        logger.info("Un-qc-ed Series retrieved: "+ series.length);
+        if(series.length) {
+          logger.info("Un-qc-ed Series retrieved: " + series.length);
+        }
 
         async.eachLimit(series, 1, qc_images,function(err) {
             if (err) return cb(err);
@@ -78,7 +80,7 @@ function run(cb) {
               // logger.info("Queue is empty, checking every 10 seconds...");
                 setTimeout(function() {
                     run(cb);
-                }, 1000*3);
+                }, 1000*5);
             }
         })
     });
