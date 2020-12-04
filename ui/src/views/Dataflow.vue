@@ -26,6 +26,8 @@
       dense
       show-expand
       :expanded.sync="expanded"
+      sort-by="date"
+      :sort-desc="true"
       :search="filter"
       item-key="_id"
       disable-pagination

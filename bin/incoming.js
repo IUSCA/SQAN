@@ -184,28 +184,29 @@ function incoming(tags, fromFile, studyName, subject, cb) {
                 if(tag.Name == 'StationName') console.log(tag);
                 if(tag.Name == '' || tag.Name === undefined) console.log(tag);
                 h[tag.Name] = val;
+                _cb();
 
-                let kk = qckeywords.find(x => x.key === tag.Name);
-                // console.log("Key lookup is "+kk)
-
-                if (kk == undefined && tag.Name !== undefined) {
-                    var newkey = {
-                        key: tag.Name,
-                        modality: "common",
-                    };
-
-                    db.QCkeyword.create({
-                        key: newkey.key,
-                        modality: newkey.modality,
-                    }, function(err, _qckeyword) {
-                        if(err) return next(err);
-                        console.log("new key found: "+newkey.key)
-                        qckeywords.push(newkey);
-                        _cb();
-                    });
-                } else {
-                    _cb();
-                }
+                // let kk = qckeywords.find(x => x.key === tag.Name);
+                // // console.log("Key lookup is "+kk)
+                //
+                // if (kk == undefined && tag.Name !== undefined) {
+                //     var newkey = {
+                //         key: tag.Name,
+                //         modality: "common",
+                //     };
+                //
+                //     db.QCkeyword.create({
+                //         key: newkey.key,
+                //         modality: newkey.modality,
+                //     }, function(err, _qckeyword) {
+                //         if(err) return next(err);
+                //         console.log("new key found: "+newkey.key)
+                //         qckeywords.push(newkey);
+                //         _cb();
+                //     });
+                // } else {
+                //     _cb();
+                // }
             }, function(err) {
                 next(err);
             });
