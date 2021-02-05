@@ -1,5 +1,5 @@
 <template>
-  <v-chip color="green lighten-2" x-small>
+  <v-chip color="green lighten-5" x-small>
     <v-avatar right>
       <v-icon x-small>{{icon}}</v-icon>
     </v-avatar>
@@ -29,7 +29,8 @@
         if(this.templates === undefined || this.template_series === undefined) return 'nope';
         let t = this.templates[this.template_series.exam_id];
         if(t === undefined) return 'Template not found';
-        return `${t.StudyTimestamp} - (#${this.template_series.SeriesNumber})`;
+        let timestamp = this.$moment(t.StudyTimestamp).format('YYYY-MM-DD');
+        return `${t.template_name} | ${timestamp} - (#${this.template_series.SeriesNumber})`;
       }
     },
     data() {

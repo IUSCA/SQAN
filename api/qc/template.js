@@ -28,6 +28,15 @@ var customs = {
         },
         "p_CoilString" : function(k, v, tv, qc) {
             if(!check_set(k, v, tv, qc)) return;
+
+            if(tv.includes('BO') && tv.includes('SP')) {
+                if(!v.includes('BO') || !(v.includes('SP'))) {
+                    return qc.errors.push({type: 'template_mismatch', k: k, v: v, tv: tv, msg: "value doesn't match with template value"});
+                } else {
+                    return true;
+                }
+            }
+
             if(tv.includes("HEA/HEP")) {
                 return check_equal(k, v, tv, qc);
             } else {
@@ -50,6 +59,12 @@ var customs = {
 
                 return check_equal(k, v, tv, qc);
             }
+        },
+        "p_ScanOptions2" : function(k, v, tv, qc) {
+            if(!check_set(k, v, tv, qc)) return;
+            let _tv = tv.substring(tv.indexOf('/')+1);
+            let _v = v.substring(v.indexOf('/')+1);
+            return check_equal(k, _v, _tv, qc);
         }
 
     }, common_customs),

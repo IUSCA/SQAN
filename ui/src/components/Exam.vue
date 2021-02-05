@@ -91,7 +91,7 @@
         let series = [];
 
         if(this.deprecated !== 'none') {
-          series = this.exam.series;
+          series = JSON.parse(JSON.stringify(this.exam.series));
         } else {
           series = this.exam.series.filter(s => {
             return s.deprecated_by === null;

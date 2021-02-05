@@ -2,7 +2,7 @@
   <v-chip label outlined small v-if="template.template !== undefined">
     {{template.template.series_desc}}
     <span class="font-italic font-weight-light ml-3">
-      {{template.template.exam_id.StudyTimestamp | moment("YYYY-MM-DD")}}
+      {{template.template.template_name}} | {{template.template.exam_id.StudyTimestamp | moment("YYYY-MM-DD")}}
     </span>
   </v-chip>
 </template>

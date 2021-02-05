@@ -67,6 +67,7 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub, algorithms: 
         converted_to_template:false,
         series: [],
         usedInQC:0,
+        template_name: null,
         parent_exam: undefined,
     };
 
@@ -75,6 +76,7 @@ router.get('/texams/:exam_id', jwt({secret: config.express.jwt.pub, algorithms: 
         if (!texam) return res.json([]);
         template_instance.date = texam.StudyTimestamp;
         template_instance.exam_id = texam._id;
+        template_instance.template_name = texam.template_name;
         template_instance.converted_to_template = texam.converted_to_template ? texam.converted_to_template : false;
 
         if (texam.converted_to_template) {

@@ -1,11 +1,51 @@
 <template>
+
   <div v-if="benchmarkData">
+    <v-dialog
+            v-model="renameDialog"
+            max-width="400"
+    >
+      <v-card>
+        <v-card-title class="headline">
+          Rename Template
+        </v-card-title>
+
+        <v-card-text>
+          <v-text-field
+                  label="Name" v-model="benchmarkData.template_name"
+          ></v-text-field>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+
+          <v-btn
+                  color="green darken-1"
+                  text
+                  @click="renameDialog = false"
+          >
+            Cancel
+          </v-btn>
+
+          <v-btn
+                  color="green darken-1"
+                  text
+                  @click="renameBenchmark"
+          >
+            Submit
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+
     <v-tabs v-model="tab" @change="changeTab" icons-and-text>
       <v-tab
         v-for="(benchmark, index) in summaryLocal.StudyTimestamp"
         :key="index"
       >
         {{ benchmark | date }}
+        <div v-if="benchmark.template_name">{{benchmark.template_name}}</div>
         <v-icon v-if="benchmark.converted_to_template">
           mdi-checkbox-multiple
         </v-icon>
@@ -21,6 +61,14 @@
           <v-col cols="8">
             <v-card class="elevation-4 pl-5 pb-5" color="#B2EBF2">
               <v-card-title>Information</v-card-title>
+
+              <div class="mb-2">
+                <v-icon class="mr-2">mdi-tag</v-icon>
+                <span>Name:</span>
+                <span>{{
+                  benchmarkData.template_name
+                }}</span>
+              </div>
 
               <div class="mb-2">
                 <v-icon class="mr-2">mdi-clock</v-icon>
@@ -57,6 +105,17 @@
               <v-card-title>Actions</v-card-title>
 
               <v-list elevation="2" rounded>
+
+                <v-tooltip left>
+                  <template v-slot:activator="{ on }">
+                    <v-list-item v-on="on" @click="openRename">
+                      <v-icon class="mr-2 blue--text">mdi-form-textbox</v-icon> Rename Template
+                    </v-list-item>
+                  </template>
+                  <span>Give this template a more descriptive name</span>
+                </v-tooltip>
+
+                
                 <v-tooltip left>
                   <template v-slot:activator="{ on }">
                     <v-list-item v-on="on" @click="deleteBenchmark">
@@ -136,7 +195,7 @@ export default {
       seriesVisible: true,
       selected: [],
       summaryLocal: { ...this.summary },
-
+      renameDialog: false,
       tab: null,
       tseriesHeaders: [
         {
@@ -161,7 +220,7 @@ export default {
   watch: {
     benchmarkData: function (val) {
       //return this._.orderBy(this.series, "SeriesNumber");
-      //console.log("New value: ", val)
+      console.log("New value: ", val)
       this.orderedSeries = val.series
         .concat()
         .sort(this.$helpers.sortBy("SeriesNumber"));
@@ -194,6 +253,23 @@ export default {
     opentemplate(tid) {
       // console.log(tid);
       window.open("template/" + tid);
+    },
+
+    openRename() {
+      this.renameDialog = true;
+    },
+
+    renameBenchmark() {
+      var texam_id = this.benchmarkData.exam_id;
+      var name = this.benchmarkData.template_name;
+      this.renameDialog = false;
+      let self = this;
+      this.$http
+              .post(`${this.$config.api}/exam/renametemplate/${texam_id}`, {name: name})
+              .then((res) => {
+                console.log(res.data);
+                self.query();
+              });
     },
 
     async deleteBenchmark() {

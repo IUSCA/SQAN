@@ -88,7 +88,7 @@ router.get('/recent/:days/:datetype', function(req, res, next) {
     if(req.params.datetype == 'created') {
         q = {createdAt: {$gt: d}}
     }
-    
+
     db.Series.find(q).distinct('exam_id').exec(function(err, _docs) {
         if(err) return next(err);
         db.Exam.find({_id: {$in: _docs}}).exec(function(err, _exams) {
@@ -229,6 +229,21 @@ router.get('/:exam_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256
     });
 });
 
+router.post('/renametemplate/:exam_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
+    if(req.body.name === undefined || req.body.name.length < 3) {
+        return res.status(500).json({message: "Invalid name provided"});
+    }
+
+    console.log("Got a rename request");
+
+    db.Exam.findById(req.params.exam_id).exec(function(err, exam) {
+        if(err) return next(err);
+        if(!exam.istemplate) return res.status(404).json({message: "no such template:"+req.params.exam_id});
+        exam.template_name = req.body.name;
+        exam.save();
+        return res.json(exam);
+    });
+});
 
 router.post('/template/:exam_id', jwt({secret: config.express.jwt.pub, algorithms: ['RS256']}), function(req, res, next) {
 

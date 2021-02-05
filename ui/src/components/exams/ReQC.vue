@@ -114,10 +114,17 @@
 
           let options = [];
           this.templates.map(t => {
+            let name = t.template.StudyTimestamp;
+            if(t.template.template_name !== undefined && t.template.template_name !== '') {
+              name = `${t.template.template_name} (${t.template.StudyTimestamp})`;
+            }
+
+
+
             t.series.map(ts => {
               if(ts.series_desc == this.series.series_desc) {
                 let option = {
-                  text: `${t.template.StudyTimestamp} - (#${ts.SeriesNumber})`,
+                  text: `${name} - (#${ts.SeriesNumber})`,
                   value: ts._id
                 }
                 options.push(option);
@@ -126,9 +133,12 @@
           });
           return options;
         } else return this.templates.map(t => {
-
+          let name = t.template.StudyTimestamp;
+          if(t.template.template_name !== undefined && t.template.template_name !== '') {
+            name = `${t.template.template_name} (${t.template.StudyTimestamp})`;
+          }
           return {
-            text: `${t.template.StudyTimestamp} - (${t.series.length})`,
+            text: `${name} - (${t.series.length})`,
             value: t.template._id
           }
         })
