@@ -33,12 +33,12 @@ SQAN (formerly RADY-SCA) is a full-stack system solution for extracting, transla
   * generates public/private keys for JSON Web Token signing/verification
 4.  `cp index.sample.js index.js`
   * Modify config/index.js as needed
-5. `cd ../ui/src && cp config.sample.js config.js`
+5. `cd ../ui/src && cp config.example.js config.js`
   * Modify ui/src/config.js as needed
 6.  `yarn install`
 7.  `yarn build`
 8.  Launch API
-  * `npm start` 
+  * `cd ../.. && npm start` 
 9.  Configure nginx to serve API/UI 
 10.  (optional) Load sample dataset (available upon request)
 11.  (optional) Initiate Incoming and QC processes
