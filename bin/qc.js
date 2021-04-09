@@ -95,7 +95,10 @@ function qc_images(series,next) {
       //build key dictionary
       db.QCkeyword.find({modality: 'common'}).exec(function (err, c_keys) {
         if (err) return next(err);
-        db.QCkeyword.find({modality: primimage.headers.modality}).exec(function (err, m_keys) {
+        console.log("USING MODALITY", primimage.headers.Modality);
+        db.QCkeyword.find({modality: primimage.headers.Modality}).exec(function (err, m_keys) {
+
+          console.log(`FOUND ${m_keys.length} MODALITY OVERRIDES`);
           if (err) return next(err);
 
           async.each(m_keys, function (mk, cb) {

@@ -43,24 +43,26 @@
               </span>
           </template>
 
-          <template v-slot:item.value="{ item }">
-              <span v-if="Array.isArray(item.value)">
-                  <div v-for="(vx, idx) in item.value" :key="idx">
-                      {{vx}}
-                  </div>
-              </span>
-
-              <div v-if="!Array.isArray(item.value)">
-                  {{item.value}}
+          <template v-slot:item.key="{ item }">
+              <b>{{item.key}}</b>
+              <div v-if="item.key in qc_errors">
+                  <v-chip class="red white--text" small><v-icon>mdi-alert</v-icon> {{qc_errors[item.key].msg}} </v-chip>
+              </div>
+              <div v-else-if="item.key in qc_warnings">
+                  <v-chip class="orange white--text" small><v-icon>mdi-alert</v-icon> {{qc_warnings[item.key].msg}}</v-chip>
               </div>
           </template>
 
-          <template v-slot:item.err_msg="{ item }">
+          <template v-slot:item.value="{ item }">
+              <HeaderValue :_key="item.key" :_val="item.value"></HeaderValue>
+          </template>
+
+          <template v-slot:item.tv="{ item }">
               <span v-if="item.key in qc_errors">
-                  <v-chip class="red white--text" small><v-icon>mdi-alert</v-icon> {{qc_errors[item.key].msg}} | Template value: <b>{{qc_errors[item.key].tv}}</b></v-chip>
+                  <HeaderValue :_key="item.key" :_val="qc_errors[item.key].tv"></HeaderValue>
               </span>
-              <span v-if="item.key in qc_warnings">
-                  <v-chip class="orange white--text" small><v-icon>mdi-alert</v-icon> {{qc_warnings[item.key].msg}} | Template value: <b>{{qc_warnings[item.key].tv}}</b></v-chip>
+              <span v-else-if="item.key in qc_warnings">
+                  <HeaderValue :_key="item.key" :_val="qc_warnings[item.key].tv"></HeaderValue>
               </span>
           </template>
       </v-data-table>
@@ -69,9 +71,13 @@
 </template>
 
 <script>
+
+    import HeaderValue from '@/components/HeaderValue';
+
     export default {
 
         name: 'image-header',
+        components: {HeaderValue},
         data() {
           return {
             showing: 'errors',
@@ -84,10 +90,11 @@
             }, {
               value: 'value',
               text: 'Value'
-            }, {
-                value: 'err_msg',
-                text: 'QC Messages'
-            }
+            },
+              {
+                value: 'tv',
+                text: 'Template Value'
+              }
             ],
             search: ''
           }
@@ -110,6 +117,10 @@
               this.showing = 'errors';
               return;
             }
+          },
+          parseSequence(seq) {
+            let vals = JSON.parse(seq);
+            return vals;
           }
         },
         computed: {
@@ -215,5 +226,5 @@
 </script>
 
 <style>
-
+    
 </style>
