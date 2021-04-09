@@ -2,7 +2,7 @@
   <span>
 
      <v-dialog
-       v-model="req_dialog"
+       v-model="frame_dialog"
        max-width="800"
      >
     <template v-slot:activator="{ on }">
@@ -67,6 +67,7 @@
     data() {
       return {
         report: [],
+        frame_dialog: false,
         fields: [
           {text: 'Frame #', value: 'frame'},
           {text: 'Start (s)', value: 'start_time'},

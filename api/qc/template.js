@@ -82,17 +82,47 @@ var customs = {
         "RadiopharmaceuticalInformationSequence": function(k, v, tv, qc) {
             if(!check_set(k, v, tv, qc)) return;
             //sometimes they are not set..
-            if(tv[0]) {
-                delete tv[0].RadiopharmaceuticalStartTime;
-                delete tv[0].RadionuclideTotalDose;
-                delete tv[0].RadiopharmaceuticalStartDateTime
+            // if(tv[0]) {
+            //     delete tv[0].RadiopharmaceuticalStartTime;
+            //     delete tv[0].RadionuclideTotalDose;
+            //     delete tv[0].RadiopharmaceuticalStartDateTime
+            // }
+            // if(v[0]) {
+            //     delete v[0].RadiopharmaceuticalStartTime;
+            //     delete v[0].RadionuclideTotalDose;
+            //     delete v[0].RadiopharmaceuticalStartDateTime
+            // }
+            let errors = false
+
+            //Radiopharmaceutical
+            if(tv[0]['0018,0031'].Value !== v[0]['0018,0031'].Value) errors = true;
+
+            //RadionuclideHalfLife
+            let tv_rhl = parseFloat(tv[0]['0018,1075'].Value);
+            let v_rhl = parseFloat(v[0]['0018,1075'].Value);
+            let diff = Math.abs(v - tv);
+            if(diff > 6) errors = true;
+          
+            //RadionuclideCodeSequence.CodeMeaning
+            if(tv[0]['0054,0300'].Value[0]['0008,0104'].Value !== v[0]['0054,0300'].Value[0]['0008,0104'].Value) errors = true;
+
+
+            if(errors) {
+                qc.errors.push({type: 'template_mismatch', k: k, tv: tv, msg: "Radiopharmaceutical does not match template"});
             }
-            if(v[0]) {
-                delete v[0].RadiopharmaceuticalStartTime;
-                delete v[0].RadionuclideTotalDose;
-                delete v[0].RadiopharmaceuticalStartDateTime
+        },
+
+        "PatientGantryRelationshipCodeSequence": function(k, v, tv, qc) {
+            if(!check_set(k, v, tv, qc)) return;
+
+            let errors = false
+
+            //CodeMeaning
+            if(tv[0]['0008,0104'].Value !== v[0]['0008,0104'].Value) errors = true;
+
+            if(errors) {
+                qc.errors.push({type: 'template_mismatch', k: k, tv: tv, msg: "Radiopharmaceutical does not match template"});
             }
-            check_equal(k, v, tv, qc);
         },
     }, common_customs)
 };

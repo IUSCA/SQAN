@@ -365,7 +365,6 @@ router.post('/template/:series_id', jwt({secret: config.express.jwt.pub, algorit
         })
         .exec(function(err, series) {
         if(err) return next(err);
-        console.log("WTF");
         if(!series) console.log("CANT FIND SERIES");
         if(!series) return res.status(404).json({message: "can't find specified series"});
         //make sure user has access to this series

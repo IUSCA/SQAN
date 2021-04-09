@@ -12,3 +12,4 @@ barn
 start.sh
 package-lock.json
 mongo
+test
