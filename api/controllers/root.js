@@ -11,6 +11,7 @@ var async = require('async');
 var axios = require('axios');
 var nodemailer = require('nodemailer');
 var passport = require('passport');
+var parseString = require('xml2js').parseString;
 
 //mine
 var config = require('../../config');
@@ -198,11 +199,11 @@ router.get('/verify', function(req, res, next) {
 
     //guess casurl using referer - TODO - should I use cookie and pass it from the UI method begin_iucas() instead?
     //var casurl = config.iucas.home_url;
-    if(!req.headers.referer) return next("Referer not set in header..");
-    var casurl = req.headers.referer;
+    // if(!req.headers.referer) return next("Referer not set in header..");
+    var service = req.query.service;
     console.log(ticket);
-    console.log(casurl);
-    axios.get('https://cas.iu.edu/cas/validate?cassvc=IU&casticket='+ticket+'&casurl='+casurl, {
+    console.log(service);
+      axios.get('https://idp.login.iu.edu/idp/profile/cas/serviceValidate?ticket='+ticket+'&service='+service, {
         timeout: 2000,
         // headers: {'Connection': 'close'},
         // httpsAgent: new https.Agent({ keepAlive: false }),
@@ -216,34 +217,48 @@ router.get('/verify', function(req, res, next) {
             logger.info("verify responded", response.status, response.data);
 
             if (response.status == 200) {
-                var reslines = response.data.split("\n");
-                // console.log(reslines);
-                if(reslines[0].trim() == "yes") {
-                    var uid = reslines[1].trim();
 
-                    db.User.findOne({username: uid}).exec(function(err, user) {
-                        if(err) return next(err);
-                        if(!user) {
-                            common.create_user(uid, next, function(err, _user) {
-                                if(err) return next(err);
-                                common.issue_jwt(_user, function (err, jwt, jwt_exp) {
+                parseString(response.data, function (err, result) {
+                    console.dir(result);
+                    if (!err && response.data.includes('authenticationSuccess')) {
+                        var uid = result['cas:serviceResponse']['cas:authenticationSuccess'][0]['cas:user'][0];
+
+                        db.User.findOne({username: uid}).exec(function (err, user) {
+                            if (err) return next(err);
+                            if (!user) {
+                                common.create_user(uid, next, function (err, _user) {
                                     if (err) return next(err);
-                                    res.json({jwt: jwt, uid: uid, role: _user.primary_role, roles: _user.roles, jwt_exp: jwt_exp});
+                                    common.issue_jwt(_user, function (err, jwt, jwt_exp) {
+                                        if (err) return next(err);
+                                        res.json({
+                                            jwt: jwt,
+                                            uid: uid,
+                                            role: _user.primary_role,
+                                            roles: _user.roles,
+                                            jwt_exp: jwt_exp
+                                        });
+                                    });
+                                })
+                            } else {
+                                user.lastLogin = Date.now();
+                                user.save();
+                                common.issue_jwt(user, function (err, jwt, jwt_exp) {
+                                    if (err) return next(err);
+                                    res.json({
+                                        jwt: jwt,
+                                        uid: uid,
+                                        role: user.primary_role,
+                                        roles: user.roles,
+                                        jwt_exp: jwt_exp
+                                    });
                                 });
-                            })
-                        } else {
-                            user.lastLogin = Date.now();
-                            user.save();
-                            common.issue_jwt(user, function (err, jwt, jwt_exp) {
-                                if (err) return next(err);
-                                res.json({jwt: jwt, uid: uid, role: user.primary_role, roles: user.roles, jwt_exp: jwt_exp});
-                            });
-                        }
-                    });
-                } else {
-                    logger.error("IUCAS failed to validate");
-                    res.sendStatus("403");//Is 403:Forbidden appropriate return code?
-                }
+                            }
+                        });
+                    } else {
+                        logger.error("IUCAS failed to validate");
+                        res.sendStatus("403");//Is 403:Forbidden appropriate return code?
+                    }
+                });
             } else {
                 //non 200 code...
                 next(response.data);
