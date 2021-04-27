@@ -70,7 +70,7 @@ export default {
   },
   computed: {
     casticket: function () {
-      return this.$route.query.casticket;
+      return this.$route.query.ticket;
     },
     redirect: function() {
       return this.$route.query.redirect;
@@ -80,13 +80,17 @@ export default {
     ...mapActions(["login"]),
 
     begin_iucas: function() {
-      window.location = this.$config.iucas_url+'?cassvc=IU&casurl='+this.$config.cas_return;
+      window.location = this.$config.iucas_url+'?service='+this.$config.cas_return;
     },
+
+    // begin_iucas: function() {
+    //   window.location = this.$config.iucas_url+'?cassvc=IU&casurl='+this.$config.cas_return;
+    // },
 
     validate: function(casticket) {
       console.log(`Calling validate`);
       var self = this;
-      this.$http.get(this.$config.api + '/verify?casticket=' + casticket)
+      this.$http.get(this.$config.api + '/verify?casticket=' + casticket+ '&service='+this.$config.cas_return)
         .then(res => {
           console.log(res.data);
           self.completeLogin(res.data);
