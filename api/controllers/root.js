@@ -226,19 +226,21 @@ router.get('/verify', function(req, res, next) {
                         db.User.findOne({username: uid}).exec(function (err, user) {
                             if (err) return next(err);
                             if (!user) {
-                                common.create_user(uid, next, function (err, _user) {
-                                    if (err) return next(err);
-                                    common.issue_jwt(_user, function (err, jwt, jwt_exp) {
-                                        if (err) return next(err);
-                                        res.json({
-                                            jwt: jwt,
-                                            uid: uid,
-                                            role: _user.primary_role,
-                                            roles: _user.roles,
-                                            jwt_exp: jwt_exp
-                                        });
-                                    });
-                                })
+                                logger.error(`Unregistered user: ${uid}`);
+                                res.sendStatus("401");
+                                // common.create_user(uid, next, function (err, _user) {
+                                //     if (err) return next(err);
+                                //     common.issue_jwt(_user, function (err, jwt, jwt_exp) {
+                                //         if (err) return next(err);
+                                //         res.json({
+                                //             jwt: jwt,
+                                //             uid: uid,
+                                //             role: _user.primary_role,
+                                //             roles: _user.roles,
+                                //             jwt_exp: jwt_exp
+                                //         });
+                                //     });
+                                // })
                             } else {
                                 user.lastLogin = Date.now();
                                 user.save();

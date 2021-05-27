@@ -134,9 +134,26 @@ export default {
 
     errorLogin: function(err) {
 
-      let errors = err.response.data.errors;
-      let key = Object.keys(errors)[0];
-      this.$store.dispatch('snack', `${key} ${errors[key]}`);
+      let status = err.response.status;
+      if(status == 403) {
+        this.$store.dispatch('snack', {
+          msg: `Login failed: validation error`,
+          isError: true,
+          timeout: 5000
+        });
+      }
+
+      if(status == 401) {
+        this.$store.dispatch('snack', {
+          msg: `Login failed: unknown user`,
+          isError: true,
+          timeout: 5000
+      });
+      }
+
+      // let errors = err.response.data.errors;
+      // let key = Object.keys(errors)[0];
+      // this.$store.dispatch('snack', `${key} ${errors[key]}`);
     }
   },
   mounted() {

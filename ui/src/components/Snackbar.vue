@@ -1,7 +1,7 @@
 <template>
-  <v-snackbar v-model="show" top right>
+  <v-snackbar v-model="show" top right :color="color">
     {{message}}
-    <v-btn text color="accent" @click.native="show = false" timeout=3000>x</v-btn>
+    <v-btn text color="accent" @click.native="show = false" :timeout="$store.state.timeout">x</v-btn>
   </v-snackbar>
 </template>
 
@@ -10,7 +10,9 @@
     data () {
       return {
         show: false,
-        message: ''
+        message: '',
+        isError: false,
+        color: 'accent'
       }
     },
     created: function () {
@@ -19,8 +21,20 @@
         if (msg !== '') {
           this.show = true;
           this.message = this.$store.state.snack;
-          this.$store.commit('setSnack', '')
+          setTimeout(() => {
+            this.$store.commit('setSnack', {
+              msg: '',
+              isError: false,
+              timeout: 3000
+            });
+          }, this.$store.state.timeout)
         }
+      });
+
+      this.$store.watch(state => state.isError, () => {
+        // console.log("STATE ISERROR IS CHANGING");
+        this.isError = this.$store.state.isError
+        this.color = this.isError ? 'red' : 'blue-grey';
       })
     }
   }

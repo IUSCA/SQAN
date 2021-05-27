@@ -13,7 +13,10 @@ export default new Vuex.Store({
             jwt_exp: localStorage.getItem('jwt_exp') || ''
         },
         layout: 'simple-layout',
-        snack: ''
+        snack: '',
+        isError: false,
+        timeout: 3000
+
     },
     mutations: {
         authChange (state, auth) {
@@ -23,7 +26,14 @@ export default new Vuex.Store({
           state.layout = payload
         },
         setSnack (state, snack) {
-          state.snack = snack
+          console.log(snack);
+          if(typeof snack == 'string') {
+            state.snack = snack
+          } else {
+            state.snack = snack.msg
+            state.isError = snack.isError
+            state.timeout = snack.timeout
+          }
         }
     },
     actions: {
@@ -48,8 +58,8 @@ export default new Vuex.Store({
                 jwt: '',
             });
         },
-        snack({commit}, message) {
-          commit('setSnack', message);
+        snack({commit}, snack) {
+          commit('setSnack', snack);
         }
     },
     getters: {
