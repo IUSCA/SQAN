@@ -22,6 +22,18 @@
             <v-divider class="my-2" v-show="mode !== 'production'"></v-divider>
             <v-btn block @click="showForm = true" v-show="!showForm && mode !== 'production'" class="elevation-8" color="primary"><v-icon class="mx-1">mdi-account</v-icon> User Login</v-btn>
 
+            <v-card class="my-2" v-show="unknownUser">
+              <v-alert
+                  color="warning"
+                  dark
+                  icon="mdi-account-alert"
+                  border="top"
+                  prominent
+              >
+                No user account found.  Access to the SQAN portal is restricted to authorized users.  If you feel this message is in error or would like to request access, please contact <a href="mailto:sca-help@iu.edu">sca-help@iu.edu</a>
+              </v-alert>
+            </v-card>
+
             <v-form @submit.prevent="userLogin" v-show="showForm">
             <v-card class="elevation-12">
               <v-card-text>
@@ -65,6 +77,7 @@ export default {
         password: ""
       },
       showForm: false,
+      unknownUser: false,
       mode: this.$config.mode
     };
   },
@@ -134,9 +147,27 @@ export default {
 
     errorLogin: function(err) {
 
-      let errors = err.response.data.errors;
-      let key = Object.keys(errors)[0];
-      this.$store.dispatch('snack', `${key} ${errors[key]}`);
+      let status = err.response.status;
+      if(status == 403) {
+        this.$store.dispatch('snack', {
+          msg: `Login failed: validation error`,
+          isError: true,
+          timeout: 5000
+        });
+      }
+
+      if(status == 401) {
+        this.$store.dispatch('snack', {
+          msg: `Login failed: unknown user`,
+          isError: true,
+          timeout: 5000
+        });
+        this.unknownUser = true;
+      }
+
+      // let errors = err.response.data.errors;
+      // let key = Object.keys(errors)[0];
+      // this.$store.dispatch('snack', `${key} ${errors[key]}`);
     }
   },
   mounted() {
