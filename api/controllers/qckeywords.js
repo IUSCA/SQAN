@@ -52,6 +52,111 @@ router.get('/scandb', function(req, res, next) {
 
 });
 
+router.get('/errorcount', function(req, res, next) {
+  let qc_counts = {};
+
+  db.Series.find({'deprecated_by': null, 'qc.errors': { $exists: true, $not: {$size: 0} }})
+    .populate('primary_image')
+    .exec(function(err,p_series){
+      if(err) console.log(err);
+      console.log(`Found ${p_series.length} candidates to check`);
+
+
+      async.each(p_series, function(p_s, cb_p){
+
+        let reset = false;
+        if(!p_s.primary_image) return cb_p();
+        let sDate = p_s.primary_image.headers.SeriesDate;
+        p_s.primary_image.qc.errors.forEach(e => {
+          if(qc_counts[e.k] === undefined) {
+            qc_counts[e.k] = {
+              key: e.k,
+              series_count: 1,
+              earliest: sDate,
+              latest: sDate
+            };
+          } else {
+            qc_counts[e.k].series_count += 1;
+            qc_counts[e.k].earliest = Math.min(qc_counts[e.k].earliest, sDate);
+            qc_counts[e.k].latest = Math.max(qc_counts[e.k].latest, sDate);
+          }
+        })
+
+
+        cb_p();
+
+      }, function(err) {
+        if (err) return next(err)
+
+        // let result = Object.keys(qc_counts).map( k => {
+        //   return {
+        //     key: k,
+        //     series_count: qc_counts[k].count,
+        //     earliest: qc_counts[k].earliest,
+        //     latest:
+        //   }
+        // })
+
+        res.json(Object.values(qc_counts));
+
+      });
+    })
+});
+
+
+router.get('/affected/:keyword', function(req, res, next) {
+  let affected = {};
+
+  db.Series.find({'deprecated_by': null, 'qc.errors': { $exists: true, $not: {$size: 0} }})
+    .populate('primary_image')
+    .populate({
+      path: 'exam_id',
+      populate: {
+        path: 'research_id'
+      }
+    })
+    .exec(function(err,p_series){
+      if(err) console.log(err);
+      console.log(`Found ${p_series.length} candidates to check`);
+
+
+      async.each(p_series, function(p_s, cb_p){
+
+        let reset = false;
+        if(!p_s.primary_image) return cb_p();
+        p_s.primary_image.qc.errors.forEach(e => {
+
+          if(e.k !== req.params.keyword) return;
+
+          let iibis = p_s.exam_id.research_id.IIBISID;
+          if(affected[iibis] === undefined) {
+            affected[iibis] = []
+          }
+
+          affected[iibis].push({
+            subject: p_s.exam_id.subject,
+            series: p_s.series_desc,
+            timestamp: p_s.exam_id.StudyTimestamp,
+            series_id: p_s._id
+          })
+        })
+
+
+        cb_p();
+
+      }, function(err) {
+        if (err) return next(err)
+
+        let result = Object.keys(affected).map( a => {
+          return {IIBISID: a, subjects: affected[a] }
+        })
+
+        res.json(result);
+
+      });
+    })
+})
+
 
 //return a joined list of common and modality-specific QC keyword settings
 router.get('/modality/:modality', function(req, res,next) {
