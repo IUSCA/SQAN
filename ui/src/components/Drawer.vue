@@ -135,6 +135,11 @@
             path: 'qckeys',
           },
           {
+            action: 'mdi-database-alert',
+            title: 'QC Error Counts',
+            path: 'qcerrors',
+          },
+          {
             action: 'mdi-cube-send',
             title: 'Dataflow',
             path: 'dataflow',

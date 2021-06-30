@@ -3,6 +3,7 @@ import VueRouter from 'vue-router'
 import Signin from '../views/Signin.vue'
 import About from '../views/About.vue'
 import QCKeys from '../views/QCKeys.vue'
+import QCErrors from '../views/QCErrors.vue'
 import Dataflow from '../views/Dataflow'
 import TemplateSummary from '../views/TemplateSummary.vue'
 import ResearchSummary from '../views/ResearchSummary.vue'
@@ -84,6 +85,15 @@ const router = new VueRouter({
       component: QCKeys,
       meta: {
         requiresAuth: true,
+        is_admin: true
+      },
+    },
+    {
+      path: '/qcerrors',
+      name: 'qcerrors',
+      component: QCErrors,
+      meta: {
+      requiresAuth: true,
         is_admin: true
       },
     },
