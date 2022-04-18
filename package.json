@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@vue/cli": "^4.1.2",
-    "async": "^2.1.2",
+    "async": "^2.6.4",
     "axios": "^0.21.2",
     "body-parser": "^1.13.2",
     "compression": "^1.7.4",
